@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jira Dashboard — Live Tickets</title>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --card-bg: #161b22;
+            --border: #30363d;
+            --text: #e6edf3;
+            --text-muted: #7d8590;
+            --accent: #58a6ff;
+            --green: #3fb950;
+            --yellow: #d29922;
+            --red: #f85149;
+            --purple: #bc8cff;
+            --orange: #db6d28;
+            --status-bg: rgba(88, 166, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        /* ─── Header ─── */
+        .header {
+            max-width: 1400px;
+            margin: 0 auto 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .header-left h1 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-left h1 .icon { font-size: 1.4rem; }
+
+        .header-left .subtitle {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 4px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .live-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green);
+            animation: pulse 2s infinite;
+        }
+
+        .live-dot.degraded {
+            background: var(--yellow);
+            box-shadow: 0 0 8px var(--yellow);
+        }
+
+        .live-dot.offline {
+            background: var(--red);
+            box-shadow: 0 0 8px var(--red);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .last-updated {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* ─── Stats Bar ─── */
+        .stats-bar {
+            max-width: 1400px;
+            margin: 0 auto 20px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 20px;
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .stat-card.total .stat-value { color: var(--accent); }
+        .stat-card.open .stat-value { color: var(--green); }
+        .stat-card.progress .stat-value { color: var(--yellow); }
+        .stat-card.other .stat-value { color: var(--purple); }
+
+        /* ─── Controls ─── */
+        .controls {
+            max-width: 1400px;
+            margin: 0 auto 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 14px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-box:focus { border-color: var(--accent); }
+        .search-box::placeholder { color: var(--text-muted); }
+
+        .filter-chip {
+            padding: 8px 14px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .filter-chip:hover { border-color: var(--accent); color: var(--text); }
+        .filter-chip.active {
+            background: rgba(88, 166, 255, 0.15);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* ─── Ticket Cards ─── */
+        .tickets-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 16px;
+        }
+
+        .ticket-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            transition: border-color 0.2s, transform 0.15s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ticket-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .ticket-card.new-flash {
+            animation: flashGreen 1.5s ease;
+        }
+
+        @keyframes flashGreen {
+            0% { border-color: var(--green); box-shadow: 0 0 12px rgba(63, 185, 80, 0.4); }
+            100% { border-color: var(--border); box-shadow: none; }
+        }
+
+        .ticket-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .ticket-key {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--accent);
+            background: rgba(88, 166, 255, 0.1);
+            padding: 3px 10px;
+            border-radius: 6px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .ticket-key:hover { text-decoration: underline; }
+
+        .ticket-status {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 12px;
+            white-space: nowrap;
+        }
+
+        .status-open { background: rgba(63, 185, 80, 0.15); color: var(--green); }
+        .status-progress { background: rgba(210, 153, 34, 0.15); color: var(--yellow); }
+        .status-todo { background: rgba(125, 133, 144, 0.15); color: var(--text-muted); }
+        .status-blocked { background: rgba(248, 81, 73, 0.15); color: var(--red); }
+        .status-verification { background: rgba(188, 140, 255, 0.15); color: var(--purple); }
+        .status-default { background: rgba(88, 166, 255, 0.15); color: var(--accent); }
+
+        .ticket-summary {
+            font-size: 0.95rem;
+            font-weight: 500;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+
+        .ticket-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .meta-tag {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .meta-tag .meta-icon { font-size: 0.75rem; }
+
+        .ticket-description {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            border-left: 3px solid var(--border);
+            max-height: 100px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .ticket-description::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: linear-gradient(transparent, var(--card-bg));
+        }
+
+        .ticket-description.empty { display: none; }
+
+        .ticket-comment {
+            font-size: 0.78rem;
+            line-height: 1.5;
+            padding: 8px 12px;
+            background: rgba(188, 140, 255, 0.05);
+            border-radius: 6px;
+            border-left: 3px solid var(--purple);
+            color: var(--text);
+        }
+
+        .ticket-comment .comment-header {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .ticket-comment .comment-author { font-weight: 600; color: var(--purple); }
+
+        .ticket-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .ticket-updated { font-style: italic; }
+
+        .ticket-comments-count {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* ─── Loading / Error States ─── */
+        .loading-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .error-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--red);
+        }
+
+        /* ─── Mobile ─── */
+        @media (max-width: 640px) {
+            body { padding: 10px; }
+            .header { flex-direction: column; align-items: flex-start; }
+            .header-right { width: 100%; justify-content: space-between; }
+            .tickets-grid { grid-template-columns: 1fr; }
+            .stats-bar { flex-direction: column; }
+            .stat-card { min-width: unset; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <h1><span class="icon">📋</span> Jira Dashboard</h1>
+            <div class="subtitle">Assigned to aryan.v1 · Auto-refreshing every 5s</div>
+        </div>
+        <div class="header-right">
+            <div class="last-updated" id="lastUpdated">Loading...</div>
+            <div class="live-indicator">
+                <div class="live-dot" id="liveDot"></div>
+                <span id="liveStatus">Connecting...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-bar" id="statsBar" style="display:none;">
+        <div class="stat-card total">
+            <div class="stat-label">Total Open</div>
+            <div class="stat-value" id="statTotal">0</div>
+        </div>
+        <div class="stat-card open">
+            <div class="stat-label">Open Status</div>
+            <div class="stat-value" id="statOpen">0</div>
+        </div>
+        <div class="stat-card progress">
+            <div class="stat-label">In Progress</div>
+            <div class="stat-value" id="statProgress">0</div>
+        </div>
+        <div class="stat-card other">
+            <div class="stat-label">Other</div>
+            <div class="stat-value" id="statOther">0</div>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls" id="controls" style="display:none;">
+        <input type="text" class="search-box" id="searchBox" placeholder="Search tickets by key, summary, project, or status..." />
+        <div class="filter-chip active" data-filter="all">All</div>
+        <div class="filter-chip" data-filter="open">Open</div>
+        <div class="filter-chip" data-filter="progress">In Progress</div>
+        <div class="filter-chip" data-filter="todo">To Do</div>
+    </div>
+
+    <!-- Tickets -->
+    <div class="tickets-grid" id="ticketsGrid">
+        <div class="loading-state">
+            <div class="loading-spinner"></div>
+            <div>Loading tickets from Jira...</div>
+        </div>
+    </div>
+
+    <script>
+        const DATA_URL = 'data.json';
+        const REFRESH_INTERVAL = 5000; // 5s visual refresh from cached JSON
+        let currentData = null;
+        let currentFilter = 'all';
+        let searchTerm = '';
+        let previousTicketKeys = new Set();
+
+        // ─── Time ago helper ───
+        function timeAgo(isoString) {
+            if (!isoString) return '';
+            const date = new Date(isoString);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+            if (seconds < 60) return 'just now';
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return minutes + 'm ago';
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return hours + 'h ago';
+            const days = Math.floor(hours / 24);
+            if (days < 7) return days + 'd ago';
+            const weeks = Math.floor(days / 7);
+            if (weeks < 4) return weeks + 'w ago';
+            return date.toLocaleDateString();
+        }
+
+        // ─── Status color mapping ───
+        function getStatusClass(status) {
+            if (!status) return 'status-default';
+            const s = status.toLowerCase();
+            if (s === 'open' || s === 'open-es') return 'status-open';
+            if (s.includes('progress') || s.includes('development') || s.includes('review')) return 'status-progress';
+            if (s.includes('to do') || s === 'to do' || s === 'todo') return 'status-todo';
+            if (s.includes('block') || s.includes('hold') || s.includes('waiting')) return 'status-blocked';
+            if (s.includes('verif') || s.includes('testing') || s.includes('uat')) return 'status-verification';
+            return 'status-default';
+        }
+
+        // ─── Priority icon ───
+        function getPriorityIcon(priority) {
+            if (!priority) return '📝';
+            const p = priority.toLowerCase();
+            if (p.includes('high') || p.includes('critical') || p.includes('urgent')) return '🔴';
+            if (p.includes('medium')) return '🟡';
+            if (p.includes('low')) return '🟢';
+            return '📝';
+        }
+
+        // ─── Render ticket card ───
+        function renderTicket(ticket, isNew) {
+            const statusClass = getStatusClass(ticket.status);
+            const newFlash = isNew ? 'new-flash' : '';
+            const descHtml = ticket.description
+                ? '<div class="ticket-description">' + escapeHtml(ticket.description) + '</div>'
+                : '';
+
+            let commentHtml = '';
+            if (ticket.lastCommentSnippet) {
+                commentHtml = '<div class="ticket-comment">' +
+                    '<div class="comment-header">' +
+                        '<span class="comment-author">💬 ' + escapeHtml(ticket.lastCommentBy || 'Unknown') + '</span>' +
+                        '<span>' + timeAgo(ticket.lastCommentDate) + '</span>' +
+                    '</div>' +
+                    '<div>' + escapeHtml(ticket.lastCommentSnippet) + '</div>' +
+                '</div>';
+            }
+
+            return '<div class="ticket-card ' + newFlash + '">' +
+                '<div class="ticket-header">' +
+                    '<a class="ticket-key" href="' + ticket.url + '" target="_blank" rel="noopener">' + escapeHtml(ticket.key) + '</a>' +
+                    '<span class="ticket-status ' + statusClass + '">' + escapeHtml(ticket.status) + '</span>' +
+                '</div>' +
+                '<div class="ticket-summary">' + escapeHtml(ticket.summary) + '</div>' +
+                '<div class="ticket-meta">' +
+                    '<span class="meta-tag"><span class="meta-icon">' + getPriorityIcon(ticket.priority) + '</span>' + escapeHtml(ticket.priority || 'None') + '</span>' +
+                    '<span class="meta-tag">📂 ' + escapeHtml(ticket.project || '') + '</span>' +
+                    '<span class="meta-tag">🏷️ ' + escapeHtml(ticket.issuetype || '') + '</span>' +
+                '</div>' +
+                descHtml +
+                commentHtml +
+                '<div class="ticket-footer">' +
+                    '<span class="ticket-updated">Updated ' + timeAgo(ticket.updated) + '</span>' +
+                    '<span class="ticket-comments-count">💬 ' + ticket.commentsCount + ' comments</span>' +
+                '</div>' +
+            '</div>';
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ─── Render all tickets ───
+        function renderTickets() {
+            const grid = document.getElementById('ticketsGrid');
+            const statsBar = document.getElementById('statsBar');
+            const controls = document.getElementById('controls');
+
+            if (!currentData) {
+                grid.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><div>Waiting for data...</div></div>';
+                return;
+            }
+
+            let tickets = currentData.tickets || [];
+
+            // Apply filter
+            if (currentFilter !== 'all') {
+                tickets = tickets.filter(function(t) {
+                    const s = (t.status || '').toLowerCase();
+                    if (currentFilter === 'open') return s === 'open' || s === 'open-es';
+                    if (currentFilter === 'progress') return s.includes('progress') || s.includes('development') || s.includes('review');
+                    if (currentFilter === 'todo') return s.includes('to do') || s === 'todo';
+                    return true;
+                });
+            }
+
+            // Apply search
+            if (searchTerm) {
+                const term = searchTerm.toLowerCase();
+                tickets = tickets.filter(function(t) {
+                    return (
+                        (t.key || '').toLowerCase().includes(term) ||
+                        (t.summary || '').toLowerCase().includes(term) ||
+                        (t.project || '').toLowerCase().includes(term) ||
+                        (t.status || '').toLowerCase().includes(term) ||
+                        (t.description || '').toLowerCase().includes(term) ||
+                        (t.lastCommentSnippet || '').toLowerCase().includes(term)
+                    );
+                });
+            }
+
+            // Show stats
+            statsBar.style.display = 'flex';
+            controls.style.display = 'flex';
+            document.getElementById('statTotal').textContent = currentData.totalTickets || 0;
+            
+            const allTickets = currentData.tickets || [];
+            let openCount = 0, progressCount = 0, otherCount = 0;
+            allTickets.forEach(function(t) {
+                const s = (t.status || '').toLowerCase();
+                if (s === 'open' || s === 'open-es') openCount++;
+                else if (s.includes('progress') || s.includes('development') || s.includes('review')) progressCount++;
+                else otherCount++;
+            });
+            document.getElementById('statOpen').textContent = openCount;
+            document.getElementById('statProgress').textContent = progressCount;
+            document.getElementById('statOther').textContent = otherCount;
+
+            // Render tickets
+            if (tickets.length === 0) {
+                grid.innerHTML = '<div class="loading-state" style="color:var(--text-muted)">No tickets match your filter.</div>';
+            } else {
+                const newKeys = new Set(tickets.map(function(t) { return t.key; }));
+                grid.innerHTML = tickets.map(function(t) {
+                    const isNew = !previousTicketKeys.has(t.key) && previousTicketKeys.size > 0;
+                    return renderTicket(t, isNew);
+                }).join('');
+                previousTicketKeys = newKeys;
+            }
+
+            // Update timestamp
+            document.getElementById('lastUpdated').textContent = 
+                'Last updated: ' + new Date(currentData.generatedAt).toLocaleTimeString();
+        }
+
+        // ─── Fetch data ───
+        async function fetchData() {
+            try {
+                // Cache-busting query param to always get fresh data
+                const url = DATA_URL + '?t=' + Date.now();
+                const response = await fetch(url, { cache: 'no-store' });
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                const data = await response.json();
+
+                currentData = data;
+                renderTickets();
+
+                // Update live indicator
+                const dot = document.getElementById('liveDot');
+                const status = document.getElementById('liveStatus');
+                dot.className = 'live-dot';
+                status.textContent = 'Live';
+            } catch(err) {
+                console.error('Fetch error:', err);
+                const dot = document.getElementById('liveDot');
+                const status = document.getElementById('liveStatus');
+                dot.className = 'live-dot degraded';
+                status.textContent = 'Connecting...';
+                
+                if (!currentData) {
+                    document.getElementById('ticketsGrid').innerHTML = 
+                        '<div class="error-state">⚠️ Could not load ticket data. Will retry in 5s...</div>';
+                }
+            }
+        }
+
+        // ─── Event listeners ───
+        document.getElementById('searchBox').addEventListener('input', function(e) {
+            searchTerm = e.target.value;
+            renderTickets();
+        });
+
+        document.querySelectorAll('.filter-chip').forEach(function(chip) {
+            chip.addEventListener('click', function() {
+                document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
+                chip.classList.add('active');
+                currentFilter = chip.dataset.filter;
+                renderTickets();
+            });
+        });
+
+        // ─── Start ───
+        fetchData();
+        setInterval(fetchData, REFRESH_INTERVAL);
+    </script>
+</body>
+</html>
