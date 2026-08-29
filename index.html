@@ -221,36 +221,39 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
   </div>
 </div>
 
-<!-- VIEW: AGENT -->
-<div class="view" id="view-agent">
+<!-- VIEW: ACTIVITY -->
+<div class="view" id="view-activity">
   <div class="topbar">
     <div class="topbar-left">
-      <div class="pulse-dot" id="agentPulseDot"></div>
-      <h1>Agent</h1>
+      <div class="pulse-dot" id="activityPulseDot"></div>
+      <h1>Activity</h1>
     </div>
-    <div class="refresh-time" id="agentRefreshTime">...</div>
+    <div class="refresh-time" id="activityRefreshTime">...</div>
   </div>
-  <div class="scroll" id="agentScroll">
-    <div class="section">
-      <div class="section-title">Bridge Health</div>
-      <div class="section-card">
-        <div class="status-row">
+  <div class="scroll" id="activityScroll">
+    <!-- Bridge health compact -->
+    <div class="section" style="padding-bottom:0">
+      <div class="section-card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px">
           <div class="pulse-dot" id="bridgeDot"></div>
-          <span id="bridgeStatus">Checking...</span>
+          <span id="bridgeStatus" style="font-weight:600">Checking...</span>
         </div>
-        <div class="stat-line" id="bridgePid"></div>
-        <div class="stat-line" id="bridgeUptime"></div>
-        <div class="stat-line" id="bridgeFailures"></div>
-        <div class="stat-line" id="bridgeProcessed"></div>
+        <div style="display:flex;gap:12px;font-size:12px;color:var(--text-dim)">
+          <span id="bridgePid"></span>
+          <span id="bridgeUptime"></span>
+          <span id="bridgeFailures"></span>
+        </div>
       </div>
     </div>
-    <div class="section" style="padding-top:0">
-      <div class="section-title">Active Bridge Sessions<span class="pending-dot" id="bridgeJobsDot" style="display:none"></span></div>
-      <div id="jobsList"><div class="stat-line">No active sessions</div></div>
+    <!-- Active jobs -->
+    <div class="section" style="padding-top:12px">
+      <div class="section-title">Active Jobs<span class="pending-dot" id="bridgeJobsDot" style="display:none"></span></div>
+      <div id="jobsList"><div class="stat-line">No active jobs</div></div>
     </div>
+    <!-- Activity Feed -->
     <div class="section" style="padding-top:0">
-      <div class="section-title">Recent Activity</div>
-      <div id="recentActivityList"><div class="stat-line">No recent activity</div></div>
+      <div class="section-title">Activity Feed</div>
+      <div id="activityFeed"><div class="stat-line">No activity yet</div></div>
     </div>
   </div>
 </div>
@@ -309,10 +312,10 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
     <span>Sessions</span>
     <div class="nav-badge" id="navBadgeSessions"></div>
   </div>
-  <div class="nav-item" data-nav="view-agent" onclick="switchView('view-agent')">
-    <div class="nav-icon">&#129302;</div>
-    <span>Agent</span>
-    <div class="nav-badge" id="navBadgeAgent"></div>
+  <div class="nav-item" data-nav="view-activity" onclick="switchView('view-activity')">
+    <div class="nav-icon">&#9889;</div>
+    <span>Activity</span>
+    <div class="nav-badge" id="navBadgeActivity"></div>
   </div>
   <div class="nav-item" data-nav="view-command" onclick="switchView('view-command')">
     <div class="nav-icon">&#9998;</div>
@@ -363,7 +366,7 @@ function switchView(id){
   if(navEl)navEl.classList.add('active');
   var fab=document.getElementById('fab');
   if(id==='view-tickets')fab.classList.remove('hidden');else fab.classList.add('hidden');
-  if(id==='view-agent')document.getElementById('navBadgeAgent').classList.remove('show');
+  if(id==='view-activity')document.getElementById('navBadgeActivity').classList.remove('show');
   if(id==='view-command')document.getElementById('navBadgeCmd').classList.remove('show');
   if(id==='view-sessions')document.getElementById('navBadgeSessions').classList.remove('show');
   if(id==='view-mcps')document.getElementById('navBadgeMcps').classList.remove('show');
@@ -383,8 +386,8 @@ function fetchData(){
 }
 
 function updateRefreshTime(){
-  var els=['refreshTime','agentRefreshTime','cmdRefreshTime','sessionsRefreshTime','mcpsRefreshTime'];
-  var dots=['pulseDot','agentPulseDot','cmdPulseDot','sessionsPulseDot','mcpsPulseDot'];
+  var els=['refreshTime','activityRefreshTime','cmdRefreshTime','sessionsRefreshTime','mcpsRefreshTime'];
+  var dots=['pulseDot','activityPulseDot','cmdPulseDot','sessionsPulseDot','mcpsPulseDot'];
   els.forEach(function(id){
     var el=document.getElementById(id);
     if(!el)return;
@@ -413,14 +416,16 @@ function onData(data){
   ticketState=newState;
   rawData=data;
   renderStats(data);renderFilters(data);renderTickets(data,changedKeys);
-  renderSessions(data);renderAgent(data);renderMcps(data);renderCmdHistory();
+  renderSessions(data);renderActivity(data);renderMcps(data);renderCmdHistory();
   pollCmdResponses(data);updateNavBadges(data);
 }
 
 function updateNavBadges(data){
   var agent=data.agent||{};
   var jobs=agent.jobs||[];
-  if(jobs.length>0)document.getElementById('navBadgeAgent').classList.add('show');
+  var activity=agent.activityLog||[];
+  var hasPending=activity.some(function(e){return e.status==='pending'});
+  if(jobs.length>0||hasPending)document.getElementById('navBadgeActivity').classList.add('show');
   var ide=agent.ideSessions||[];
   if(ide.length>0)document.getElementById('navBadgeSessions').classList.add('show');
   var hist=JSON.parse(localStorage.getItem('cmdHistory')||'[]');
@@ -695,27 +700,41 @@ function pollCmdResponses(data){
   if(upd){localStorage.setItem('cmdHistory',JSON.stringify(hist));renderCmdHistory()}
 }
 
-// ===== AGENT VIEW (Bridge health + jobs + recent activity — NO IDE sessions) =====
-function renderAgent(data){
+// ===== ACTIVITY VIEW (Bridge health + jobs + activity feed) =====
+function renderActivity(data){
   var a=data.agent||{};
+  // Bridge health (compact)
   var dot=document.getElementById('bridgeDot');
   if(a.online){dot.classList.remove('offline');document.getElementById('bridgeStatus').textContent='Online'}
   else{dot.classList.add('offline');document.getElementById('bridgeStatus').textContent='Offline'}
   document.getElementById('bridgePid').textContent='PID: '+(a.pid||'N/A');
   document.getElementById('bridgeUptime').textContent='Uptime: '+fmtUptime(a.uptime||0);
   document.getElementById('bridgeFailures').textContent='Failures: '+(a.failures||0);
-  document.getElementById('bridgeProcessed').textContent='Total processed: '+(a.stats&&a.stats.totalProcessed?a.stats.totalProcessed:0);
-  // Jobs
+  // Active jobs
   var jel=document.getElementById('jobsList');
   var jobs=a.jobs||[];
   var jdot=document.getElementById('bridgeJobsDot');
-  if(jobs.length===0){jel.innerHTML='<div class="stat-line">No active sessions</div>';if(jdot)jdot.style.display='none'}
+  if(jobs.length===0){jel.innerHTML='<div class="stat-line">No active jobs</div>';if(jdot)jdot.style.display='none'}
   else{if(jdot)jdot.style.display='inline-block';var jh='';jobs.forEach(function(j){jh+='<div class="list-item"><div class="list-item-title">#'+(j.issueNum||'?')+' '+escapeHtml(j.title||'')+'</div><div class="list-item-sub">'+escapeHtml(j.snippet||'')+'</div><div class="list-item-time">'+(j.elapsed?fmtUptime(j.elapsed)+' elapsed':'')+'</div></div>'});jel.innerHTML=jh}
-  // Recent activity
-  var rael=document.getElementById('recentActivityList');
-  var ra=a.recentActivity||[];
-  if(ra.length===0){rael.innerHTML='<div class="stat-line">No recent activity</div>'}
-  else{var rh='';ra.forEach(function(act){rh+='<div class="list-item"><div class="list-item-title">#'+(act.issueNum||'?')+' '+escapeHtml(act.title||'')+'</div><div class="list-item-sub">'+escapeHtml(act.responseSnippet||'')+'</div><div class="list-item-time">'+(act.responded?relTime(act.responded):'')+'</div></div>'});rael.innerHTML=rh}
+  // Activity feed
+  var feed=document.getElementById('activityFeed');
+  var log=a.activityLog||[];
+  if(log.length===0){feed.innerHTML='<div class="stat-line">No activity yet</div>';return}
+  var typeIcons={'command':'&#9998;','jira-action':'&#128203;','agent-response':'&#129302;','bridge-event':'&#9881;'};
+  var typeColors={'command':'var(--accent)','jira-action':'var(--success)','agent-response':'var(--accent)','bridge-event':'var(--text-dim)'};
+  var statusIcons={'success':'&#10003;','failed':'&#10007;','pending':''};
+  var fh='';
+  log.forEach(function(entry){
+    var icon=typeIcons[entry.type]||'&#9679;';
+    var color=typeColors[entry.type]||'var(--text-dim)';
+    var stIcon=entry.status==='failed'?'<span style="color:var(--danger)">&#10007;</span>':entry.status==='success'?'<span style="color:var(--success)">&#10003;</span>':'<span class="pending-dot"></span>';
+    fh+='<div class="list-item">'+
+      '<div class="list-item-title"><span style="color:'+color+';margin-right:6px">'+icon+'</span>'+escapeHtml(entry.title||'')+'</div>'+
+      (entry.detail?'<div class="list-item-sub">'+escapeHtml(entry.detail)+'</div>':'')+
+      '<div class="list-item-time">'+relTime(entry.timestamp)+' &middot; '+escapeHtml(entry.source||'')+ ' ' + stIcon + '</div>'+
+    '</div>'
+  });
+  feed.innerHTML=fh;
 }
 
 // ===== MCPS VIEW =====
