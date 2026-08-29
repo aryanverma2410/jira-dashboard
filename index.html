@@ -121,16 +121,19 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .session-card.expanded{border-color:var(--accent)}
 .session-card .expanded-content{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
 .session-card.expanded .expanded-content{display:block}
-.session-header{display:flex;align-items:center;justify-content:space-between}
-.session-name{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
-.session-status-dot{font-size:16px;line-height:1}
-.session-pid{font-size:12px;color:var(--text-dim);font-weight:400}
-.session-sub{font-size:12px;color:var(--text-dim);margin-top:4px}
-.session-uptime-bar{height:3px;border-radius:2px;background:rgba(88,166,255,0.3);margin-top:6px;overflow:hidden}
+.session-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.session-task{flex:1;font-size:14px;font-weight:600;line-height:1.4;word-break:break-word}
+.session-status-dot{font-size:16px;line-height:1;flex-shrink:0;margin-top:2px}
+.session-info-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;font-size:11px;color:var(--text-dim)}
+.session-info-tag{padding:2px 8px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);white-space:nowrap}
+.session-info-tag.pid-tag{color:var(--accent)}
+.session-info-tag.uptime-tag{color:var(--success)}
+.session-cwd{font-size:11px;color:var(--text-dim);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.session-uptime-bar{height:3px;border-radius:2px;background:rgba(88,166,255,0.3);margin-top:8px;overflow:hidden}
 .session-uptime-fill{height:100%;background:var(--accent);border-radius:2px;transition:width 0.5s}
 .session-detail-label{font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-top:8px;margin-bottom:2px}
 .session-detail-val{font-size:12px;color:var(--text);word-break:break-all}
-.session-last-exchange{font-size:12px;color:var(--text-dim);background:rgba(0,0,0,0.3);border-radius:6px;padding:8px;margin-top:4px;max-height:120px;overflow-y:auto;line-height:1.4}
+.session-last-exchange{font-size:12px;color:var(--text);background:rgba(0,0,0,0.3);border-radius:6px;padding:8px;margin-top:4px;max-height:150px;overflow-y:auto;line-height:1.5;white-space:pre-wrap}
 .ide-msg-btn{margin-top:10px;padding:8px 12px;border-radius:8px;background:rgba(88,166,255,0.1);border:1px solid var(--border);color:var(--accent);font-size:13px;cursor:pointer;width:100%;text-align:center}
 .ide-msg-btn:active{background:rgba(88,166,255,0.2)}
 .ide-msg-area{display:none;margin-top:8px}
@@ -515,23 +518,23 @@ function buildSessionCard(s,exp){
   var pidStr=String(s.pid);
   var dt=s.status==='running'?'&#128994;':'&#128308;';
   var expClass=exp?' expanded':'';
-  // Uptime bar: cap at 8 hours for visual scale
   var ageSec=s.ageSeconds||0;
   var pct=Math.min(100,(ageSec/28800)*100);
   var le=s.lastExchange?escapeHtml(s.lastExchange):'<span style="color:var(--text-dim)">No recent exchange</span>';
   return '<div class="session-card'+expClass+'" data-session-pid="'+pidStr+'">'+
-    '<div class="session-header">'+
-      '<div class="session-name"><span class="session-status-dot">'+dt+'</span> '+escapeHtml(s.taskSummary||'Unknown')+'</div>'+
-      '<span class="session-pid">PID '+pidStr+'</span>'+
+    '<div class="session-top">'+
+      '<div class="session-task" data-field="task">'+escapeHtml(s.taskSummary||'aipro session')+'</div>'+
+      '<span class="session-status-dot">'+dt+'</span>'+
     '</div>'+
-    '<div class="session-sub">'+fmtUptime(ageSec)+' &middot; '+(s.isChild?'child process':'primary session')+'</div>'+
+    '<div class="session-info-row">'+
+      '<span class="session-info-tag pid-tag">PID '+pidStr+'</span>'+
+      '<span class="session-info-tag uptime-tag" data-field="uptime-tag">'+fmtUptime(ageSec)+'</span>'+
+      '<span class="session-info-tag">'+(s.isChild?'child':'primary')+'</span>'+
+    '</div>'+
+    '<div class="session-cwd" data-field="cwd">'+escapeHtml(s.cwd||'N/A')+'</div>'+
     '<div class="session-uptime-bar"><div class="session-uptime-fill" style="width:'+pct+'%"></div></div>'+
     '<div class="expanded-content">'+
-      '<div class="session-detail-label">Working Directory</div>'+
-      '<div class="session-detail-val">'+escapeHtml(s.cwd||'N/A')+'</div>'+
-      '<div class="session-detail-label">Uptime</div>'+
-      '<div class="session-detail-val" data-field="uptime">'+fmtUptime(ageSec)+'</div>'+
-      '<div class="session-detail-label">Last Exchange</div>'+
+      '<div class="session-detail-label">Full Last Exchange</div>'+
       '<div class="session-last-exchange">'+le+'</div>'+
       '<button class="ide-msg-btn" data-action="ide-msg" data-pid="'+pidStr+'">Drop a Message</button>'+
       '<div class="ide-msg-area" id="im-'+pidStr+'">'+
@@ -544,21 +547,21 @@ function buildSessionCard(s,exp){
 function updateSessionCard(card,s){
   var pidStr=String(s.pid);
   var ageSec=s.ageSeconds||0;
-  // Update header
-  var nm=card.querySelector('.session-name');
-  if(nm){var dt=s.status==='running'?'&#128994;':'&#128308;';nm.innerHTML='<span class="session-status-dot">'+dt+'</span> '+escapeHtml(s.taskSummary||'Unknown')}
-  // Update sub
-  var sb=card.querySelector('.session-sub');
-  if(sb)sb.innerHTML=fmtUptime(ageSec)+' &middot; '+(s.isChild?'child process':'primary session');
+  // Update task
+  var tk=card.querySelector('[data-field="task"]');
+  if(tk)tk.textContent=s.taskSummary||'aipro session';
+  // Update uptime tag
+  var ut=card.querySelector('[data-field="uptime-tag"]');
+  if(ut)ut.textContent=fmtUptime(ageSec);
   // Update uptime bar
   var bar=card.querySelector('.session-uptime-fill');
-  if(bar){var pct=Math.min(100,(ageSec/28800)*100);bar.style.width=pct+'%'}
-  // Update uptime detail
-  var ut=card.querySelector('[data-field="uptime"]');
-  if(ut)ut.textContent=fmtUptime(ageSec);
+  if(bar)bar.style.width=Math.min(100,(ageSec/28800)*100)+'%';
+  // Update cwd
+  var cw=card.querySelector('[data-field="cwd"]');
+  if(cw)cw.textContent=s.cwd||'N/A';
   // Update last exchange
   var le=card.querySelector('.session-last-exchange');
-  if(le){le.innerHTML=s.lastExchange?escapeHtml(s.lastExchange):'<span style="color:var(--text-dim)">No recent exchange</span>'}
+  if(le)le.innerHTML=s.lastExchange?escapeHtml(s.lastExchange):'<span style="color:var(--text-dim)">No recent exchange</span>';
 }
 
 function toggleSessionExpand(pidStr){
@@ -685,7 +688,6 @@ function updateLiveUptimes(){
   var a=rawData.agent;
   var ue=document.getElementById('bridgeUptime');
   if(ue&&a.startTime){var el=Math.floor((Date.now()-new Date(a.startTime).getTime())/1000);ue.textContent='Uptime: '+fmtUptime(el)}
-  // Update session card uptimes locally without re-render
   var ide=a.ideSessions||[];
   ide.forEach(function(s){
     if(!s._la)s._la=s.ageSeconds||0;
@@ -693,9 +695,7 @@ function updateLiveUptimes(){
     var pidStr=String(s.pid);
     var card=document.querySelector('[data-session-pid="'+pidStr+'"]');
     if(card){
-      var sub=card.querySelector('.session-sub');
-      if(sub)sub.innerHTML=fmtUptime(s._la)+' &middot; '+(s.isChild?'child process':'primary session');
-      var ut=card.querySelector('[data-field="uptime"]');
+      var ut=card.querySelector('[data-field="uptime-tag"]');
       if(ut)ut.textContent=fmtUptime(s._la);
       var bar=card.querySelector('.session-uptime-fill');
       if(bar)bar.style.width=Math.min(100,(s._la/28800)*100)+'%';
