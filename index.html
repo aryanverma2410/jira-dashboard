@@ -428,6 +428,7 @@
 
     <script>
         const DATA_URL = 'data.json';
+        const FALLBACK_URL = 'https://raw.githubusercontent.com/aryanverma2410/jira-dashboard/main/data.json';
         const REFRESH_INTERVAL = 5000; // 5s visual refresh from cached JSON
         let currentData = null;
         let currentFilter = 'all';
@@ -594,10 +595,11 @@
         }
 
         // ─── Fetch data ───
+        let useFallback = false;
         async function fetchData() {
             try {
-                // Cache-busting query param to always get fresh data
-                const url = DATA_URL + '?t=' + Date.now();
+                const baseUrl = useFallback ? FALLBACK_URL : DATA_URL;
+                const url = baseUrl + (baseUrl.startsWith('http') ? '?t=' + Date.now() : '?t=' + Date.now());
                 const response = await fetch(url, { cache: 'no-store' });
                 if (!response.ok) throw new Error('HTTP ' + response.status);
                 const data = await response.json();
@@ -609,9 +611,16 @@
                 const dot = document.getElementById('liveDot');
                 const status = document.getElementById('liveStatus');
                 dot.className = 'live-dot';
-                status.textContent = 'Live';
+                status.textContent = 'Live' + (useFallback ? ' (fallback)' : '');
             } catch(err) {
                 console.error('Fetch error:', err);
+                // Try fallback if local failed
+                if (!useFallback) {
+                    console.log('Trying fallback URL...');
+                    useFallback = true;
+                    fetchData();
+                    return;
+                }
                 const dot = document.getElementById('liveDot');
                 const status = document.getElementById('liveStatus');
                 dot.className = 'live-dot degraded';
@@ -619,7 +628,7 @@
                 
                 if (!currentData) {
                     document.getElementById('ticketsGrid').innerHTML = 
-                        '<div class="error-state">⚠️ Could not load ticket data. Will retry in 5s...</div>';
+                        '<div class="error-state">Could not load ticket data. Will retry in 5s...</div>';
                 }
             }
         }
