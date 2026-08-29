@@ -173,9 +173,24 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 
 .empty-state{text-align:center;padding:40px 20px;color:var(--text-dim);font-size:14px}
 .loading-state{text-align:center;padding:40px 20px;color:var(--text-dim)}
+
+/* Live/Stale Status Bar */
+.status-bar{position:fixed;top:0;left:0;right:0;z-index:500;display:flex;align-items:center;justify-content:center;gap:8px;padding:5px 16px;font-size:12px;font-weight:600;transform:translateY(-100%);transition:transform 0.3s}
+.status-bar.show{transform:translateY(0)}
+.status-bar.live{background:rgba(63,185,80,0.15);border-bottom:1px solid var(--success);color:var(--success)}
+.status-bar.stale{background:rgba(248,81,73,0.15);border-bottom:1px solid var(--danger);color:var(--danger)}
+.status-bar-dot{width:8px;height:8px;border-radius:50%;animation:pulse 1.5s infinite}
+.status-bar.live .status-bar-dot{background:var(--success);box-shadow:0 0 6px var(--success)}
+.status-bar.stale .status-bar-dot{background:var(--danger);box-shadow:0 0 6px var(--danger)}
+.topbar{top:0!important}
+body.has-status-bar .topbar{top:28px!important}
+body.has-status-bar .scroll{padding-top:28px}
 </style>
 </head>
 <body>
+
+<!-- LIVE/STALE STATUS BAR -->
+<div class="status-bar" id="statusBar"><span class="status-bar-dot"></span><span id="statusBarText">Connecting...</span></div>
 
 <!-- VIEW: TICKETS -->
 <div class="view active" id="view-tickets">
@@ -347,7 +362,52 @@ var currentFilter='All';
 var searchTerm='';
 var lastFetchOk=false;
 var lastFetchTime=null;
+var dataGeneratedAt=null;
+var STALE_THRESHOLD=90; // seconds — data older than this is stale (3 missed 30s polls)
 var NL=String.fromCharCode(10);
+
+// ===== STALENESS DETECTION =====
+function checkStaleness(){
+  var bar=document.getElementById('statusBar');
+  var txt=document.getElementById('statusBarText');
+  if(!dataGeneratedAt){
+    // No data yet — connecting
+    bar.className='status-bar';
+    bar.classList.add('show');
+    txt.textContent='Connecting...';
+    document.body.classList.remove('has-status-bar');
+    return;
+  }
+  var ageSec=Math.floor((Date.now()-new Date(dataGeneratedAt).getTime())/1000);
+  if(ageSec<0)ageSec=0;
+  if(!lastFetchOk){
+    // Fetch failed entirely — show stale
+    bar.className='status-bar show stale';
+    txt.textContent='OFFLINE — showing data from '+relTime(dataGeneratedAt);
+    document.body.classList.add('has-status-bar');
+    updateRefreshTime(); // update all refresh-time labels to show 'Offline'
+  } else if(ageSec>STALE_THRESHOLD){
+    // Fetch succeeded but data is old — server down
+    bar.className='status-bar show stale';
+    var ageStr=ageSec<3600?Math.floor(ageSec/60)+'m':Math.floor(ageSec/3600)+'h';
+    txt.textContent='STALE — data is '+ageStr+' old (server may be down)';
+    document.body.classList.add('has-status-bar');
+  } else {
+    // Fresh data
+    bar.className='status-bar show live';
+    txt.textContent='LIVE — updated '+relTime(dataGeneratedAt);
+    document.body.classList.add('has-status-bar');
+    // Auto-hide after 5 seconds if very fresh
+    if(ageSec<30){
+      setTimeout(function(){
+        if(dataGeneratedAt && Math.floor((Date.now()-new Date(dataGeneratedAt).getTime())/1000)<STALE_THRESHOLD){
+          bar.classList.remove('show');
+          document.body.classList.remove('has-status-bar');
+        }
+      },5000);
+    }
+  }
+}
 
 function relTime(ds){if(!ds)return '';var d=new Date(ds);var n=Date.now();var df=Math.floor((n-d.getTime())/1000);if(df<0)df=0;if(df<10)return 'just now';if(df<60)return df+'s ago';if(df<3600)return Math.floor(df/60)+'m ago';if(df<86400)return Math.floor(df/3600)+'h ago';if(df<604800)return Math.floor(df/86400)+'d ago';return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}
 function fmtUptime(s){if(!s||s<0)return '0s';var h=Math.floor(s/3600);var m=Math.floor((s%3600)/60);var ss=Math.floor(s%60);if(h>0)return h+'h '+m+'m';if(m>0)return m+'m '+ss+'s';return ss+'s'}
@@ -376,12 +436,12 @@ function switchView(id){
 function fetchData(){
   fetch(PRIMARY_URL+'?t='+Date.now(),{cache:'no-store'})
     .then(function(r){if(!r.ok)throw new Error('fail');return r.json()})
-    .then(function(d){lastFetchOk=true;lastFetchTime=Date.now();onData(d);updateRefreshTime()})
+    .then(function(d){lastFetchOk=true;lastFetchTime=Date.now();if(d.generatedAt)dataGeneratedAt=d.generatedAt;onData(d);updateRefreshTime();checkStaleness()})
     .catch(function(){
       fetch(FALLBACK_URL+'?t='+Date.now(),{cache:'no-store'})
         .then(function(r){if(!r.ok)throw new Error('fail');return r.json()})
-        .then(function(d){lastFetchOk=true;lastFetchTime=Date.now();onData(d);updateRefreshTime()})
-        .catch(function(){lastFetchOk=false;updateRefreshTime()})
+        .then(function(d){lastFetchOk=true;lastFetchTime=Date.now();if(d.generatedAt)dataGeneratedAt=d.generatedAt;onData(d);updateRefreshTime();checkStaleness()})
+        .catch(function(){lastFetchOk=false;updateRefreshTime();checkStaleness()})
     })
 }
 
@@ -850,6 +910,7 @@ document.getElementById('searchInput').addEventListener('input',function(e){sear
 fetchData();
 setInterval(fetchData,10000);
 setInterval(updateRefreshTime,5000);
+setInterval(checkStaleness,5000);
 setInterval(updateRelativeTimes,30000);
 setInterval(updateLiveUptimes,1000);
 </script>
