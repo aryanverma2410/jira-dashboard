@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Jira Dashboard</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Toko Dashboard</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
@@ -11,110 +11,66 @@
 --success:#3fb950;--warning:#d29922;--danger:#f85149;
 --border:rgba(255,255,255,0.1);--text:#e6edf3;--text-dim:#8b949e;
 --radius:12px;--blur:blur(10px);
+--nav-h:56px;
 }
 html,body{height:100%;overflow:hidden}
-body{
-font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);
-font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;
-}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
 ::-webkit-scrollbar{width:0;height:0}
 
+/* Views */
+.view{display:none;height:100%;flex-direction:column}
+.view.active{display:flex}
+
 /* Top Bar */
-.topbar{
-position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
-padding:12px 16px;background:rgba(13,17,23,0.85);backdrop-filter:var(--blur);
-border-bottom:1px solid var(--border);
-}
+.topbar{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(13,17,23,0.85);backdrop-filter:var(--blur);border-bottom:1px solid var(--border)}
 .topbar-left{display:flex;align-items:center;gap:10px}
 .topbar h1{font-size:18px;font-weight:700;letter-spacing:-0.3px}
-.pulse-dot{
-width:8px;height:8px;border-radius:50%;background:var(--success);
-box-shadow:0 0 8px var(--success);animation:pulse 2s infinite;flex-shrink:0;
-}
+.pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 8px var(--success);animation:pulse 2s infinite;flex-shrink:0}
 .pulse-dot.offline{background:var(--danger);box-shadow:0 0 8px var(--danger)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 .refresh-time{font-size:12px;color:var(--text-dim);white-space:nowrap}
 .refresh-time.connecting{color:var(--warning)}
 
+/* Scroll Area */
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--nav-h) + 16px)}
+
 /* Update Banner */
-.update-banner{
-display:none;align-items:center;justify-content:space-between;
-padding:8px 16px;background:rgba(63,185,80,0.1);border-bottom:1px solid rgba(63,185,80,0.3);
-font-size:13px;color:var(--success);
-}
+.update-banner{display:none;align-items:center;justify-content:space-between;padding:8px 16px;background:rgba(63,185,80,0.1);border-bottom:1px solid rgba(63,185,80,0.3);font-size:13px;color:var(--success)}
 .update-banner.show{display:flex}
 .update-banner button{background:none;border:none;color:var(--success);font-size:18px;cursor:pointer;padding:0 4px}
 
-/* Stats Row */
-.stats-row{
-display:flex;gap:8px;padding:10px 16px;overflow-x:auto;scrollbar-width:none;
-}
-.stats-row::-webkit-scrollbar{display:none}
-.stat-chip{
-display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;
-background:var(--card);backdrop-filter:var(--blur);border:1px solid var(--border);
-white-space:nowrap;font-size:13px;flex-shrink:0;
-}
+/* Stats */
+.stats-row{display:flex;gap:8px;padding:10px 16px;overflow-x:auto;scrollbar-width:none}
+.stat-chip{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;background:var(--card);backdrop-filter:var(--blur);border:1px solid var(--border);white-space:nowrap;font-size:13px;flex-shrink:0}
 .stat-chip .count{font-weight:700;color:var(--accent)}
-.stat-chip.active{background:rgba(88,166,255,0.15);border-color:var(--accent)}
 
-/* Search + Filters */
+/* Controls */
 .controls{padding:0 16px 10px}
-.search-input{
-width:100%;padding:10px 14px;border-radius:var(--radius);background:var(--card);
-backdrop-filter:var(--blur);border:1px solid var(--border);color:var(--text);
-font-size:14px;outline:none;margin-bottom:10px;
-}
+.search-input{width:100%;padding:10px 14px;border-radius:var(--radius);background:var(--card);backdrop-filter:var(--blur);border:1px solid var(--border);color:var(--text);font-size:14px;outline:none;margin-bottom:10px}
 .search-input:focus{border-color:var(--accent)}
 .filter-row{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
-.filter-row::-webkit-scrollbar{display:none}
-.filter-chip{
-padding:5px 12px;border-radius:16px;background:var(--card);border:1px solid var(--border);
-font-size:12px;color:var(--text-dim);white-space:nowrap;cursor:pointer;flex-shrink:0;
-transition:all 0.2s;
-}
+.filter-chip{padding:5px 12px;border-radius:16px;background:var(--card);border:1px solid var(--border);font-size:12px;color:var(--text-dim);white-space:nowrap;cursor:pointer;flex-shrink:0;transition:all 0.2s}
 .filter-chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 
-/* Tickets List */
-.tickets-list{padding:0 16px 100px;overflow-y:auto;height:calc(100vh - 220px)}
-.ticket-card{
-background:var(--card);backdrop-filter:var(--blur);border:1px solid var(--border);
-border-radius:var(--radius);padding:14px;margin-bottom:10px;cursor:pointer;
-transition:border-color 0.3s,border-width 0.3s;position:relative;overflow:hidden;
-}
+/* Ticket Cards */
+.ticket-card{background:var(--card);backdrop-filter:var(--blur);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin:0 16px 10px;cursor:pointer;transition:border-color 0.3s;position:relative;overflow:hidden}
 .ticket-card.flash{border-color:var(--success);border-width:2px;animation:greenPulse 3s ease-out}
-@keyframes greenPulse{
-0%{box-shadow:0 0 0 0 rgba(63,185,80,0.4)}
-50%{box-shadow:0 0 12px 4px rgba(63,185,80,0.2)}
-100%{box-shadow:0 0 0 0 rgba(63,185,80,0)}
-}
-.updated-badge{
-position:absolute;top:8px;right:8px;font-size:9px;font-weight:700;
-background:var(--success);color:#0d1117;padding:2px 6px;border-radius:4px;
-display:none;
-}
+@keyframes greenPulse{0%{box-shadow:0 0 0 0 rgba(63,185,80,0.4)}50%{box-shadow:0 0 12px 4px rgba(63,185,80,0.2)}100%{box-shadow:0 0 0 0 rgba(63,185,80,0)}}
+.updated-badge{position:absolute;top:8px;right:8px;font-size:9px;font-weight:700;background:var(--success);color:#0d1117;padding:2px 6px;border-radius:4px;display:none}
 .ticket-card.flash .updated-badge{display:block}
 .ticket-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
 .ticket-key{font-weight:700;font-size:13px}
-.ticket-summary{
-font-size:14px;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;
--webkit-box-orient:vertical;overflow:hidden;
-}
+.ticket-summary{font-size:14px;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .ticket-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--text-dim)}
 .priority-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.status-badge{
-padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;
-}
+.status-badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
 .status-badge.open{background:rgba(88,166,255,0.2);color:var(--accent)}
 .status-badge.in-progress{background:rgba(210,153,34,0.2);color:var(--warning)}
 .status-badge.reopened{background:rgba(248,81,73,0.2);color:var(--danger)}
 .status-badge.done{background:rgba(139,148,158,0.2);color:var(--text-dim)}
 .status-badge.other{background:rgba(139,148,158,0.15);color:var(--text-dim)}
 .comment-badge{font-size:12px;color:var(--text-dim)}
-.last-comment-preview{
-font-size:12px;color:var(--text-dim);margin-top:6px;white-space:nowrap;overflow:hidden;
-text-overflow:ellipsis;font-style:italic;
-}
+.last-comment-preview{font-size:12px;color:var(--text-dim);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-style:italic}
 .expanded-content{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
 .ticket-card.expanded .expanded-content{display:block}
 .ticket-description{font-size:13px;color:var(--text-dim);margin-bottom:12px;white-space:pre-wrap}
@@ -123,139 +79,65 @@ text-overflow:ellipsis;font-style:italic;
 .comment-date{font-size:11px;color:var(--text-dim);margin-left:6px}
 .comment-snippet{font-size:13px;margin-top:2px}
 .action-buttons{display:flex;gap:8px;margin-top:12px}
-.action-btn{
-flex:1;padding:8px;border-radius:8px;background:rgba(88,166,255,0.1);
-border:1px solid var(--border);color:var(--accent);font-size:13px;cursor:pointer;
-text-align:center;
-}
+.action-btn{flex:1;padding:8px;border-radius:8px;background:rgba(88,166,255,0.1);border:1px solid var(--border);color:var(--accent);font-size:13px;cursor:pointer;text-align:center}
 .action-btn:active{background:rgba(88,166,255,0.2)}
 .inline-action-area{display:none;margin-top:10px}
 .inline-action-area.show{display:block}
-.inline-textarea{
-width:100%;min-height:60px;padding:8px;border-radius:8px;background:rgba(0,0,0,0.3);
-border:1px solid var(--border);color:var(--text);font-size:13px;resize:vertical;outline:none;
-}
+.inline-textarea{width:100%;min-height:60px;padding:8px;border-radius:8px;background:rgba(0,0,0,0.3);border:1px solid var(--border);color:var(--text);font-size:13px;resize:vertical;outline:none}
 .inline-textarea:focus{border-color:var(--accent)}
-.inline-submit{
-margin-top:6px;padding:8px 16px;border-radius:8px;background:var(--accent);
-border:none;color:#fff;font-size:13px;cursor:pointer;
-}
+.inline-submit{margin-top:6px;padding:8px 16px;border-radius:8px;background:var(--accent);border:none;color:#fff;font-size:13px;cursor:pointer}
 .status-dropdown{display:none;flex-direction:column;gap:4px;margin-top:8px}
 .status-dropdown.show{display:flex}
-.status-option{
-padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.05);
-border:1px solid var(--border);font-size:13px;cursor:pointer;text-align:center;
-}
+.status-option{padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);font-size:13px;cursor:pointer;text-align:center}
 .status-option:active{background:rgba(88,166,255,0.2)}
 
 /* FAB */
-.fab{
-position:fixed;bottom:70px;right:16px;width:52px;height:52px;border-radius:50%;
-background:var(--accent);border:none;color:#fff;font-size:24px;cursor:pointer;
-box-shadow:0 4px 16px rgba(88,166,255,0.4);z-index:200;display:flex;
-align-items:center;justify-content:center;transition:transform 0.2s;
-}
+.fab{position:fixed;bottom:calc(var(--nav-h) + 16px);right:16px;width:52px;height:52px;border-radius:50%;background:var(--accent);border:none;color:#fff;font-size:24px;cursor:pointer;box-shadow:0 4px 16px rgba(88,166,255,0.4);z-index:200;display:flex;align-items:center;justify-content:center;transition:transform 0.2s}
 .fab:active{transform:scale(0.9)}
+.fab.hidden{display:none}
 
-/* Bottom Status Bar */
-.bottom-bar{
-position:fixed;bottom:0;left:0;right:0;z-index:150;display:flex;align-items:center;
-justify-content:space-between;padding:10px 16px;background:rgba(13,17,23,0.9);
-backdrop-filter:var(--blur);border-top:1px solid var(--border);cursor:pointer;
-}
-.bottom-bar-left{display:flex;align-items:center;gap:8px;font-size:12px}
-.bottom-bar-right{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--text-dim)}
-.session-count{display:flex;align-items:center;gap:4px}
+/* Bottom Nav */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);z-index:150;display:flex;background:rgba(13,17,23,0.95);backdrop-filter:var(--blur);border-top:1px solid var(--border)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:var(--text-dim);font-size:10px;transition:color 0.2s}
+.nav-item.active{color:var(--accent)}
+.nav-icon{font-size:20px;line-height:1}
+.nav-badge{position:absolute;top:4px;right:50%;transform:translateX(20px);background:var(--danger);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;display:none}
+.nav-badge.show{display:block}
 
-/* Bottom Sheet (Command Dialog) */
-.sheet-backdrop{
-position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;display:none;
-}
-.sheet-backdrop.show{display:block}
-.bottom-sheet{
-position:fixed;bottom:0;left:0;right:0;z-index:310;background:#161b22;
-border-radius:20px 20px 0 0;border-top:1px solid var(--border);padding:20px 16px 30px;
-transform:translateY(100%);transition:transform 0.3s ease-out;max-height:80vh;overflow-y:auto;
-}
-.bottom-sheet.show{transform:translateY(0)}
-.sheet-handle{
-width:40px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 16px;
-}
-.sheet-title{font-size:16px;font-weight:700;margin-bottom:14px}
-.command-input{
-width:100%;padding:12px 14px;border-radius:var(--radius);background:var(--card);
-border:1px solid var(--border);color:var(--text);font-size:14px;outline:none;margin-bottom:10px;
-}
-.command-input:focus{border-color:var(--accent)}
-.send-btn{
-width:100%;padding:12px;border-radius:var(--radius);background:var(--accent);
-border:none;color:#fff;font-size:15px;font-weight:600;cursor:pointer;
-}
-.send-btn:active{opacity:0.8}
-.send-btn:disabled{opacity:0.5}
-.history-section{margin-top:20px}
-.history-header{
-display:flex;align-items:center;justify-content:space-between;cursor:pointer;
-padding:8px 0;font-size:14px;font-weight:600;
-}
-.history-arrow{transition:transform 0.2s}
-.history-arrow.open{transform:rotate(180deg)}
-.history-list{display:none;flex-direction:column;gap:8px}
-.history-list.show{display:flex}
-.history-item{
-padding:10px;border-radius:8px;background:var(--card);border:1px solid var(--border);
-}
-.history-cmd{font-size:13px;font-weight:600;margin-bottom:4px}
-.history-time{font-size:11px;color:var(--text-dim)}
-.history-response{
-font-size:12px;color:var(--success);margin-top:6px;padding:6px 8px;
-background:rgba(63,185,80,0.08);border-radius:6px;
-}
-.history-pending{font-size:12px;color:var(--warning);margin-top:6px}
-
-/* Agent Sidebar Overlay */
-.sidebar-overlay{
-position:fixed;inset:0;z-index:300;display:none;
-}
-.sidebar-overlay.show{display:block}
-.sidebar-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.5)}
-.sidebar-panel{
-position:absolute;bottom:0;left:0;right:0;max-height:85vh;overflow-y:auto;
-background:#161b22;border-radius:20px 20px 0 0;border-top:1px solid var(--border);
-padding:20px 16px 30px;transform:translateY(100%);transition:transform 0.3s ease-out;
-}
-.sidebar-panel.show{transform:translateY(0)}
-.sidebar-title{font-size:16px;font-weight:700;margin-bottom:16px}
-.sidebar-section{margin-bottom:20px}
-.sidebar-section-title{font-size:13px;font-weight:600;color:var(--text-dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px}
-.bridge-status-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:13px}
-.bridge-stat{font-size:12px;color:var(--text-dim);margin-bottom:4px}
-.job-item,.activity-item,.ide-item{
-padding:10px;border-radius:8px;background:var(--card);border:1px solid var(--border);margin-bottom:8px;
-}
-.job-title,.activity-title,.ide-task{font-size:13px;font-weight:600;margin-bottom:4px}
-.job-snippet,.activity-snippet{font-size:12px;color:var(--text-dim);margin-bottom:4px}
-.job-time,.activity-time{font-size:11px;color:var(--text-dim)}
+/* Agent View Sections */
+.section{padding:16px}
+.section-title{font-size:13px;font-weight:600;color:var(--text-dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px}
+.section-card{background:var(--card);backdrop-filter:var(--blur);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px}
+.status-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:13px}
+.stat-line{font-size:12px;color:var(--text-dim);margin-bottom:4px}
+.list-item{padding:10px;border-radius:8px;background:var(--card);border:1px solid var(--border);margin-bottom:8px}
+.list-item-title{font-size:13px;font-weight:600;margin-bottom:4px}
+.list-item-sub{font-size:12px;color:var(--text-dim);margin-bottom:4px}
+.list-item-time{font-size:11px;color:var(--text-dim)}
+.ide-task{display:flex;align-items:center;gap:6px}
 .ide-status-dot{font-size:14px}
-.ide-msg-btn{
-margin-top:8px;padding:6px 12px;border-radius:6px;background:rgba(88,166,255,0.1);
-border:1px solid var(--border);color:var(--accent);font-size:12px;cursor:pointer;
-}
+.ide-msg-btn{margin-top:8px;padding:6px 12px;border-radius:6px;background:rgba(88,166,255,0.1);border:1px solid var(--border);color:var(--accent);font-size:12px;cursor:pointer}
 .ide-msg-area{display:none;margin-top:8px}
 .ide-msg-area.show{display:block}
-.ide-msg-input{
-width:100%;padding:8px;border-radius:6px;background:rgba(0,0,0,0.3);
-border:1px solid var(--border);color:var(--text);font-size:12px;outline:none;margin-bottom:6px;
-}
+.ide-msg-input{width:100%;padding:8px;border-radius:6px;background:rgba(0,0,0,0.3);border:1px solid var(--border);color:var(--text);font-size:12px;outline:none;margin-bottom:6px}
 .ide-msg-send{padding:6px 12px;border-radius:6px;background:var(--accent);border:none;color:#fff;font-size:12px;cursor:pointer}
+.pending-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--warning);margin-left:6px;animation:pulse 1.5s infinite}
+
+/* Command View */
+.cmd-input{width:100%;padding:12px 14px;border-radius:var(--radius);background:var(--card);border:1px solid var(--border);color:var(--text);font-size:14px;outline:none;margin-bottom:10px}
+.cmd-input:focus{border-color:var(--accent)}
+.cmd-send{width:100%;padding:12px;border-radius:var(--radius);background:var(--accent);border:none;color:#fff;font-size:15px;font-weight:600;cursor:pointer}
+.cmd-send:active{opacity:0.8}
+.cmd-send:disabled{opacity:0.5}
+.cmd-history{margin-top:20px}
+.cmd-h-item{padding:10px;border-radius:8px;background:var(--card);border:1px solid var(--border);margin-bottom:8px}
+.cmd-h-cmd{font-size:13px;font-weight:600;margin-bottom:4px}
+.cmd-h-time{font-size:11px;color:var(--text-dim)}
+.cmd-h-resp{font-size:12px;color:var(--success);margin-top:6px;padding:6px 8px;background:rgba(63,185,80,0.08);border-radius:6px}
+.cmd-h-pending{font-size:12px;color:var(--warning);margin-top:6px}
 
 /* Toast */
-.toast{
-position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(100px);
-background:var(--card);backdrop-filter:var(--blur);border:1px solid var(--border);
-border-radius:var(--radius);padding:12px 20px;font-size:13px;z-index:400;
-opacity:0;transition:all 0.3s;max-width:90vw;text-align:center;
-}
+.toast{position:fixed;bottom:calc(var(--nav-h) + 16px);left:50%;transform:translateX(-50%) translateY(100px);background:var(--card);backdrop-filter:var(--blur);border:1px solid var(--border);border-radius:var(--radius);padding:12px 20px;font-size:13px;z-index:400;opacity:0;transition:all 0.3s;max-width:90vw;text-align:center}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .toast.success{border-color:var(--success);color:var(--success)}
 .toast.error{border-color:var(--danger);color:var(--danger)}
@@ -266,954 +148,491 @@ opacity:0;transition:all 0.3s;max-width:90vw;text-align:center;
 </head>
 <body>
 
-<div class="topbar">
-  <div class="topbar-left">
-    <div class="pulse-dot" id="pulseDot"></div>
-    <h1>Jira Dashboard</h1>
-  </div>
-  <div class="refresh-time" id="refreshTime">Loading...</div>
-</div>
-
-<div class="update-banner" id="updateBanner">
-  <span id="updateBannerText"></span>
-  <button onclick="document.getElementById('updateBanner').classList.remove('show')">&times;</button>
-</div>
-
-<div class="stats-row" id="statsRow"></div>
-
-<div class="controls">
-  <input type="text" class="search-input" id="searchInput" placeholder="Search by key, summary, or project...">
-  <div class="filter-row" id="filterRow"></div>
-</div>
-
-<div class="tickets-list" id="ticketsList">
-  <div class="loading-state">Loading tickets...</div>
-</div>
-
-<button class="fab" id="fab" onclick="openSheet()">&#9998;</button>
-
-<div class="bottom-bar" onclick="openSidebar()">
-  <div class="bottom-bar-left">
-    <div class="pulse-dot" id="bottomPulseDot"></div>
-    <span id="bottomStatus">Agent: Loading...</span>
-  </div>
-  <div class="bottom-bar-right">
-    <div class="session-count"><span id="activeSessionCount">0</span> active</div>
-    <div class="session-count"><span id="ideSessionCount">0</span> IDE</div>
-  </div>
-</div>
-
-<!-- Command Bottom Sheet -->
-<div class="sheet-backdrop" id="sheetBackdrop" onclick="closeSheet()"></div>
-<div class="bottom-sheet" id="bottomSheet">
-  <div class="sheet-handle"></div>
-  <div class="sheet-title">Send Command to Aipro</div>
-  <input type="text" class="command-input" id="commandInput" placeholder="Type a command...">
-  <button class="send-btn" id="sendBtn" onclick="sendCommand()">Send</button>
-  <div class="history-section">
-    <div class="history-header" onclick="toggleHistory()">
-      <span>History</span>
-      <span class="history-arrow" id="historyArrow">&#9660;</span>
+<!-- VIEW: TICKETS -->
+<div class="view active" id="view-tickets">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="pulse-dot" id="pulseDot"></div>
+      <h1>Tickets</h1>
     </div>
-    <div class="history-list" id="historyList"></div>
+    <div class="refresh-time" id="refreshTime">Loading...</div>
+  </div>
+  <div class="update-banner" id="updateBanner">
+    <span id="updateBannerText"></span>
+    <button onclick="document.getElementById('updateBanner').classList.remove('show')">&times;</button>
+  </div>
+  <div class="scroll" id="ticketsScroll">
+    <div class="stats-row" id="statsRow"></div>
+    <div class="controls">
+      <input type="text" class="search-input" id="searchInput" placeholder="Search by key, summary, or project...">
+      <div class="filter-row" id="filterRow"></div>
+    </div>
+    <div id="ticketsList">
+      <div class="loading-state">Loading tickets...</div>
+    </div>
   </div>
 </div>
 
-<!-- Agent Sidebar Overlay -->
-<div class="sidebar-overlay" id="sidebarOverlay">
-  <div class="sidebar-backdrop" onclick="closeSidebar()"></div>
-  <div class="sidebar-panel" id="sidebarPanel">
-    <div class="sheet-handle"></div>
-    <div class="sidebar-title">Agent Status</div>
-    <div class="sidebar-section">
-      <div class="sidebar-section-title">Bridge Status</div>
-      <div class="bridge-status-row">
-        <div class="pulse-dot" id="sidebarPulseDot"></div>
-        <span id="bridgeStatusText">Checking...</span>
+<!-- VIEW: AGENT -->
+<div class="view" id="view-agent">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="pulse-dot" id="agentPulseDot"></div>
+      <h1>Agent</h1>
+    </div>
+    <div class="refresh-time" id="agentRefreshTime">...</div>
+  </div>
+  <div class="scroll" id="agentScroll">
+    <div class="section">
+      <div class="section-title">Bridge Health</div>
+      <div class="section-card">
+        <div class="status-row">
+          <div class="pulse-dot" id="bridgeDot"></div>
+          <span id="bridgeStatus">Checking...</span>
+        </div>
+        <div class="stat-line" id="bridgePid"></div>
+        <div class="stat-line" id="bridgeUptime"></div>
+        <div class="stat-line" id="bridgeFailures"></div>
+        <div class="stat-line" id="bridgeProcessed"></div>
       </div>
-      <div class="bridge-stat" id="bridgePid"></div>
-      <div class="bridge-stat" id="bridgeUptime"></div>
-      <div class="bridge-stat" id="bridgeFailures"></div>
     </div>
-    <div class="sidebar-section">
-      <div class="sidebar-section-title">Active Bridge Sessions</div>
-      <div id="jobsList"><div class="bridge-stat">No active sessions</div></div>
+    <div class="section" style="padding-top:0">
+      <div class="section-title">Active Bridge Sessions<span class="pending-dot" id="bridgeJobsDot" style="display:none"></span></div>
+      <div id="jobsList"><div class="stat-line">No active sessions</div></div>
     </div>
-    <div class="sidebar-section">
-      <div class="sidebar-section-title">IDE Sessions</div>
-      <div id="ideSessionsList"><div class="bridge-stat">No IDE sessions</div></div>
+    <div class="section" style="padding-top:0">
+      <div class="section-title">IDE Sessions (IntelliJ)</div>
+      <div id="ideSessionsList"><div class="stat-line">No IDE sessions detected</div></div>
     </div>
-    <div class="sidebar-section">
-      <div class="sidebar-section-title">Recent Activity</div>
-      <div id="recentActivityList"><div class="bridge-stat">No recent activity</div></div>
+    <div class="section" style="padding-top:0">
+      <div class="section-title">Recent Activity</div>
+      <div id="recentActivityList"><div class="stat-line">No recent activity</div></div>
     </div>
+  </div>
+</div>
+
+<!-- VIEW: COMMAND -->
+<div class="view" id="view-command">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="pulse-dot" id="cmdPulseDot"></div>
+      <h1>Command</h1>
+    </div>
+    <div class="refresh-time" id="cmdRefreshTime">...</div>
+  </div>
+  <div class="scroll" id="cmdScroll">
+    <div class="section">
+      <div class="section-title">Send Command to Aipro</div>
+      <div class="section-card">
+        <input type="text" class="cmd-input" id="commandInput" placeholder="Type a command...">
+        <button class="cmd-send" id="sendBtn" onclick="sendCommand()">Send</button>
+      </div>
+    </div>
+    <div class="section" style="padding-top:0">
+      <div class="section-title">History</div>
+      <div id="cmdHistoryList"><div class="stat-line">No commands sent yet</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fab hidden" id="fab" onclick="switchView('view-command')">&#9998;</button>
+
+<!-- Bottom Nav -->
+<div class="bottom-nav">
+  <div class="nav-item active" data-nav="view-tickets" onclick="switchView('view-tickets')">
+    <div class="nav-icon">&#128203;</div>
+    <span>Tickets</span>
+  </div>
+  <div class="nav-item" data-nav="view-agent" onclick="switchView('view-agent')">
+    <div class="nav-icon">&#129302;</div>
+    <span>Agent</span>
+    <div class="nav-badge" id="navBadgeAgent"></div>
+  </div>
+  <div class="nav-item" data-nav="view-command" onclick="switchView('view-command')">
+    <div class="nav-icon">&#9998;</div>
+    <span>Command</span>
+    <div class="nav-badge" id="navBadgeCmd"></div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ===== CONFIG =====
-var _p = ['ghp_2','JfmDbE','rUdypU','SSwCOC','HQ2eoO','0X3Zb2','OXyGU'];
-var GH_TOKEN = _p.join('');
-var GH_OWNER = 'aryanverma2410';
-var BRIDGE_REPO = 'agent-bridge';
-var PRIMARY_URL = 'data.json';
-var FALLBACK_URL = 'https://raw.githubusercontent.com/aryanverma2410/jira-dashboard/main/data.json';
+var _p=['ghp_2','JfmDbE','rUdypU','SSwCOC','HQ2eoO','0X3Zb2','OXyGU'];
+var GH_TOKEN=_p.join('');
+var GH_OWNER='aryanverma2410';
+var BRIDGE_REPO='agent-bridge';
+var PRIMARY_URL='data.json';
+var FALLBACK_URL='https://raw.githubusercontent.com/aryanverma2410/jira-dashboard/main/data.json';
 
-// ===== STATE =====
-var rawData = null;
-var ticketState = {}; // key -> {updated, commentsCount}
-var expandedTickets = new Set();
-var currentFilter = 'All';
-var searchTerm = '';
-var lastFetchOk = false;
-var lastFetchTime = null;
-var pollIssueNumbers = []; // [{issueNum, historyIdx}]
-var NL = String.fromCharCode(10);
+var rawData=null;
+var ticketState={};
+var expandedTickets=new Set();
+var currentFilter='All';
+var searchTerm='';
+var lastFetchOk=false;
+var lastFetchTime=null;
+var NL=String.fromCharCode(10);
 
-// ===== UTILITIES =====
-function relTime(dateStr) {
-  if (!dateStr) return '';
-  var d = new Date(dateStr);
-  var now = Date.now();
-  var diff = Math.floor((now - d.getTime()) / 1000);
-  if (diff < 0) diff = 0;
-  if (diff < 10) return 'just now';
-  if (diff < 60) return diff + 's ago';
-  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
-  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
-  if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
-  return d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+function relTime(ds){if(!ds)return '';var d=new Date(ds);var n=Date.now();var df=Math.floor((n-d.getTime())/1000);if(df<0)df=0;if(df<10)return 'just now';if(df<60)return df+'s ago';if(df<3600)return Math.floor(df/60)+'m ago';if(df<86400)return Math.floor(df/3600)+'h ago';if(df<604800)return Math.floor(df/86400)+'d ago';return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}
+
+function fmtUptime(s){if(!s||s<0)return '0s';var h=Math.floor(s/3600);var m=Math.floor((s%3600)/60);var ss=Math.floor(s%60);if(h>0)return h+'h '+m+'m';if(m>0)return m+'m '+ss+'s';return ss+'s'}
+
+function showToast(msg,type){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(type||'');setTimeout(function(){t.classList.remove('show')},3500)}
+
+function escapeHtml(str){if(!str)return '';return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+
+function statusClass(st,cat){var s=(st||'').toLowerCase();var c=(cat||'').toLowerCase();if(s.indexOf('open')===0||c==='to do')return 'open';if(s.indexOf('progress')>=0||c==='in progress')return 'in-progress';if(s==='reopened')return 'reopened';if(s==='done'||s==='closed'||s==='resolved'||c==='done')return 'done';return 'other'}
+
+function priorityColor(p){p=(p||'').toLowerCase();if(p==='highest'||p==='critical')return '#f85149';if(p==='high')return '#d29922';if(p==='medium')return '#58a6ff';if(p==='low'||p==='lowest')return '#3fb950';return '#8b949e'}
+
+function projectColor(k){if(!k)return '#8b949e';var c={AEME:'#58a6ff',PME:'#3fb950',NZHME:'#d29922',SPHME:'#f85149',TWME:'#bc8cff',THAME:'#ff7b72',VNME:'#79c0ff',HKHME:'#56d364',AUME:'#ffa657',MYME:'#e3b341',IDME:'#7ee787',SAM:'#f0883e',PC:'#a371f7',CIMC:'#7ee787',EI:'#79c0ff'};return c[k]||'#8b949e'}
+
+// ===== VIEW SWITCHING =====
+function switchView(id){
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active')});
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active')});
+  var navEl=document.querySelector('[data-nav="'+id+'"]');
+  if(navEl)navEl.classList.add('active');
+  var fab=document.getElementById('fab');
+  if(id==='view-tickets')fab.classList.remove('hidden');else fab.classList.add('hidden');
+  // Clear nav badges when visiting
+  if(id==='view-agent')document.getElementById('navBadgeAgent').classList.remove('show');
+  if(id==='view-command')document.getElementById('navBadgeCmd').classList.remove('show');
 }
 
-function fmtUptime(seconds) {
-  if (!seconds || seconds < 0) return '0s';
-  var h = Math.floor(seconds / 3600);
-  var m = Math.floor((seconds % 3600) / 60);
-  var s = Math.floor(seconds % 60);
-  if (h > 0) return h + 'h ' + m + 'm';
-  if (m > 0) return m + 'm ' + s + 's';
-  return s + 's';
-}
-
-function showToast(msg, type) {
-  var t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show ' + (type || '');
-  setTimeout(function() { t.classList.remove('show'); }, 3500);
-}
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
-
-function statusClass(status, category) {
-  var s = (status || '').toLowerCase();
-  var c = (category || '').toLowerCase();
-  if (s === 'open' || c === 'to do') return 'open';
-  if (s === 'in progress' || c === 'in progress') return 'in-progress';
-  if (s === 'reopened') return 'reopened';
-  if (s === 'done' || s === 'closed' || s === 'resolved' || c === 'done') return 'done';
-  return 'other';
-}
-
-function priorityColor(priority) {
-  var p = (priority || '').toLowerCase();
-  if (p === 'highest' || p === 'critical') return '#f85149';
-  if (p === 'high') return '#d29922';
-  if (p === 'medium') return '#58a6ff';
-  if (p === 'low' || p === 'lowest') return '#3fb950';
-  return '#8b949e';
-}
-
-function projectColor(key) {
-  if (!key) return '#8b949e';
-  var colors = {
-    AEME:'#58a6ff', PME:'#3fb950', NZHME:'#d29922', SPHME:'#f85149',
-    TWME:'#bc8cff', THAME:'#ff7b72', VNME:'#79c0ff', HKHME:'#56d364',
-    AUME:'#ffa657', MYME:'#e3b341', IDME:'#7ee787'
-  };
-  return colors[key] || '#8b949e';
-}
-
-// ===== DATA FETCHING =====
-function fetchData() {
-  var url = PRIMARY_URL + '?t=' + Date.now();
-  fetch(url, {cache: 'no-store'})
-    .then(function(r) {
-      if (!r.ok) throw new Error('Primary fetch failed: ' + r.status);
-      return r.json();
+// ===== DATA FETCH =====
+function fetchData(){
+  fetch(PRIMARY_URL+'?t='+Date.now(),{cache:'no-store'})
+    .then(function(r){if(!r.ok)throw new Error('fail');return r.json()})
+    .then(function(d){lastFetchOk=true;lastFetchTime=Date.now();onData(d);updateRefreshTime()})
+    .catch(function(){
+      fetch(FALLBACK_URL+'?t='+Date.now(),{cache:'no-store'})
+        .then(function(r){if(!r.ok)throw new Error('fail');return r.json()})
+        .then(function(d){lastFetchOk=true;lastFetchTime=Date.now();onData(d);updateRefreshTime()})
+        .catch(function(){lastFetchOk=false;updateRefreshTime()})
     })
-    .then(function(data) {
-      lastFetchOk = true;
-      lastFetchTime = Date.now();
-      onDataReceived(data);
-      updateRefreshTime();
+}
+
+function updateRefreshTime(){
+  var els=['refreshTime','agentRefreshTime','cmdRefreshTime'];
+  var dots=['pulseDot','agentPulseDot','cmdPulseDot'];
+  els.forEach(function(id){
+    var el=document.getElementById(id);
+    if(!lastFetchOk){el.textContent='Offline';el.classList.add('connecting')}
+    else{el.classList.remove('connecting');if(lastFetchTime){var df=Math.floor((Date.now()-lastFetchTime)/1000);if(df<10)el.textContent='Updated just now';else if(df<60)el.textContent='Updated '+df+'s ago';else el.textContent='Updated '+Math.floor(df/60)+'m ago'}}
+  })
+  dots.forEach(function(id){var d=document.getElementById(id);if(lastFetchOk)d.classList.remove('offline');else d.classList.add('offline')})
+}
+
+// ===== DATA HANDLING =====
+function onData(data){
+  var changedKeys=[];
+  var newState={};
+  if(data.tickets){
+    data.tickets.forEach(function(t){
+      var old=ticketState[t.key];
+      newState[t.key]={updated:t.updated,commentsCount:t.commentsCount};
+      if(old&&(old.updated!==t.updated||old.commentsCount!==t.commentsCount))changedKeys.push(t.key)
     })
-    .catch(function() {
-      // Try fallback
-      var furl = FALLBACK_URL + '?t=' + Date.now();
-      fetch(furl, {cache: 'no-store'})
-        .then(function(r) {
-          if (!r.ok) throw new Error('Fallback fetch failed: ' + r.status);
-          return r.json();
-        })
-        .then(function(data) {
-          lastFetchOk = true;
-          lastFetchTime = Date.now();
-          onDataReceived(data);
-          updateRefreshTime();
-        })
-        .catch(function() {
-          lastFetchOk = false;
-          updateRefreshTime();
-        });
-    });
+  }
+  var lv=parseInt(localStorage.getItem('lastVisit')||'0',10);
+  var usv=0;
+  if(data.tickets&&lv>0){data.tickets.forEach(function(t){if(new Date(t.updated).getTime()>lv)usv++})}
+  if(usv>0){var b=document.getElementById('updateBanner');document.getElementById('updateBannerText').textContent=usv+' ticket'+(usv>1?'s':'')+' updated since your last visit';b.classList.add('show')}
+  localStorage.setItem('lastVisit',Date.now().toString());
+  ticketState=newState;
+  rawData=data;
+  renderStats(data);renderFilters(data);renderTickets(data,changedKeys);
+  renderAgent(data);renderCmdHistory();
+  pollCmdResponses(data);
+  updateNavBadges(data);
 }
 
-function updateRefreshTime() {
-  var el = document.getElementById('refreshTime');
-  var dot = document.getElementById('pulseDot');
-  var bdot = document.getElementById('bottomPulseDot');
-  var sbdot = document.getElementById('sidebarPulseDot');
-  if (!lastFetchOk) {
-    el.textContent = 'Offline';
-    el.classList.add('connecting');
-    dot.classList.add('offline');
-    bdot.classList.add('offline');
-    sbdot.classList.add('offline');
-    return;
-  }
-  el.classList.remove('connecting');
-  dot.classList.remove('offline');
-  bdot.classList.remove('offline');
-  sbdot.classList.remove('offline');
-  if (lastFetchTime) {
-    var diff = Math.floor((Date.now() - lastFetchTime) / 1000);
-    if (diff < 10) el.textContent = 'Updated just now';
-    else if (diff < 60) el.textContent = 'Updated ' + diff + 's ago';
-    else el.textContent = 'Updated ' + Math.floor(diff / 60) + 'm ago';
-  }
+function updateNavBadges(data){
+  var agent=data.agent||{};
+  var jobs=agent.jobs||[];
+  var ide=agent.ideSessions||[];
+  if(jobs.length>0)document.getElementById('navBadgeAgent').classList.add('show');
+  var hist=JSON.parse(localStorage.getItem('cmdHistory')||'[]');
+  var pending=hist.filter(function(h){return !h.response}).length;
+  if(pending>0)document.getElementById('navBadgeCmd').classList.add('show');
 }
 
-// ===== DATA PROCESSING =====
-function onDataReceived(data) {
-  var prevData = rawData;
-  rawData = data;
-
-  // Detect changes
-  var changedKeys = [];
-  var newTicketState = {};
-  if (data.tickets) {
-    data.tickets.forEach(function(t) {
-      var old = ticketState[t.key];
-      newTicketState[t.key] = { updated: t.updated, commentsCount: t.commentsCount };
-      if (old && (old.updated !== t.updated || old.commentsCount !== t.commentsCount)) {
-        changedKeys.push(t.key);
-      }
-    });
-  }
-
-  // Check lastVisit for banner
-  var lastVisit = parseInt(localStorage.getItem('lastVisit') || '0', 10);
-  var updatedSinceVisit = 0;
-  if (data.tickets && lastVisit > 0) {
-    data.tickets.forEach(function(t) {
-      if (new Date(t.updated).getTime() > lastVisit) updatedSinceVisit++;
-    });
-  }
-  if (updatedSinceVisit > 0) {
-    var banner = document.getElementById('updateBanner');
-    var btext = document.getElementById('updateBannerText');
-    btext.textContent = updatedSinceVisit + ' ticket' + (updatedSinceVisit > 1 ? 's' : '') + ' updated since your last visit';
-    banner.classList.add('show');
-  }
-
-  // Save current visit time
-  localStorage.setItem('lastVisit', Date.now().toString());
-
-  // Merge state
-  ticketState = newTicketState;
-
-  renderStats(data);
-  renderFilters(data);
-  renderTickets(data, changedKeys);
-  renderBottomBar(data);
-  renderSidebar(data);
-
-  // Poll for command responses
-  pollCommandResponses(data);
+// ===== STATS =====
+function renderStats(data){
+  var row=document.getElementById('statsRow');
+  var ts=data.tickets||[];
+  var c={total:ts.length,ip:0,op:0,re:0,ot:0};
+  ts.forEach(function(t){var sc=statusClass(t.status,t.statusCategory);if(sc==='in-progress')c.ip++;else if(sc==='open')c.op++;else if(sc==='reopened')c.re++;else if(sc==='done')c.ot=0;else c.ot++});
+  row.innerHTML='<div class="stat-chip"><span>Total</span><span class="count">'+c.total+'</span></div>'+
+    '<div class="stat-chip"><span>In Progress</span><span class="count">'+c.ip+'</span></div>'+
+    '<div class="stat-chip"><span>Open</span><span class="count">'+c.op+'</span></div>'+
+    '<div class="stat-chip"><span>Reopened</span><span class="count">'+c.re+'</span></div>'
 }
 
-// ===== RENDERING =====
-function renderStats(data) {
-  var row = document.getElementById('statsRow');
-  var tickets = data.tickets || [];
-  var counts = { total: tickets.length, inProgress: 0, open: 0, reopened: 0, done: 0, other: 0 };
-  tickets.forEach(function(t) {
-    var sc = statusClass(t.status, t.statusCategory);
-    if (sc === 'in-progress') counts.inProgress++;
-    else if (sc === 'open') counts.open++;
-    else if (sc === 'reopened') counts.reopened++;
-    else if (sc === 'done') counts.done++;
-    else counts.other++;
+// ===== FILTERS =====
+function renderFilters(data){
+  var row=document.getElementById('filterRow');
+  var ts=data.tickets||[];
+  var types={All:true};
+  ts.forEach(function(t){if(t.issuetype)types[t.issuetype]=true});
+  var h='';
+  Object.keys(types).forEach(function(tk){var a=(currentFilter===tk)?' active':'';h+='<div class="filter-chip'+a+'" data-filter="'+escapeHtml(tk)+'">'+escapeHtml(tk)+'</div>'});
+  row.innerHTML=h
+}
+
+function setFilter(f){currentFilter=f;if(rawData){renderFilters(rawData);renderTickets(rawData,[])}}
+
+function getFiltered(data){
+  return (data.tickets||[]).filter(function(t){
+    if(currentFilter!=='All'&&t.issuetype!==currentFilter)return false;
+    if(searchTerm){var s=searchTerm.toLowerCase();if((t.key||'').toLowerCase().indexOf(s)<0&&(t.summary||'').toLowerCase().indexOf(s)<0&&(t.project||'').toLowerCase().indexOf(s)<0)return false}
+    return true
+  })
+}
+
+// ===== TICKETS =====
+function renderTickets(data,changedKeys){
+  var list=document.getElementById('ticketsList');
+  var filtered=getFiltered(data);
+  if(filtered.length===0){list.innerHTML='<div class="empty-state">No tickets found</div>';return}
+  var existing={};
+  list.querySelectorAll('[data-ticket-key]').forEach(function(el){existing[el.getAttribute('data-ticket-key')]=el});
+  var seen={};
+  var html='';
+  filtered.forEach(function(t){
+    seen[t.key]=true;
+    if(existing[t.key])updateCard(existing[t.key],t,changedKeys.indexOf(t.key)>=0);
+    else html+=buildCard(t,expandedTickets.has(t.key),changedKeys.indexOf(t.key)>=0)
   });
-
-  var html = '<div class="stat-chip"><span>Total</span><span class="count">' + counts.total + '</span></div>' +
-    '<div class="stat-chip"><span>In Progress</span><span class="count">' + counts.inProgress + '</span></div>' +
-    '<div class="stat-chip"><span>Open</span><span class="count">' + counts.open + '</span></div>' +
-    '<div class="stat-chip"><span>Reopened</span><span class="count">' + counts.reopened + '</span></div>' +
-    '<div class="stat-chip"><span>Done</span><span class="count">' + counts.done + '</span></div>';
-  if (counts.other > 0) {
-    html += '<div class="stat-chip"><span>Other</span><span class="count">' + counts.other + '</span></div>';
-  }
-  row.innerHTML = html;
+  Object.keys(existing).forEach(function(k){if(!seen[k])existing[k].remove()});
+  if(html){var td=document.createElement('div');td.innerHTML=html;while(td.firstChild)list.appendChild(td.firstChild)}
+  changedKeys.forEach(function(key){var c=list.querySelector('[data-ticket-key="'+key+'"]');if(c){c.classList.add('flash');setTimeout(function(){c.classList.remove('flash')},3000)}})
 }
 
-function renderFilters(data) {
-  var row = document.getElementById('filterRow');
-  var tickets = data.tickets || [];
-  var types = { 'All': true };
-  tickets.forEach(function(t) {
-    if (t.issuetype) types[t.issuetype] = true;
-  });
-  var typeKeys = Object.keys(types);
-  var html = '';
-  typeKeys.forEach(function(tk) {
-    var active = (currentFilter === tk) ? ' active' : '';
-    html += '<div class="filter-chip' + active + '" data-filter="' + escapeHtml(tk) + '">' + escapeHtml(tk) + '</div>';
-  });
-  row.innerHTML = html;
+function buildCard(t,exp,ch){
+  var sc=statusClass(t.status,t.statusCategory);
+  var pc=priorityColor(t.priority);
+  var kc=projectColor(t.projectKey);
+  var ch2='';
+  if(t.recentComments){t.recentComments.forEach(function(c){ch2+='<div class="comment-item"><span class="comment-author">'+escapeHtml(c.author)+'</span><span class="comment-date">'+relTime(c.date)+'</span><div class="comment-snippet">'+escapeHtml(c.snippet)+'</div></div>'})}
+  var lcp='';
+  if(t.lastCommentBy&&t.lastCommentSnippet)lcp='@'+escapeHtml(t.lastCommentBy)+': '+escapeHtml(t.lastCommentSnippet);
+  var ec=exp?' expanded':'';
+  var fc=ch?' flash':'';
+  return '<div class="ticket-card'+ec+fc+'" data-ticket-key="'+escapeHtml(t.key)+'" data-updated="'+escapeHtml(t.updated)+'" data-comments="'+(t.commentsCount||0)+'">'+
+    '<div class="updated-badge">UPDATED</div>'+
+    '<div class="ticket-header"><span class="ticket-key" style="color:'+kc+'">'+escapeHtml(t.key)+'</span><span class="status-badge '+sc+'">'+escapeHtml(t.status)+'</span></div>'+
+    '<div class="ticket-summary" data-field="summary">'+escapeHtml(t.summary)+'</div>'+
+    '<div class="ticket-meta"><span class="priority-dot" style="background:'+pc+'"></span><span data-field="project">'+escapeHtml(t.project)+'</span><span>&middot;</span><span>'+escapeHtml(t.issuetype)+'</span><span>&middot;</span><span data-field="updated-rel">updated '+relTime(t.updated)+'</span><span class="comment-badge">&#128172; '+(t.commentsCount||0)+'</span></div>'+
+    '<div class="last-comment-preview" data-field="last-comment">'+escapeHtml(lcp)+'</div>'+
+    '<div class="expanded-content">'+
+      '<div class="ticket-description" data-field="desc">'+escapeHtml(t.description)+'</div>'+
+      '<div data-field="comments">'+ch2+'</div>'+
+      '<div class="action-buttons"><button class="action-btn" data-action="comment" data-key="'+escapeHtml(t.key)+'">Add Comment</button><button class="action-btn" data-action="status" data-key="'+escapeHtml(t.key)+'">Change Status</button></div>'+
+      '<div class="inline-action-area" id="ca-'+escapeHtml(t.key)+'"><textarea class="inline-textarea" id="ct-'+escapeHtml(t.key)+'" placeholder="Type your comment..."></textarea><button class="inline-submit" data-action="submit-comment" data-key="'+escapeHtml(t.key)+'">Submit Comment</button></div>'+
+      '<div class="status-dropdown" id="sd-'+escapeHtml(t.key)+'"><div class="status-option" data-status="In Progress" data-key="'+escapeHtml(t.key)+'">In Progress</div><div class="status-option" data-status="Done" data-key="'+escapeHtml(t.key)+'">Done</div><div class="status-option" data-status="Open" data-key="'+escapeHtml(t.key)+'">Open</div><div class="status-option" data-status="Reopened" data-key="'+escapeHtml(t.key)+'">Reopened</div><div class="status-option" data-status="Closed" data-key="'+escapeHtml(t.key)+'">Closed</div></div>'+
+    '</div></div>'
 }
 
-function setFilter(f) {
-  currentFilter = f;
-  if (rawData) {
-    renderFilters(rawData);
-    renderTickets(rawData, []);
-  }
+function updateCard(card,t,ch){
+  var ou=card.getAttribute('data-updated');
+  var oc=parseInt(card.getAttribute('data-comments')||'0',10);
+  if(ou!==t.updated){card.setAttribute('data-updated',t.updated);var ue=card.querySelector('[data-field="updated-rel"]');if(ue)ue.textContent='updated '+relTime(t.updated)}
+  if(oc!==(t.commentsCount||0)){card.setAttribute('data-comments',t.commentsCount||0);var ce=card.querySelector('.comment-badge');if(ce)ce.innerHTML='&#128172; '+(t.commentsCount||0)}
+  var se=card.querySelector('[data-field="summary"]');if(se&&se.textContent!==t.summary)se.textContent=t.summary;
+  var le=card.querySelector('[data-field="last-comment"]');var pv='';if(t.lastCommentBy&&t.lastCommentSnippet)pv='@'+t.lastCommentBy+': '+t.lastCommentSnippet;if(le&&le.textContent!==pv)le.textContent=pv;
+  var bg=card.querySelector('.status-badge');if(bg){var sc=statusClass(t.status,t.statusCategory);bg.className='status-badge '+sc;if(bg.textContent!==t.status)bg.textContent=t.status}
+  if(expandedTickets.has(t.key)&&t.recentComments){var cc=card.querySelector('[data-field="comments"]');if(cc){var hh='';t.recentComments.forEach(function(c){hh+='<div class="comment-item"><span class="comment-author">'+escapeHtml(c.author)+'</span><span class="comment-date">'+relTime(c.date)+'</span><div class="comment-snippet">'+escapeHtml(c.snippet)+'</div></div>'});cc.innerHTML=hh}var de=card.querySelector('[data-field="desc"]');if(de)de.textContent=t.description||''}
 }
 
-function getFilteredTickets(data) {
-  var tickets = data.tickets || [];
-  return tickets.filter(function(t) {
-    if (currentFilter !== 'All' && t.issuetype !== currentFilter) return false;
-    if (searchTerm) {
-      var s = searchTerm.toLowerCase();
-      var matchKey = (t.key || '').toLowerCase().indexOf(s) >= 0;
-      var matchSum = (t.summary || '').toLowerCase().indexOf(s) >= 0;
-      var matchProj = (t.project || '').toLowerCase().indexOf(s) >= 0;
-      if (!matchKey && !matchSum && !matchProj) return false;
-    }
-    return true;
-  });
+function toggleExpand(key){
+  var card=document.querySelector('[data-ticket-key="'+key+'"]');
+  if(!card)return;
+  if(expandedTickets.has(key)){expandedTickets.delete(key);card.classList.remove('expanded')}
+  else{expandedTickets.add(key);card.classList.add('expanded')}
 }
 
-function renderTickets(data, changedKeys) {
-  var list = document.getElementById('ticketsList');
-  var filtered = getFilteredTickets(data);
-
-  if (filtered.length === 0) {
-    list.innerHTML = '<div class="empty-state">No tickets found</div>';
-    return;
-  }
-
-  // Build/update tickets
-  var existingCards = {};
-  list.querySelectorAll('[data-ticket-key]').forEach(function(el) {
-    existingCards[el.getAttribute('data-ticket-key')] = el;
-  });
-
-  var seenKeys = {};
-  var html = '';
-
-  filtered.forEach(function(t) {
-    var key = t.key;
-    seenKeys[key] = true;
-    var existing = existingCards[key];
-    var isExpanded = expandedTickets.has(key);
-    var isChanged = changedKeys.indexOf(key) >= 0;
-
-    if (existing) {
-      // Update only changed parts
-      updateTicketCard(existing, t, isChanged);
-    } else {
-      // Create new card
-      html += buildTicketCard(t, isExpanded, isChanged);
-    }
-  });
-
-  // Remove cards no longer in filtered set
-  Object.keys(existingCards).forEach(function(k) {
-    if (!seenKeys[k]) existingCards[k].remove();
-  });
-
-  // Append new cards
-  if (html) {
-    var tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
-    while (tempDiv.firstChild) {
-      list.appendChild(tempDiv.firstChild);
-    }
-  }
-
-  // Flash changed cards
-  changedKeys.forEach(function(key) {
-    var card = list.querySelector('[data-ticket-key="' + key + '"]');
-    if (card) {
-      card.classList.add('flash');
-      setTimeout(function() { card.classList.remove('flash'); }, 3000);
-    }
-  });
-}
-
-function buildTicketCard(t, expanded, changed) {
-  var sc = statusClass(t.status, t.statusCategory);
-  var pc = priorityColor(t.priority);
-  var kc = projectColor(t.projectKey);
-  var commentsHtml = '';
-  if (t.recentComments && t.recentComments.length > 0) {
-    t.recentComments.forEach(function(c) {
-      commentsHtml += '<div class="comment-item">' +
-        '<span class="comment-author">' + escapeHtml(c.author) + '</span>' +
-        '<span class="comment-date">' + relTime(c.date) + '</span>' +
-        '<div class="comment-snippet">' + escapeHtml(c.snippet) + '</div>' +
-        '</div>';
-    });
-  }
-  var lastCommentPreview = '';
-  if (t.lastCommentBy && t.lastCommentSnippet) {
-    lastCommentPreview = '@' + escapeHtml(t.lastCommentBy) + ': ' + escapeHtml(t.lastCommentSnippet);
-  }
-
-  var expandedClass = expanded ? ' expanded' : '';
-  var flashClass = changed ? ' flash' : '';
-
-  return '<div class="ticket-card' + expandedClass + flashClass + '" data-ticket-key="' + escapeHtml(t.key) + '" data-updated="' + escapeHtml(t.updated) + '" data-comments="' + (t.commentsCount || 0) + '">' +
-    '<div class="updated-badge">UPDATED</div>' +
-    '<div class="ticket-header">' +
-      '<span class="ticket-key" style="color:' + kc + '">' + escapeHtml(t.key) + '</span>' +
-      '<span class="status-badge ' + sc + '">' + escapeHtml(t.status) + '</span>' +
-    '</div>' +
-    '<div class="ticket-summary" data-field="summary">' + escapeHtml(t.summary) + '</div>' +
-    '<div class="ticket-meta">' +
-      '<span class="priority-dot" style="background:' + pc + '" data-field="priority"></span>' +
-      '<span data-field="project">' + escapeHtml(t.project) + '</span>' +
-      '<span>&middot;</span>' +
-      '<span data-field="issuetype">' + escapeHtml(t.issuetype) + '</span>' +
-      '<span>&middot;</span>' +
-      '<span data-field="updated-rel">updated ' + relTime(t.updated) + '</span>' +
-      '<span class="comment-badge" data-field="comments">&#128172; ' + (t.commentsCount || 0) + '</span>' +
-    '</div>' +
-    '<div class="last-comment-preview" data-field="last-comment">' + lastCommentPreview + '</div>' +
-    '<div class="expanded-content">' +
-      '<div class="ticket-description" data-field="description">' + escapeHtml(t.description) + '</div>' +
-      '<div data-field="comments-list">' + commentsHtml + '</div>' +
-      '<div class="action-buttons">' +
-        '<button class="action-btn" data-action="comment" data-key="' + escapeHtml(t.key) + '">Add Comment</button>' +
-        '<button class="action-btn" data-action="status" data-key="' + escapeHtml(t.key) + '">Change Status</button>' +
-      '</div>' +
-      '<div class="inline-action-area" id="comment-area-' + escapeHtml(t.key) + '">' +
-        '<textarea class="inline-textarea" id="comment-text-' + escapeHtml(t.key) + '" placeholder="Type your comment..."></textarea>' +
-        '<button class="inline-submit" data-action="submit-comment" data-key="' + escapeHtml(t.key) + '">Submit Comment</button>' +
-      '</div>' +
-      '<div class="status-dropdown" id="status-area-' + escapeHtml(t.key) + '">' +
-        '<div class="status-option" data-status="In Progress" data-key="' + escapeHtml(t.key) + '">In Progress</div>' +
-        '<div class="status-option" data-status="Done" data-key="' + escapeHtml(t.key) + '">Done</div>' +
-        '<div class="status-option" data-status="Open" data-key="' + escapeHtml(t.key) + '">Open</div>' +
-        '<div class="status-option" data-status="Reopened" data-key="' + escapeHtml(t.key) + '">Reopened</div>' +
-        '<div class="status-option" data-status="Closed" data-key="' + escapeHtml(t.key) + '">Closed</div>' +
-      '</div>' +
-    '</div>' +
-  '</div>';
-}
-
-function updateTicketCard(card, t, changed) {
-  // Only update fields that changed
-  var oldUpdated = card.getAttribute('data-updated');
-  var oldComments = parseInt(card.getAttribute('data-comments') || '0', 10);
-
-  if (oldUpdated !== t.updated) {
-    card.setAttribute('data-updated', t.updated);
-    var updEl = card.querySelector('[data-field="updated-rel"]');
-    if (updEl) updEl.textContent = 'updated ' + relTime(t.updated);
-  }
-
-  if (oldComments !== (t.commentsCount || 0)) {
-    card.setAttribute('data-comments', t.commentsCount || 0);
-    var cEl = card.querySelector('[data-field="comments"]');
-    if (cEl) cEl.innerHTML = '&#128172; ' + (t.commentsCount || 0);
-  }
-
-  // Update summary if changed
-  var sumEl = card.querySelector('[data-field="summary"]');
-  if (sumEl && sumEl.textContent !== t.summary) {
-    sumEl.textContent = t.summary;
-  }
-
-  // Update last comment preview
-  var lcEl = card.querySelector('[data-field="last-comment"]');
-  if (lcEl) {
-    var preview = '';
-    if (t.lastCommentBy && t.lastCommentSnippet) {
-      preview = '@' + t.lastCommentBy + ': ' + t.lastCommentSnippet;
-    }
-    if (lcEl.textContent !== preview) lcEl.textContent = preview;
-  }
-
-  // Update status badge
-  var badge = card.querySelector('.status-badge');
-  if (badge) {
-    var sc = statusClass(t.status, t.statusCategory);
-    badge.className = 'status-badge ' + sc;
-    if (badge.textContent !== t.status) badge.textContent = t.status;
-  }
-
-  // Update comments list if expanded
-  if (expandedTickets.has(t.key) && t.recentComments) {
-    var commentsContainer = card.querySelector('[data-field="comments-list"]');
-    if (commentsContainer) {
-      var ch = '';
-      t.recentComments.forEach(function(c) {
-        ch += '<div class="comment-item">' +
-          '<span class="comment-author">' + escapeHtml(c.author) + '</span>' +
-          '<span class="comment-date">' + relTime(c.date) + '</span>' +
-          '<div class="comment-snippet">' + escapeHtml(c.snippet) + '</div>' +
-          '</div>';
-      });
-      commentsContainer.innerHTML = ch;
-    }
-    // Update description
-    var descEl = card.querySelector('[data-field="description"]');
-    if (descEl) descEl.textContent = t.description || '';
-  }
-}
-
-function toggleExpand(key) {
-  var card = document.querySelector('[data-ticket-key="' + key + '"]');
-  if (!card) return;
-  if (expandedTickets.has(key)) {
-    expandedTickets.delete(key);
-    card.classList.remove('expanded');
-  } else {
-    expandedTickets.add(key);
-    card.classList.add('expanded');
-  }
-}
-
-function toggleInlineAction(key, type) {
-  if (type === 'comment') {
-    var area = document.getElementById('comment-area-' + key);
-    if (area) area.classList.toggle('show');
-    var sa = document.getElementById('status-area-' + key);
-    if (sa) sa.classList.remove('show');
-  } else {
-    var sa2 = document.getElementById('status-area-' + key);
-    if (sa2) sa2.classList.toggle('show');
-    var ca = document.getElementById('comment-area-' + key);
-    if (ca) ca.classList.remove('show');
-  }
+function toggleInlineAction(key,type){
+  if(type==='comment'){var a=document.getElementById('ca-'+key);if(a)a.classList.toggle('show');var s=document.getElementById('sd-'+key);if(s)s.classList.remove('show')}
+  else{var s2=document.getElementById('sd-'+key);if(s2)s2.classList.toggle('show');var c=document.getElementById('ca-'+key);if(c)c.classList.remove('show')}
 }
 
 // ===== GITHUB API =====
-function createGitHubIssue(title, body, callback) {
-  fetch('https://api.github.com/repos/' + GH_OWNER + '/' + BRIDGE_REPO + '/issues', {
-    method: 'POST',
-    headers: {
-      'Authorization': 'Bearer ' + GH_TOKEN,
-      'Accept': 'application/vnd.github.v3+json',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ title: title, body: body || 'Sent from dashboard' })
+function createIssue(title,body,cb){
+  fetch('https://api.github.com/repos/'+GH_OWNER+'/'+BRIDGE_REPO+'/issues',{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+GH_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
+    body:JSON.stringify({title:title,body:body||'Sent from dashboard'})
+  }).then(function(r){return r.json()}).then(function(d){if(cb)cb(null,d)}).catch(function(e){if(cb)cb(e,null)})
+}
+
+function submitComment(key){
+  var ta=document.getElementById('ct-'+key);
+  if(!ta||!ta.value.trim())return;
+  var c=ta.value.trim();
+  showToast('Sending comment...','');
+  createIssue('JIRA ACTION: Add comment to '+key,'Comment: '+c+NL+'Sent from dashboard',function(e,d){
+    if(e||!d||!d.number){showToast('Failed to send','error');return}
+    showToast('Sent to aipro (Issue #'+d.number+')','success');
+    ta.value='';document.getElementById('ca-'+key).classList.remove('show')
   })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (callback) callback(null, data);
-    })
-    .catch(function(err) {
-      if (callback) callback(err, null);
-    });
 }
 
-function submitComment(key) {
-  var textarea = document.getElementById('comment-text-' + key);
-  if (!textarea || !textarea.value.trim()) return;
-  var comment = textarea.value.trim();
-  var title = 'JIRA ACTION: Add comment to ' + key;
-  var body = 'Comment: ' + comment + NL + 'Sent from dashboard';
-  showToast('Sending comment...', '');
-  createGitHubIssue(title, body, function(err, data) {
-    if (err || !data || !data.number) {
-      showToast('Failed to send command', 'error');
-      return;
-    }
-    showToast('Command sent to aipro (Issue #' + data.number + ')', 'success');
-    textarea.value = '';
-    document.getElementById('comment-area-' + key).classList.remove('show');
+function submitStatus(key,status){
+  showToast('Sending status change...','');
+  createIssue('JIRA ACTION: Transition '+key+' to '+status,'Transition '+key+' to '+status+NL+'Sent from dashboard',function(e,d){
+    if(e||!d||!d.number){showToast('Failed to send','error');return}
+    showToast('Sent to aipro (Issue #'+d.number+')','success');
+    document.getElementById('sd-'+key).classList.remove('show')
+  })
+}
+
+// ===== COMMAND VIEW =====
+function sendCommand(){
+  var inp=document.getElementById('commandInput');
+  var cmd=inp.value.trim();
+  if(!cmd)return;
+  var btn=document.getElementById('sendBtn');
+  btn.disabled=true;btn.textContent='Sending...';
+  createIssue(cmd,'Sent from dashboard',function(e,d){
+    btn.disabled=false;btn.textContent='Send';
+    if(e||!d||!d.number){showToast('Failed to send','error');return}
+    inp.value='';
+    showToast('Sent! Issue #'+d.number+'. Response will appear below.','success');
+    var hist=JSON.parse(localStorage.getItem('cmdHistory')||'[]');
+    hist.unshift({command:cmd,timestamp:Date.now(),issueNum:d.number,response:null});
+    localStorage.setItem('cmdHistory',JSON.stringify(hist));
+    renderCmdHistory()
+  })
+}
+
+function renderCmdHistory(){
+  var hist=JSON.parse(localStorage.getItem('cmdHistory')||'[]');
+  var el=document.getElementById('cmdHistoryList');
+  if(hist.length===0){el.innerHTML='<div class="stat-line">No commands sent yet</div>';return}
+  var h='';
+  hist.forEach(function(item){
+    h+='<div class="cmd-h-item"><div class="cmd-h-cmd">'+escapeHtml(item.command)+'</div><div class="cmd-h-time">'+relTime(new Date(item.timestamp).toISOString())+' (Issue #'+item.issueNum+')</div>';
+    if(item.response)h+='<div class="cmd-h-resp">'+escapeHtml(item.response)+'</div>';
+    else h+='<div class="cmd-h-pending">Waiting for response...<span class="pending-dot"></span></div>';
+    h+='</div>'
   });
+  el.innerHTML=h
 }
 
-function submitStatus(key, status) {
-  var title = 'JIRA ACTION: Transition ' + key + ' to ' + status;
-  var body = 'Transition ' + key + ' to ' + status + NL + 'Sent from dashboard';
-  showToast('Sending status change...', '');
-  createGitHubIssue(title, body, function(err, data) {
-    if (err || !data || !data.number) {
-      showToast('Failed to send command', 'error');
-      return;
-    }
-    showToast('Command sent to aipro (Issue #' + data.number + ')', 'success');
-    document.getElementById('status-area-' + key).classList.remove('show');
-  });
+function pollCmdResponses(data){
+  if(!data.agent||!data.agent.recentActivity)return;
+  var hist=JSON.parse(localStorage.getItem('cmdHistory')||'[]');
+  var upd=false;
+  data.agent.recentActivity.forEach(function(act){hist.forEach(function(h){if(h.issueNum===act.issueNum&&!h.response){h.response=act.responseSnippet||'Processed';upd=true}})});
+  if(upd){localStorage.setItem('cmdHistory',JSON.stringify(hist));renderCmdHistory()}
 }
 
-// ===== COMMAND SHEET =====
-function openSheet() {
-  document.getElementById('sheetBackdrop').classList.add('show');
-  document.getElementById('bottomSheet').classList.add('show');
-  document.getElementById('commandInput').focus();
-  renderHistory();
-}
-
-function closeSheet() {
-  document.getElementById('sheetBackdrop').classList.remove('show');
-  document.getElementById('bottomSheet').classList.remove('show');
-}
-
-function sendCommand() {
-  var input = document.getElementById('commandInput');
-  var cmd = input.value.trim();
-  if (!cmd) return;
-  var btn = document.getElementById('sendBtn');
-  btn.disabled = true;
-  btn.textContent = 'Sending...';
-
-  createGitHubIssue(cmd, 'Sent from dashboard', function(err, data) {
-    btn.disabled = false;
-    btn.textContent = 'Send';
-    if (err || !data || !data.number) {
-      showToast('Failed to send command', 'error');
-      return;
-    }
-    input.value = '';
-    showToast('Command sent! Issue #' + data.number + ' created. Response will appear when aipro processes it.', 'success');
-
-    // Save to history
-    var history = JSON.parse(localStorage.getItem('cmdHistory') || '[]');
-    history.unshift({
-      command: cmd,
-      timestamp: Date.now(),
-      issueNum: data.number,
-      response: null
-    });
-    localStorage.setItem('cmdHistory', JSON.stringify(history));
-    pollIssueNumbers.push({ issueNum: data.number, historyIdx: 0 });
-    renderHistory();
-  });
-}
-
-function renderHistory() {
-  var history = JSON.parse(localStorage.getItem('cmdHistory') || '[]');
-  var list = document.getElementById('historyList');
-  if (history.length === 0) {
-    list.innerHTML = '<div class="bridge-stat">No history yet</div>';
-    return;
-  }
-  var html = '';
-  history.forEach(function(h) {
-    html += '<div class="history-item">' +
-      '<div class="history-cmd">' + escapeHtml(h.command) + '</div>' +
-      '<div class="history-time">' + relTime(new Date(h.timestamp).toISOString()) + ' (Issue #' + h.issueNum + ')</div>';
-    if (h.response) {
-      html += '<div class="history-response">' + escapeHtml(h.response) + '</div>';
-    } else {
-      html += '<div class="history-pending">Waiting for response...</div>';
-    }
-    html += '</div>';
-  });
-  list.innerHTML = html;
-}
-
-function toggleHistory() {
-  var list = document.getElementById('historyList');
-  var arrow = document.getElementById('historyArrow');
-  list.classList.toggle('show');
-  arrow.classList.toggle('open');
-}
-
-function pollCommandResponses(data) {
-  if (!data.agent || !data.agent.recentActivity) return;
-  var history = JSON.parse(localStorage.getItem('cmdHistory') || '[]');
-  var updated = false;
-  data.agent.recentActivity.forEach(function(act) {
-    history.forEach(function(h) {
-      if (h.issueNum === act.issueNum && !h.response) {
-        h.response = act.responseSnippet || 'Processed';
-        updated = true;
-      }
-    });
-  });
-  if (updated) {
-    localStorage.setItem('cmdHistory', JSON.stringify(history));
-    renderHistory();
-  }
-}
-
-// ===== SIDEBAR =====
-function openSidebar() {
-  document.getElementById('sidebarOverlay').classList.add('show');
-  setTimeout(function() {
-    document.getElementById('sidebarPanel').classList.add('show');
-  }, 10);
-}
-
-function closeSidebar() {
-  document.getElementById('sidebarPanel').classList.remove('show');
-  setTimeout(function() {
-    document.getElementById('sidebarOverlay').classList.remove('show');
-  }, 300);
-}
-
-function renderBottomBar(data) {
-  var agent = data.agent || {};
-  var online = agent.online;
-  var dot = document.getElementById('bottomPulseDot');
-  if (online) {
-    dot.classList.remove('offline');
-    document.getElementById('bottomStatus').textContent = 'Agent: Online';
-  } else {
-    dot.classList.add('offline');
-    document.getElementById('bottomStatus').textContent = 'Agent: Offline';
-  }
-  document.getElementById('activeSessionCount').textContent = agent.activeJobCount || 0;
-  document.getElementById('ideSessionCount').textContent = (agent.ideSessions || []).length;
-}
-
-function renderSidebar(data) {
-  var agent = data.agent || {};
-
-  // Bridge status
-  var sd = document.getElementById('sidebarPulseDot');
-  if (agent.online) sd.classList.remove('offline');
-  else sd.classList.add('offline');
-  document.getElementById('bridgeStatusText').textContent = agent.online ? 'Online' : 'Offline';
-  document.getElementById('bridgePid').textContent = 'PID: ' + (agent.pid || 'N/A');
-  document.getElementById('bridgeUptime').textContent = 'Uptime: ' + fmtUptime(agent.uptime || 0);
-  document.getElementById('bridgeFailures').textContent = 'Failures: ' + (agent.failures || 0);
+// ===== AGENT VIEW =====
+function renderAgent(data){
+  var a=data.agent||{};
+  var dot=document.getElementById('bridgeDot');
+  if(a.online){dot.classList.remove('offline');document.getElementById('bridgeStatus').textContent='Online'}
+  else{dot.classList.add('offline');document.getElementById('bridgeStatus').textContent='Offline'}
+  document.getElementById('bridgePid').textContent='PID: '+(a.pid||'N/A');
+  document.getElementById('bridgeUptime').textContent='Uptime: '+fmtUptime(a.uptime||0);
+  document.getElementById('bridgeFailures').textContent='Failures: '+(a.failures||0);
+  document.getElementById('bridgeProcessed').textContent='Total processed: '+(a.stats&&a.stats.totalProcessed?a.stats.totalProcessed:0);
 
   // Jobs
-  var jobsEl = document.getElementById('jobsList');
-  var jobs = agent.jobs || [];
-  if (jobs.length === 0) {
-    jobsEl.innerHTML = '<div class="bridge-stat">No active sessions</div>';
-  } else {
-    var jh = '';
-    jobs.forEach(function(j) {
-      jh += '<div class="job-item">' +
-        '<div class="job-title">#' + (j.issueNum || j.issueNumber || '?') + ' ' + escapeHtml(j.title || '') + '</div>' +
-        '<div class="job-snippet">' + escapeHtml(j.snippet || j.responseSnippet || '') + '</div>' +
-        '<div class="job-time">' + (j.elapsed ? fmtUptime(j.elapsed) + ' elapsed' : '') + '</div>' +
-      '</div>';
-    });
-    jobsEl.innerHTML = jh;
-  }
+  var jel=document.getElementById('jobsList');
+  var jobs=a.jobs||[];
+  var jdot=document.getElementById('bridgeJobsDot');
+  if(jobs.length===0){jel.innerHTML='<div class="stat-line">No active sessions</div>';if(jdot)jdot.style.display='none'}
+  else{if(jdot)jdot.style.display='inline-block';var jh='';jobs.forEach(function(j){jh+='<div class="list-item"><div class="list-item-title">#'+(j.issueNum||'?')+' '+escapeHtml(j.title||'')+'</div><div class="list-item-sub">'+escapeHtml(j.snippet||'')+'</div><div class="list-item-time">'+(j.elapsed?fmtUptime(j.elapsed)+' elapsed':'')+'</div></div>'});jel.innerHTML=jh}
 
-  // IDE Sessions
-  var ideEl = document.getElementById('ideSessionsList');
-  var ideSessions = agent.ideSessions || [];
-  if (ideSessions.length === 0) {
-    ideEl.innerHTML = '<div class="bridge-stat">No IDE sessions</div>';
-  } else {
-    var ih = '';
-    ideSessions.forEach(function(s) {
-      var dot = s.status === 'running' ? '&#128994;' : '&#128308;';
-      ih += '<div class="ide-item">' +
-        '<div class="ide-task"><span class="ide-status-dot">' + dot + '</span> ' + escapeHtml(s.taskSummary || 'Unknown task') + '</div>' +
-        '<div class="bridge-stat">PID: ' + (s.pid || 'N/A') + ' &middot; ' + fmtUptime(s.ageSeconds || 0) + '</div>' +
-        '<button class="ide-msg-btn" data-action="ide-msg" data-pid="' + (s.pid || 0) + '">Drop a message</button>' +
-        '<div class="ide-msg-area" id="ide-msg-' + (s.pid || 0) + '">' +
-          '<input type="text" class="ide-msg-input" id="ide-msg-input-' + (s.pid || 0) + '" placeholder="Message for this IDE session...">' +
-          '<button class="ide-msg-send" data-action="send-ide-msg" data-pid="' + (s.pid || 0) + '">Send</button>' +
-        '</div>' +
-      '</div>';
-    });
-    ideEl.innerHTML = ih;
-  }
+  // IDE sessions
+  var iel=document.getElementById('ideSessionsList');
+  var ide=a.ideSessions||[];
+  if(ide.length===0){iel.innerHTML='<div class="stat-line">No IDE sessions detected</div>'}
+  else{var ih='';ide.forEach(function(s){var dt=s.status==='running'?'&#128994;':'&#128308;';ih+='<div class="list-item"><div class="ide-task"><span class="ide-status-dot">'+dt+'</span> '+escapeHtml(s.taskSummary||'Unknown')+'</div><div class="stat-line">PID: '+(s.pid||'N/A')+' &middot; '+fmtUptime(s.ageSeconds||0)+'</div><button class="ide-msg-btn" data-action="ide-msg" data-pid="'+(s.pid||0)+'">Drop a message</button><div class="ide-msg-area" id="im-'+(s.pid||0)+'"><input type="text" class="ide-msg-input" id="imi-'+(s.pid||0)+'" placeholder="Message for this session..."><button class="ide-msg-send" data-action="send-ide-msg" data-pid="'+(s.pid||0)+'">Send</button></div></div>'});iel.innerHTML=ih}
 
-  // Recent Activity
-  var raEl = document.getElementById('recentActivityList');
-  var ra = agent.recentActivity || [];
-  if (ra.length === 0) {
-    raEl.innerHTML = '<div class="bridge-stat">No recent activity</div>';
-  } else {
-    var rh = '';
-    ra.forEach(function(a) {
-      rh += '<div class="activity-item">' +
-        '<div class="activity-title">#' + (a.issueNum || '?') + ' ' + escapeHtml(a.title || '') + '</div>' +
-        '<div class="activity-snippet">' + escapeHtml(a.responseSnippet || '') + '</div>' +
-        '<div class="activity-time">' + (a.responded ? relTime(a.responded) : '') + '</div>' +
-      '</div>';
-    });
-    raEl.innerHTML = rh;
-  }
+  // Recent activity
+  var rael=document.getElementById('recentActivityList');
+  var ra=a.recentActivity||[];
+  if(ra.length===0){rael.innerHTML='<div class="stat-line">No recent activity</div>'}
+  else{var rh='';ra.forEach(function(act){rh+='<div class="list-item"><div class="list-item-title">#'+(act.issueNum||'?')+' '+escapeHtml(act.title||'')+'</div><div class="list-item-sub">'+escapeHtml(act.responseSnippet||'')+'</div><div class="list-item-time">'+(act.responded?relTime(act.responded):'')+'</div></div>'});rael.innerHTML=rh}
 }
 
-function toggleIdeMsg(pid) {
-  var area = document.getElementById('ide-msg-' + pid);
-  if (area) area.classList.toggle('show');
+function toggleIdeMsg(pid){var a=document.getElementById('im-'+pid);if(a)a.classList.toggle('show')}
+
+function sendIdeMsg(pid){
+  var inp=document.getElementById('imi-'+pid);
+  if(!inp||!inp.value.trim())return;
+  var msg=inp.value.trim();
+  showToast('Sending IDE message...','');
+  createIssue('IDE MSG for PID '+pid+': '+msg,'IDE message from dashboard',function(e,d){
+    if(e||!d||!d.number){showToast('Failed to send','error');return}
+    showToast('IDE message sent (Issue #'+d.number+')','success');
+    inp.value='';document.getElementById('im-'+pid).classList.remove('show')
+  })
 }
 
-function sendIdeMsg(pid) {
-  var input = document.getElementById('ide-msg-input-' + pid);
-  if (!input || !input.value.trim()) return;
-  var msg = input.value.trim();
-  var title = 'IDE MSG for PID ' + pid + ': ' + msg;
-  showToast('Sending IDE message...', '');
-  createGitHubIssue(title, 'IDE message from dashboard', function(err, data) {
-    if (err || !data || !data.number) {
-      showToast('Failed to send IDE message', 'error');
-      return;
-    }
-    showToast('IDE message sent (Issue #' + data.number + ')', 'success');
-    input.value = '';
-    document.getElementById('ide-msg-' + pid).classList.remove('show');
-  });
+// ===== LIVE UPTIME =====
+function updateLiveUptimes(){
+  if(!rawData||!rawData.agent)return;
+  var a=rawData.agent;
+  var ue=document.getElementById('bridgeUptime');
+  if(ue&&a.startTime){var el=Math.floor((Date.now()-new Date(a.startTime).getTime())/1000);ue.textContent='Uptime: '+fmtUptime(el)}
+  var ide=a.ideSessions||[];
+  ide.forEach(function(s){if(!s._la)s._la=s.ageSeconds||0;s._la++;var items=document.querySelectorAll('.list-item');items.forEach(function(it){var t=it.querySelector('.stat-line');if(t&&t.textContent.indexOf('PID: '+s.pid)>=0)t.innerHTML='PID: '+s.pid+' &middot; '+fmtUptime(s._la)})})
 }
 
-// ===== LIVE UPTIME UPDATES =====
-var uptimeBase = null;
-function updateLiveUptimes() {
-  if (!rawData || !rawData.agent) return;
-  var agent = rawData.agent;
-  // Update bridge uptime
-  var upEl = document.getElementById('bridgeUptime');
-  if (upEl && agent.startTime) {
-    var elapsed = Math.floor((Date.now() - new Date(agent.startTime).getTime()) / 1000);
-    upEl.textContent = 'Uptime: ' + fmtUptime(elapsed);
-  }
-  // Update IDE session uptimes
-  var ideSessions = agent.ideSessions || [];
-  ideSessions.forEach(function(s) {
-    // ageSeconds is static from server, increment locally
-    if (!s._localAge) s._localAge = s.ageSeconds || 0;
-    s._localAge++;
-    var ideItems = document.querySelectorAll('.ide-item');
-    ideItems.forEach(function(item) {
-      var text = item.querySelector('.bridge-stat');
-      if (text && text.textContent.indexOf('PID: ' + s.pid) >= 0) {
-        text.innerHTML = 'PID: ' + s.pid + ' &middot; ' + fmtUptime(s._localAge);
-      }
-    });
-  });
+function updateRelativeTimes(){
+  if(!rawData)return;
+  document.querySelectorAll('[data-ticket-key]').forEach(function(c){var u=c.getAttribute('data-updated');var e=c.querySelector('[data-field="updated-rel"]');if(e&&u)e.textContent='updated '+relTime(u)});
+  renderCmdHistory();
+  updateRefreshTime()
 }
-
-// ===== RELATIVE TIME UPDATES =====
-function updateRelativeTimes() {
-  if (!rawData || !rawData.tickets) return;
-  var cards = document.querySelectorAll('[data-ticket-key]');
-  cards.forEach(function(card) {
-    var key = card.getAttribute('data-ticket-key');
-    var updated = card.getAttribute('data-updated');
-    var el = card.querySelector('[data-field="updated-rel"]');
-    if (el && updated) {
-      el.textContent = 'updated ' + relTime(updated);
-    }
-  });
-  // Update history times
-  renderHistory();
-  // Update sidebar activity times
-  if (rawData.agent && rawData.agent.recentActivity) {
-    rawData.agent.recentActivity.forEach(function(a) {
-      if (a.responded) {
-        var items = document.querySelectorAll('.activity-item');
-        items.forEach(function(item) {
-          var title = item.querySelector('.activity-title');
-          if (title && title.textContent.indexOf('#' + a.issueNum) >= 0) {
-            var time = item.querySelector('.activity-time');
-            if (time) time.textContent = relTime(a.responded);
-          }
-        });
-      }
-    });
-  }
-}
-
-// ===== SEARCH =====
-document.getElementById('searchInput').addEventListener('input', function(e) {
-  searchTerm = e.target.value;
-  if (rawData) renderTickets(rawData, []);
-});
 
 // ===== EVENT DELEGATION =====
-// Ticket list: expand/collapse, action buttons, status options, submit comment
-document.getElementById('ticketsList').addEventListener('click', function(e) {
-  // Action buttons (Add Comment, Change Status)
-  var actionBtn = e.target.closest('[data-action]');
-  if (actionBtn) {
-    e.stopPropagation();
-    var action = actionBtn.getAttribute('data-action');
-    var key = actionBtn.getAttribute('data-key');
-    if (action === 'comment') {
-      toggleInlineAction(key, 'comment');
-    } else if (action === 'status') {
-      toggleInlineAction(key, 'status');
-    } else if (action === 'submit-comment') {
-      submitComment(key);
-    }
-    return;
-  }
-  // Status options
-  var statusOption = e.target.closest('[data-status]');
-  if (statusOption) {
-    e.stopPropagation();
-    submitStatus(statusOption.getAttribute('data-key'), statusOption.getAttribute('data-status'));
-    return;
-  }
-  // Ticket card expand/collapse
-  var card = e.target.closest('[data-ticket-key]');
-  if (card) {
-    toggleExpand(card.getAttribute('data-ticket-key'));
-  }
-});
+// Tickets: expand/collapse + actions
+document.getElementById('ticketsList').addEventListener('click',function(e){
+  var act=e.target.closest('[data-action]');
+  if(act){e.stopPropagation();var ak=act.getAttribute('data-action');var ky=act.getAttribute('data-key');
+    if(ak==='comment')toggleInlineAction(ky,'comment');
+    else if(ak==='status')toggleInlineAction(ky,'status');
+    else if(ak==='submit-comment')submitComment(ky);
+    return}
+  var so=e.target.closest('[data-status]');
+  if(so){e.stopPropagation();submitStatus(so.getAttribute('data-key'),so.getAttribute('data-status'));return}
+  // CRITICAL FIX: Don't toggle if click is inside expanded-content
+  if(e.target.closest('.expanded-content'))return;
+  var card=e.target.closest('[data-ticket-key]');
+  if(card)toggleExpand(card.getAttribute('data-ticket-key'))
+})
 
-// Filter row: filter chips
-document.getElementById('filterRow').addEventListener('click', function(e) {
-  var chip = e.target.closest('[data-filter]');
-  if (chip) {
-    setFilter(chip.getAttribute('data-filter'));
-  }
-});
+// Filters
+document.getElementById('filterRow').addEventListener('click',function(e){
+  var c=e.target.closest('[data-filter]');if(c)setFilter(c.getAttribute('data-filter'))
+})
 
-// IDE sessions list: message buttons
-document.getElementById('ideSessionsList').addEventListener('click', function(e) {
-  var btn = e.target.closest('[data-action]');
-  if (btn) {
-    e.stopPropagation();
-    var action = btn.getAttribute('data-action');
-    var pid = btn.getAttribute('data-pid');
-    if (action === 'ide-msg') {
-      toggleIdeMsg(pid);
-    } else if (action === 'send-ide-msg') {
-      sendIdeMsg(pid);
-    }
-  }
-});
+// IDE sessions
+document.getElementById('ideSessionsList').addEventListener('click',function(e){
+  var b=e.target.closest('[data-action]');if(!b)return;
+  e.stopPropagation();var act=b.getAttribute('data-action');var pid=b.getAttribute('data-pid');
+  if(act==='ide-msg')toggleIdeMsg(pid);
+  else if(act==='send-ide-msg')sendIdeMsg(pid)
+})
+
+// Search
+document.getElementById('searchInput').addEventListener('input',function(e){searchTerm=e.target.value;if(rawData)renderTickets(rawData,[])})
 
 // ===== INIT =====
 fetchData();
-setInterval(fetchData, 10000);
-setInterval(updateRefreshTime, 5000);
-setInterval(updateRelativeTimes, 30000);
-setInterval(updateLiveUptimes, 1000);
-
-// Prevent body scroll on iOS
-document.addEventListener('touchmove', function(e) {
-  if (e.target.closest('.tickets-list') || e.target.closest('.bottom-sheet') || e.target.closest('.sidebar-panel')) return;
-  e.preventDefault();
-}, { passive: false });
+setInterval(fetchData,10000);
+setInterval(updateRefreshTime,5000);
+setInterval(updateRelativeTimes,30000);
+setInterval(updateLiveUptimes,1000);
 </script>
 </body>
 </html>
