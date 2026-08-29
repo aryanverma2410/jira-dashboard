@@ -3,654 +3,522 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jira Dashboard — Live Tickets</title>
+    <title>Jira Dashboard — Live</title>
     <style>
         :root {
-            --bg: #0d1117;
-            --card-bg: #161b22;
+            --bg: #0a0e14;
+            --sidebar-bg: #0d1117;
+            --card-bg: rgba(22, 27, 34, 0.85);
             --border: #30363d;
+            --border-bright: #58a6ff;
             --text: #e6edf3;
             --text-muted: #7d8590;
+            --text-dim: #484f58;
             --accent: #58a6ff;
             --green: #3fb950;
             --yellow: #d29922;
             --red: #f85149;
             --purple: #bc8cff;
             --orange: #db6d28;
-            --status-bg: rgba(88, 166, 255, 0.1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-            background: var(--bg);
+            background: radial-gradient(ellipse at top, #0d1117 0%, #0a0e14 100%);
             color: var(--text);
             min-height: 100vh;
-            padding: 16px;
         }
 
-        /* ─── Header ─── */
-        .header {
-            max-width: 1400px;
-            margin: 0 auto 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        .app { display: flex; min-height: 100vh; }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: 300px;
+            min-width: 300px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 100vh;
         }
 
-        .header-left h1 {
-            font-size: 1.6rem;
-            font-weight: 600;
+        .sidebar-header {
             display: flex;
             align-items: center;
             gap: 10px;
+            margin-bottom: 20px;
         }
 
-        .header-left h1 .icon { font-size: 1.4rem; }
-
-        .header-left .subtitle {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            margin-top: 4px;
+        .sidebar-header .avatar {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem;
         }
 
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 16px;
+        .sidebar-header h2 { font-size: 1rem; font-weight: 600; }
+        .sidebar-header .subtitle { font-size: 0.72rem; color: var(--text-muted); }
+
+        .agent-status-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 0.7rem; padding: 3px 10px; border-radius: 12px;
+            margin-bottom: 16px;
+        }
+        .agent-online { background: rgba(63,185,80,0.15); color: var(--green); }
+        .agent-offline { background: rgba(248,81,73,0.15); color: var(--red); }
+        .agent-online .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
+        .agent-offline .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); }
+
+        .section-title {
+            font-size: 0.68rem; text-transform: uppercase; letter-spacing: 1px;
+            color: var(--text-muted); margin: 20px 0 10px; font-weight: 600;
         }
 
-        .live-indicator {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
+        .stat-row { display: flex; justify-content: space-between; font-size: 0.78rem; padding: 6px 0; border-bottom: 1px solid rgba(48,54,61,0.4); }
+        .stat-row:last-child { border: none; }
+        .stat-row .label { color: var(--text-muted); }
+        .stat-row .value { font-weight: 600; }
 
-        .live-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: var(--green);
-            box-shadow: 0 0 8px var(--green);
-            animation: pulse 2s infinite;
-        }
-
-        .live-dot.degraded {
-            background: var(--yellow);
-            box-shadow: 0 0 8px var(--yellow);
-        }
-
-        .live-dot.offline {
-            background: var(--red);
-            box-shadow: 0 0 8px var(--red);
-            animation: none;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
-        .last-updated {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        /* ─── Stats Bar ─── */
-        .stats-bar {
-            max-width: 1400px;
-            margin: 0 auto 20px;
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .stat-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
+        .session-card {
+            background: rgba(88,166,255,0.06);
+            border: 1px solid rgba(88,166,255,0.2);
             border-radius: 8px;
-            padding: 12px 20px;
-            flex: 1;
-            min-width: 140px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            animation: slideIn 0.3s ease;
         }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
 
-        .stat-card .stat-label {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-        }
+        .session-card .session-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .session-card .session-issue { font-size: 0.75rem; color: var(--accent); font-weight: 600; }
+        .session-card .session-elapsed { font-size: 0.68rem; color: var(--text-muted); }
+        .session-card .session-title { font-size: 0.78rem; color: var(--text); margin-bottom: 4px; font-weight: 500; }
+        .session-card .session-snippet { font-size: 0.68rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .processing-badge { font-size: 0.6rem; background: rgba(88,166,255,0.2); color: var(--accent); padding: 2px 8px; border-radius: 8px; animation: pulse 1.5s infinite; }
 
-        .stat-card .stat-value {
-            font-size: 1.8rem;
-            font-weight: 700;
-        }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-        .stat-card.total .stat-value { color: var(--accent); }
-        .stat-card.open .stat-value { color: var(--green); }
-        .stat-card.progress .stat-value { color: var(--yellow); }
-        .stat-card.other .stat-value { color: var(--purple); }
+        .activity-item { padding: 8px 0; border-bottom: 1px solid rgba(48,54,61,0.3); }
+        .activity-item:last-child { border: none; }
+        .activity-item .ai { font-size: 0.75rem; color: var(--text); margin-bottom: 2px; font-weight: 500; }
+        .activity-item .ai .num { color: var(--accent); font-weight: 600; }
+        .activity-item .ai .time { font-size: 0.66rem; color: var(--text-muted); float: right; }
+        .activity-item .resp { font-size: 0.68rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        /* ─── Controls ─── */
-        .controls {
-            max-width: 1400px;
-            margin: 0 auto 20px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
+        .no-data { font-size: 0.75rem; color: var(--text-dim); padding: 10px 0; }
 
-        .search-box {
-            flex: 1;
-            min-width: 200px;
-            padding: 10px 14px;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text);
-            font-size: 0.9rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
+        /* ── Main ── */
+        .main { flex: 1; padding: 20px 24px; overflow-y: auto; max-height: 100vh; }
 
+        .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .main-header h1 { font-size: 1.4rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .main-header .subtitle { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+        .main-header .right { display: flex; align-items: center; gap: 16px; }
+        .last-updated { font-size: 0.72rem; color: var(--text-muted); }
+
+        .live-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+        .live-dot.degraded { background: var(--yellow); box-shadow: 0 0 8px var(--yellow); }
+        .live-indicator { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; color: var(--text-muted); }
+
+        .stats-bar { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+        .stat-card { background: var(--card-bg); backdrop-filter: blur(8px); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; flex: 1; min-width: 130px; }
+        .stat-card .lbl { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 4px; }
+        .stat-card .val { font-size: 1.6rem; font-weight: 700; }
+        .stat-card.total .val { color: var(--accent); }
+        .stat-card.open .val { color: var(--green); }
+        .stat-card.prog .val { color: var(--yellow); }
+        .stat-card.other .val { color: var(--purple); }
+
+        .controls { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+        .search-box { flex: 1; min-width: 180px; padding: 9px 14px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.85rem; outline: none; transition: border-color 0.2s; }
         .search-box:focus { border-color: var(--accent); }
         .search-box::placeholder { color: var(--text-muted); }
-
-        .filter-chip {
-            padding: 8px 14px;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            user-select: none;
-        }
-
+        .filter-chip { padding: 7px 14px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; color: var(--text-muted); font-size: 0.76rem; cursor: pointer; transition: all 0.2s; user-select: none; }
         .filter-chip:hover { border-color: var(--accent); color: var(--text); }
-        .filter-chip.active {
-            background: rgba(88, 166, 255, 0.15);
-            border-color: var(--accent);
-            color: var(--accent);
-        }
+        .filter-chip.active { background: rgba(88,166,255,0.15); border-color: var(--accent); color: var(--accent); }
 
-        /* ─── Ticket Cards ─── */
-        .tickets-grid {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-            gap: 16px;
-        }
+        .tickets-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 14px; }
 
-        .ticket-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 16px;
-            transition: border-color 0.2s, transform 0.15s;
-            position: relative;
-            overflow: hidden;
-        }
+        .ticket-card { background: var(--card-bg); backdrop-filter: blur(8px); border: 1px solid var(--border); border-radius: 10px; padding: 16px; transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s; position: relative; overflow: hidden; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .ticket-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 20px rgba(88,166,255,0.08); }
+        .ticket-card.new-flash { animation: flashGreen 1.5s ease; }
+        @keyframes flashGreen { 0% { border-color: var(--green); box-shadow: 0 0 12px rgba(63,185,80,0.4); } 100% { border-color: var(--border); box-shadow: none; } }
 
-        .ticket-card:hover {
-            border-color: var(--accent);
-            transform: translateY(-2px);
-        }
-
-        .ticket-card.new-flash {
-            animation: flashGreen 1.5s ease;
-        }
-
-        @keyframes flashGreen {
-            0% { border-color: var(--green); box-shadow: 0 0 12px rgba(63, 185, 80, 0.4); }
-            100% { border-color: var(--border); box-shadow: none; }
-        }
-
-        .ticket-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 10px;
-        }
-
-        .ticket-key {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--accent);
-            background: rgba(88, 166, 255, 0.1);
-            padding: 3px 10px;
-            border-radius: 6px;
-            text-decoration: none;
-            white-space: nowrap;
-        }
-
+        .ticket-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .ticket-key { font-size: 0.76rem; font-weight: 600; color: var(--accent); background: rgba(88,166,255,0.1); padding: 3px 10px; border-radius: 6px; text-decoration: none; white-space: nowrap; }
         .ticket-key:hover { text-decoration: underline; }
+        .ticket-status { font-size: 0.66rem; font-weight: 600; padding: 3px 10px; border-radius: 12px; white-space: nowrap; }
+        .status-open { background: rgba(63,185,80,0.15); color: var(--green); }
+        .status-progress { background: rgba(210,153,34,0.15); color: var(--yellow); }
+        .status-todo { background: rgba(125,133,144,0.15); color: var(--text-muted); }
+        .status-blocked { background: rgba(248,81,73,0.15); color: var(--red); }
+        .status-verification { background: rgba(188,140,255,0.15); color: var(--purple); }
+        .status-default { background: rgba(88,166,255,0.15); color: var(--accent); }
 
-        .ticket-status {
-            font-size: 0.7rem;
-            font-weight: 600;
-            padding: 3px 10px;
-            border-radius: 12px;
-            white-space: nowrap;
-        }
+        .ticket-summary { font-size: 0.9rem; font-weight: 500; line-height: 1.4; margin-bottom: 8px; }
+        .ticket-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; font-size: 0.68rem; color: var(--text-muted); }
+        .ticket-description { font-size: 0.76rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 8px; padding: 8px 12px; background: rgba(255,255,255,0.03); border-radius: 6px; border-left: 3px solid var(--border); max-height: 80px; overflow: hidden; position: relative; }
+        .ticket-description::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 16px; background: linear-gradient(transparent, rgba(22,27,34,0.85)); }
+        .ticket-comment { font-size: 0.74rem; line-height: 1.5; padding: 8px 12px; background: rgba(188,140,255,0.05); border-radius: 6px; border-left: 3px solid var(--purple); color: var(--text); }
+        .ticket-comment .ch { font-size: 0.66rem; color: var(--text-muted); margin-bottom: 3px; display: flex; justify-content: space-between; }
+        .ticket-comment .ca { font-weight: 600; color: var(--purple); }
+        .ticket-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 0.66rem; color: var(--text-muted); }
 
-        .status-open { background: rgba(63, 185, 80, 0.15); color: var(--green); }
-        .status-progress { background: rgba(210, 153, 34, 0.15); color: var(--yellow); }
-        .status-todo { background: rgba(125, 133, 144, 0.15); color: var(--text-muted); }
-        .status-blocked { background: rgba(248, 81, 73, 0.15); color: var(--red); }
-        .status-verification { background: rgba(188, 140, 255, 0.15); color: var(--purple); }
-        .status-default { background: rgba(88, 166, 255, 0.15); color: var(--accent); }
-
-        .ticket-summary {
-            font-size: 0.95rem;
-            font-weight: 500;
-            line-height: 1.4;
-            margin-bottom: 10px;
-        }
-
-        .ticket-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 10px;
-            font-size: 0.7rem;
-            color: var(--text-muted);
-        }
-
-        .meta-tag {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .meta-tag .meta-icon { font-size: 0.75rem; }
-
-        .ticket-description {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            line-height: 1.5;
-            margin-bottom: 10px;
-            padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 6px;
-            border-left: 3px solid var(--border);
-            max-height: 100px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .ticket-description::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 20px;
-            background: linear-gradient(transparent, var(--card-bg));
-        }
-
-        .ticket-description.empty { display: none; }
-
-        .ticket-comment {
-            font-size: 0.78rem;
-            line-height: 1.5;
-            padding: 8px 12px;
-            background: rgba(188, 140, 255, 0.05);
-            border-radius: 6px;
-            border-left: 3px solid var(--purple);
-            color: var(--text);
-        }
-
-        .ticket-comment .comment-header {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            margin-bottom: 4px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .ticket-comment .comment-author { font-weight: 600; color: var(--purple); }
-
-        .ticket-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 10px;
-            font-size: 0.7rem;
-            color: var(--text-muted);
-        }
-
-        .ticket-updated { font-style: italic; }
-
-        .ticket-comments-count {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        /* ─── Loading / Error States ─── */
-        .loading-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-muted);
-        }
-
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 16px;
-        }
-
+        .loading-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+        .loading-spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 14px; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        .error-state { text-align: center; padding: 40px 20px; color: var(--red); }
 
-        .error-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--red);
+        @media (max-width: 900px) {
+            .app { flex-direction: column; }
+            .sidebar { width: 100%; min-width: unset; max-height: none; border-right: none; border-bottom: 1px solid var(--border); }
+            .main { max-height: none; }
         }
-
-        /* ─── Mobile ─── */
         @media (max-width: 640px) {
-            body { padding: 10px; }
-            .header { flex-direction: column; align-items: flex-start; }
-            .header-right { width: 100%; justify-content: space-between; }
+            .main { padding: 14px; }
             .tickets-grid { grid-template-columns: 1fr; }
-            .stats-bar { flex-direction: column; }
-            .stat-card { min-width: unset; }
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <div class="header">
-        <div class="header-left">
-            <h1><span class="icon">📋</span> Jira Dashboard</h1>
-            <div class="subtitle">Assigned to aryan.v1 · Auto-refreshing every 5s</div>
+<div class="app">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="avatar">AI</div>
+            <div>
+                <h2>AI Agent</h2>
+                <div class="subtitle">GitHub Bridge v3</div>
+            </div>
         </div>
-        <div class="header-right">
-            <div class="last-updated" id="lastUpdated">Loading...</div>
-            <div class="live-indicator">
-                <div class="live-dot" id="liveDot"></div>
-                <span id="liveStatus">Connecting...</span>
+        <div id="agentBadge" class="agent-status-badge agent-offline">
+            <span class="dot"></span>
+            <span id="agentStatus">Offline</span>
+        </div>
+
+        <div class="section-title">Bridge Health</div>
+        <div class="stat-row"><span class="label">Status</span><span class="value" id="agentHealth">--</span></div>
+        <div class="stat-row"><span class="label">PID</span><span class="value" id="agentPid">--</span></div>
+        <div class="stat-row"><span class="label">Uptime</span><span class="value" id="agentUptime">--</span></div>
+        <div class="stat-row"><span class="label">Failures</span><span class="value" id="agentFailures">--</span></div>
+        <div class="stat-row"><span class="label">Total Processed</span><span class="value" id="agentProcessed">--</span></div>
+
+        <div class="section-title">Active Sessions</div>
+        <div id="sessionsContainer">
+            <div class="no-data">No active sessions</div>
+        </div>
+
+        <div class="section-title">Recent Activity</div>
+        <div id="activityContainer">
+            <div class="no-data">No recent activity</div>
+        </div>
+    </div>
+
+    <!-- Main -->
+    <div class="main">
+        <div class="main-header">
+            <div>
+                <h1>Jira Dashboard</h1>
+                <div class="subtitle">Assigned to aryan.v1 &middot; Refreshes every 5s</div>
+            </div>
+            <div class="right">
+                <div class="last-updated" id="lastUpdated">Loading...</div>
+                <div class="live-indicator">
+                    <div class="live-dot" id="liveDot"></div>
+                    <span id="liveStatus">Connecting...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-bar" id="statsBar" style="display:none;">
+            <div class="stat-card total"><div class="lbl">Total Open</div><div class="val" id="statTotal">0</div></div>
+            <div class="stat-card open"><div class="lbl">Open</div><div class="val" id="statOpen">0</div></div>
+            <div class="stat-card prog"><div class="lbl">In Progress</div><div class="val" id="statProgress">0</div></div>
+            <div class="stat-card other"><div class="lbl">Other</div><div class="val" id="statOther">0</div></div>
+        </div>
+
+        <div class="controls" id="controls" style="display:none;">
+            <input type="text" class="search-box" id="searchBox" placeholder="Search by key, summary, project, status..." />
+            <div class="filter-chip active" data-filter="all">All</div>
+            <div class="filter-chip" data-filter="open">Open</div>
+            <div class="filter-chip" data-filter="progress">In Progress</div>
+            <div class="filter-chip" data-filter="todo">To Do</div>
+        </div>
+
+        <div class="tickets-grid" id="ticketsGrid">
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <div>Loading tickets from Jira...</div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Stats -->
-    <div class="stats-bar" id="statsBar" style="display:none;">
-        <div class="stat-card total">
-            <div class="stat-label">Total Open</div>
-            <div class="stat-value" id="statTotal">0</div>
-        </div>
-        <div class="stat-card open">
-            <div class="stat-label">Open Status</div>
-            <div class="stat-value" id="statOpen">0</div>
-        </div>
-        <div class="stat-card progress">
-            <div class="stat-label">In Progress</div>
-            <div class="stat-value" id="statProgress">0</div>
-        </div>
-        <div class="stat-card other">
-            <div class="stat-label">Other</div>
-            <div class="stat-value" id="statOther">0</div>
-        </div>
-    </div>
+<script>
+    const DATA_URL = 'data.json';
+    const FALLBACK_URL = 'https://raw.githubusercontent.com/aryanverma2410/jira-dashboard/main/data.json';
+    const REFRESH_INTERVAL = 5000;
+    let currentData = null;
+    let currentFilter = 'all';
+    let searchTerm = '';
+    let previousTicketKeys = new Set();
+    let useFallback = false;
 
-    <!-- Controls -->
-    <div class="controls" id="controls" style="display:none;">
-        <input type="text" class="search-box" id="searchBox" placeholder="Search tickets by key, summary, project, or status..." />
-        <div class="filter-chip active" data-filter="all">All</div>
-        <div class="filter-chip" data-filter="open">Open</div>
-        <div class="filter-chip" data-filter="progress">In Progress</div>
-        <div class="filter-chip" data-filter="todo">To Do</div>
-    </div>
+    function timeAgo(iso) {
+        if (!iso) return '';
+        const d = new Date(iso);
+        const s = Math.floor((Date.now() - d) / 1000);
+        if (s < 0) return 'just now';
+        if (s < 60) return s + 's ago';
+        const m = Math.floor(s / 60);
+        if (m < 60) return m + 'm ago';
+        const h = Math.floor(m / 60);
+        if (h < 24) return h + 'h ago';
+        const dd = Math.floor(h / 24);
+        if (dd < 7) return dd + 'd ago';
+        const w = Math.floor(dd / 7);
+        if (w < 4) return w + 'w ago';
+        return d.toLocaleDateString();
+    }
 
-    <!-- Tickets -->
-    <div class="tickets-grid" id="ticketsGrid">
-        <div class="loading-state">
-            <div class="loading-spinner"></div>
-            <div>Loading tickets from Jira...</div>
-        </div>
-    </div>
+    function formatUptime(s) {
+        if (!s || s < 0) return '--';
+        const h = Math.floor(s / 3600);
+        const m = Math.floor((s % 3600) / 60);
+        const sec = Math.floor(s % 60);
+        if (h > 0) return h + 'h ' + m + 'm';
+        if (m > 0) return m + 'm ' + sec + 's';
+        return sec + 's';
+    }
 
-    <script>
-        const DATA_URL = 'data.json';
-        const FALLBACK_URL = 'https://raw.githubusercontent.com/aryanverma2410/jira-dashboard/main/data.json';
-        const REFRESH_INTERVAL = 5000; // 5s visual refresh from cached JSON
-        let currentData = null;
-        let currentFilter = 'all';
-        let searchTerm = '';
-        let previousTicketKeys = new Set();
+    function getStatusClass(st) {
+        if (!st) return 'status-default';
+        const s = st.toLowerCase();
+        if (s === 'open' || s === 'open-es') return 'status-open';
+        if (s.includes('progress') || s.includes('development') || s.includes('review')) return 'status-progress';
+        if (s.includes('to do') || s === 'todo') return 'status-todo';
+        if (s.includes('block') || s.includes('hold') || s.includes('waiting')) return 'status-blocked';
+        if (s.includes('verif') || s.includes('testing') || s.includes('uat')) return 'status-verification';
+        return 'status-default';
+    }
 
-        // ─── Time ago helper ───
-        function timeAgo(isoString) {
-            if (!isoString) return '';
-            const date = new Date(isoString);
-            const now = new Date();
-            const seconds = Math.floor((now - date) / 1000);
-            if (seconds < 60) return 'just now';
-            const minutes = Math.floor(seconds / 60);
-            if (minutes < 60) return minutes + 'm ago';
-            const hours = Math.floor(minutes / 60);
-            if (hours < 24) return hours + 'h ago';
-            const days = Math.floor(hours / 24);
-            if (days < 7) return days + 'd ago';
-            const weeks = Math.floor(days / 7);
-            if (weeks < 4) return weeks + 'w ago';
-            return date.toLocaleDateString();
+    function priorityIcon(p) {
+        if (!p) return 'TE';
+        const l = p.toLowerCase();
+        if (l.includes('high') || l.includes('critical') || l.includes('urgent')) return 'RD';
+        if (l.includes('medium')) return 'YL';
+        if (l.includes('low')) return 'GN';
+        return 'TE';
+    }
+
+    function esc(t) {
+        if (!t) return '';
+        const d = document.createElement('div');
+        d.textContent = t;
+        return d.innerHTML;
+    }
+
+    function renderTicket(t, isNew) {
+        const sc = getStatusClass(t.status);
+        const nf = isNew ? 'new-flash' : '';
+        const dh = t.description ? '<div class="ticket-description">' + esc(t.description) + '</div>' : '';
+        let ch = '';
+        if (t.lastCommentSnippet) {
+            ch = '<div class="ticket-comment"><div class="ch"><span class="ca">' + esc(t.lastCommentBy || 'Unknown') + '</span><span>' + timeAgo(t.lastCommentDate) + '</span></div><div>' + esc(t.lastCommentSnippet) + '</div></div>';
+        }
+        return '<div class="ticket-card ' + nf + '">' +
+            '<div class="ticket-header">' +
+                '<a class="ticket-key" href="' + t.url + '" target="_blank" rel="noopener">' + esc(t.key) + '</a>' +
+                '<span class="ticket-status ' + sc + '">' + esc(t.status) + '</span>' +
+            '</div>' +
+            '<div class="ticket-summary">' + esc(t.summary) + '</div>' +
+            '<div class="ticket-meta">' +
+                '<span>' + priorityIcon(t.priority) + ' ' + esc(t.priority || 'None') + '</span>' +
+                '<span>&#128193; ' + esc(t.project || '') + '</span>' +
+                '<span>&#127991; ' + esc(t.issuetype || '') + '</span>' +
+            '</div>' +
+            dh + ch +
+            '<div class="ticket-footer">' +
+                '<span>Updated ' + timeAgo(t.updated) + '</span>' +
+                '<span>' + t.commentsCount + ' comments</span>' +
+            '</div>' +
+        '</div>';
+    }
+
+    function renderTickets() {
+        const grid = document.getElementById('ticketsGrid');
+        const sb = document.getElementById('statsBar');
+        const ctrl = document.getElementById('controls');
+        if (!currentData) return;
+
+        let tickets = currentData.tickets || [];
+        if (currentFilter !== 'all') {
+            tickets = tickets.filter(function(t) {
+                const s = (t.status || '').toLowerCase();
+                if (currentFilter === 'open') return s === 'open' || s === 'open-es';
+                if (currentFilter === 'progress') return s.includes('progress') || s.includes('development') || s.includes('review');
+                if (currentFilter === 'todo') return s.includes('to do') || s === 'todo';
+                return true;
+            });
+        }
+        if (searchTerm) {
+            const term = searchTerm.toLowerCase();
+            tickets = tickets.filter(function(t) {
+                return (t.key||'').toLowerCase().includes(term) ||
+                       (t.summary||'').toLowerCase().includes(term) ||
+                       (t.project||'').toLowerCase().includes(term) ||
+                       (t.status||'').toLowerCase().includes(term) ||
+                       (t.description||'').toLowerCase().includes(term) ||
+                       (t.lastCommentSnippet||'').toLowerCase().includes(term);
+            });
         }
 
-        // ─── Status color mapping ───
-        function getStatusClass(status) {
-            if (!status) return 'status-default';
-            const s = status.toLowerCase();
-            if (s === 'open' || s === 'open-es') return 'status-open';
-            if (s.includes('progress') || s.includes('development') || s.includes('review')) return 'status-progress';
-            if (s.includes('to do') || s === 'to do' || s === 'todo') return 'status-todo';
-            if (s.includes('block') || s.includes('hold') || s.includes('waiting')) return 'status-blocked';
-            if (s.includes('verif') || s.includes('testing') || s.includes('uat')) return 'status-verification';
-            return 'status-default';
+        sb.style.display = 'flex';
+        ctrl.style.display = 'flex';
+        const all = currentData.tickets || [];
+        let oc=0,pc=0,ot=0;
+        all.forEach(function(t) {
+            const s=(t.status||'').toLowerCase();
+            if (s==='open'||s==='open-es') oc++; else if (s.includes('progress')||s.includes('development')||s.includes('review')) pc++; else ot++;
+        });
+        document.getElementById('statTotal').textContent = all.length;
+        document.getElementById('statOpen').textContent = oc;
+        document.getElementById('statProgress').textContent = pc;
+        document.getElementById('statOther').textContent = ot;
+
+        if (tickets.length === 0) {
+            grid.innerHTML = '<div class="loading-state" style="color:var(--text-muted)">No tickets match your filter.</div>';
+        } else {
+            const nk = new Set(tickets.map(function(t){return t.key;}));
+            grid.innerHTML = tickets.map(function(t) {
+                const isNew = !previousTicketKeys.has(t.key) && previousTicketKeys.size > 0;
+                return renderTicket(t, isNew);
+            }).join('');
+            previousTicketKeys = nk;
         }
+        document.getElementById('lastUpdated').textContent = 'Updated ' + new Date(currentData.generatedAt).toLocaleTimeString();
+    }
 
-        // ─── Priority icon ───
-        function getPriorityIcon(priority) {
-            if (!priority) return '📝';
-            const p = priority.toLowerCase();
-            if (p.includes('high') || p.includes('critical') || p.includes('urgent')) return '🔴';
-            if (p.includes('medium')) return '🟡';
-            if (p.includes('low')) return '🟢';
-            return '📝';
+    function renderAgent(agent) {
+        if (!agent) {
+            document.getElementById('agentBadge').className = 'agent-status-badge agent-offline';
+            document.getElementById('agentStatus').textContent = 'Offline';
+            return;
         }
+        const badge = document.getElementById('agentBadge');
+        if (agent.online) {
+            badge.className = 'agent-status-badge agent-online';
+            document.getElementById('agentStatus').textContent = 'Online';
+        } else {
+            badge.className = 'agent-status-badge agent-offline';
+            document.getElementById('agentStatus').textContent = 'Offline';
+        }
+        document.getElementById('agentHealth').textContent = agent.online ? 'Healthy' : 'Down';
+        document.getElementById('agentPid').textContent = agent.pid || '--';
+        document.getElementById('agentUptime').textContent = formatUptime(agent.uptime);
+        document.getElementById('agentFailures').textContent = agent.failures ?? '--';
+        document.getElementById('agentProcessed').textContent = (agent.stats && agent.stats.totalProcessed) ?? '--';
 
-        // ─── Render ticket card ───
-        function renderTicket(ticket, isNew) {
-            const statusClass = getStatusClass(ticket.status);
-            const newFlash = isNew ? 'new-flash' : '';
-            const descHtml = ticket.description
-                ? '<div class="ticket-description">' + escapeHtml(ticket.description) + '</div>'
-                : '';
-
-            let commentHtml = '';
-            if (ticket.lastCommentSnippet) {
-                commentHtml = '<div class="ticket-comment">' +
-                    '<div class="comment-header">' +
-                        '<span class="comment-author">💬 ' + escapeHtml(ticket.lastCommentBy || 'Unknown') + '</span>' +
-                        '<span>' + timeAgo(ticket.lastCommentDate) + '</span>' +
+        // Sessions
+        const sc = document.getElementById('sessionsContainer');
+        if (agent.jobs && agent.jobs.length > 0) {
+            sc.innerHTML = agent.jobs.map(function(j) {
+                return '<div class="session-card">' +
+                    '<div class="session-header">' +
+                        '<span class="session-issue">#' + j.issueNum + '</span>' +
+                        '<span class="session-elapsed">' + j.elapsed + 's</span>' +
                     '</div>' +
-                    '<div>' + escapeHtml(ticket.lastCommentSnippet) + '</div>' +
+                    '<div class="session-title">' + esc(j.issueTitle) + '</div>' +
+                    '<div class="session-snippet">' + esc(j.snippet) + '</div>' +
+                    '<span class="processing-badge">PROCESSING</span>' +
                 '</div>';
-            }
-
-            return '<div class="ticket-card ' + newFlash + '">' +
-                '<div class="ticket-header">' +
-                    '<a class="ticket-key" href="' + ticket.url + '" target="_blank" rel="noopener">' + escapeHtml(ticket.key) + '</a>' +
-                    '<span class="ticket-status ' + statusClass + '">' + escapeHtml(ticket.status) + '</span>' +
-                '</div>' +
-                '<div class="ticket-summary">' + escapeHtml(ticket.summary) + '</div>' +
-                '<div class="ticket-meta">' +
-                    '<span class="meta-tag"><span class="meta-icon">' + getPriorityIcon(ticket.priority) + '</span>' + escapeHtml(ticket.priority || 'None') + '</span>' +
-                    '<span class="meta-tag">📂 ' + escapeHtml(ticket.project || '') + '</span>' +
-                    '<span class="meta-tag">🏷️ ' + escapeHtml(ticket.issuetype || '') + '</span>' +
-                '</div>' +
-                descHtml +
-                commentHtml +
-                '<div class="ticket-footer">' +
-                    '<span class="ticket-updated">Updated ' + timeAgo(ticket.updated) + '</span>' +
-                    '<span class="ticket-comments-count">💬 ' + ticket.commentsCount + ' comments</span>' +
-                '</div>' +
-            '</div>';
+            }).join('');
+        } else {
+            sc.innerHTML = '<div class="no-data">No active sessions</div>';
         }
 
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+        // Activity
+        const ac = document.getElementById('activityContainer');
+        if (agent.recentActivity && agent.recentActivity.length > 0) {
+            ac.innerHTML = agent.recentActivity.map(function(a) {
+                return '<div class="activity-item">' +
+                    '<div class="ai"><span class="num">#' + a.issueNum + '</span> ' + esc(a.title) +
+                    '<span class="time">' + timeAgo(a.responded || a.received) + '</span></div>' +
+                    '<div class="resp">' + esc(a.responseSnippet) + '</div>' +
+                '</div>';
+            }).join('');
+        } else {
+            ac.innerHTML = '<div class="no-data">No recent activity</div>';
         }
+    }
 
-        // ─── Render all tickets ───
-        function renderTickets() {
-            const grid = document.getElementById('ticketsGrid');
-            const statsBar = document.getElementById('statsBar');
-            const controls = document.getElementById('controls');
-
-            if (!currentData) {
-                grid.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><div>Waiting for data...</div></div>';
+    async function fetchData() {
+        try {
+            const base = useFallback ? FALLBACK_URL : DATA_URL;
+            const url = base + '?t=' + Date.now();
+            const resp = await fetch(url, { cache: 'no-store' });
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const data = await resp.json();
+            currentData = data;
+            renderTickets();
+            if (data.agent) renderAgent(data.agent);
+            const dot = document.getElementById('liveDot');
+            const st = document.getElementById('liveStatus');
+            dot.className = 'live-dot';
+            st.textContent = 'Live' + (useFallback ? ' (fallback)' : '');
+        } catch(err) {
+            if (!useFallback) {
+                useFallback = true;
+                fetchData();
                 return;
             }
-
-            let tickets = currentData.tickets || [];
-
-            // Apply filter
-            if (currentFilter !== 'all') {
-                tickets = tickets.filter(function(t) {
-                    const s = (t.status || '').toLowerCase();
-                    if (currentFilter === 'open') return s === 'open' || s === 'open-es';
-                    if (currentFilter === 'progress') return s.includes('progress') || s.includes('development') || s.includes('review');
-                    if (currentFilter === 'todo') return s.includes('to do') || s === 'todo';
-                    return true;
-                });
-            }
-
-            // Apply search
-            if (searchTerm) {
-                const term = searchTerm.toLowerCase();
-                tickets = tickets.filter(function(t) {
-                    return (
-                        (t.key || '').toLowerCase().includes(term) ||
-                        (t.summary || '').toLowerCase().includes(term) ||
-                        (t.project || '').toLowerCase().includes(term) ||
-                        (t.status || '').toLowerCase().includes(term) ||
-                        (t.description || '').toLowerCase().includes(term) ||
-                        (t.lastCommentSnippet || '').toLowerCase().includes(term)
-                    );
-                });
-            }
-
-            // Show stats
-            statsBar.style.display = 'flex';
-            controls.style.display = 'flex';
-            document.getElementById('statTotal').textContent = currentData.totalTickets || 0;
-            
-            const allTickets = currentData.tickets || [];
-            let openCount = 0, progressCount = 0, otherCount = 0;
-            allTickets.forEach(function(t) {
-                const s = (t.status || '').toLowerCase();
-                if (s === 'open' || s === 'open-es') openCount++;
-                else if (s.includes('progress') || s.includes('development') || s.includes('review')) progressCount++;
-                else otherCount++;
-            });
-            document.getElementById('statOpen').textContent = openCount;
-            document.getElementById('statProgress').textContent = progressCount;
-            document.getElementById('statOther').textContent = otherCount;
-
-            // Render tickets
-            if (tickets.length === 0) {
-                grid.innerHTML = '<div class="loading-state" style="color:var(--text-muted)">No tickets match your filter.</div>';
-            } else {
-                const newKeys = new Set(tickets.map(function(t) { return t.key; }));
-                grid.innerHTML = tickets.map(function(t) {
-                    const isNew = !previousTicketKeys.has(t.key) && previousTicketKeys.size > 0;
-                    return renderTicket(t, isNew);
-                }).join('');
-                previousTicketKeys = newKeys;
-            }
-
-            // Update timestamp
-            document.getElementById('lastUpdated').textContent = 
-                'Last updated: ' + new Date(currentData.generatedAt).toLocaleTimeString();
-        }
-
-        // ─── Fetch data ───
-        let useFallback = false;
-        async function fetchData() {
-            try {
-                const baseUrl = useFallback ? FALLBACK_URL : DATA_URL;
-                const url = baseUrl + (baseUrl.startsWith('http') ? '?t=' + Date.now() : '?t=' + Date.now());
-                const response = await fetch(url, { cache: 'no-store' });
-                if (!response.ok) throw new Error('HTTP ' + response.status);
-                const data = await response.json();
-
-                currentData = data;
-                renderTickets();
-
-                // Update live indicator
-                const dot = document.getElementById('liveDot');
-                const status = document.getElementById('liveStatus');
-                dot.className = 'live-dot';
-                status.textContent = 'Live' + (useFallback ? ' (fallback)' : '');
-            } catch(err) {
-                console.error('Fetch error:', err);
-                // Try fallback if local failed
-                if (!useFallback) {
-                    console.log('Trying fallback URL...');
-                    useFallback = true;
-                    fetchData();
-                    return;
-                }
-                const dot = document.getElementById('liveDot');
-                const status = document.getElementById('liveStatus');
-                dot.className = 'live-dot degraded';
-                status.textContent = 'Connecting...';
-                
-                if (!currentData) {
-                    document.getElementById('ticketsGrid').innerHTML = 
-                        '<div class="error-state">Could not load ticket data. Will retry in 5s...</div>';
-                }
+            const dot = document.getElementById('liveDot');
+            const st = document.getElementById('liveStatus');
+            dot.className = 'live-dot degraded';
+            st.textContent = 'Connecting...';
+            if (!currentData) {
+                document.getElementById('ticketsGrid').innerHTML = '<div class="error-state">Could not load data. Retrying in 5s...</div>';
             }
         }
+    }
 
-        // ─── Event listeners ───
-        document.getElementById('searchBox').addEventListener('input', function(e) {
-            searchTerm = e.target.value;
+    document.getElementById('searchBox').addEventListener('input', function(e) { searchTerm = e.target.value; renderTickets(); });
+    document.querySelectorAll('.filter-chip').forEach(function(c) {
+        c.addEventListener('click', function() {
+            document.querySelectorAll('.filter-chip').forEach(function(x){x.classList.remove('active');});
+            c.classList.add('active');
+            currentFilter = c.dataset.filter;
             renderTickets();
         });
+    });
 
-        document.querySelectorAll('.filter-chip').forEach(function(chip) {
-            chip.addEventListener('click', function() {
-                document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
-                chip.classList.add('active');
-                currentFilter = chip.dataset.filter;
-                renderTickets();
-            });
-        });
+    // Live-update session elapsed times every second
+    setInterval(function() {
+        if (currentData && currentData.agent && currentData.agent.jobs) {
+            currentData.agent.jobs.forEach(function(j){ j.elapsed++; });
+            renderAgent(currentData.agent);
+        }
+    }, 1000);
 
-        // ─── Start ───
-        fetchData();
-        setInterval(fetchData, REFRESH_INTERVAL);
-    </script>
+    // Live-update "time ago" displays every 30s
+    setInterval(function() {
+        if (currentData) {
+            renderTickets();
+            if (currentData.agent) renderAgent(currentData.agent);
+        }
+    }, 30000);
+
+    fetchData();
+    setInterval(fetchData, REFRESH_INTERVAL);
+</script>
 </body>
 </html>
