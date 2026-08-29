@@ -584,7 +584,7 @@ function renderFilters(data) {
   var html = '';
   typeKeys.forEach(function(tk) {
     var active = (currentFilter === tk) ? ' active' : '';
-    html += '<div class="filter-chip' + active + '" onclick="setFilter('' + escapeHtml(tk) + '')">' + escapeHtml(tk) + '</div>';
+    html += '<div class="filter-chip' + active + '" data-filter="' + escapeHtml(tk) + '">' + escapeHtml(tk) + '</div>';
   });
   row.innerHTML = html;
 }
@@ -692,7 +692,7 @@ function buildTicketCard(t, expanded, changed) {
   var expandedClass = expanded ? ' expanded' : '';
   var flashClass = changed ? ' flash' : '';
 
-  return '<div class="ticket-card' + expandedClass + flashClass + '" data-ticket-key="' + escapeHtml(t.key) + '" onclick="toggleExpand('' + escapeHtml(t.key) + '')" data-updated="' + escapeHtml(t.updated) + '" data-comments="' + (t.commentsCount || 0) + '">' +
+  return '<div class="ticket-card' + expandedClass + flashClass + '" data-ticket-key="' + escapeHtml(t.key) + '" data-updated="' + escapeHtml(t.updated) + '" data-comments="' + (t.commentsCount || 0) + '">' +
     '<div class="updated-badge">UPDATED</div>' +
     '<div class="ticket-header">' +
       '<span class="ticket-key" style="color:' + kc + '">' + escapeHtml(t.key) + '</span>' +
@@ -713,19 +713,19 @@ function buildTicketCard(t, expanded, changed) {
       '<div class="ticket-description" data-field="description">' + escapeHtml(t.description) + '</div>' +
       '<div data-field="comments-list">' + commentsHtml + '</div>' +
       '<div class="action-buttons">' +
-        '<button class="action-btn" onclick="event.stopPropagation();toggleInlineAction('' + escapeHtml(t.key) + '','comment')">Add Comment</button>' +
-        '<button class="action-btn" onclick="event.stopPropagation();toggleInlineAction('' + escapeHtml(t.key) + '','status')">Change Status</button>' +
+        '<button class="action-btn" data-action="comment" data-key="' + escapeHtml(t.key) + '">Add Comment</button>' +
+        '<button class="action-btn" data-action="status" data-key="' + escapeHtml(t.key) + '">Change Status</button>' +
       '</div>' +
       '<div class="inline-action-area" id="comment-area-' + escapeHtml(t.key) + '">' +
         '<textarea class="inline-textarea" id="comment-text-' + escapeHtml(t.key) + '" placeholder="Type your comment..."></textarea>' +
-        '<button class="inline-submit" onclick="event.stopPropagation();submitComment('' + escapeHtml(t.key) + '')">Submit Comment</button>' +
+        '<button class="inline-submit" data-action="submit-comment" data-key="' + escapeHtml(t.key) + '">Submit Comment</button>' +
       '</div>' +
       '<div class="status-dropdown" id="status-area-' + escapeHtml(t.key) + '">' +
-        '<div class="status-option" onclick="event.stopPropagation();submitStatus('' + escapeHtml(t.key) + '','In Progress')">In Progress</div>' +
-        '<div class="status-option" onclick="event.stopPropagation();submitStatus('' + escapeHtml(t.key) + '','Done')">Done</div>' +
-        '<div class="status-option" onclick="event.stopPropagation();submitStatus('' + escapeHtml(t.key) + '','Open')">Open</div>' +
-        '<div class="status-option" onclick="event.stopPropagation();submitStatus('' + escapeHtml(t.key) + '','Reopened')">Reopened</div>' +
-        '<div class="status-option" onclick="event.stopPropagation();submitStatus('' + escapeHtml(t.key) + '','Closed')">Closed</div>' +
+        '<div class="status-option" data-status="In Progress" data-key="' + escapeHtml(t.key) + '">In Progress</div>' +
+        '<div class="status-option" data-status="Done" data-key="' + escapeHtml(t.key) + '">Done</div>' +
+        '<div class="status-option" data-status="Open" data-key="' + escapeHtml(t.key) + '">Open</div>' +
+        '<div class="status-option" data-status="Reopened" data-key="' + escapeHtml(t.key) + '">Reopened</div>' +
+        '<div class="status-option" data-status="Closed" data-key="' + escapeHtml(t.key) + '">Closed</div>' +
       '</div>' +
     '</div>' +
   '</div>';
@@ -1033,10 +1033,10 @@ function renderSidebar(data) {
       ih += '<div class="ide-item">' +
         '<div class="ide-task"><span class="ide-status-dot">' + dot + '</span> ' + escapeHtml(s.taskSummary || 'Unknown task') + '</div>' +
         '<div class="bridge-stat">PID: ' + (s.pid || 'N/A') + ' &middot; ' + fmtUptime(s.ageSeconds || 0) + '</div>' +
-        '<button class="ide-msg-btn" onclick="event.stopPropagation();toggleIdeMsg(' + (s.pid || 0) + ')">Drop a message</button>' +
+        '<button class="ide-msg-btn" data-action="ide-msg" data-pid="' + (s.pid || 0) + '">Drop a message</button>' +
         '<div class="ide-msg-area" id="ide-msg-' + (s.pid || 0) + '">' +
           '<input type="text" class="ide-msg-input" id="ide-msg-input-' + (s.pid || 0) + '" placeholder="Message for this IDE session...">' +
-          '<button class="ide-msg-send" onclick="event.stopPropagation();sendIdeMsg(' + (s.pid || 0) + ')">Send</button>' +
+          '<button class="ide-msg-send" data-action="send-ide-msg" data-pid="' + (s.pid || 0) + '">Send</button>' +
         '</div>' +
       '</div>';
     });
@@ -1145,6 +1145,61 @@ function updateRelativeTimes() {
 document.getElementById('searchInput').addEventListener('input', function(e) {
   searchTerm = e.target.value;
   if (rawData) renderTickets(rawData, []);
+});
+
+// ===== EVENT DELEGATION =====
+// Ticket list: expand/collapse, action buttons, status options, submit comment
+document.getElementById('ticketsList').addEventListener('click', function(e) {
+  // Action buttons (Add Comment, Change Status)
+  var actionBtn = e.target.closest('[data-action]');
+  if (actionBtn) {
+    e.stopPropagation();
+    var action = actionBtn.getAttribute('data-action');
+    var key = actionBtn.getAttribute('data-key');
+    if (action === 'comment') {
+      toggleInlineAction(key, 'comment');
+    } else if (action === 'status') {
+      toggleInlineAction(key, 'status');
+    } else if (action === 'submit-comment') {
+      submitComment(key);
+    }
+    return;
+  }
+  // Status options
+  var statusOption = e.target.closest('[data-status]');
+  if (statusOption) {
+    e.stopPropagation();
+    submitStatus(statusOption.getAttribute('data-key'), statusOption.getAttribute('data-status'));
+    return;
+  }
+  // Ticket card expand/collapse
+  var card = e.target.closest('[data-ticket-key]');
+  if (card) {
+    toggleExpand(card.getAttribute('data-ticket-key'));
+  }
+});
+
+// Filter row: filter chips
+document.getElementById('filterRow').addEventListener('click', function(e) {
+  var chip = e.target.closest('[data-filter]');
+  if (chip) {
+    setFilter(chip.getAttribute('data-filter'));
+  }
+});
+
+// IDE sessions list: message buttons
+document.getElementById('ideSessionsList').addEventListener('click', function(e) {
+  var btn = e.target.closest('[data-action]');
+  if (btn) {
+    e.stopPropagation();
+    var action = btn.getAttribute('data-action');
+    var pid = btn.getAttribute('data-pid');
+    if (action === 'ide-msg') {
+      toggleIdeMsg(pid);
+    } else if (action === 'send-ide-msg') {
+      sendIdeMsg(pid);
+    }
+  }
 });
 
 // ===== INIT =====
