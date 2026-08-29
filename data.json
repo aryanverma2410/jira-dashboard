@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-29T09:52:31.316Z",
+  "generatedAt": "2026-08-29T09:53:08.901Z",
   "totalTickets": 2,
   "tickets": [
     {
@@ -86,7 +86,7 @@
       }
     ],
     "pid": 26832,
-    "uptime": 5217,
+    "uptime": 5258,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -98,7 +98,7 @@
       {
         "pid": 22452,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 4879,
+        "ageSeconds": 4917,
         "status": "running",
         "isChild": false,
         "taskSummary": "also ensure it would auto turn on on launch. Also, by MCPs I meant Jira, kibana, confluence and h...",
@@ -108,7 +108,7 @@
       {
         "pid": 8404,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 4439,
+        "ageSeconds": 4477,
         "status": "running",
         "isChild": false,
         "taskSummary": "I dont think the PAT thing works on Jira and confluence, check previous sessions why we didnt use...",
@@ -139,68 +139,34 @@
   },
   "mcps": [
     {
-      "name": "context7",
+      "name": "Jira",
       "status": "up",
-      "type": "stdio",
-      "command": "npx",
-      "description": "Upstash Context7 - Library documentation lookup. Fetches up-to-date docs for any npm/PyPI package.",
-      "tools": [
-        "resolve_library_id",
-        "get_library_docs"
-      ]
+      "type": "process",
+      "dir": "mcp-jira"
     },
     {
-      "name": "jira-mcp",
-      "status": "down",
-      "type": "stdio",
-      "command": "node",
-      "description": "Samsung Jira (Core) - 7 tools: myself, get_issue, search, my_issues, add_comment, transitions, transition, update_issue",
-      "tools": [
-        "jira_get_myself",
-        "jira_get_issue",
-        "jira_search",
-        "jira_my_issues",
-        "jira_add_comment",
-        "jira_get_transitions",
-        "jira_transition",
-        "jira_update_issue"
-      ]
+      "name": "Kibana",
+      "status": "up",
+      "type": "process",
+      "dir": "mcp-kibana"
     },
     {
-      "name": "ja-mcp",
+      "name": "HAC",
+      "status": "up",
+      "type": "process",
+      "dir": "mcp-hac"
+    },
+    {
+      "name": "Confluence",
       "status": "down",
-      "type": "stdio",
-      "command": "node",
-      "description": "Samsung Jira Assistant (Extended) - 30+ tools: dashboard, boards, sprints, sprint reports, worklogs, project metadata, issue picker, JQL autocomplete",
-      "tools": [
-        "ja_dashboard",
-        "ja_get_boards",
-        "ja_get_sprints",
-        "ja_get_sprint_issues",
-        "ja_get_sprint_report",
-        "ja_get_rapid_views",
-        "ja_get_sprint_query",
-        "ja_get_issue_detail",
-        "ja_get_worklog",
-        "ja_add_worklog",
-        "ja_update_worklog",
-        "ja_delete_worklog",
-        "ja_get_projects",
-        "ja_get_project_statuses",
-        "ja_get_statuses",
-        "ja_get_issue_types",
-        "ja_get_fields",
-        "ja_search",
-        "ja_get_bulk_issues",
-        "ja_get_myself",
-        "ja_search_users",
-        "ja_get_favorite_filters",
-        "ja_get_board_config",
-        "ja_get_create_meta",
-        "ja_issue_picker",
-        "ja_jql_autocomplete",
-        "ja_jql_suggestions"
-      ]
+      "type": "process",
+      "dir": "mcp-confluence"
+    },
+    {
+      "name": "Workflow",
+      "status": "up",
+      "type": "process",
+      "dir": "mcp-workflow"
     }
   ]
 }
