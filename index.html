@@ -816,9 +816,7 @@ function renderMcps(data){
   mcps.forEach(function(m){
     var dot=m.status==='up'?'&#128994;':'&#128308;';
     var statusColor=m.status==='up'?'var(--success)':'var(--danger)';
-    var toolsHtml=(m.tools||[]).map(function(t){
-      return '<span class="mcp-tool-chip">'+escapeHtml(t)+'</span>';
-    }).join('');
+    var isActive=m.status==='up';
     cardsHtml+='<div class="mcp-card" data-mcp-name="'+escapeHtml(m.name)+'">'+
       '<div class="mcp-top">'+
         '<div class="mcp-name">'+escapeHtml(m.name)+'</div>'+
@@ -826,11 +824,10 @@ function renderMcps(data){
       '</div>'+
       '<div class="mcp-desc">'+escapeHtml(m.description||'')+'</div>'+
       '<div class="mcp-info-row">'+
-        '<span class="mcp-info-tag" style="color:'+statusColor+'">'+(m.status||'unknown').toUpperCase()+'</span>'+
+        '<span class="mcp-info-tag" style="color:'+statusColor+';font-weight:600">'+(isActive?'ACTIVE':'INACTIVE')+'</span>'+
         '<span class="mcp-info-tag">'+escapeHtml(m.type||'stdio')+'</span>'+
-        '<span class="mcp-info-tag">'+(m.tools?m.tools.length:0)+' tools</span>'+
+        (m.lastPinged?'<span class="mcp-info-tag">Pinged '+relTime(m.lastPinged)+'</span>':'')+
       '</div>'+
-      '<div class="mcp-tools">'+toolsHtml+'</div>'+
     '</div>';
   });
   view.innerHTML=statsHtml+cardsHtml;
