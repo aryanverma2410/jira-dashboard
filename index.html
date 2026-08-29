@@ -816,18 +816,13 @@ function renderMcps(data){
   mcps.forEach(function(m){
     var dot=m.status==='up'?'&#128994;':'&#128308;';
     var statusColor=m.status==='up'?'var(--success)':'var(--danger)';
-    var isActive=m.status==='up';
+    var statusText=m.status==='up'?'Connected':'Not Running';
     cardsHtml+='<div class="mcp-card" data-mcp-name="'+escapeHtml(m.name)+'">'+
       '<div class="mcp-top">'+
         '<div class="mcp-name">'+escapeHtml(m.name)+'</div>'+
         '<span class="mcp-status-dot">'+dot+'</span>'+
       '</div>'+
-      '<div class="mcp-desc">'+escapeHtml(m.description||'')+'</div>'+
-      '<div class="mcp-info-row">'+
-        '<span class="mcp-info-tag" style="color:'+statusColor+';font-weight:600">'+(isActive?'ACTIVE':'INACTIVE')+'</span>'+
-        '<span class="mcp-info-tag">'+escapeHtml(m.type||'stdio')+'</span>'+
-        (m.lastPinged?'<span class="mcp-info-tag">Pinged '+relTime(m.lastPinged)+'</span>':'')+
-      '</div>'+
+      '<div class="mcp-desc" style="color:'+statusColor+';font-weight:600">'+statusText+'</div>'+
     '</div>';
   });
   view.innerHTML=statsHtml+cardsHtml;
