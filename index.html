@@ -98,13 +98,13 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 
 /* Bottom Nav */
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);z-index:150;display:flex;background:rgba(13,17,23,0.95);backdrop-filter:var(--blur);border-top:1px solid var(--border)}
-.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:var(--text-dim);font-size:10px;transition:color 0.2s}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:var(--text-dim);font-size:10px;transition:color 0.2s;position:relative}
 .nav-item.active{color:var(--accent)}
-.nav-icon{font-size:20px;line-height:1}
-.nav-badge{position:absolute;top:4px;right:50%;transform:translateX(20px);background:var(--danger);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;display:none}
+.nav-icon{font-size:18px;line-height:1}
+.nav-badge{position:absolute;top:3px;right:50%;transform:translateX(16px);background:var(--danger);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;display:none}
 .nav-badge.show{display:block}
 
-/* Agent View Sections */
+/* Section Cards (Agent + Sessions views) */
 .section{padding:16px}
 .section-title{font-size:13px;font-weight:600;color:var(--text-dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px}
 .section-card{background:var(--card);backdrop-filter:var(--blur);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px}
@@ -114,14 +114,30 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .list-item-title{font-size:13px;font-weight:600;margin-bottom:4px}
 .list-item-sub{font-size:12px;color:var(--text-dim);margin-bottom:4px}
 .list-item-time{font-size:11px;color:var(--text-dim)}
-.ide-task{display:flex;align-items:center;gap:6px}
-.ide-status-dot{font-size:14px}
-.ide-msg-btn{margin-top:8px;padding:6px 12px;border-radius:6px;background:rgba(88,166,255,0.1);border:1px solid var(--border);color:var(--accent);font-size:12px;cursor:pointer}
+.pending-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--warning);margin-left:6px;animation:pulse 1.5s infinite}
+
+/* Session Cards (Sessions view) */
+.session-card{background:var(--card);backdrop-filter:var(--blur);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin:0 16px 10px;cursor:pointer;position:relative;overflow:hidden;transition:border-color 0.3s}
+.session-card.expanded{border-color:var(--accent)}
+.session-card .expanded-content{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.session-card.expanded .expanded-content{display:block}
+.session-header{display:flex;align-items:center;justify-content:space-between}
+.session-name{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
+.session-status-dot{font-size:16px;line-height:1}
+.session-pid{font-size:12px;color:var(--text-dim);font-weight:400}
+.session-sub{font-size:12px;color:var(--text-dim);margin-top:4px}
+.session-uptime-bar{height:3px;border-radius:2px;background:rgba(88,166,255,0.3);margin-top:6px;overflow:hidden}
+.session-uptime-fill{height:100%;background:var(--accent);border-radius:2px;transition:width 0.5s}
+.session-detail-label{font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-top:8px;margin-bottom:2px}
+.session-detail-val{font-size:12px;color:var(--text);word-break:break-all}
+.session-last-exchange{font-size:12px;color:var(--text-dim);background:rgba(0,0,0,0.3);border-radius:6px;padding:8px;margin-top:4px;max-height:120px;overflow-y:auto;line-height:1.4}
+.ide-msg-btn{margin-top:10px;padding:8px 12px;border-radius:8px;background:rgba(88,166,255,0.1);border:1px solid var(--border);color:var(--accent);font-size:13px;cursor:pointer;width:100%;text-align:center}
+.ide-msg-btn:active{background:rgba(88,166,255,0.2)}
 .ide-msg-area{display:none;margin-top:8px}
 .ide-msg-area.show{display:block}
 .ide-msg-input{width:100%;padding:8px;border-radius:6px;background:rgba(0,0,0,0.3);border:1px solid var(--border);color:var(--text);font-size:12px;outline:none;margin-bottom:6px}
-.ide-msg-send{padding:6px 12px;border-radius:6px;background:var(--accent);border:none;color:#fff;font-size:12px;cursor:pointer}
-.pending-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--warning);margin-left:6px;animation:pulse 1.5s infinite}
+.ide-msg-input:focus{border-color:var(--accent)}
+.ide-msg-send{padding:8px 12px;border-radius:6px;background:var(--accent);border:none;color:#fff;font-size:13px;cursor:pointer;width:100%}
 
 /* Command View */
 .cmd-input{width:100%;padding:12px 14px;border-radius:var(--radius);background:var(--card);border:1px solid var(--border);color:var(--text);font-size:14px;outline:none;margin-bottom:10px}
@@ -129,7 +145,6 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .cmd-send{width:100%;padding:12px;border-radius:var(--radius);background:var(--accent);border:none;color:#fff;font-size:15px;font-weight:600;cursor:pointer}
 .cmd-send:active{opacity:0.8}
 .cmd-send:disabled{opacity:0.5}
-.cmd-history{margin-top:20px}
 .cmd-h-item{padding:10px;border-radius:8px;background:var(--card);border:1px solid var(--border);margin-bottom:8px}
 .cmd-h-cmd{font-size:13px;font-weight:600;margin-bottom:4px}
 .cmd-h-time{font-size:11px;color:var(--text-dim)}
@@ -173,6 +188,25 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
   </div>
 </div>
 
+<!-- VIEW: SESSIONS -->
+<div class="view" id="view-sessions">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="pulse-dot" id="sessionsPulseDot"></div>
+      <h1>Sessions</h1>
+    </div>
+    <div class="refresh-time" id="sessionsRefreshTime">...</div>
+  </div>
+  <div class="scroll" id="sessionsScroll">
+    <div style="padding:16px 16px 0">
+      <div class="section-title">AI Agent Sessions</div>
+    </div>
+    <div id="sessionsList">
+      <div class="loading-state">Detecting sessions...</div>
+    </div>
+  </div>
+</div>
+
 <!-- VIEW: AGENT -->
 <div class="view" id="view-agent">
   <div class="topbar">
@@ -199,10 +233,6 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
     <div class="section" style="padding-top:0">
       <div class="section-title">Active Bridge Sessions<span class="pending-dot" id="bridgeJobsDot" style="display:none"></span></div>
       <div id="jobsList"><div class="stat-line">No active sessions</div></div>
-    </div>
-    <div class="section" style="padding-top:0">
-      <div class="section-title">IDE Sessions (IntelliJ)</div>
-      <div id="ideSessionsList"><div class="stat-line">No IDE sessions detected</div></div>
     </div>
     <div class="section" style="padding-top:0">
       <div class="section-title">Recent Activity</div>
@@ -244,6 +274,11 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
     <div class="nav-icon">&#128203;</div>
     <span>Tickets</span>
   </div>
+  <div class="nav-item" data-nav="view-sessions" onclick="switchView('view-sessions')">
+    <div class="nav-icon">&#128187;</div>
+    <span>Sessions</span>
+    <div class="nav-badge" id="navBadgeSessions"></div>
+  </div>
   <div class="nav-item" data-nav="view-agent" onclick="switchView('view-agent')">
     <div class="nav-icon">&#129302;</div>
     <span>Agent</span>
@@ -269,6 +304,7 @@ var FALLBACK_URL='https://raw.githubusercontent.com/aryanverma2410/jira-dashboar
 var rawData=null;
 var ticketState={};
 var expandedTickets=new Set();
+var expandedSessions=new Set();
 var currentFilter='All';
 var searchTerm='';
 var lastFetchOk=false;
@@ -276,17 +312,11 @@ var lastFetchTime=null;
 var NL=String.fromCharCode(10);
 
 function relTime(ds){if(!ds)return '';var d=new Date(ds);var n=Date.now();var df=Math.floor((n-d.getTime())/1000);if(df<0)df=0;if(df<10)return 'just now';if(df<60)return df+'s ago';if(df<3600)return Math.floor(df/60)+'m ago';if(df<86400)return Math.floor(df/3600)+'h ago';if(df<604800)return Math.floor(df/86400)+'d ago';return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}
-
 function fmtUptime(s){if(!s||s<0)return '0s';var h=Math.floor(s/3600);var m=Math.floor((s%3600)/60);var ss=Math.floor(s%60);if(h>0)return h+'h '+m+'m';if(m>0)return m+'m '+ss+'s';return ss+'s'}
-
 function showToast(msg,type){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(type||'');setTimeout(function(){t.classList.remove('show')},3500)}
-
 function escapeHtml(str){if(!str)return '';return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
-
 function statusClass(st,cat){var s=(st||'').toLowerCase();var c=(cat||'').toLowerCase();if(s.indexOf('open')===0||c==='to do')return 'open';if(s.indexOf('progress')>=0||c==='in progress')return 'in-progress';if(s==='reopened')return 'reopened';if(s==='done'||s==='closed'||s==='resolved'||c==='done')return 'done';return 'other'}
-
 function priorityColor(p){p=(p||'').toLowerCase();if(p==='highest'||p==='critical')return '#f85149';if(p==='high')return '#d29922';if(p==='medium')return '#58a6ff';if(p==='low'||p==='lowest')return '#3fb950';return '#8b949e'}
-
 function projectColor(k){if(!k)return '#8b949e';var c={AEME:'#58a6ff',PME:'#3fb950',NZHME:'#d29922',SPHME:'#f85149',TWME:'#bc8cff',THAME:'#ff7b72',VNME:'#79c0ff',HKHME:'#56d364',AUME:'#ffa657',MYME:'#e3b341',IDME:'#7ee787',SAM:'#f0883e',PC:'#a371f7',CIMC:'#7ee787',EI:'#79c0ff'};return c[k]||'#8b949e'}
 
 // ===== VIEW SWITCHING =====
@@ -298,9 +328,9 @@ function switchView(id){
   if(navEl)navEl.classList.add('active');
   var fab=document.getElementById('fab');
   if(id==='view-tickets')fab.classList.remove('hidden');else fab.classList.add('hidden');
-  // Clear nav badges when visiting
   if(id==='view-agent')document.getElementById('navBadgeAgent').classList.remove('show');
   if(id==='view-command')document.getElementById('navBadgeCmd').classList.remove('show');
+  if(id==='view-sessions')document.getElementById('navBadgeSessions').classList.remove('show');
 }
 
 // ===== DATA FETCH =====
@@ -317,14 +347,15 @@ function fetchData(){
 }
 
 function updateRefreshTime(){
-  var els=['refreshTime','agentRefreshTime','cmdRefreshTime'];
-  var dots=['pulseDot','agentPulseDot','cmdPulseDot'];
+  var els=['refreshTime','agentRefreshTime','cmdRefreshTime','sessionsRefreshTime'];
+  var dots=['pulseDot','agentPulseDot','cmdPulseDot','sessionsPulseDot'];
   els.forEach(function(id){
     var el=document.getElementById(id);
+    if(!el)return;
     if(!lastFetchOk){el.textContent='Offline';el.classList.add('connecting')}
     else{el.classList.remove('connecting');if(lastFetchTime){var df=Math.floor((Date.now()-lastFetchTime)/1000);if(df<10)el.textContent='Updated just now';else if(df<60)el.textContent='Updated '+df+'s ago';else el.textContent='Updated '+Math.floor(df/60)+'m ago'}}
-  })
-  dots.forEach(function(id){var d=document.getElementById(id);if(lastFetchOk)d.classList.remove('offline');else d.classList.add('offline')})
+  });
+  dots.forEach(function(id){var d=document.getElementById(id);if(!d)return;if(lastFetchOk)d.classList.remove('offline');else d.classList.add('offline')})
 }
 
 // ===== DATA HANDLING =====
@@ -346,16 +377,16 @@ function onData(data){
   ticketState=newState;
   rawData=data;
   renderStats(data);renderFilters(data);renderTickets(data,changedKeys);
-  renderAgent(data);renderCmdHistory();
-  pollCmdResponses(data);
-  updateNavBadges(data);
+  renderSessions(data);renderAgent(data);renderCmdHistory();
+  pollCmdResponses(data);updateNavBadges(data);
 }
 
 function updateNavBadges(data){
   var agent=data.agent||{};
   var jobs=agent.jobs||[];
-  var ide=agent.ideSessions||[];
   if(jobs.length>0)document.getElementById('navBadgeAgent').classList.add('show');
+  var ide=agent.ideSessions||[];
+  if(ide.length>0)document.getElementById('navBadgeSessions').classList.add('show');
   var hist=JSON.parse(localStorage.getItem('cmdHistory')||'[]');
   var pending=hist.filter(function(h){return !h.response}).length;
   if(pending>0)document.getElementById('navBadgeCmd').classList.add('show');
@@ -365,8 +396,8 @@ function updateNavBadges(data){
 function renderStats(data){
   var row=document.getElementById('statsRow');
   var ts=data.tickets||[];
-  var c={total:ts.length,ip:0,op:0,re:0,ot:0};
-  ts.forEach(function(t){var sc=statusClass(t.status,t.statusCategory);if(sc==='in-progress')c.ip++;else if(sc==='open')c.op++;else if(sc==='reopened')c.re++;else if(sc==='done')c.ot=0;else c.ot++});
+  var c={total:ts.length,ip:0,op:0,re:0};
+  ts.forEach(function(t){var sc=statusClass(t.status,t.statusCategory);if(sc==='in-progress')c.ip++;else if(sc==='open')c.op++;else if(sc==='reopened')c.re++});
   row.innerHTML='<div class="stat-chip"><span>Total</span><span class="count">'+c.total+'</span></div>'+
     '<div class="stat-chip"><span>In Progress</span><span class="count">'+c.ip+'</span></div>'+
     '<div class="stat-chip"><span>Open</span><span class="count">'+c.op+'</span></div>'+
@@ -383,9 +414,7 @@ function renderFilters(data){
   Object.keys(types).forEach(function(tk){var a=(currentFilter===tk)?' active':'';h+='<div class="filter-chip'+a+'" data-filter="'+escapeHtml(tk)+'">'+escapeHtml(tk)+'</div>'});
   row.innerHTML=h
 }
-
 function setFilter(f){currentFilter=f;if(rawData){renderFilters(rawData);renderTickets(rawData,[])}}
-
 function getFiltered(data){
   return (data.tickets||[]).filter(function(t){
     if(currentFilter!=='All'&&t.issuetype!==currentFilter)return false;
@@ -461,6 +490,101 @@ function toggleInlineAction(key,type){
   else{var s2=document.getElementById('sd-'+key);if(s2)s2.classList.toggle('show');var c=document.getElementById('ca-'+key);if(c)c.classList.remove('show')}
 }
 
+// ===== SESSIONS =====
+function renderSessions(data){
+  var list=document.getElementById('sessionsList');
+  var a=data.agent||{};
+  var ide=a.ideSessions||[];
+  if(ide.length===0){list.innerHTML='<div class="empty-state">No AI agent sessions detected</div>';return}
+  // Build/update each session card
+  var existing={};
+  list.querySelectorAll('[data-session-pid]').forEach(function(el){existing[el.getAttribute('data-session-pid')]=el});
+  var seen={};
+  var html='';
+  ide.forEach(function(s){
+    var pidStr=String(s.pid);
+    seen[pidStr]=true;
+    if(existing[pidStr])updateSessionCard(existing[pidStr],s);
+    else html+=buildSessionCard(s,expandedSessions.has(pidStr))
+  });
+  Object.keys(existing).forEach(function(k){if(!seen[k])existing[k].remove()});
+  if(html){var td=document.createElement('div');td.innerHTML=html;while(td.firstChild)list.appendChild(td.firstChild)}
+}
+
+function buildSessionCard(s,exp){
+  var pidStr=String(s.pid);
+  var dt=s.status==='running'?'&#128994;':'&#128308;';
+  var expClass=exp?' expanded':'';
+  // Uptime bar: cap at 8 hours for visual scale
+  var ageSec=s.ageSeconds||0;
+  var pct=Math.min(100,(ageSec/28800)*100);
+  var le=s.lastExchange?escapeHtml(s.lastExchange):'<span style="color:var(--text-dim)">No recent exchange</span>';
+  return '<div class="session-card'+expClass+'" data-session-pid="'+pidStr+'">'+
+    '<div class="session-header">'+
+      '<div class="session-name"><span class="session-status-dot">'+dt+'</span> '+escapeHtml(s.taskSummary||'Unknown')+'</div>'+
+      '<span class="session-pid">PID '+pidStr+'</span>'+
+    '</div>'+
+    '<div class="session-sub">'+fmtUptime(ageSec)+' &middot; '+(s.isChild?'child process':'primary session')+'</div>'+
+    '<div class="session-uptime-bar"><div class="session-uptime-fill" style="width:'+pct+'%"></div></div>'+
+    '<div class="expanded-content">'+
+      '<div class="session-detail-label">Working Directory</div>'+
+      '<div class="session-detail-val">'+escapeHtml(s.cwd||'N/A')+'</div>'+
+      '<div class="session-detail-label">Uptime</div>'+
+      '<div class="session-detail-val" data-field="uptime">'+fmtUptime(ageSec)+'</div>'+
+      '<div class="session-detail-label">Last Exchange</div>'+
+      '<div class="session-last-exchange">'+le+'</div>'+
+      '<button class="ide-msg-btn" data-action="ide-msg" data-pid="'+pidStr+'">Drop a Message</button>'+
+      '<div class="ide-msg-area" id="im-'+pidStr+'">'+
+        '<input type="text" class="ide-msg-input" id="imi-'+pidStr+'" placeholder="Type a message for this session...">'+
+        '<button class="ide-msg-send" data-action="send-ide-msg" data-pid="'+pidStr+'">Send Message</button>'+
+      '</div>'+
+    '</div></div>'
+}
+
+function updateSessionCard(card,s){
+  var pidStr=String(s.pid);
+  var ageSec=s.ageSeconds||0;
+  // Update header
+  var nm=card.querySelector('.session-name');
+  if(nm){var dt=s.status==='running'?'&#128994;':'&#128308;';nm.innerHTML='<span class="session-status-dot">'+dt+'</span> '+escapeHtml(s.taskSummary||'Unknown')}
+  // Update sub
+  var sb=card.querySelector('.session-sub');
+  if(sb)sb.innerHTML=fmtUptime(ageSec)+' &middot; '+(s.isChild?'child process':'primary session');
+  // Update uptime bar
+  var bar=card.querySelector('.session-uptime-fill');
+  if(bar){var pct=Math.min(100,(ageSec/28800)*100);bar.style.width=pct+'%'}
+  // Update uptime detail
+  var ut=card.querySelector('[data-field="uptime"]');
+  if(ut)ut.textContent=fmtUptime(ageSec);
+  // Update last exchange
+  var le=card.querySelector('.session-last-exchange');
+  if(le){le.innerHTML=s.lastExchange?escapeHtml(s.lastExchange):'<span style="color:var(--text-dim)">No recent exchange</span>'}
+}
+
+function toggleSessionExpand(pidStr){
+  var card=document.querySelector('[data-session-pid="'+pidStr+'"]');
+  if(!card)return;
+  if(expandedSessions.has(pidStr)){expandedSessions.delete(pidStr);card.classList.remove('expanded')}
+  else{expandedSessions.add(pidStr);card.classList.add('expanded')}
+}
+
+function toggleIdeMsg(pidStr){
+  var a=document.getElementById('im-'+pidStr);
+  if(a)a.classList.toggle('show')
+}
+
+function sendIdeMsg(pidStr){
+  var inp=document.getElementById('imi-'+pidStr);
+  if(!inp||!inp.value.trim())return;
+  var msg=inp.value.trim();
+  showToast('Sending IDE message...','');
+  createIssue('IDE MSG for PID '+pidStr+': '+msg,'IDE message from dashboard',function(e,d){
+    if(e||!d||!d.number){showToast('Failed to send','error');return}
+    showToast('IDE message sent (Issue #'+d.number+')','success');
+    inp.value='';document.getElementById('im-'+pidStr).classList.remove('show')
+  })
+}
+
 // ===== GITHUB API =====
 function createIssue(title,body,cb){
   fetch('https://api.github.com/repos/'+GH_OWNER+'/'+BRIDGE_REPO+'/issues',{
@@ -532,7 +656,7 @@ function pollCmdResponses(data){
   if(upd){localStorage.setItem('cmdHistory',JSON.stringify(hist));renderCmdHistory()}
 }
 
-// ===== AGENT VIEW =====
+// ===== AGENT VIEW (Bridge health + jobs + recent activity — NO IDE sessions) =====
 function renderAgent(data){
   var a=data.agent||{};
   var dot=document.getElementById('bridgeDot');
@@ -542,39 +666,17 @@ function renderAgent(data){
   document.getElementById('bridgeUptime').textContent='Uptime: '+fmtUptime(a.uptime||0);
   document.getElementById('bridgeFailures').textContent='Failures: '+(a.failures||0);
   document.getElementById('bridgeProcessed').textContent='Total processed: '+(a.stats&&a.stats.totalProcessed?a.stats.totalProcessed:0);
-
   // Jobs
   var jel=document.getElementById('jobsList');
   var jobs=a.jobs||[];
   var jdot=document.getElementById('bridgeJobsDot');
   if(jobs.length===0){jel.innerHTML='<div class="stat-line">No active sessions</div>';if(jdot)jdot.style.display='none'}
   else{if(jdot)jdot.style.display='inline-block';var jh='';jobs.forEach(function(j){jh+='<div class="list-item"><div class="list-item-title">#'+(j.issueNum||'?')+' '+escapeHtml(j.title||'')+'</div><div class="list-item-sub">'+escapeHtml(j.snippet||'')+'</div><div class="list-item-time">'+(j.elapsed?fmtUptime(j.elapsed)+' elapsed':'')+'</div></div>'});jel.innerHTML=jh}
-
-  // IDE sessions
-  var iel=document.getElementById('ideSessionsList');
-  var ide=a.ideSessions||[];
-  if(ide.length===0){iel.innerHTML='<div class="stat-line">No IDE sessions detected</div>'}
-  else{var ih='';ide.forEach(function(s){var dt=s.status==='running'?'&#128994;':'&#128308;';ih+='<div class="list-item"><div class="ide-task"><span class="ide-status-dot">'+dt+'</span> '+escapeHtml(s.taskSummary||'Unknown')+'</div><div class="stat-line">PID: '+(s.pid||'N/A')+' &middot; '+fmtUptime(s.ageSeconds||0)+'</div><button class="ide-msg-btn" data-action="ide-msg" data-pid="'+(s.pid||0)+'">Drop a message</button><div class="ide-msg-area" id="im-'+(s.pid||0)+'"><input type="text" class="ide-msg-input" id="imi-'+(s.pid||0)+'" placeholder="Message for this session..."><button class="ide-msg-send" data-action="send-ide-msg" data-pid="'+(s.pid||0)+'">Send</button></div></div>'});iel.innerHTML=ih}
-
   // Recent activity
   var rael=document.getElementById('recentActivityList');
   var ra=a.recentActivity||[];
   if(ra.length===0){rael.innerHTML='<div class="stat-line">No recent activity</div>'}
   else{var rh='';ra.forEach(function(act){rh+='<div class="list-item"><div class="list-item-title">#'+(act.issueNum||'?')+' '+escapeHtml(act.title||'')+'</div><div class="list-item-sub">'+escapeHtml(act.responseSnippet||'')+'</div><div class="list-item-time">'+(act.responded?relTime(act.responded):'')+'</div></div>'});rael.innerHTML=rh}
-}
-
-function toggleIdeMsg(pid){var a=document.getElementById('im-'+pid);if(a)a.classList.toggle('show')}
-
-function sendIdeMsg(pid){
-  var inp=document.getElementById('imi-'+pid);
-  if(!inp||!inp.value.trim())return;
-  var msg=inp.value.trim();
-  showToast('Sending IDE message...','');
-  createIssue('IDE MSG for PID '+pid+': '+msg,'IDE message from dashboard',function(e,d){
-    if(e||!d||!d.number){showToast('Failed to send','error');return}
-    showToast('IDE message sent (Issue #'+d.number+')','success');
-    inp.value='';document.getElementById('im-'+pid).classList.remove('show')
-  })
 }
 
 // ===== LIVE UPTIME =====
@@ -583,15 +685,28 @@ function updateLiveUptimes(){
   var a=rawData.agent;
   var ue=document.getElementById('bridgeUptime');
   if(ue&&a.startTime){var el=Math.floor((Date.now()-new Date(a.startTime).getTime())/1000);ue.textContent='Uptime: '+fmtUptime(el)}
+  // Update session card uptimes locally without re-render
   var ide=a.ideSessions||[];
-  ide.forEach(function(s){if(!s._la)s._la=s.ageSeconds||0;s._la++;var items=document.querySelectorAll('.list-item');items.forEach(function(it){var t=it.querySelector('.stat-line');if(t&&t.textContent.indexOf('PID: '+s.pid)>=0)t.innerHTML='PID: '+s.pid+' &middot; '+fmtUptime(s._la)})})
+  ide.forEach(function(s){
+    if(!s._la)s._la=s.ageSeconds||0;
+    s._la++;
+    var pidStr=String(s.pid);
+    var card=document.querySelector('[data-session-pid="'+pidStr+'"]');
+    if(card){
+      var sub=card.querySelector('.session-sub');
+      if(sub)sub.innerHTML=fmtUptime(s._la)+' &middot; '+(s.isChild?'child process':'primary session');
+      var ut=card.querySelector('[data-field="uptime"]');
+      if(ut)ut.textContent=fmtUptime(s._la);
+      var bar=card.querySelector('.session-uptime-fill');
+      if(bar)bar.style.width=Math.min(100,(s._la/28800)*100)+'%';
+    }
+  });
 }
 
 function updateRelativeTimes(){
   if(!rawData)return;
   document.querySelectorAll('[data-ticket-key]').forEach(function(c){var u=c.getAttribute('data-updated');var e=c.querySelector('[data-field="updated-rel"]');if(e&&u)e.textContent='updated '+relTime(u)});
-  renderCmdHistory();
-  updateRefreshTime()
+  renderCmdHistory();updateRefreshTime()
 }
 
 // ===== EVENT DELEGATION =====
@@ -611,17 +726,27 @@ document.getElementById('ticketsList').addEventListener('click',function(e){
   if(card)toggleExpand(card.getAttribute('data-ticket-key'))
 })
 
+// Sessions: expand/collapse + actions
+document.getElementById('sessionsList').addEventListener('click',function(e){
+  var act=e.target.closest('[data-action]');
+  if(act){
+    e.stopPropagation();
+    var ak=act.getAttribute('data-action');
+    var pid=act.getAttribute('data-pid');
+    if(ak==='ide-msg')toggleIdeMsg(pid);
+    else if(ak==='send-ide-msg')sendIdeMsg(pid);
+    return
+  }
+  // Don't toggle if click is inside expanded-content or input
+  if(e.target.closest('.expanded-content'))return;
+  if(e.target.tagName==='INPUT')return;
+  var card=e.target.closest('[data-session-pid]');
+  if(card)toggleSessionExpand(card.getAttribute('data-session-pid'))
+})
+
 // Filters
 document.getElementById('filterRow').addEventListener('click',function(e){
   var c=e.target.closest('[data-filter]');if(c)setFilter(c.getAttribute('data-filter'))
-})
-
-// IDE sessions
-document.getElementById('ideSessionsList').addEventListener('click',function(e){
-  var b=e.target.closest('[data-action]');if(!b)return;
-  e.stopPropagation();var act=b.getAttribute('data-action');var pid=b.getAttribute('data-pid');
-  if(act==='ide-msg')toggleIdeMsg(pid);
-  else if(act==='send-ide-msg')sendIdeMsg(pid)
 })
 
 // Search
