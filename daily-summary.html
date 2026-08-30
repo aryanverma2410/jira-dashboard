@@ -111,11 +111,11 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 Here is the end-of-day summary for 30 August 2026.
 
 Completed today:
-PC-52853 — RCA/comment posted. Comment added to PC-52853
-PC-53268 — RCA/comment posted. Comment added to PC-53268
+PC-53268 — RCA posted as comment.
 
 In progress:
-SAM-24707 — comment posted, awaiting response. No cookies from cookie-bridge
+PC-52853 — RCA posted as comment, ticket assigned to me, added label sc=order_remediation, root cause analysis completed — Let me investigate the context around PID 21524 and find the existing RCA.
+SAM-24707 — investigation in progress — No cookies from cookie-bridge.
 
 Thanks,
 
@@ -180,7 +180,7 @@ function renderSummary(data) {
   html += '<div class="ticket-section-title">&#9989; Completed <span class="count">(' + (t.completed || []).length + ')</span></div>';
   if (t.completed && t.completed.length > 0) {
     t.completed.forEach(function(tk) {
-      html += '<div class="ticket-row"><span class="ticket-key">' + tk.key + '</span><span class="ticket-detail"><span class="action">' + tk.action + '</span> — ' + (tk.detail || '') + '</span></div>';
+      html += '<div class="ticket-row"><span class="ticket-key">' + tk.key + '</span><span class="ticket-detail">' + (tk.description || '') + '</span></div>';
     });
   } else {
     html += '<div class="ticket-empty">No tickets completed today.</div>';
@@ -192,7 +192,7 @@ function renderSummary(data) {
   html += '<div class="ticket-section-title">&#9203; In Progress <span class="count">(' + (t.inProgress || []).length + ')</span></div>';
   if (t.inProgress && t.inProgress.length > 0) {
     t.inProgress.forEach(function(tk) {
-      html += '<div class="ticket-row"><span class="ticket-key">' + tk.key + '</span><span class="ticket-detail"><span class="action">' + tk.action + '</span> — ' + (tk.detail || '') + '</span></div>';
+      html += '<div class="ticket-row"><span class="ticket-key">' + tk.key + '</span><span class="ticket-detail">' + (tk.description || '') + '</span></div>';
     });
   } else {
     html += '<div class="ticket-empty">No tickets in progress.</div>';
@@ -204,7 +204,7 @@ function renderSummary(data) {
     html += '<div class="ticket-section">';
     html += '<div class="ticket-section-title">&#23F3; Awaiting Response <span class="count">(' + t.awaiting.length + ')</span></div>';
     t.awaiting.forEach(function(tk) {
-      html += '<div class="ticket-row"><span class="ticket-key">' + tk.key + '</span><span class="ticket-detail">' + (tk.detail || '') + '</span></div>';
+      html += '<div class="ticket-row"><span class="ticket-key">' + tk.key + '</span><span class="ticket-detail">' + (tk.description || '') + '</span></div>';
     });
     html += '</div>';
   }
