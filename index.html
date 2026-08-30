@@ -124,6 +124,8 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .session-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
 .session-task{flex:1;font-size:14px;font-weight:600;line-height:1.4;word-break:break-word}
 .session-status-dot{font-size:16px;line-height:1;flex-shrink:0;margin-top:2px}
+.session-pulse-dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#0f0;animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.8)}}
 .session-info-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;font-size:11px;color:var(--text-dim)}
 .session-info-tag{padding:2px 8px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);white-space:nowrap}
 .session-info-tag.pid-tag{color:var(--accent)}
@@ -626,8 +628,10 @@ function renderSessions(data){
   var list=document.getElementById('sessionsList');
   var a=data.agent||{};
   var ide=a.ideSessions||[];
-  if(ide.length===0){list.innerHTML='<div class="empty-state">No AI agent sessions detected</div>';return}
-  // Build/update each session card
+  var sm=a.sessionMeta||{};
+  if(ide.length===0&&Object.keys(sm).length===0){list.innerHTML='<div class="empty-state">No AI agent sessions detected</div>';return}
+  if(ide.length===0){list.innerHTML=''}
+  // Build/update each IDE session card
   var existing={};
   list.querySelectorAll('[data-session-pid]').forEach(function(el){existing[el.getAttribute('data-session-pid')]=el});
   var seen={};
@@ -640,6 +644,19 @@ function renderSessions(data){
   });
   Object.keys(existing).forEach(function(k){if(!seen[k])existing[k].remove()});
   if(html){var td=document.createElement('div');td.innerHTML=html;while(td.firstChild)list.appendChild(td.firstChild)}
+  // Render bridge sessions from sessionMeta
+  list.querySelectorAll('[data-bridge-issue]').forEach(function(el){el.remove()});
+  var bridgeHtml='';
+  Object.keys(sm).forEach(function(key){
+    var m=sm[key];
+    if(!m||!m.startTime)return;
+    if(m.status==='done'&&m.endTime){
+      var ageMin=(Date.now()-new Date(m.endTime).getTime())/60000;
+      if(ageMin>30)return;
+    }
+    bridgeHtml+=buildBridgeSessionCard(m);
+  });
+  if(bridgeHtml){var bd=document.createElement('div');bd.innerHTML=bridgeHtml;while(bd.firstChild)list.appendChild(bd.firstChild)}
 }
 
 function buildSessionCard(s,exp){
@@ -690,6 +707,38 @@ function updateSessionCard(card,s){
   // Update last exchange
   var le=card.querySelector('.session-last-exchange');
   if(le)le.innerHTML=s.lastExchange?escapeHtml(s.lastExchange):'<span style="color:var(--text-dim)">No recent exchange</span>';
+}
+
+function buildBridgeSessionCard(m){
+  var isThinking=m.status==='thinking';
+  var dot=isThinking?'<span class="session-pulse-dot"></span>':'&#9989;';
+  var startTimeMs=new Date(m.startTime).getTime();
+  var elapsed=Math.max(0,Math.round((Date.now()-startTimeMs)/1000));
+  var timeLabel=isThinking?'Thinking: '+fmtUptime(elapsed):'Done';
+  var outputHtml='';
+  if(m.lastOutput){
+    outputHtml='<div class="session-detail-label">Latest Output</div>'+
+      '<div class="session-last-exchange">'+escapeHtml(m.lastOutput.substring(0,300))+'</div>';
+  }
+  var histHtml='';
+  if(m.commandHistory&&m.commandHistory.length>0){
+    histHtml='<div class="session-detail-label">Commands ('+m.commandHistory.length+')</div>';
+    m.commandHistory.forEach(function(cmd){
+      histHtml+='<div style="font-size:11px;color:var(--text-dim);margin:2px 0">'+escapeHtml(cmd.title)+' &mdash; '+new Date(cmd.time).toLocaleTimeString()+'</div>';
+    });
+  }
+  return '<div class="session-card" data-bridge-issue="'+(m.issueNum||'')+'" style="border-left:3px solid var(--accent)">'+
+    '<div class="session-top">'+
+      '<div class="session-task">'+escapeHtml(m.title||'Bridge Session #'+(m.issueNum||'?'))+'</div>'+
+      '<span class="session-status-dot">'+dot+'</span>'+
+    '</div>'+
+    '<div class="session-info-row">'+
+      '<span class="session-info-tag" style="background:var(--accent);color:#fff">Bridge</span>'+
+      '<span class="session-info-tag">'+timeLabel+'</span>'+
+      '<span class="session-info-tag">#'+(m.issueNum||'?')+'</span>'+
+    '</div>'+
+    '<div class="expanded-content">'+outputHtml+histHtml+'</div>'+
+  '</div>';
 }
 
 function toggleSessionExpand(pidStr){
