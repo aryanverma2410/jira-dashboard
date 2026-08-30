@@ -185,12 +185,23 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .topbar{top:0!important}
 body.has-status-bar .topbar{top:28px!important}
 body.has-status-bar .scroll{padding-top:28px}
+.ptr-indicator{position:fixed;top:0;left:50%;transform:translateX(-50%) translateY(-100%);z-index:600;padding:8px 20px;background:var(--card);border-radius:0 0 12px 12px;box-shadow:0 2px 12px rgba(0,0,0,0.3);transition:transform 0.2s;font-size:13px;color:var(--text-dim)}
+.ptr-indicator.show{transform:translateX(-50%) translateY(0)}
+.ptr-indicator.spin{animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:translateX(-50%) translateY(0) rotate(360deg)}}
+.ticket-actions-swipe{position:absolute;right:0;top:0;bottom:0;display:flex;align-items:center;gap:4px;padding-right:12px;background:var(--card);transform:translateX(100%);transition:transform 0.2s;z-index:5}
+.ticket-actions-swipe.show{transform:translateX(0)}
+.ticket-actions-swipe button{padding:8px 10px;border:none;border-radius:8px;font-size:11px;cursor:pointer;color:#fff}
+.ticket-actions-swipe .act-comment{background:var(--accent)}
+.ticket-actions-swipe .act-status{background:var(--warning)}
 </style>
 </head>
 <body>
 
 <!-- LIVE/STALE STATUS BAR -->
-<div class="status-bar" id="statusBar"><span class="status-bar-dot"></span><span id="statusBarText">Connecting...</span></div>
+<div class="status-bar" id="statusBar"><span class="status-bar-dot"></span><span id="statusBarText">Connecting...</span><button id="wakeBtn" onclick="wakeUpServer()" style="margin-left:12px;padding:3px 12px;border:1px solid currentColor;background:transparent;color:inherit;border-radius:12px;font-size:11px;cursor:pointer;display:none">Wake Up</button></div>
+
+<div class="ptr-indicator" id="ptrIndicator">&#8635; Pull to refresh</div>
 
 <!-- VIEW: TICKETS -->
 <div class="view active" id="view-tickets">
@@ -386,17 +397,20 @@ function checkStaleness(){
     txt.textContent='OFFLINE — showing data from '+relTime(dataGeneratedAt);
     document.body.classList.add('has-status-bar');
     updateRefreshTime(); // update all refresh-time labels to show 'Offline'
+    var wb=document.getElementById('wakeBtn');if(wb)wb.style.display='inline-block';
   } else if(ageSec>STALE_THRESHOLD){
     // Fetch succeeded but data is old — server down
     bar.className='status-bar show stale';
     var ageStr=ageSec<3600?Math.floor(ageSec/60)+'m':Math.floor(ageSec/3600)+'h';
     txt.textContent='STALE — data is '+ageStr+' old (server may be down)';
     document.body.classList.add('has-status-bar');
+    var wb=document.getElementById('wakeBtn');if(wb)wb.style.display='inline-block';
   } else {
     // Fresh data
     bar.className='status-bar show live';
     txt.textContent='LIVE — updated '+relTime(dataGeneratedAt);
     document.body.classList.add('has-status-bar');
+    var wb=document.getElementById('wakeBtn');if(wb)wb.style.display='none';
     // Auto-hide after 5 seconds if very fresh
     if(ageSec<30){
       setTimeout(function(){
@@ -407,6 +421,18 @@ function checkStaleness(){
       },5000);
     }
   }
+}
+
+function wakeUpServer(){
+  var btn=document.getElementById('wakeBtn');
+  if(btn){btn.textContent='Waking...';btn.disabled=true}
+  fetchData();
+  var token=GH_TOKEN;
+  var body=JSON.stringify({title:'WAKE UP: Restart dashboard server',body:'Dashboard data is stale. Please restart the dashboard server process.\nSent from dashboard'});
+  fetch('https://api.github.com/repos/aryanverma2410/agent-bridge/issues',{method:'POST',headers:{'Authorization':'Bearer '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:body})
+    .then(function(r){return r.json()})
+    .then(function(){if(btn){btn.textContent='Wake sent!';setTimeout(function(){if(btn){btn.textContent='Wake Up';btn.disabled=false;btn.style.display='none'}},3000)}})
+    .catch(function(){if(btn){btn.textContent='Wake failed';btn.disabled=false}})
 }
 
 function relTime(ds){if(!ds)return '';var d=new Date(ds);var n=Date.now();var df=Math.floor((n-d.getTime())/1000);if(df<0)df=0;if(df<10)return 'just now';if(df<60)return df+'s ago';if(df<3600)return Math.floor(df/60)+'m ago';if(df<86400)return Math.floor(df/3600)+'h ago';if(df<604800)return Math.floor(df/86400)+'d ago';return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}
@@ -468,6 +494,7 @@ function onData(data){
       if(old&&(old.updated!==t.updated||old.commentsCount!==t.commentsCount))changedKeys.push(t.key)
     })
   }
+  if(changedKeys.length>0 && navigator.vibrate){navigator.vibrate(100)}
   var lv=parseInt(localStorage.getItem('lastVisit')||'0',10);
   var usv=0;
   if(data.tickets&&lv>0){data.tickets.forEach(function(t){if(new Date(t.updated).getTime()>lv)usv++})}
@@ -905,6 +932,66 @@ setInterval(updateRefreshTime,5000);
 setInterval(checkStaleness,5000);
 setInterval(updateRelativeTimes,30000);
 setInterval(updateLiveUptimes,1000);
+
+// ===== PULL TO REFRESH =====
+var ptrStartY=0,ptrPulling=false,ptrThreshold=80;
+document.addEventListener('touchstart',function(e){
+  var el=e.target;
+  while(el&&el.id!=='view-tickets'&&el.tagName!=='BODY'){el=el.parentElement}
+  if(!el||el.tagName==='BODY')return;
+  var scroll=document.getElementById('ticketsScroll');
+  if(scroll&&scroll.scrollTop===0){ptrStartY=e.touches[0].clientY;ptrPulling=true}
+}, {passive:true});
+document.addEventListener('touchmove',function(e){
+  if(!ptrPulling)return;
+  var diff=e.touches[0].clientY-ptrStartY;
+  if(diff>0&&diff<150){
+    var ind=document.getElementById('ptrIndicator');
+    if(ind){ind.classList.add('show');ind.textContent=diff>ptrThreshold?'Release to refresh':'Pull to refresh'}
+  }
+}, {passive:true});
+document.addEventListener('touchend',function(e){
+  if(!ptrPulling)return;
+  ptrPulling=false;
+  var diff=(e.changedTouches[0]?e.changedTouches[0].clientY:0)-ptrStartY;
+  var ind=document.getElementById('ptrIndicator');
+  if(diff>ptrThreshold){
+    if(ind){ind.innerHTML='&#8635; Refreshing...';ind.classList.add('spin')}
+    fetchData();
+    setTimeout(function(){if(ind){ind.classList.remove('show');ind.classList.remove('spin')}},1500);
+  }else{
+    if(ind)ind.classList.remove('show');
+  }
+}, {passive:true});
+
+// ===== SWIPE QUICK ACTIONS =====
+var swipeStartX=0,swipeTarget=null,swipeOpen=null;
+document.addEventListener('touchstart',function(e){
+  var card=e.target.closest('.ticket-card');
+  if(!card)return;
+  if(swipeOpen&&swipeOpen!==card){var sa=swipeOpen.querySelector('.ticket-actions-swipe');if(sa)sa.classList.remove('show');swipeOpen=null}
+  swipeStartX=e.touches[0].clientX;
+  swipeTarget=card;
+}, {passive:true});
+document.addEventListener('touchmove',function(e){
+  if(!swipeTarget)return;
+  var diff=swipeStartX-e.touches[0].clientX;
+  if(diff>40){
+    var sa=swipeTarget.querySelector('.ticket-actions-swipe');
+    if(!sa){
+      sa=document.createElement('div');sa.className='ticket-actions-swipe';
+      var key=swipeTarget.getAttribute('data-ticket-key');
+      sa.innerHTML='<button class="act-comment" onclick="event.stopPropagation();toggleInlineAction(\''+key+'\',\'comment\')">Comment</button><button class="act-status" onclick="event.stopPropagation();toggleInlineAction(\''+key+'\',\'status\')">Status</button>';
+      swipeTarget.style.position='relative';
+      swipeTarget.appendChild(sa);
+    }
+    if(diff>80){sa.classList.add('show');swipeOpen=swipeTarget}
+  }else if(diff<-40){
+    var sa=swipeTarget.querySelector('.ticket-actions-swipe');if(sa)sa.classList.remove('show');
+    swipeOpen=null;
+  }
+}, {passive:true});
+document.addEventListener('touchend',function(){swipeTarget=null}, {passive:true});
 </script>
 </body>
 </html>
