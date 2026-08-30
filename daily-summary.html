@@ -44,29 +44,15 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .trigger-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
 .trigger-chip{padding:4px 10px;border-radius:12px;background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);font-size:12px;color:var(--success);font-family:monospace}
 .output-label{font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
-.output-box{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:14px;font-family:'Cascadia Code','Fira Code',monospace;font-size:13px;line-height:1.6;white-space:pre-wrap;color:var(--text);max-height:400px;overflow-y:auto;margin-bottom:12px}
+.output-box{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:14px;font-family:'Cascadia Code','Fira Code',monospace;font-size:13px;line-height:1.6;white-space:pre-wrap;color:var(--text);max-height:500px;overflow-y:auto;margin-bottom:12px}
 .copy-btn{padding:8px 16px;border-radius:8px;background:rgba(88,166,255,0.1);border:1px solid var(--border);color:var(--accent);font-size:13px;cursor:pointer;transition:all 0.2s}
 .copy-btn:active{background:rgba(88,166,255,0.2);transform:scale(0.98)}
 .copy-btn.copied{background:rgba(63,185,80,0.15);border-color:var(--success);color:var(--success)}
 
-/* Stats row */
-.stats-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
-.stat-pill{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;background:var(--card);border:1px solid var(--border);font-size:13px}
-.stat-pill .num{font-weight:700;font-size:15px}
-.stat-pill.done .num{color:var(--success)}
-.stat-pill.progress .num{color:var(--warning)}
-.stat-pill.waiting .num{color:var(--danger)}
-.stat-pill.total .num{color:var(--accent)}
-
-/* Ticket list */
-.ticket-section{margin-bottom:16px}
-.ticket-section-title{font-size:13px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.ticket-section-title .count{font-size:12px;color:var(--text-dim);font-weight:400}
-.ticket-row{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border-radius:8px;background:var(--card);border:1px solid var(--border);margin-bottom:6px}
-.ticket-key{font-weight:700;font-size:13px;color:var(--accent);white-space:nowrap;flex-shrink:0;min-width:90px}
-.ticket-detail{font-size:13px;color:var(--text-dim);flex:1}
-.ticket-detail .action{color:var(--text);font-weight:600}
-.ticket-empty{font-size:13px;color:var(--text-dim);padding:12px;text-align:center;font-style:italic}
+/* Source badge */
+.source-badge{display:inline-block;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
+.source-badge.skill{background:rgba(63,185,80,0.15);color:var(--success);border:1px solid rgba(63,185,80,0.3)}
+.source-badge.fallback{background:rgba(210,153,34,0.15);color:var(--warning);border:1px solid rgba(210,153,34,0.3)}
 
 /* Loading / empty states */
 .loading{text-align:center;padding:40px 20px;color:var(--text-dim)}
@@ -96,7 +82,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
     <div class="skill-badge"><span class="dot"></span> jira-daily-summary</div>
     <div class="skill-title">End-of-Day Work Summary</div>
     <div class="skill-desc">
-      Generates a manager-ready summary of all Jira tickets worked on today, written in AryanTone. Scans activity logs, IDE sessions, bridge commands, and Jira actions to classify tickets as completed, in progress, or awaiting response. Output is plain text ready to paste into Teams or email.
+      Generates a manager-ready narrative summary of all Jira tickets worked on today, written in AryanTone. Scans activity logs, IDE sessions, bridge commands, and Jira actions, then recalls what was actually done — investigations, code traces, scripts written, RCAs posted, tools fixed. Output is flowing narrative paragraphs ready to paste into Teams or email.
     </div>
     <div class="trigger-list">
       <span class="trigger-chip">goodnight</span>
@@ -110,12 +96,13 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 
 Here is the end-of-day summary for 30 August 2026.
 
-Completed today:
-PC-53268 — RCA posted as comment.
+Work today was focused on SAM-24707, the AE store GNB navigation difference ticket. The HAC MCP went down mid-session with bad credential errors, so I built a standalone HAC client (_hac-client.js) that authenticates directly and supports FlexiSearch and Groovy execution. FlexiSearch is working — I used it to confirm that aeDotComCmsNavSyncJob last ran on August 27th, three days stale, while every other store's NavSync job runs daily. The Groovy execution function was fixed but hasn't been tested yet.
 
-In progress:
-PC-52853 — RCA posted as comment, ticket assigned to me, added label sc=order_remediation, root cause analysis completed — Let me investigate the context around PID 21524 and find the existing RCA.
-SAM-24707 — investigation in progress — No cookies from cookie-bridge.
+The Confluence MCP was also down, so I built a search script using cached browser cookies. That search came back incomplete — the script has a newline escaping bug that still needs fixing.
+
+On the investigation side, I traced the full GNB sync architecture through the codebase: TokoDotComCmsNavSyncCronJob pulls GNB data from AEM's navigation API, maps it through GNBMenuMapperV5ToOldResponse for GNB v5, and syncs from Staged to Online in the aeContentCatalog. Kibana logs confirmed GNB v5 is active with both v4 and v5 feature flags enabled. The root cause is clear — the AE NavSync cronjob hasn't triggered since August 27th, so Hybris cart page GNB is three days behind AEM's real-time content.
+
+I prepared a remediation script (script-SAM-24707-ae-navsync-trigger.groovy) that triggers aeDotComCmsNavSyncJob, waits up to five minutes, and reports the result. It has not been executed yet — it's waiting for approval. No Jira worklogs were logged today. No PC ticket was raised for this one yet.
 
 Thanks,
 
@@ -127,8 +114,6 @@ Aryan</div>
 
   <!-- SECTION 2: TODAY'S WORK SUMMARY -->
   <div class="section-header"><span class="icon">&#128203;</span> Today's Work Summary</div>
-
-  <div id="statsRow" class="stats-row"></div>
 
   <div id="summaryContainer">
     <div class="loading">Loading today's summary...</div>
@@ -163,59 +148,22 @@ function fetchSummary() {
 }
 
 function renderSummary(data) {
-  // Stats
-  var s = data.stats || {};
-  var statsHtml = '';
-  statsHtml += '<div class="stat-pill total"><span class="num">' + (s.totalTickets || 0) + '</span> Total</div>';
-  statsHtml += '<div class="stat-pill done"><span class="num">' + (s.completed || 0) + '</span> Done</div>';
-  statsHtml += '<div class="stat-pill progress"><span class="num">' + (s.inProgress || 0) + '</span> In Progress</div>';
-  if (s.awaiting) statsHtml += '<div class="stat-pill waiting"><span class="num">' + s.awaiting + '</span> Awaiting</div>';
-  document.getElementById('statsRow').innerHTML = statsHtml;
-
   var html = '';
-  var t = data.tickets || {};
 
-  // Completed
-  html += '<div class="ticket-section">';
-  html += '<div class="ticket-section-title">&#9989; Completed <span class="count">(' + (t.completed || []).length + ')</span></div>';
-  if (t.completed && t.completed.length > 0) {
-    t.completed.forEach(function(tk) {
-      html += '<div class="ticket-row"><span class="ticket-key">' + tk.key + '</span><span class="ticket-detail">' + (tk.description || '') + '</span></div>';
-    });
-  } else {
-    html += '<div class="ticket-empty">No tickets completed today.</div>';
-  }
-  html += '</div>';
-
-  // In Progress
-  html += '<div class="ticket-section">';
-  html += '<div class="ticket-section-title">&#9203; In Progress <span class="count">(' + (t.inProgress || []).length + ')</span></div>';
-  if (t.inProgress && t.inProgress.length > 0) {
-    t.inProgress.forEach(function(tk) {
-      html += '<div class="ticket-row"><span class="ticket-key">' + tk.key + '</span><span class="ticket-detail">' + (tk.description || '') + '</span></div>';
-    });
-  } else {
-    html += '<div class="ticket-empty">No tickets in progress.</div>';
-  }
-  html += '</div>';
-
-  // Awaiting
-  if (t.awaiting && t.awaiting.length > 0) {
-    html += '<div class="ticket-section">';
-    html += '<div class="ticket-section-title">&#23F3; Awaiting Response <span class="count">(' + t.awaiting.length + ')</span></div>';
-    t.awaiting.forEach(function(tk) {
-      html += '<div class="ticket-row"><span class="ticket-key">' + tk.key + '</span><span class="ticket-detail">' + (tk.description || '') + '</span></div>';
-    });
-    html += '</div>';
+  // Source badge
+  if (data.source) {
+    html += '<div class="source-badge ' + data.source + '">' + data.source + '</div>';
   }
 
-  // Full summary text (collapsible)
-  if (data.summaryText) {
-    html += '<div class="card" style="margin-top:16px">';
-    html += '<div class="output-label">Full EOD Summary (AryanTone)</div>';
-    html += '<div class="output-box" id="fullSummary">' + escapeHtml(data.summaryText) + '</div>';
+  // Narrative text
+  var narrative = data.narrative || data.summaryText || '';
+  if (narrative) {
+    html += '<div class="card">';
+    html += '<div class="output-box">' + escapeHtml(narrative) + '</div>';
     html += '<button class="copy-btn" onclick="copyFull()">Copy Summary</button>';
     html += '</div>';
+  } else {
+    html += '<div class="card"><div class="loading">No summary available yet.</div></div>';
   }
 
   document.getElementById('summaryContainer').innerHTML = html;
@@ -240,8 +188,8 @@ function copySample() {
 }
 
 function copyFull() {
-  var el = document.getElementById('fullSummary');
-  if (el) copyText(el.textContent, event.target);
+  var container = document.querySelector('#summaryContainer .output-box');
+  if (container) copyText(container.textContent, event.target);
 }
 
 // Initial load
