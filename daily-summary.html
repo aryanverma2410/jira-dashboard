@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>EOD Summary</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+--bg:#0d1117;--card:rgba(255,255,255,0.05);--accent:#58a6ff;
+--success:#3fb950;--warning:#d29922;--danger:#f85149;
+--border:rgba(255,255,255,0.1);--text:#e6edf3;--text-dim:#8b949e;
+--radius:12px;--blur:blur(10px);
+}
+html,body{height:100%;overflow-y:auto}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;padding-bottom:40px}
+
+::-webkit-scrollbar{width:0;height:0}
+
+.topbar{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(13,17,23,0.85);backdrop-filter:var(--blur);border-bottom:1px solid var(--border)}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.topbar h1{font-size:18px;font-weight:700;letter-spacing:-0.3px}
+.refresh-time{font-size:12px;color:var(--text-dim)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 8px var(--success);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+.content{max-width:680px;margin:0 auto;padding:16px}
+
+/* Section headers */
+.section-header{font-size:12px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin:20px 0 10px;display:flex;align-items:center;gap:8px}
+.section-header .icon{font-size:16px}
+.section-divider{height:1px;background:var(--border);margin:24px 0}
+
+/* Card */
+.card{background:var(--card);backdrop-filter:var(--blur);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;transition:border-color 0.3s}
+.card:hover{border-color:rgba(255,255,255,0.2)}
+
+/* Goodnight skill section */
+.skill-card{position:relative;overflow:hidden}
+.skill-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:16px;background:rgba(88,166,255,0.15);border:1px solid rgba(88,166,255,0.3);font-size:11px;color:var(--accent);margin-bottom:10px}
+.skill-badge .dot{width:6px;height:6px;box-shadow:none}
+.skill-title{font-size:15px;font-weight:700;margin-bottom:6px}
+.skill-desc{font-size:13px;color:var(--text-dim);line-height:1.5;margin-bottom:12px}
+.trigger-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.trigger-chip{padding:4px 10px;border-radius:12px;background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);font-size:12px;color:var(--success);font-family:monospace}
+.output-label{font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.output-box{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:14px;font-family:'Cascadia Code','Fira Code',monospace;font-size:13px;line-height:1.6;white-space:pre-wrap;color:var(--text);max-height:400px;overflow-y:auto;margin-bottom:12px}
+.copy-btn{padding:8px 16px;border-radius:8px;background:rgba(88,166,255,0.1);border:1px solid var(--border);color:var(--accent);font-size:13px;cursor:pointer;transition:all 0.2s}
+.copy-btn:active{background:rgba(88,166,255,0.2);transform:scale(0.98)}
+.copy-btn.copied{background:rgba(63,185,80,0.15);border-color:var(--success);color:var(--success)}
+
+/* Stats row */
+.stats-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.stat-pill{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;background:var(--card);border:1px solid var(--border);font-size:13px}
+.stat-pill .num{font-weight:700;font-size:15px}
+.stat-pill.done .num{color:var(--success)}
+.stat-pill.progress .num{color:var(--warning)}
+.stat-pill.waiting .num{color:var(--danger)}
+.stat-pill.total .num{color:var(--accent)}
+
+/* Ticket list */
+.ticket-section{margin-bottom:16px}
+.ticket-section-title{font-size:13px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.ticket-section-title .count{font-size:12px;color:var(--text-dim);font-weight:400}
+.ticket-row{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border-radius:8px;background:var(--card);border:1px solid var(--border);margin-bottom:6px}
+.ticket-key{font-weight:700;font-size:13px;color:var(--accent);white-space:nowrap;flex-shrink:0;min-width:90px}
+.ticket-detail{font-size:13px;color:var(--text-dim);flex:1}
+.ticket-detail .action{color:var(--text);font-weight:600}
+.ticket-empty{font-size:13px;color:var(--text-dim);padding:12px;text-align:center;font-style:italic}
+
+/* Loading / empty states */
+.loading{text-align:center;padding:40px 20px;color:var(--text-dim)}
+.error{text-align:center;padding:40px 20px;color:var(--danger)}
+
+/* Back link */
+.back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text-dim);text-decoration:none;padding:4px 0}
+.back-link:hover{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="dot" id="liveDot"></div>
+    <h1>EOD Summary</h1>
+  </div>
+  <div class="refresh-time" id="refreshTime">Loading...</div>
+</div>
+
+<div class="content">
+
+  <!-- SECTION 1: GOODNIGHT SKILL -->
+  <div class="section-header"><span class="icon">&#9790;</span> Goodnight Skill</div>
+
+  <div class="card skill-card">
+    <div class="skill-badge"><span class="dot"></span> jira-daily-summary</div>
+    <div class="skill-title">End-of-Day Work Summary</div>
+    <div class="skill-desc">
+      Generates a manager-ready summary of all Jira tickets worked on today, written in AryanTone. Scans activity logs, IDE sessions, bridge commands, and Jira actions to classify tickets as completed, in progress, or awaiting response. Output is plain text ready to paste into Teams or email.
+    </div>
+    <div class="trigger-list">
+      <span class="trigger-chip">goodnight</span>
+      <span class="trigger-chip">adios</span>
+      <span class="trigger-chip">end of day</span>
+      <span class="trigger-chip">eod summary</span>
+      <span class="trigger-chip">sign off</span>
+    </div>
+    <div class="output-label">Sample Output (AryanTone)</div>
+    <div class="output-box" id="sampleOutput">Hi ,
+
+Here is the end-of-day summary for 30 August 2026.
+
+Completed today:
+PC-52853 — RCA/comment posted. Comment added to PC-52853
+PC-53268 — RCA/comment posted. Comment added to PC-53268
+
+In progress:
+SAM-24707 — comment posted, awaiting response. No cookies from cookie-bridge
+
+Thanks,
+
+Aryan</div>
+    <button class="copy-btn" id="copySampleBtn" onclick="copySample()">Copy Sample</button>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 2: TODAY'S WORK SUMMARY -->
+  <div class="section-header"><span class="icon">&#128203;</span> Today's Work Summary</div>
+
+  <div id="statsRow" class="stats-row"></div>
+
+  <div id="summaryContainer">
+    <div class="loading">Loading today's summary...</div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <a class="back-link" href="https://aryanverma2410.github.io/jira-dashboard/">&#8592; Back to Dashboard</a>
+
+</div>
+
+<script>
+var DATA_URL = 'https://aryanverma2410.github.io/jira-dashboard/summary.json';
+var CACHE_BUST = '?t=' + Date.now();
+
+function fetchSummary() {
+  fetch(DATA_URL + CACHE_BUST)
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function(data) {
+      renderSummary(data);
+      document.getElementById('refreshTime').textContent = 'Updated ' + new Date(data.generatedAt).toLocaleTimeString();
+      document.getElementById('liveDot').style.background = 'var(--success)';
+    })
+    .catch(function(err) {
+      document.getElementById('summaryContainer').innerHTML = '<div class="error">Could not load summary. ' + err.message + '</div>';
+      document.getElementById('refreshTime').textContent = 'Error';
+      document.getElementById('liveDot').style.background = 'var(--danger)';
+    });
+}
+
+function renderSummary(data) {
+  // Stats
+  var s = data.stats || {};
+  var statsHtml = '';
+  statsHtml += '<div class="stat-pill total"><span class="num">' + (s.totalTickets || 0) + '</span> Total</div>';
+  statsHtml += '<div class="stat-pill done"><span class="num">' + (s.completed || 0) + '</span> Done</div>';
+  statsHtml += '<div class="stat-pill progress"><span class="num">' + (s.inProgress || 0) + '</span> In Progress</div>';
+  if (s.awaiting) statsHtml += '<div class="stat-pill waiting"><span class="num">' + s.awaiting + '</span> Awaiting</div>';
+  document.getElementById('statsRow').innerHTML = statsHtml;
+
+  var html = '';
+  var t = data.tickets || {};
+
+  // Completed
+  html += '<div class="ticket-section">';
+  html += '<div class="ticket-section-title">&#9989; Completed <span class="count">(' + (t.completed || []).length + ')</span></div>';
+  if (t.completed && t.completed.length > 0) {
+    t.completed.forEach(function(tk) {
+      html += '<div class="ticket-row"><span class="ticket-key">' + tk.key + '</span><span class="ticket-detail"><span class="action">' + tk.action + '</span> — ' + (tk.detail || '') + '</span></div>';
+    });
+  } else {
+    html += '<div class="ticket-empty">No tickets completed today.</div>';
+  }
+  html += '</div>';
+
+  // In Progress
+  html += '<div class="ticket-section">';
+  html += '<div class="ticket-section-title">&#9203; In Progress <span class="count">(' + (t.inProgress || []).length + ')</span></div>';
+  if (t.inProgress && t.inProgress.length > 0) {
+    t.inProgress.forEach(function(tk) {
+      html += '<div class="ticket-row"><span class="ticket-key">' + tk.key + '</span><span class="ticket-detail"><span class="action">' + tk.action + '</span> — ' + (tk.detail || '') + '</span></div>';
+    });
+  } else {
+    html += '<div class="ticket-empty">No tickets in progress.</div>';
+  }
+  html += '</div>';
+
+  // Awaiting
+  if (t.awaiting && t.awaiting.length > 0) {
+    html += '<div class="ticket-section">';
+    html += '<div class="ticket-section-title">&#23F3; Awaiting Response <span class="count">(' + t.awaiting.length + ')</span></div>';
+    t.awaiting.forEach(function(tk) {
+      html += '<div class="ticket-row"><span class="ticket-key">' + tk.key + '</span><span class="ticket-detail">' + (tk.detail || '') + '</span></div>';
+    });
+    html += '</div>';
+  }
+
+  // Full summary text (collapsible)
+  if (data.summaryText) {
+    html += '<div class="card" style="margin-top:16px">';
+    html += '<div class="output-label">Full EOD Summary (AryanTone)</div>';
+    html += '<div class="output-box" id="fullSummary">' + escapeHtml(data.summaryText) + '</div>';
+    html += '<button class="copy-btn" onclick="copyFull()">Copy Summary</button>';
+    html += '</div>';
+  }
+
+  document.getElementById('summaryContainer').innerHTML = html;
+}
+
+function escapeHtml(text) {
+  if (!text) return '';
+  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function copyText(text, btn) {
+  navigator.clipboard.writeText(text).then(function() {
+    var orig = btn.textContent;
+    btn.classList.add('copied');
+    btn.textContent = 'Copied!';
+    setTimeout(function() { btn.classList.remove('copied'); btn.textContent = orig; }, 2000);
+  });
+}
+
+function copySample() {
+  copyText(document.getElementById('sampleOutput').textContent, document.getElementById('copySampleBtn'));
+}
+
+function copyFull() {
+  var el = document.getElementById('fullSummary');
+  if (el) copyText(el.textContent, event.target);
+}
+
+// Initial load
+fetchSummary();
+
+// Refresh every 60s
+setInterval(fetchSummary, 60000);
+</script>
+
+</body>
+</html>
