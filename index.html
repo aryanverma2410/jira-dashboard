@@ -161,6 +161,16 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .cmd-h-resp{font-size:12px;color:var(--success);margin-top:6px;padding:6px 8px;background:rgba(63,185,80,0.08);border-radius:6px}
 .cmd-h-pending{font-size:12px;color:var(--warning);margin-top:6px}
 
+/* Solution Section (inside expanded ticket cards) */
+.solution-section{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.solution-label{font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.solution-found{background:rgba(63,185,80,0.08);border:1px solid rgba(63,185,80,0.2);border-radius:8px;padding:10px;font-size:12px;line-height:1.5;max-height:200px;overflow-y:auto;white-space:pre-wrap;word-break:break-word}
+.solution-source{font-size:10px;color:var(--text-dim);margin-top:6px;font-style:italic}
+.solution-investigating{display:flex;align-items:center;gap:8px;padding:10px;background:rgba(88,166,255,0.08);border:1px solid rgba(88,166,255,0.2);border-radius:8px;font-size:12px;color:var(--accent)}
+.solution-spinner{width:14px;height:14px;border:2px solid rgba(88,166,255,0.2);border-top-color:var(--accent);border-radius:50%;animation:solSpin 0.8s linear infinite;flex-shrink:0}
+@keyframes solSpin{to{transform:rotate(360deg)}}
+.solution-none{padding:10px;background:rgba(139,148,158,0.05);border:1px dashed rgba(139,148,158,0.2);border-radius:8px;font-size:12px;color:var(--text-dim)}
+
 /* MCP Cards (MCPs view) */
 .mcp-card{background:var(--card);backdrop-filter:var(--blur);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin:0 16px 10px;position:relative}
 .mcp-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
@@ -587,6 +597,18 @@ function renderTickets(data,changedKeys){
   changedKeys.forEach(function(key){var c=list.querySelector('[data-ticket-key="'+key+'"]');if(c){c.classList.add('flash');setTimeout(function(){c.classList.remove('flash')},3000)}})
 }
 
+function buildSolutionHtml(sol){
+  if(!sol||!sol.status||sol.status==='none')return '<div class="solution-label">&#128161; Possible Solutions</div><div class="solution-none">No solution yet. Auto-investigation will trigger if aipro output is found.</div>';
+  if(sol.status==='investigating')return '<div class="solution-label">&#128161; Possible Solutions</div><div class="solution-investigating"><div class="solution-spinner"></div>Auto-investigating... aipro is analyzing this ticket</div>';
+  if(sol.status==='found'){
+    var s='<div class="solution-label">&#128161; Possible Solutions</div>';
+    s+='<div class="solution-found">'+escapeHtml(sol.excerpt||'')+'</div>';
+    if(sol.source||sol.foundAt)s+='<div class="solution-source">Source: '+escapeHtml(sol.source||'')+(sol.foundAt?' &middot; '+relTime(sol.foundAt):'')+'</div>';
+    return s;
+  }
+  return '<div class="solution-label">&#128161; Possible Solutions</div><div class="solution-none">No solution data available.</div>';
+}
+
 function buildCard(t,exp,ch){
   var sc=statusClass(t.status,t.statusCategory);
   var pc=priorityColor(t.priority);
@@ -619,7 +641,8 @@ function buildCard(t,exp,ch){
       '<div class="status-dropdown" id="sd-'+escapeHtml(t.key)+'"><div class="status-option" data-status="In Progress" data-key="'+escapeHtml(t.key)+'">In Progress</div><div class="status-option" data-status="Done" data-key="'+escapeHtml(t.key)+'">Done</div><div class="status-option" data-status="Open" data-key="'+escapeHtml(t.key)+'">Open</div><div class="status-option" data-status="Reopened" data-key="'+escapeHtml(t.key)+'">Reopened</div><div class="status-option" data-status="Closed" data-key="'+escapeHtml(t.key)+'">Closed</div></div>'+
       '<div class="inline-action-area" id="la-'+escapeHtml(t.key)+'"><input type="text" class="inline-input" id="li-'+escapeHtml(t.key)+'" placeholder="Label name (e.g. MENAL1, c=platform_issue)..."><button class="inline-submit" data-action="submit-label" data-key="'+escapeHtml(t.key)+'">Add Label</button></div>'+
       '<div class="inline-action-area" id="lk-'+escapeHtml(t.key)+'"><input type="text" class="inline-input" id="lt-'+escapeHtml(t.key)+'" placeholder="Target ticket key (e.g. PC-1234)..."><select class="inline-select" id="lr-'+escapeHtml(t.key)+'"><option value="Relates">Relates</option><option value="Blocks">Blocks</option><option value="Is blocked by">Is blocked by</option><option value="Duplicates">Duplicates</option><option value="Is duplicated by">Is duplicated by</option></select><button class="inline-submit" data-action="submit-link" data-key="'+escapeHtml(t.key)+'">Link Issue</button></div>'+
-    '</div></div>'
+          '<div class="solution-section" data-field="solution">'+buildSolutionHtml(t.solution)+'</div>'+
+'</div></div>'
 }
 
 function updateCard(card,t,ch){
@@ -631,6 +654,8 @@ function updateCard(card,t,ch){
   var le=card.querySelector('[data-field="last-comment"]');var pv='';if(t.lastCommentBy&&t.lastCommentSnippet)pv='@'+t.lastCommentBy+': '+t.lastCommentSnippet;if(le&&le.textContent!==pv)le.textContent=pv;
   var bg=card.querySelector('.status-badge');if(bg){var sc=statusClass(t.status,t.statusCategory);bg.className='status-badge '+sc;if(bg.textContent!==t.status)bg.textContent=t.status}
   if(expandedTickets.has(t.key)&&t.recentComments){var cc=card.querySelector('[data-field="comments"]');if(cc){var hh='';t.recentComments.forEach(function(c){hh+='<div class="comment-item"><span class="comment-author">'+escapeHtml(c.author)+'</span><span class="comment-date">'+relTime(c.date)+'</span><div class="comment-snippet">'+escapeHtml(c.snippet)+'</div></div>'});cc.innerHTML=hh}var de=card.querySelector('[data-field="desc"]');if(de)de.textContent=t.description||''}
+  // Update solution section
+  var solEl=card.querySelector('[data-field="solution"]');if(solEl)solEl.innerHTML=buildSolutionHtml(t.solution);
 }
 
 function toggleExpand(key){
