@@ -1,48 +1,7 @@
 {
-  "generatedAt": "2026-09-01T09:49:03.587Z",
-  "totalTickets": 6,
+  "generatedAt": "2026-09-01T09:49:47.235Z",
+  "totalTickets": 5,
   "tickets": [
-    {
-      "key": "TKME-2302",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Turkey Maintenance & Enhancements",
-      "projectKey": "TKME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-01T18:47:25.000+0900",
-      "created": "2026-08-26T21:54:33.000+0900",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n|Order|Creation_Date|Status|\n|TR260826-69153477|2026/08/26|WAITING_FOR_SEND_FINANCIAL|\n|TR260825-68551552|2026/08/25|ORDER_SPLIT|\n|TR260825-68578011|2026/08/25|ORDER_SPLIT|\n|TR260825-68438872|2026/08/2",
-      "commentsCount": 5,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-01T18:45:49.850+0900",
-          "snippet": "Hi Rajesh,\n\nHere is the current status of all orders from this ticket:\n\n|Order Code|Previous Status|Current Status|\n|TR260826-69153477|WAITING_FOR_SEND_FINANCIAL|CANCELLED|\n|TR260825-68551552|ORDER_SPLIT|COMPLETED|\n|TR260825-68578011|ORDER_SPLIT|COMPLETED|\n|TR260825-68438872|WAITING_FOR_SEND_FINANCI"
-        },
-        {
-          "author": "Rajeshbabu Yatirajula",
-          "date": "2026-09-01T17:13:47.455+0900",
-          "snippet": "Hi ~@email \n\nPlease go ahead for the below.\n\nTR260822-66135233 is stuck at WAITING_FOR_FINANCIAL — the order process errored at completeFinancialUpdate due to a GERP connection reset.\n\nTR260824-67438718 is stuck at WAIT_FRAUD_MANUAL_CHECK — the order process errored at orderManualChecked due to a Nu"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Rajesh,\n\nHere is the current status of all orders from this ticket:\n\n|Order Code|Previous Status|Current Status|\n|TR260826-69153477|WAITING_FOR_SEND_FINANCIAL|CANCELLED|\n|TR260825-68551552|ORDER_SPLIT|COMPLETED|\n|TR260825-68578011|ORDER_SPLIT|COMPLETED|\n|TR260825-68438872|WAITING_FOR_SEND_FINANCI",
-      "lastCommentDate": "2026-09-01T18:45:49.850+0900",
-      "url": "https://jira.secext.samsung.net/browse/TKME-2302",
-      "solution": {
-        "status": "found",
-        "excerpt": "I see there's already a lock file and extensive learnings from a previous TKME-2302 investigation (Aug 31). The RCA was never saved as an MD file. Let me fetch the ticket and produce the RCA based on the existing findings.\nI have ticket details and extensive learnings from a prior session. Let me read the Aryantone style guide and launch parallel investigations for the remaining stuck orders.\nI have enough data from the learnings file (which contains the actual Kibana log findings from the prior investigation) and ticket details. Some sub-agents failed, but the learnings file from the previous session has comprehensive findings. Let me write the RCA now.\nNow delete the lock file to signal completion.\nRCA for TKME-2302 is complete and saved to `ticket-rca/TKME-2302.md`. Lock file deleted.\n\n10 stuck TR-region orders investigated. 4 already resolved (CANCELLED/COMPLETED/RETURN_REFUNDED). 6 remain with distinct root causes:\n\n1. TR260822-66135233 — GERP connection reset at completeFinancialUpdate (approved for retrigger)\n2. TR260824-67438718 — NPE at orderManualChecked, missing workflow status entry (approved for retrigger)\n3. TR260825-68578011 — Process engine completion detection bug, isProcessCompleted returns NOK despite all consignments COMPLETED\n4. TR260822-65775139 — Financial completion event never posted externally, process waiting\n5. TR260821-65117344 — Fulfilment partner never confirmed return receipt, isReturnComplete looping 100+ times\n6. TR260821-65084030 — Return warehouse not configured for tr-cleaning-delivery delivery mode + fulfilment partner unresponsive",
-        "sections": {
-          "issue": "",
-          "rca": "I see there's already a lock file and extensive learnings from a previous TKME-2302 investigation (Aug 31). The RCA was never saved as an MD file. Let me fetch the ticket and produce the RCA based on the existing findings.\nI have ticket details and extensive learnings from a prior session. Let me read the Aryantone style guide and launch parallel investigations for the remaining stuck orders.\nI have enough data from the learnings file (which contains the actual Kibana log findings from the prior investigation) and ticket details. Some sub-agents failed, but the learnings file from the previous session has comprehensive findings. Let me write the RCA now.\nNow delete the lock file to signal completion.\nRCA for TKME-2302 is complete and saved to `ticket-rca/TKME-2302.md`. Lock file deleted.\n\n10 stuck TR-region orders investigated. 4 already resolved (CANCELLED/COMPLETED/RETURN_REFUNDED). 6 remain with distinct root causes:\n\n1. TR260822-66135233 — GERP connection reset at completeFinancialUpdate (approved for retrigger)\n2. TR260824-67438718 — NPE at orderManualChecked, missing workflow status entry (approved for retrigger)\n3. TR260825-68578011 — Process engine completion detection bug, isProcessCompleted returns NOK despite all consignments COMPLETED\n4. TR260822-65775139 — Financial completion event never posted externally, process waiting\n5. TR260821-65117344 — Fulfilment partner never confirmed return receipt, isReturnComplete looping 100+ times\n6. TR260821-65084030 — Return warehouse not configured for tr-cleaning-delivery delivery mode + fulfilment partner unresponsive",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-01T09:47:55.364Z"
-      }
-    },
     {
       "key": "TKME-2307",
       "summary": "For Creation: POS I Usergroup I Omnichannel Dealer Master Data",
@@ -259,7 +218,7 @@
       }
     ],
     "pid": 39780,
-    "uptime": 14502,
+    "uptime": 14547,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -271,7 +230,7 @@
       {
         "pid": 21524,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 143714,
+        "ageSeconds": 143756,
         "status": "running",
         "isChild": false,
         "taskSummary": "the RCA in possible solution is truncated. it should have the whoe RCA. and it should have 3 sect...",
@@ -281,17 +240,17 @@
       {
         "pid": 30788,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 136270,
+        "ageSeconds": 136312,
         "status": "running",
         "isChild": false,
-        "taskSummary": "first log 1.5 hours and assign it back, then start working on the remaining order",
-        "lastExchange": "first log 1.5 hours and assign it back, then start working on the remaining order",
+        "taskSummary": "investigate SAME-3952",
+        "lastExchange": "investigate SAME-3952",
         "sessionId": "bin"
       },
       {
         "pid": 30880,
         "cwd": "c:\\windows",
-        "ageSeconds": 136214,
+        "ageSeconds": 136256,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -301,7 +260,7 @@
       {
         "pid": 13076,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 108970,
+        "ageSeconds": 109012,
         "status": "running",
         "isChild": false,
         "taskSummary": "the RCA in possible solution is truncated. it should have the whoe RCA. and it should have 3 sect...",
@@ -311,7 +270,7 @@
       {
         "pid": 28204,
         "cwd": "unknown",
-        "ageSeconds": 88858,
+        "ageSeconds": 88900,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
