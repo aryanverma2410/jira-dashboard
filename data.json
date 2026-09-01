@@ -1,7 +1,43 @@
 {
-  "generatedAt": "2026-09-01T10:09:24.242Z",
+  "generatedAt": "2026-09-01T10:10:03.261Z",
   "totalTickets": 5,
   "tickets": [
+    {
+      "key": "SAME-3952",
+      "summary": "Order Stuck - CREATED - SA260831-72577904",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Kingdom of Saudi Arabia Maintenance & Enhancements",
+      "projectKey": "SAME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-09-01T19:09:41.000+0900",
+      "created": "2026-09-01T15:43:53.000+0900",
+      "description": "Hi Team,\n\nPlease check why order SA260831-72577904 got stuck in Created status and push the order forward urgently.\n\nNote that payment has been captured from PG.\n\n!image-2026-09-01-10-43-32-947.png!\n\n \n\nThanks,\n\nArj\n~@email",
+      "commentsCount": 1,
+      "recentComments": [
+        {
+          "author": "Arjenelle Acabado",
+          "date": "2026-09-01T19:09:41.397+0900",
+          "snippet": "Hi ~@email ~@email \n\nAppreciate your urgent support on this for sub's monthly closing please.\n\n \n\nThanks,\n\nArj"
+        }
+      ],
+      "lastCommentBy": "Arjenelle Acabado",
+      "lastCommentSnippet": "Hi ~@email ~@email \n\nAppreciate your urgent support on this for sub's monthly closing please.\n\n \n\nThanks,\n\nArj",
+      "lastCommentDate": "2026-09-01T19:09:41.397+0900",
+      "url": "https://jira.secext.samsung.net/browse/SAME-3952",
+      "solution": {
+        "status": "found",
+        "excerpt": "---\n\nHi Arjenelle ,\n\nI investigated order SA260831-72577904 and found it stuck at CREATED status with the order process in ERROR state. Here is what happened.\n\nThe order was placed on 31 August 2026 at 08:01:58 UTC via ApplePay (Checkout.com ApplePay flow) on the SA store for a total of 1,259 SAR. The payment was successfully authorised — the PaymentTransaction entry shows AUTHORIZATION with status ACCEPTED for 1,259 SAR at 08:02:17. The paymentInfo, billing address, payment address, and delivery address are all present and linked correctly. So the payment side is healthy.\n\nThe order process (order-process-v25-69-SA260831-72577904-1788163337560) started and executed three actions successfully: checkPartialPaymentEnabled (which set the order status to CREATED), sendOrderAcknowledgementEmail, and processOrderAnalytics. The process then errored at the next step — checkExternalEnabledAction. The process is now in ERROR state, which means no further actions will execute automatically.\n\nTwo anomalies in the DB state point to the root cause:\n\n1. The order header has a NULL deliveryMode. The order entry (entry 0) has the delivery mode set to sa-delivery-calendar-PSND, but this was not propagated to the order header. Several actions in the order process rely on order.getDeliveryMode() being non-null.\n\n2. There is an ExternalService entry linked to the order with all fields NULL (provider, status, serviceProduct, serviceID are all empty). This is a partially initialised external service record that should not exist for a standard product order. When CheckExternalEnabledAction retrieves order.getExternalServiceEntries() and processes them, this malformed entry causes a runtime exception — likely a NullPointerException — which puts the process into ERROR state.\n\nNo consignments were ever created because the process never reached the checkOrder or splitOrder steps, which are downstream of checkExternalEnabled. The order is therefore stuck at CREATED with no fulfilment path.\n\nThis is the same pattern observed in SAME-3285 (October 2025), where ApplePay orders on the SA store failed to convert to real orders despite payment being captured at the gateway. That ticket was resolved as Fixed, confirming this is a recurring ApplePay checkout flow issue specific to the SA store.\n\nThe remediation is to restart the order process from checkExternalEnabled. This requires a Groovy script that cleans up the malformed external service entry, sets the order header deliveryMode from the order entry, and creates a new order process instance. I do not have a reusable PC ticket for this remediation type — let me know if you would like me to create one.\n\nThanks,\n\nAryan.\n\n---\n\nRCA saved to `ticket-rca/SAME-3952.md`. Lock file deleted. No reusable PC ticket was found for order process restart remediation.",
+        "sections": {
+          "issue": "",
+          "rca": "---\n\nHi Arjenelle ,\n\nI investigated order SA260831-72577904 and found it stuck at CREATED status with the order process in ERROR state. Here is what happened.\n\nThe order was placed on 31 August 2026 at 08:01:58 UTC via ApplePay (Checkout.com ApplePay flow) on the SA store for a total of 1,259 SAR. The payment was successfully authorised — the PaymentTransaction entry shows AUTHORIZATION with status ACCEPTED for 1,259 SAR at 08:02:17. The paymentInfo, billing address, payment address, and delivery address are all present and linked correctly. So the payment side is healthy.\n\nThe order process (order-process-v25-69-SA260831-72577904-1788163337560) started and executed three actions successfully: checkPartialPaymentEnabled (which set the order status to CREATED), sendOrderAcknowledgementEmail, and processOrderAnalytics. The process then errored at the next step — checkExternalEnabledAction. The process is now in ERROR state, which means no further actions will execute automatically.\n\nTwo anomalies in the DB state point to the root cause:\n\n1. The order header has a NULL deliveryMode. The order entry (entry 0) has the delivery mode set to sa-delivery-calendar-PSND, but this was not propagated to the order header. Several actions in the order process rely on order.getDeliveryMode() being non-null.\n\n2. There is an ExternalService entry linked to the order with all fields NULL (provider, status, serviceProduct, serviceID are all empty). This is a partially initialised external service record that should not exist for a standard product order. When CheckExternalEnabledAction retrieves order.getExternalServiceEntries() and processes them, this malformed entry causes a runtime exception — likely a NullPointerException — which puts the process into ERROR state.\n\nNo consignments were ever created because the process never reached the checkOrder or splitOrder steps, which are downstream of checkExternalEnabled. The order is therefore stuck at CREATED with no fulfilment path.\n\nThis is the same pattern observed in SAME-3285 (October 2025), where ApplePay orders on the SA store failed to convert to real orders despite payment being captured at the gateway. That ticket was resolved as Fixed, confirming this is a recurring ApplePay checkout flow issue specific to the SA store.\n\nThe remediation is to restart the order process from checkExternalEnabled. This requires a Groovy script that cleans up the malformed external service entry, sets the order header deliveryMode from the order entry, and creates a new order process instance. I do not have a reusable PC ticket for this remediation type — let me know if you would like me to create one.\n\nThanks,\n\nAryan.\n\n---\n\nRCA saved to `ticket-rca/SAME-3952.md`. Lock file deleted. No reusable PC ticket was found for order process restart remediation.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-01T09:53:47.070Z"
+      }
+    },
     {
       "key": "TKME-2307",
       "summary": "For Creation: POS I Usergroup I Omnichannel Dealer Master Data",
@@ -36,36 +72,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-01T09:53:47.073Z"
-      }
-    },
-    {
-      "key": "SAME-3952",
-      "summary": "Order Stuck - CREATED - SA260831-72577904",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Kingdom of Saudi Arabia Maintenance & Enhancements",
-      "projectKey": "SAME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-01T16:54:19.000+0900",
-      "created": "2026-09-01T15:43:53.000+0900",
-      "description": "Hi Team,\n\nPlease check why order SA260831-72577904 got stuck in Created status and push the order forward urgently.\n\nNote that payment has been captured from PG.\n\n!image-2026-09-01-10-43-32-947.png!\n\n \n\nThanks,\n\nArj\n~@email",
-      "commentsCount": 0,
-      "recentComments": [],
-      "lastCommentBy": "",
-      "lastCommentSnippet": "",
-      "lastCommentDate": "",
-      "url": "https://jira.secext.samsung.net/browse/SAME-3952",
-      "solution": {
-        "status": "found",
-        "excerpt": "---\n\nHi Arjenelle ,\n\nI investigated order SA260831-72577904 and found it stuck at CREATED status with the order process in ERROR state. Here is what happened.\n\nThe order was placed on 31 August 2026 at 08:01:58 UTC via ApplePay (Checkout.com ApplePay flow) on the SA store for a total of 1,259 SAR. The payment was successfully authorised — the PaymentTransaction entry shows AUTHORIZATION with status ACCEPTED for 1,259 SAR at 08:02:17. The paymentInfo, billing address, payment address, and delivery address are all present and linked correctly. So the payment side is healthy.\n\nThe order process (order-process-v25-69-SA260831-72577904-1788163337560) started and executed three actions successfully: checkPartialPaymentEnabled (which set the order status to CREATED), sendOrderAcknowledgementEmail, and processOrderAnalytics. The process then errored at the next step — checkExternalEnabledAction. The process is now in ERROR state, which means no further actions will execute automatically.\n\nTwo anomalies in the DB state point to the root cause:\n\n1. The order header has a NULL deliveryMode. The order entry (entry 0) has the delivery mode set to sa-delivery-calendar-PSND, but this was not propagated to the order header. Several actions in the order process rely on order.getDeliveryMode() being non-null.\n\n2. There is an ExternalService entry linked to the order with all fields NULL (provider, status, serviceProduct, serviceID are all empty). This is a partially initialised external service record that should not exist for a standard product order. When CheckExternalEnabledAction retrieves order.getExternalServiceEntries() and processes them, this malformed entry causes a runtime exception — likely a NullPointerException — which puts the process into ERROR state.\n\nNo consignments were ever created because the process never reached the checkOrder or splitOrder steps, which are downstream of checkExternalEnabled. The order is therefore stuck at CREATED with no fulfilment path.\n\nThis is the same pattern observed in SAME-3285 (October 2025), where ApplePay orders on the SA store failed to convert to real orders despite payment being captured at the gateway. That ticket was resolved as Fixed, confirming this is a recurring ApplePay checkout flow issue specific to the SA store.\n\nThe remediation is to restart the order process from checkExternalEnabled. This requires a Groovy script that cleans up the malformed external service entry, sets the order header deliveryMode from the order entry, and creates a new order process instance. I do not have a reusable PC ticket for this remediation type — let me know if you would like me to create one.\n\nThanks,\n\nAryan.\n\n---\n\nRCA saved to `ticket-rca/SAME-3952.md`. Lock file deleted. No reusable PC ticket was found for order process restart remediation.",
-        "sections": {
-          "issue": "",
-          "rca": "---\n\nHi Arjenelle ,\n\nI investigated order SA260831-72577904 and found it stuck at CREATED status with the order process in ERROR state. Here is what happened.\n\nThe order was placed on 31 August 2026 at 08:01:58 UTC via ApplePay (Checkout.com ApplePay flow) on the SA store for a total of 1,259 SAR. The payment was successfully authorised — the PaymentTransaction entry shows AUTHORIZATION with status ACCEPTED for 1,259 SAR at 08:02:17. The paymentInfo, billing address, payment address, and delivery address are all present and linked correctly. So the payment side is healthy.\n\nThe order process (order-process-v25-69-SA260831-72577904-1788163337560) started and executed three actions successfully: checkPartialPaymentEnabled (which set the order status to CREATED), sendOrderAcknowledgementEmail, and processOrderAnalytics. The process then errored at the next step — checkExternalEnabledAction. The process is now in ERROR state, which means no further actions will execute automatically.\n\nTwo anomalies in the DB state point to the root cause:\n\n1. The order header has a NULL deliveryMode. The order entry (entry 0) has the delivery mode set to sa-delivery-calendar-PSND, but this was not propagated to the order header. Several actions in the order process rely on order.getDeliveryMode() being non-null.\n\n2. There is an ExternalService entry linked to the order with all fields NULL (provider, status, serviceProduct, serviceID are all empty). This is a partially initialised external service record that should not exist for a standard product order. When CheckExternalEnabledAction retrieves order.getExternalServiceEntries() and processes them, this malformed entry causes a runtime exception — likely a NullPointerException — which puts the process into ERROR state.\n\nNo consignments were ever created because the process never reached the checkOrder or splitOrder steps, which are downstream of checkExternalEnabled. The order is therefore stuck at CREATED with no fulfilment path.\n\nThis is the same pattern observed in SAME-3285 (October 2025), where ApplePay orders on the SA store failed to convert to real orders despite payment being captured at the gateway. That ticket was resolved as Fixed, confirming this is a recurring ApplePay checkout flow issue specific to the SA store.\n\nThe remediation is to restart the order process from checkExternalEnabled. This requires a Groovy script that cleans up the malformed external service entry, sets the order header deliveryMode from the order entry, and creates a new order process instance. I do not have a reusable PC ticket for this remediation type — let me know if you would like me to create one.\n\nThanks,\n\nAryan.\n\n---\n\nRCA saved to `ticket-rca/SAME-3952.md`. Lock file deleted. No reusable PC ticket was found for order process restart remediation.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-01T09:53:47.070Z"
       }
     },
     {
@@ -218,7 +224,7 @@
       }
     ],
     "pid": 39780,
-    "uptime": 15724,
+    "uptime": 15764,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -230,7 +236,7 @@
       {
         "pid": 21524,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 144933,
+        "ageSeconds": 144972,
         "status": "running",
         "isChild": false,
         "taskSummary": "the RCA in possible solution is truncated. it should have the whoe RCA. and it should have 3 sect...",
@@ -240,7 +246,7 @@
       {
         "pid": 30788,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 137488,
+        "ageSeconds": 137527,
         "status": "running",
         "isChild": false,
         "taskSummary": "please verify first if this is even possible and plausible",
@@ -250,7 +256,7 @@
       {
         "pid": 30880,
         "cwd": "c:\\windows",
-        "ageSeconds": 137433,
+        "ageSeconds": 137472,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -260,7 +266,7 @@
       {
         "pid": 13076,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 110189,
+        "ageSeconds": 110228,
         "status": "running",
         "isChild": false,
         "taskSummary": "the RCA in possible solution is truncated. it should have the whoe RCA. and it should have 3 sect...",
@@ -270,7 +276,7 @@
       {
         "pid": 28204,
         "cwd": "unknown",
-        "ageSeconds": 90076,
+        "ageSeconds": 90115,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
