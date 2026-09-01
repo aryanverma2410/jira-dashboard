@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-01T12:17:59.426Z",
+  "generatedAt": "2026-09-01T12:18:38.442Z",
   "totalTickets": 6,
   "tickets": [
     {
@@ -248,7 +248,7 @@
       }
     ],
     "pid": 39780,
-    "uptime": 23440,
+    "uptime": 23477,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -260,7 +260,7 @@
       {
         "pid": 21524,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 152648,
+        "ageSeconds": 152687,
         "status": "running",
         "isChild": false,
         "taskSummary": "the RCA when being scrolled, keeps jumping to the top of the rca while reading which is annoying,...",
@@ -270,17 +270,17 @@
       {
         "pid": 30788,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 145204,
+        "ageSeconds": 145243,
         "status": "running",
         "isChild": false,
-        "taskSummary": "check these orders in HAC if this script would fail somewhere",
-        "lastExchange": "check these orders in HAC if this script would fail somewhere",
+        "taskSummary": "would we fall into same isues in this script as well?mport de.hybris.platform.servicelayer.search...",
+        "lastExchange": "would we fall into same isues in this script as well?mport de.hybris.platform.servicelayer.search.FlexibleSearchQuery\nimport de.hybris.platform.servicelayer.model.ModelService\nimport de.hybris.platform.ordersplitting.model.ConsignmentModel\nimport de.hybris.platform.ordersplitting.model.ConsignmentEntryModel\nimport de.hybris.platform.basecommerce.enums.ConsignmentStatus\n\n// 1. Map of (OrderID : ProductCode)\ndef orderProductMap = [\n    \"ORDER-1001\": \"PROD-A\",\n    \"ORDER-1002\": \"PROD-B\"\n]\n\nModelService modelService = spring.getBean(\"modelService\")\ndef flexibleSearchService = spring.getBean(\"flexibleSearchService\")\ndef businessProcessService = spring.getBean(\"businessProcessService\")\n\norderProductMap.each { orderId, productCode ->\n    // 2. Fetch Order from DB\n    def orderQuery = new FlexibleSearchQuery(\"SELECT {pk} FROM {Order} WHERE {code} = ?orderCode\")\n    orderQuery.addQueryParameter(\"orderCode\", orderId)\n    def orderResult = flexibleSearchService.search(orderQuery)\n\n    if (orderResult.result.isEmpty()) {\n        println \"Order non-existent: ${orderId}\"\n        return\n    }\n\n    def order = orderResult.result.first()\n\n    // 3. Find and update the Order Entry price to 0.01\n    def matchingEntry = order.entries.find { entry ->\n        entry.product != null && entry.product.code == productCode\n    }\n\n    if (matchingEntry) {\n\t\tmatchingEntry.setTotalPrice(0.01);\n        matchingEntry.setNonGiveAwayFOC(false);\n        matchingEntry.setParentEntryNumber(null);\n        modelService.save(matchingEntry)\n        println \"Updated entry price to 0.01 for Order: ${orderId}, Product: ${productCode}\"\n    } else {\n        println \"No matching order entry for Product: ${productCode} in Order: ${orderId}\"\n        return\n    }\n\n    // 4. Fetch non-completed Consignment Entries matching the ProductCode\n    if (!order.consignments) {\n        println \"No consignments found for Order: ${orderId}\"\n        return\n    }\n\n    order.consignments.each { ConsignmentModel consignment ->\n        // Check if consignment is NOT in completed state\n        if (consignment.status != ConsignmentStatus.CANCELLED && consignment.status != ConsignmentStatus.PICKPACK) {\n\n            def matchingConsignmentEntry = consignment.consignmentEntries.find { ConsignmentEntryModel cEntry ->\n                cEntry.orderEntry?.product?.code == productCode\n            }\n\n            if (matchingConsignmentEntry) {\n                println \"Found consignment ${consignment.code} in status [${consignment.status}] for Product: ${productCode}\"\n\n                // 5. Trigger consignment business process from 'sendWarehouse' step\n                def processes = consignment.consignmentProcesses\n\n                if (processes) {\n                    processes.each { process ->\n                        // Send event to wake up or transition process at sendWarehouse action\n                        def eventName = \"${process.code}_sendWarehouse\"\n                        businessProcessService.triggerEvent(eventName)\n                        println \"Triggered process event: ${eventName}\"\n                    }\n                } else {\n                    println \"No active business process linked to Consignment: ${consignment.code}\"\n                }\n            }\n        }\n    }\n}",
         "sessionId": "bin"
       },
       {
         "pid": 30880,
         "cwd": "c:\\windows",
-        "ageSeconds": 145148,
+        "ageSeconds": 145187,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -290,7 +290,7 @@
       {
         "pid": 13076,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 117904,
+        "ageSeconds": 117943,
         "status": "running",
         "isChild": false,
         "taskSummary": "the RCA when being scrolled, keeps jumping to the top of the rca while reading which is annoying,...",
@@ -300,7 +300,7 @@
       {
         "pid": 28204,
         "cwd": "unknown",
-        "ageSeconds": 97792,
+        "ageSeconds": 97831,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
