@@ -230,6 +230,36 @@ body.has-status-bar .scroll{padding-top:28px}
 .ticket-actions-swipe .act-label{background:var(--success)}
 .ticket-actions-swipe .act-assign{background:#a371f7}
 .ticket-actions-swipe .act-investigate{background:#ff7b72}
+
+/* ===== TICKET DETAIL PAGE ===== */
+.detail-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:200;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.detail-overlay.show{display:block}
+.detail-header{position:sticky;top:0;z-index:10;background:var(--bg);padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.detail-back{background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex-shrink:0;transition:background 0.2s}
+.detail-back:hover{background:rgba(88,166,255,0.1)}
+.detail-header-info{flex:1;min-width:0}
+.detail-header-key{font-size:13px;font-weight:700;font-family:monospace}
+.detail-header-status{font-size:11px;color:var(--text-dim)}
+.detail-body{padding:16px;max-width:800px;margin:0 auto}
+.detail-summary{font-size:18px;font-weight:600;line-height:1.4;margin-bottom:12px;color:var(--text)}
+.detail-meta-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.detail-meta-chip{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:11px;color:var(--text-dim)}
+.detail-section{margin-bottom:20px}
+.detail-section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-dim);margin-bottom:8px}
+.detail-description{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-size:13px;line-height:1.6;white-space:pre-wrap;word-break:break-word;color:var(--text)}
+.detail-comments{display:flex;flex-direction:column;gap:10px}
+.detail-comment{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px}
+.detail-comment-author{font-size:12px;font-weight:600;color:var(--text)}
+.detail-comment-date{font-size:10px;color:var(--text-dim);margin-left:8px}
+.detail-comment-body{font-size:12px;line-height:1.5;margin-top:6px;color:var(--text);white-space:pre-wrap;word-break:break-word}
+.detail-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.detail-actions .action-btn{font-size:12px;padding:6px 14px}
+.detail-inline-area{margin-bottom:16px}
+.detail-solution{margin-bottom:20px}
+.detail-solution .solution-section-block{margin-bottom:10px}
+.detail-solution .solution-section-body{max-height:none;overflow-y:visible}
+.detail-link{display:inline-block;margin-top:12px;font-size:12px;color:var(--accent);text-decoration:none}
+.detail-link:hover{text-decoration:underline}
 </style>
 </head>
 <body>
@@ -399,6 +429,18 @@ body.has-status-bar .scroll{padding-top:28px}
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- TICKET DETAIL OVERLAY -->
+<div class="detail-overlay" id="detailOverlay">
+  <div class="detail-header">
+    <div class="detail-back" onclick="closeTicketDetail()">&#8592;</div>
+    <div class="detail-header-info">
+      <div class="detail-header-key" id="detailKey"></div>
+      <div class="detail-header-status" id="detailStatus"></div>
+    </div>
+  </div>
+  <div class="detail-body" id="detailBody"></div>
+</div>
 
 <script>
 var _p=['ghp_2','JfmDbE','rUdypU','SSwCOC','HQ2eoO','0X3Zb2','OXyGU'];
@@ -682,6 +724,68 @@ function updateCard(card,t,ch){
   if(expandedTickets.has(t.key)&&t.recentComments){var cc=card.querySelector('[data-field="comments"]');if(cc){var hh='';t.recentComments.forEach(function(c){hh+='<div class="comment-item"><span class="comment-author">'+escapeHtml(c.author)+'</span><span class="comment-date">'+relTime(c.date)+'</span><div class="comment-snippet">'+escapeHtml(c.snippet)+'</div></div>'});cc.innerHTML=hh}var de=card.querySelector('[data-field="desc"]');if(de)de.textContent=t.description||''}
   // Update solution section
   var solEl=card.querySelector('[data-field="solution"]');if(solEl)solEl.innerHTML=buildSolutionHtml(t.solution);
+}
+
+// ===== TICKET DETAIL PAGE =====
+var detailTicketKey=null;
+function openTicketDetail(key){
+  if(!rawData||!rawData.tickets)return;
+  var t=rawData.tickets.find(function(x){return x.key===key});
+  if(!t)return;
+  detailTicketKey=key;
+  var sc=statusClass(t.status,t.statusCategory);
+  var pc=priorityColor(t.priority);
+  var kc=projectColor(t.projectKey);
+
+  // Header
+  document.getElementById('detailKey').textContent=t.key;
+  document.getElementById('detailKey').style.color=kc;
+  document.getElementById('detailStatus').innerHTML='<span class="status-badge '+sc+'">'+escapeHtml(t.status)+'</span>';
+
+  // Body
+  var html='';
+  // Summary
+  html+='<div class="detail-summary">'+escapeHtml(t.summary||'')+'</div>';
+  // Meta chips
+  html+='<div class="detail-meta-row">'+
+    '<div class="detail-meta-chip"><span class="priority-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+pc+';margin-right:4px"></span>'+escapeHtml(t.priority||'N/A')+'</div>'+
+    '<div class="detail-meta-chip">'+escapeHtml(t.project||'N/A')+'</div>'+
+    '<div class="detail-meta-chip">'+escapeHtml(t.issuetype||'N/A')+'</div>'+
+    '<div class="detail-meta-chip">Updated '+relTime(t.updated)+'</div>'+
+    '<div class="detail-meta-chip">&#128172; '+(t.commentsCount||0)+'</div>'+
+  '</div>';
+  // Description
+  if(t.description){
+    html+='<div class="detail-section"><div class="detail-section-title">Description</div><div class="detail-description">'+escapeHtml(t.description)+'</div></div>';
+  }
+  // Comments
+  if(t.recentComments&&t.recentComments.length>0){
+    html+='<div class="detail-section"><div class="detail-section-title">Comments ('+t.commentsCount+')</div><div class="detail-comments">';
+    t.recentComments.forEach(function(c){
+      html+='<div class="detail-comment"><div><span class="detail-comment-author">'+escapeHtml(c.author)+'</span><span class="detail-comment-date">'+relTime(c.date)+'</span></div><div class="detail-comment-body">'+escapeHtml(c.body||c.snippet||'')+'</div></div>';
+    });
+    html+='</div></div>';
+  }
+  // Actions
+  html+='<div class="detail-section"><div class="detail-section-title">Actions</div><div class="detail-actions">'+
+    '<button class="action-btn" onclick="investigateTicket(\''+key+'\')">Investigate</button>'+
+    '<button class="action-btn" onclick="writeScript(\''+key+'\')">Write Script</button>'+
+    '<button class="action-btn" onclick="assignToMe(\''+key+'\')">Assign to Me</button>'+
+    '<a class="detail-link" href="https://jira.secext.samsung.net/browse/'+encodeURIComponent(key)+'" target="_blank">Open in Jira &#8599;</a>'+
+  '</div></div>';
+  // Solution / RCA
+  if(t.solution){
+    html+='<div class="detail-section"><div class="detail-section-title">Possible Solutions</div><div class="detail-solution">'+buildSolutionHtml(t.solution)+'</div></div>';
+  }
+  document.getElementById('detailBody').innerHTML=html;
+
+  // Show overlay
+  document.getElementById('detailOverlay').classList.add('show');
+  document.getElementById('detailOverlay').scrollTop=0;
+}
+function closeTicketDetail(){
+  document.getElementById('detailOverlay').classList.remove('show');
+  detailTicketKey=null;
 }
 
 function toggleExpand(key){
@@ -1099,10 +1203,10 @@ document.getElementById('ticketsList').addEventListener('click',function(e){
     return}
   var so=e.target.closest('[data-status]');
   if(so){e.stopPropagation();submitStatus(so.getAttribute('data-key'),so.getAttribute('data-status'));return}
-  // CRITICAL FIX: Don't toggle if click is inside expanded-content
+  // CRITICAL FIX: Don't open detail if click is inside expanded-content
   if(e.target.closest('.expanded-content'))return;
   var card=e.target.closest('[data-ticket-key]');
-  if(card)toggleExpand(card.getAttribute('data-ticket-key'))
+  if(card)openTicketDetail(card.getAttribute('data-ticket-key'))
 })
 
 // Sessions: expand/collapse + actions
