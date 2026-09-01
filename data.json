@@ -1,43 +1,7 @@
 {
-  "generatedAt": "2026-09-01T09:15:44.841Z",
-  "totalTickets": 8,
+  "generatedAt": "2026-09-01T09:16:24.382Z",
+  "totalTickets": 7,
   "tickets": [
-    {
-      "key": "TKME-2308",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Turkey Maintenance & Enhancements",
-      "projectKey": "TKME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-01T18:15:30.000+0900",
-      "created": "2026-09-01T16:57:03.000+0900",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|TR260831-72955234|2026/08/31|WAITING_FOR_SEND_FINANCIAL|\n|TR260830-71999966|2026/08/30|WAITING_FOR_FINANCIAL|\n|TR260829-71694545|2026/08/29|CANCELLED|\n|TR260829-71455203|",
-      "commentsCount": 1,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-01T18:15:30.588+0900",
-          "snippet": "Hi Team,\n\nFollowing orders were found to be stuck with various issues. Below is the root cause analysis for each category:\n\n1. Financial Integration (FI) Connection Errors (8 orders):\n\nTR260831-72955234: isInitialFISuccess rc=ERROR\nTR260830-71999966: completeFinancialUpdate - I/O error: Connection r"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Team,\n\nFollowing orders were found to be stuck with various issues. Below is the root cause analysis for each category:\n\n1. Financial Integration (FI) Connection Errors (8 orders):\n\nTR260831-72955234: isInitialFISuccess rc=ERROR\nTR260830-71999966: completeFinancialUpdate - I/O error: Connection r",
-      "lastCommentDate": "2026-09-01T18:15:30.588+0900",
-      "url": "https://jira.secext.samsung.net/browse/TKME-2308",
-      "solution": {
-        "status": "found",
-        "excerpt": "Stuck order on Hybris\r\nGenerated: 2026-09-01T09:15:00.000Z\r\n\r\nHi [~aryan.v1@samsung.com] ,\r\n\r\nTKME-2308 is a healthcheck ticket covering 17 stuck TR-region orders reported on 2026-08-31. After verifying each order's current DB state directly via HAC and correlating with the analysis in the ticket comments, 5 orders have already progressed to terminal CANCELLED status and need no further action. The remaining 12 orders fall into 5 distinct root cause categories.\r\n\r\nOrders Already Resolved (5 orders):\r\n\r\nTR260829-71694545, TR260829-71319898, TR260821-65147067, TR260823-66787781, TR260827-69845695: All five are now in CANCELLED status with completed consignments and refund entries. The cancellation and refund processes completed after the healthcheck data was collected. No further action needed.\r\n\r\nFinancial Integration Connection Errors (4 orders):\r\n\r\nTR260830-71999966, TR260828-70880822, TR260828-70612432, TR260827-69829901: All four orders are stuck at WAITING_FOR_FINANCIAL with the order process (order-process-v25-69) in ERROR state. The consignments are in COMPLETED status but the financial completion step failed. The completeFinancialUpdate action sends the financial update to GERP/FI, and the connection was reset or timed out during the HTTP call. The process engine moved the business process to ERROR state after the action failed. These are transient network failures at the FI endpoint. The orders have been stagnant for 85-114 hours. The process can be retried by restarting the order process from the waitForFinancialCompletion action, but only after confirming FI endpoint availability.\r\n\r\nGetMobil NPE (1 order):\r\n\r\nTR260828-70236798: The order is stuck at PAYMENT_CAPTURED with the order process in ERROR state. The GetMobil external service entry is in NEW status, meaning it was never successfully created. The processExternalServicesAction handler received a null response from the GetMobil integration and threw a NullPointerException when calling getLead_id() on the null response. The process entered ERROR state because the action node failed. The order has been stagnant for 92 hours. The process can be retried after confirming GetMobil endpoint health.\r\n\r\nTR260808-53929391: The order is stuck at PAYMENT_CAPTURED with the order process in ERROR state. Same GetMobil NPE pattern as above. The GetMobil external service is in NEW status and was never completed. The process has been stagnant for 115 hours. The process can be retried after confirming GetMobil endpoint health.\r\n\r\nRefund Failures (2 orders):\r\n\r\nTR260829-71455203: The order is at REFUND_FAILED status. The refund follow-on payment entry returned ERROR from the payment gateway. The refund process is in FAILED state. The order amount is 84,999 TRY. The refund may need a manual retry after investigating the payment gateway response to determine why the follow-on refund was rejected.\r\n\r\nTR260827-69905253: The order is at REFUND_FAILED status. The refund process is in RUNNING state but the payment entry returned ERROR. The ERP sales order was not created, and the order has been stagnant for 111 hours. The refund amount is 61,999 TRY. Same root cause as above: the payment gateway rejected the refund follow-on request. Manual investigation of the payment gateway response is needed before retrying.\r\n\r\nOrder Split (1 order):\r\n\r\nTR260829-71253457: The order is at ORDER_SPLIT status with 2 consignments in READY status. The order process is in RUNNING state. The order is waiting for the split logic to complete. This is not an error state but a potentially slow process. The consignments are ready but have not been dispatched. This may need WMS team attention to check if the consignment dispatch is blocked.\r\n\r\nCompleted with Failed Subprocesses (1 order):\r\n\r\nTR260829-71171710: The order is in COMPLETED status, but 2 consignment subprocesses (_2 and _3) are in FAILED state. The main order completed successfully but the consignment-level processes failed, possibly related to return or cancel DO operations that were blocked by WMS. The WMS blocks need WMS team intervention to release.\r\n\r\nReturn Shipping Preparation Stuck (1 order):\r\n\r\nTR260828-70738663: The order is at PARTIAL_RETURN_SHIPPING_PREPARATION status. Five return-refund processes are in RUNNING state. The consignments have no shipping date set and have been in this state for 3 days. The return-refund processes are waiting for the shipping preparation to complete, but the shipping date has not been set. This may need the logistics or WMS team to set the shipping date for the return consignments.\r\n\r\nWaiting for Send Financial (1 order):\r\n\r\nTR260831-72955234: The order is at WAITING_FOR_SEND_FINANCIAL status. No consignment has been created for this order yet. The order process is waiting for the financial send step. The isInitialFISuccess check returned ERROR. This is a financial integration failure at the initial FI step, before consignment creation. The process can be retried after confirming FI endpoint availability.\r\n\r\nSummary of required actions:\r\n\r\n1. TR260830-71999966, TR260828-70880822, TR260828-70612432, TR260827-69829901, TR260831-72955234 (5 orders) - Retrigger order process from waitForFinancialCompletion or isInitialFISuccess after confirming FI endpoint availability\r\n2. TR260828-70236798, TR260808-53929391 (2 orders) - Retrigger order process from processExternalServicesAction after confirming GetMobil endpoint health\r\n3. TR260829-71455203, TR260827-69905253 (2 orders) - Manual refund retry after investigating payment gateway response\r\n4. TR260829-71253457 - WMS team to check consignment dispatch status\r\n5. TR260829-71171710 - WMS team to release consignment subprocess blocks\r\n6. TR260828-70738663 - Logistics/WMS team to set return shipping date\r\n\r\nNo reusable PC ticket exists for FI retrigger or refund retrigger by aryan.v1. PC-52678 is available only for SC+ remediation and does not apply here. A new PC ticket will be needed if scripting is approved for the process retrigger orders.\r\n\r\nThanks,\r\n\r\nAryan.",
-        "sections": {
-          "issue": "",
-          "rca": "Stuck order on Hybris\r\nGenerated: 2026-09-01T09:15:00.000Z\r\n\r\nHi [~aryan.v1@samsung.com] ,\r\n\r\nTKME-2308 is a healthcheck ticket covering 17 stuck TR-region orders reported on 2026-08-31. After verifying each order's current DB state directly via HAC and correlating with the analysis in the ticket comments, 5 orders have already progressed to terminal CANCELLED status and need no further action. The remaining 12 orders fall into 5 distinct root cause categories.\r\n\r\nOrders Already Resolved (5 orders):\r\n\r\nTR260829-71694545, TR260829-71319898, TR260821-65147067, TR260823-66787781, TR260827-69845695: All five are now in CANCELLED status with completed consignments and refund entries. The cancellation and refund processes completed after the healthcheck data was collected. No further action needed.\r\n\r\nFinancial Integration Connection Errors (4 orders):\r\n\r\nTR260830-71999966, TR260828-70880822, TR260828-70612432, TR260827-69829901: All four orders are stuck at WAITING_FOR_FINANCIAL with the order process (order-process-v25-69) in ERROR state. The consignments are in COMPLETED status but the financial completion step failed. The completeFinancialUpdate action sends the financial update to GERP/FI, and the connection was reset or timed out during the HTTP call. The process engine moved the business process to ERROR state after the action failed. These are transient network failures at the FI endpoint. The orders have been stagnant for 85-114 hours. The process can be retried by restarting the order process from the waitForFinancialCompletion action, but only after confirming FI endpoint availability.\r\n\r\nGetMobil NPE (1 order):\r\n\r\nTR260828-70236798: The order is stuck at PAYMENT_CAPTURED with the order process in ERROR state. The GetMobil external service entry is in NEW status, meaning it was never successfully created. The processExternalServicesAction handler received a null response from the GetMobil integration and threw a NullPointerException when calling getLead_id() on the null response. The process entered ERROR state because the action node failed. The order has been stagnant for 92 hours. The process can be retried after confirming GetMobil endpoint health.\r\n\r\nTR260808-53929391: The order is stuck at PAYMENT_CAPTURED with the order process in ERROR state. Same GetMobil NPE pattern as above. The GetMobil external service is in NEW status and was never completed. The process has been stagnant for 115 hours. The process can be retried after confirming GetMobil endpoint health.\r\n\r\nRefund Failures (2 orders):\r\n\r\nTR260829-71455203: The order is at REFUND_FAILED status. The refund follow-on payment entry returned ERROR from the payment gateway. The refund process is in FAILED state. The order amount is 84,999 TRY. The refund may need a manual retry after investigating the payment gateway response to determine why the follow-on refund was rejected.\r\n\r\nTR260827-69905253: The order is at REFUND_FAILED status. The refund process is in RUNNING state but the payment entry returned ERROR. The ERP sales order was not created, and the order has been stagnant for 111 hours. The refund amount is 61,999 TRY. Same root cause as above: the payment gateway rejected the refund follow-on request. Manual investigation of the payment gateway response is needed before retrying.\r\n\r\nOrder Split (1 order):\r\n\r\nTR260829-71253457: The order is at ORDER_SPLIT status with 2 consignments in READY status. The order process is in RUNNING state. The order is waiting for the split logic to complete. This is not an error state but a potentially slow process. The consignments are ready but have not been dispatched. This may need WMS team attention to check if the consignment dispatch is blocked.\r\n\r\nCompleted with Failed Subprocesses (1 order):\r\n\r\nTR260829-71171710: The order is in COMPLETED status, but 2 consignment subprocesses (_2 and _3) are in FAILED state. The main order completed successfully but the consignment-level processes failed, possibly related to return or cancel DO operations that were blocked by WMS. The WMS blocks need WMS team intervention to release.\r\n\r\nReturn Shipping Preparation Stuck (1 order):\r\n\r\nTR260828-70738663: The order is at PARTIAL_RETURN_SHIPPING_PREPARATION status. Five return-refund processes are in RUNNING state. The consignments have no shipping date set and have been in this state for 3 days. The return-refund processes are waiting for the shipping preparation to complete, but the shipping date has not been set. This may need the logistics or WMS team to set the shipping date for the return consignments.\r\n\r\nWaiting for Send Financial (1 order):\r\n\r\nTR260831-72955234: The order is at WAITING_FOR_SEND_FINANCIAL status. No consignment has been created for this order yet. The order process is waiting for the financial send step. The isInitialFISuccess check returned ERROR. This is a financial integration failure at the initial FI step, before consignment creation. The process can be retried after confirming FI endpoint availability.\r\n\r\nSummary of required actions:\r\n\r\n1. TR260830-71999966, TR260828-70880822, TR260828-70612432, TR260827-69829901, TR260831-72955234 (5 orders) - Retrigger order process from waitForFinancialCompletion or isInitialFISuccess after confirming FI endpoint availability\r\n2. TR260828-70236798, TR260808-53929391 (2 orders) - Retrigger order process from processExternalServicesAction after confirming GetMobil endpoint health\r\n3. TR260829-71455203, TR260827-69905253 (2 orders) - Manual refund retry after investigating payment gateway response\r\n4. TR260829-71253457 - WMS team to check consignment dispatch status\r\n5. TR260829-71171710 - WMS team to release consignment subprocess blocks\r\n6. TR260828-70738663 - Logistics/WMS team to set return shipping date\r\n\r\nNo reusable PC ticket exists for FI retrigger or refund retrigger by aryan.v1. PC-52678 is available only for SC+ remediation and does not apply here. A new PC ticket will be needed if scripting is approved for the process retrigger orders.\r\n\r\nThanks,\r\n\r\nAryan.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-01T09:07:20.709Z"
-      }
-    },
     {
       "key": "PC-53353",
       "summary": "ImpEx to create POS, Usergroup and Omnichannel Dealer Master Data for 3 TR stores",
@@ -325,7 +289,7 @@
       }
     ],
     "pid": 39780,
-    "uptime": 12504,
+    "uptime": 12544,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -337,7 +301,7 @@
       {
         "pid": 21524,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 141713,
+        "ageSeconds": 141753,
         "status": "running",
         "isChild": false,
         "taskSummary": "the RCA in possible solution is truncated. it should have the whoe RCA. and it should have 3 sect...",
@@ -347,7 +311,7 @@
       {
         "pid": 30788,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 134269,
+        "ageSeconds": 134309,
         "status": "running",
         "isChild": false,
         "taskSummary": "beth the tickets were assigned to SDS Shop. explicitly make sure the tickets I create are assigne...",
@@ -357,7 +321,7 @@
       {
         "pid": 30880,
         "cwd": "c:\\windows",
-        "ageSeconds": 134213,
+        "ageSeconds": 134253,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -367,7 +331,7 @@
       {
         "pid": 13076,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 106969,
+        "ageSeconds": 107009,
         "status": "running",
         "isChild": false,
         "taskSummary": "the RCA in possible solution is truncated. it should have the whoe RCA. and it should have 3 sect...",
@@ -377,7 +341,7 @@
       {
         "pid": 28204,
         "cwd": "unknown",
-        "ageSeconds": 86857,
+        "ageSeconds": 86897,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
