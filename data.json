@@ -1,7 +1,37 @@
 {
-  "generatedAt": "2026-09-01T08:53:10.558Z",
-  "totalTickets": 7,
+  "generatedAt": "2026-09-01T08:53:53.251Z",
+  "totalTickets": 8,
   "tickets": [
+    {
+      "key": "TKME-2308",
+      "summary": "Stuck order on Hybris",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Turkey Maintenance & Enhancements",
+      "projectKey": "TKME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-09-01T17:53:27.000+0900",
+      "created": "2026-09-01T16:57:03.000+0900",
+      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|TR260831-72955234|2026/08/31|WAITING_FOR_SEND_FINANCIAL|\n|TR260830-71999966|2026/08/30|WAITING_FOR_FINANCIAL|\n|TR260829-71694545|2026/08/29|CANCELLED|\n|TR260829-71455203|",
+      "commentsCount": 1,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-09-01T16:57:05.146+0900",
+          "snippet": "Hi Team,\n\nFollowing orders were found to be stuck with various issues. Below is the root cause analysis for each category:\n\n1. Financial Integration (FI) Connection Errors (8 orders):\n\nTR260831-72955234: isInitialFISuccess rc=ERROR\nTR260830-71999966: completeFinancialUpdate - I/O error: Connection r"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Team,\n\nFollowing orders were found to be stuck with various issues. Below is the root cause analysis for each category:\n\n1. Financial Integration (FI) Connection Errors (8 orders):\n\nTR260831-72955234: isInitialFISuccess rc=ERROR\nTR260830-71999966: completeFinancialUpdate - I/O error: Connection r",
+      "lastCommentDate": "2026-09-01T16:57:05.146+0900",
+      "url": "https://jira.secext.samsung.net/browse/TKME-2308",
+      "solution": {
+        "status": "investigating",
+        "issueNumber": null,
+        "lockedAt": "2026-09-01T08:53:52.254Z"
+      }
+    },
     {
       "key": "PC-53353",
       "summary": "ImpEx to create POS, Usergroup and Omnichannel Dealer Master Data for 3 TR stores",
@@ -21,9 +51,15 @@
       "lastCommentDate": "",
       "url": "https://jira.secext.samsung.net/browse/PC-53353",
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-09-01T08:38:27.816Z"
+        "status": "found",
+        "excerpt": "ImpEx to create POS, Usergroup and Omnichannel Dealer Master Data for 3 TR stores\r\nGenerated: 2026-09-01T08:45:00.000Z\r\n\r\nHi Georgina ,\r\n\r\nPC-53353 is a master data creation ticket to set up PointOfService, StoreEmployeeGroup, UserGroup, Address, and OmnichannelDealer entries for 3 new TR-region stores in the Samsung Toko Hybris platform. The parent ticket TKME-2307 requested this creation, and this PC ticket carries the ImpEx script that will be executed in production SMI-P1.\r\n\r\nThe 3 stores are C750_020_80167 (SPLAZA DAYANIKLI TUKETIM TERASPARK, Denizli), C750_0034_00678 (DORUK KORU FLORYA, Istanbul Bakirkoy), and C750_0034_00294 (ASAS ELEKTRONIK TEMA WORLD, Istanbul Kucukcekmece). The data was provided by the subsidiary in two Excel templates attached to TKME-2307.\r\n\r\nThe ImpEx script TKME-2307.impex follows the exact same 6-step pattern established by the two prior similar PC tickets, PC-49087 (TKME-2175, Closed, 5 stores) and PC-50301 (TKME-2222, Closed, 3 stores). Both were approved and executed successfully in production by OM Prakash. The pattern is:\r\n\r\nStep 1 creates StoreEmployeeGroup entries for each store, with uid following the convention tr-o2o-{storeId}-storeemployeegroup. Each StoreEmployeeGroup is assigned to the parent tr-storeagentgroup. The uidHash is computed via com.samsung.toko.dataimport.decorators.UidHashCellDecorator.\r\n\r\nStep 2 creates UserGroup entries (store agent groups) for each store, with uid following tr-o2o-{storeId}-storeagentgroup. Each UserGroup is linked to its corresponding StoreEmployeeGroup and the parent tr-storeagentgroup via the UidHashGroupCellDecorator.\r\n\r\nStep 3 creates PointOfService entries with name matching the store externalId, displayName from the subsidiary data, storeEmployeeGroups linked via uidHash, partnerId, partnerName, gerpSoldTo, gerpShipTo, type=STORE, and baseStore=tr.\r\n\r\nStep 4 creates Address entries for each store with streetname, town, postalcode, phone1, country=TR, region (TR-20 for Denizli, TR-34 for Istanbul), district, email, and owner pointing to the PointOfService.\r\n\r\nStep 5 links each Address to its PointOfService via UPDATE.\r\n\r\nStep 6 creates OmnichannelDealer entries for each store with uid, name, branchCode, companyCode, city, cityCode, district, emails, longitude, latitude, and store=tr. The OmnichannelDealer type is a custom Samsung Toko type defined in tokocore-items.xml at line 40183 with deployment table OmnichannelDealer and typecode 10736.\r\n\r\nThe script structure is correct and consistent with the established pattern. All store IDs, partner codes, addresses, coordinates, and dealer branch codes are populated from the subsidiary-provided Excel data. The ITGC header comments reference PC-53353(TKME-2307) and target environment SMI-P1.\r\n\r\nThere are no code defects, no runtime errors, and no system issues to investigate. This is a straightforward master data provisioning task. The script is ready for approval and execution.\r\n\r\nVerification after execution: confirm in Backoffice that POS, StoreEmployeeGroup, UserGroup, Address, and OmnichannelDealer entries exist for all 3 stores. Rollback if needed: remove the created POS, UserGroups, and OmnichannelDealer entries for the 3 stores.\r\n\r\nThanks,\r\nAryan.\r\n\r\n## Remediation\r\nScript: TKME-2307.impex (already attached to PC-53353 in Jira, also at C:\toko\toko6\toko6\\core-customize\\hybris\\bin\\confluence-pc-scripts\\TKME-2307.impex)\r\nPattern follows: PC-49087 (TKME-2175, Closed, 5 TR stores) and PC-50301 (TKME-2222, Closed, 3 TR stores)\r\nParent: TKME-2307 (QA Server Review)\r\nEnvironment: SMI-P1\r\nNo new PC ticket needed - this IS the PC ticket.",
+        "sections": {
+          "issue": "",
+          "rca": "ImpEx to create POS, Usergroup and Omnichannel Dealer Master Data for 3 TR stores\r\nGenerated: 2026-09-01T08:45:00.000Z\r\n\r\nHi Georgina ,\r\n\r\nPC-53353 is a master data creation ticket to set up PointOfService, StoreEmployeeGroup, UserGroup, Address, and OmnichannelDealer entries for 3 new TR-region stores in the Samsung Toko Hybris platform. The parent ticket TKME-2307 requested this creation, and this PC ticket carries the ImpEx script that will be executed in production SMI-P1.\r\n\r\nThe 3 stores are C750_020_80167 (SPLAZA DAYANIKLI TUKETIM TERASPARK, Denizli), C750_0034_00678 (DORUK KORU FLORYA, Istanbul Bakirkoy), and C750_0034_00294 (ASAS ELEKTRONIK TEMA WORLD, Istanbul Kucukcekmece). The data was provided by the subsidiary in two Excel templates attached to TKME-2307.\r\n\r\nThe ImpEx script TKME-2307.impex follows the exact same 6-step pattern established by the two prior similar PC tickets, PC-49087 (TKME-2175, Closed, 5 stores) and PC-50301 (TKME-2222, Closed, 3 stores). Both were approved and executed successfully in production by OM Prakash. The pattern is:\r\n\r\nStep 1 creates StoreEmployeeGroup entries for each store, with uid following the convention tr-o2o-{storeId}-storeemployeegroup. Each StoreEmployeeGroup is assigned to the parent tr-storeagentgroup. The uidHash is computed via com.samsung.toko.dataimport.decorators.UidHashCellDecorator.\r\n\r\nStep 2 creates UserGroup entries (store agent groups) for each store, with uid following tr-o2o-{storeId}-storeagentgroup. Each UserGroup is linked to its corresponding StoreEmployeeGroup and the parent tr-storeagentgroup via the UidHashGroupCellDecorator.\r\n\r\nStep 3 creates PointOfService entries with name matching the store externalId, displayName from the subsidiary data, storeEmployeeGroups linked via uidHash, partnerId, partnerName, gerpSoldTo, gerpShipTo, type=STORE, and baseStore=tr.\r\n\r\nStep 4 creates Address entries for each store with streetname, town, postalcode, phone1, country=TR, region (TR-20 for Denizli, TR-34 for Istanbul), district, email, and owner pointing to the PointOfService.\r\n\r\nStep 5 links each Address to its PointOfService via UPDATE.\r\n\r\nStep 6 creates OmnichannelDealer entries for each store with uid, name, branchCode, companyCode, city, cityCode, district, emails, longitude, latitude, and store=tr. The OmnichannelDealer type is a custom Samsung Toko type defined in tokocore-items.xml at line 40183 with deployment table OmnichannelDealer and typecode 10736.\r\n\r\nThe script structure is correct and consistent with the established pattern. All store IDs, partner codes, addresses, coordinates, and dealer branch codes are populated from the subsidiary-provided Excel data. The ITGC header comments reference PC-53353(TKME-2307) and target environment SMI-P1.\r\n\r\nThere are no code defects, no runtime errors, and no system issues to investigate. This is a straightforward master data provisioning task. The script is ready for approval and execution.\r\n\r\nVerification after execution: confirm in Backoffice that POS, StoreEmployeeGroup, UserGroup, Address, and OmnichannelDealer entries exist for all 3 stores. Rollback if needed: remove the created POS, UserGroups, and OmnichannelDealer entries for the 3 stores.\r\n\r\nThanks,\r\nAryan.\r\n\r\n## Remediation\r\nScript: TKME-2307.impex (already attached to PC-53353 in Jira, also at C:\toko\toko6\toko6\\core-customize\\hybris\\bin\\confluence-pc-scripts\\TKME-2307.impex)\r\nPattern follows: PC-49087 (TKME-2175, Closed, 5 TR stores) and PC-50301 (TKME-2222, Closed, 3 TR stores)\r\nParent: TKME-2307 (QA Server Review)\r\nEnvironment: SMI-P1\r\nNo new PC ticket needed - this IS the PC ticket.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-01T08:53:52.006Z"
       }
     },
     {
@@ -279,7 +315,7 @@
       }
     ],
     "pid": 39780,
-    "uptime": 11152,
+    "uptime": 11192,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -288,7 +324,7 @@
         "issueTitle": "Investigate ticket PC-53353",
         "snippet": "Auto-triggered investigation for new ticket PC-53353.\n\nTicket: PC-53353\nSummary: ImpEx to create POS, Usergroup and Omni",
         "pid": 42744,
-        "elapsed": 869
+        "elapsed": 909
       }
     ],
     "startTime": "2026-09-01T05:47:18.875Z",
@@ -299,7 +335,7 @@
       {
         "pid": 21524,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 140360,
+        "ageSeconds": 140402,
         "status": "running",
         "isChild": false,
         "taskSummary": "the RCA in possible solution is truncated. it should have the whoe RCA. and it should have 3 sect...",
@@ -309,7 +345,7 @@
       {
         "pid": 30788,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 132916,
+        "ageSeconds": 132958,
         "status": "running",
         "isChild": false,
         "taskSummary": "assign TKME-2308 and MHME-1428 to me",
@@ -319,7 +355,7 @@
       {
         "pid": 30880,
         "cwd": "c:\\windows",
-        "ageSeconds": 132860,
+        "ageSeconds": 132902,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -329,7 +365,7 @@
       {
         "pid": 13076,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 105616,
+        "ageSeconds": 105658,
         "status": "running",
         "isChild": false,
         "taskSummary": "the RCA in possible solution is truncated. it should have the whoe RCA. and it should have 3 sect...",
@@ -339,7 +375,7 @@
       {
         "pid": 28204,
         "cwd": "unknown",
-        "ageSeconds": 85504,
+        "ageSeconds": 85546,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
