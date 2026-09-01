@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-01T09:44:25.235Z",
+  "generatedAt": "2026-09-01T09:45:04.815Z",
   "totalTickets": 6,
   "tickets": [
     {
@@ -32,11 +32,15 @@
       "lastCommentDate": "2026-09-01T18:41:29.111+0900",
       "url": "https://jira.secext.samsung.net/browse/TKME-2302",
       "solution": {
-        "status": "none",
-        "excerpt": "",
-        "source": "",
-        "foundAt": "",
-        "issueNumber": null
+        "status": "found",
+        "excerpt": "I see there's already a lock file and extensive learnings from a previous TKME-2302 investigation (Aug 31). The RCA was never saved as an MD file. Let me fetch the ticket and produce the RCA based on the existing findings.\nI have ticket details and extensive learnings from a prior session. Let me read the Aryantone style guide and launch parallel investigations for the remaining stuck orders.\nI have enough data from the learnings file (which contains the actual Kibana log findings from the prior investigation) and ticket details. Some sub-agents failed, but the learnings file from the previous session has comprehensive findings. Let me write the RCA now.\nNow delete the lock file to signal completion.\nRCA for TKME-2302 is complete and saved to `ticket-rca/TKME-2302.md`. Lock file deleted.\n\n10 stuck TR-region orders investigated. 4 already resolved (CANCELLED/COMPLETED/RETURN_REFUNDED). 6 remain with distinct root causes:\n\n1. TR260822-66135233 — GERP connection reset at completeFinancialUpdate (approved for retrigger)\n2. TR260824-67438718 — NPE at orderManualChecked, missing workflow status entry (approved for retrigger)\n3. TR260825-68578011 — Process engine completion detection bug, isProcessCompleted returns NOK despite all consignments COMPLETED\n4. TR26",
+        "sections": {
+          "issue": "",
+          "rca": "I see there's already a lock file and extensive learnings from a previous TKME-2302 investigation (Aug 31). The RCA was never saved as an MD file. Let me fetch the ticket and produce the RCA based on the existing findings.\nI have ticket details and extensive learnings from a prior session. Let me read the Aryantone style guide and launch parallel investigations for the remaining stuck orders.\nI have enough data from the learnings file (which contains the actual Kibana log findings from the prior investigation) and ticket details. Some sub-agents failed, but the learnings file from the previous session has comprehensive findings. Let me write the RCA now.\nNow delete the lock file to signal completion.\nRCA for TKME-2302 is complete and saved to `ticket-rca/TKME-2302.md`. Lock file deleted.\n\n10 stuck TR-region orders investigated. 4 already resolved (CANCELLED/COMPLETED/RETURN_REFUNDED). 6 remain with distinct root causes:\n\n1. TR260822-66135233 — GERP connection reset at completeFinancialUpdate (approved for retrigger)\n2. TR260824-67438718 — NPE at orderManualChecked, missing workflow status entry (approved for retrigger)\n3. TR260825-68578011 — Process engine completion detection bug, isProcessCompleted returns NOK despite all consignments COMPLETED\n4. TR26",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-01T09:45:04.803Z"
       }
     },
     {
@@ -64,11 +68,15 @@
       "lastCommentDate": "2026-08-31T23:49:24.054+0900",
       "url": "https://jira.secext.samsung.net/browse/TKME-2307",
       "solution": {
-        "status": "none",
-        "excerpt": "",
-        "source": "",
-        "foundAt": "",
-        "issueNumber": null
+        "status": "found",
+        "excerpt": "6433 RCA as a style reference. Let me fix the PowerShell command to fetch the ticket.\nExcellent, I have the full ticket details. Let me analyze:\n\n**PC-53353 Summary:**\n- **Type**: ImpEx master data creation for 3 TR stores\n- **Stores**: C750_020_80167, C750_0034_00678, C750_0034_00294\n- **Parent**: TKME-2307 (QA Server Review)\n- **Similar PCs**: PC-49087, PC-50301\n- **Labels**: i=masterdata, sc=scripting\n- **Status**: To do\n- **Implementation**: Attached ImpEx script\n- **Verification**: POS, StoreEmployeeGroup, UserGroup, Address and OmnichannelDealer created for all 3 stores in backoffice\n- **Rollback**: Remove the created POS, UserGroups and OmnichannelDealer entries for the 3 stores\n\nThis is a master data creation ticket, not an incident investigation. Let me launch parallel investigations to understand the codebase types and check for similar PC patterns.\nThe codebase investigator hit workspace restrictions. Let me search the codebase directly via PowerShell and fetch the similar PC tickets.\nI found the key files. OmnichannelDealer is defined in `tokocore-items.xml` and there's already an ImpEx file `TKME-2307.impex` in `confluence-pc-scripts/`. Let me read the relevant files and fetch similar PC tickets.\nExcellent, I have the ImpEx script and all the ticket details. Let me also check the OmnichannelDealer type definition and read the previous similar ImpEx scripts.\nNow I have all the information needed. Let me synthesize and write the RCA. This is a master data creation",
+        "sections": {
+          "issue": "",
+          "rca": "6433 RCA as a style reference. Let me fix the PowerShell command to fetch the ticket.\nExcellent, I have the full ticket details. Let me analyze:\n\n**PC-53353 Summary:**\n- **Type**: ImpEx master data creation for 3 TR stores\n- **Stores**: C750_020_80167, C750_0034_00678, C750_0034_00294\n- **Parent**: TKME-2307 (QA Server Review)\n- **Similar PCs**: PC-49087, PC-50301\n- **Labels**: i=masterdata, sc=scripting\n- **Status**: To do\n- **Implementation**: Attached ImpEx script\n- **Verification**: POS, StoreEmployeeGroup, UserGroup, Address and OmnichannelDealer created for all 3 stores in backoffice\n- **Rollback**: Remove the created POS, UserGroups and OmnichannelDealer entries for the 3 stores\n\nThis is a master data creation ticket, not an incident investigation. Let me launch parallel investigations to understand the codebase types and check for similar PC patterns.\nThe codebase investigator hit workspace restrictions. Let me search the codebase directly via PowerShell and fetch the similar PC tickets.\nI found the key files. OmnichannelDealer is defined in `tokocore-items.xml` and there's already an ImpEx file `TKME-2307.impex` in `confluence-pc-scripts/`. Let me read the relevant files and fetch similar PC tickets.\nExcellent, I have the ImpEx script and all the ticket details. Let me also check the OmnichannelDealer type definition and read the previous similar ImpEx scripts.\nNow I have all the information needed. Let me synthesize and write the RCA. This is a master data creation",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-01T09:45:04.805Z"
       }
     },
     {
@@ -90,11 +98,15 @@
       "lastCommentDate": "",
       "url": "https://jira.secext.samsung.net/browse/SAME-3952",
       "solution": {
-        "status": "none",
-        "excerpt": "",
-        "source": "",
-        "foundAt": "",
-        "issueNumber": null
+        "status": "found",
+        "excerpt": "Starting the investigation workflow for SAME-3952. Let me begin with Phase 0 pre-flight checks.\nNow I need to fetch the ticket details. Let me check how existing fetch scripts work and fetch the ticket.\nGood. I have the ticket details. Now launching Phase 1 parallel investigation. Let me check available resources and launch sub-agents.\nGood. Cookie bridge is UP and HAC scripts exist. Now launching all Phase 1 sub-agents in parallel.\nSub-agents B, C, D, E failed. Let me run these investigations directly. DB state is most critical.\nCritical findings: Order at CREATED, process in ERROR state, no consignments created, payment authorized. Need to dig deeper into the process error and order fields.\nGot the DB state. Let me run the corrected queries for the remaining critical fields and also search the codebase.\nKey findings so far: Order at CREATED, process ERROR, no consignments, deliveryMode NULL, paymentStatus NULL, paymentInfo EXISTS, Apple Pay payment mode. Let me get the task log details and check for the process definition.\nPayment transaction looks healthy (Checkout.com ApplePay, AUTHORIZED, 1259 SAR). But deliveryMode and paymentStatus are both NULL. Let me get the task log return codes.\nThe queries are timing out. Le",
+        "sections": {
+          "issue": "",
+          "rca": "Starting the investigation workflow for SAME-3952. Let me begin with Phase 0 pre-flight checks.\nNow I need to fetch the ticket details. Let me check how existing fetch scripts work and fetch the ticket.\nGood. I have the ticket details. Now launching Phase 1 parallel investigation. Let me check available resources and launch sub-agents.\nGood. Cookie bridge is UP and HAC scripts exist. Now launching all Phase 1 sub-agents in parallel.\nSub-agents B, C, D, E failed. Let me run these investigations directly. DB state is most critical.\nCritical findings: Order at CREATED, process in ERROR state, no consignments created, payment authorized. Need to dig deeper into the process error and order fields.\nGot the DB state. Let me run the corrected queries for the remaining critical fields and also search the codebase.\nKey findings so far: Order at CREATED, process ERROR, no consignments, deliveryMode NULL, paymentStatus NULL, paymentInfo EXISTS, Apple Pay payment mode. Let me get the task log details and check for the process definition.\nPayment transaction looks healthy (Checkout.com ApplePay, AUTHORIZED, 1259 SAR). But deliveryMode and paymentStatus are both NULL. Let me get the task log return codes.\nThe queries are timing out. Le",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-01T09:45:04.801Z"
       }
     },
     {
@@ -127,11 +139,15 @@
       "lastCommentDate": "2026-09-01T16:13:16.806+0900",
       "url": "https://jira.secext.samsung.net/browse/PC-53051",
       "solution": {
-        "status": "none",
-        "excerpt": "",
-        "source": "",
-        "foundAt": "",
-        "issueNumber": null
+        "status": "found",
+        "excerpt": "own when hovering on the AEM homepage differ from what appears on the cart page. Steps to reproduce involve logging in as AE, navigating to the homepage, and comparing the TV GNB menu between the two pages.\n- **Comments:** None\n- **Link:** https://jira.secext.samsung.net/browse/SAM-24707\n\n---\n\n**2. PC-53051** — `[Hybris Platform | High | To Do]`\n*[HGE-11880] [SDS] Request to replace service account key for GCRM voucher integration — SMI Prod*\n- **Created:** Aug 25, 2026 | **Updated:** Aug 25, 2026\n- **Description:** Involves replacing the GCRM voucher integration service account key on SMI Prod. Requires detaching the existing CRM ETL credential, uploading new credentials to DevOps, and updating deployment configuration.\n- **Comments:** None\n- **Link:** https://jira.secext.samsung.net/browse/PC-53051\n\n---\n\n**Summary:** The PC-53051 is your higher-priority item (High) — a platform change for replacing a service account key. SAM-24707 is a medium-priority bug about a GNB navigation discrepancy between AEM and cart pages. Neither ticket has any comments yet. Both were last updated 2–4 days ago.",
+        "sections": {
+          "issue": "",
+          "rca": "own when hovering on the AEM homepage differ from what appears on the cart page. Steps to reproduce involve logging in as AE, navigating to the homepage, and comparing the TV GNB menu between the two pages.\n- **Comments:** None\n- **Link:** https://jira.secext.samsung.net/browse/SAM-24707\n\n---\n\n**2. PC-53051** — `[Hybris Platform | High | To Do]`\n*[HGE-11880] [SDS] Request to replace service account key for GCRM voucher integration — SMI Prod*\n- **Created:** Aug 25, 2026 | **Updated:** Aug 25, 2026\n- **Description:** Involves replacing the GCRM voucher integration service account key on SMI Prod. Requires detaching the existing CRM ETL credential, uploading new credentials to DevOps, and updating deployment configuration.\n- **Comments:** None\n- **Link:** https://jira.secext.samsung.net/browse/PC-53051\n\n---\n\n**Summary:** The PC-53051 is your higher-priority item (High) — a platform change for replacing a service account key. SAM-24707 is a medium-priority bug about a GNB navigation discrepancy between AEM and cart pages. Neither ticket has any comments yet. Both were last updated 2–4 days ago.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-01T09:45:04.753Z"
       }
     },
     {
@@ -243,7 +259,7 @@
       }
     ],
     "pid": 39780,
-    "uptime": 14224,
+    "uptime": 14262,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -255,7 +271,7 @@
       {
         "pid": 21524,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 143434,
+        "ageSeconds": 143474,
         "status": "running",
         "isChild": false,
         "taskSummary": "the RCA in possible solution is truncated. it should have the whoe RCA. and it should have 3 sect...",
@@ -265,7 +281,7 @@
       {
         "pid": 30788,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 135990,
+        "ageSeconds": 136029,
         "status": "running",
         "isChild": false,
         "taskSummary": "change the comment to include all the orders that have moved forward and write we are working on ...",
@@ -275,7 +291,7 @@
       {
         "pid": 30880,
         "cwd": "c:\\windows",
-        "ageSeconds": 135934,
+        "ageSeconds": 135973,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -285,7 +301,7 @@
       {
         "pid": 13076,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 108690,
+        "ageSeconds": 108730,
         "status": "running",
         "isChild": false,
         "taskSummary": "the RCA in possible solution is truncated. it should have the whoe RCA. and it should have 3 sect...",
@@ -295,7 +311,7 @@
       {
         "pid": 28204,
         "cwd": "unknown",
-        "ageSeconds": 88578,
+        "ageSeconds": 88617,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
