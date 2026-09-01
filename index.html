@@ -889,7 +889,7 @@ function assignToMe(key){
 function doAutologin(){
   var btn=document.getElementById('autologinBtn');
   if(btn){btn.textContent='\u23F3 Launching...';btn.disabled=true}
-  fetch('http://127.0.0.1:9291/autologin',{method:'GET'})
+  fetch('http://127.0.0.1:9293/autologin',{method:'GET'})
     .then(function(r){return r.json()})
     .then(function(d){
       if(d.ok){
@@ -901,7 +901,7 @@ function doAutologin(){
       }
     })
     .catch(function(e){
-      showToast('Autologin: server not running on :9291','error');
+      showToast('Autologin: server not running on :9293','error');
       if(btn){btn.textContent='\uD83D\uDD12 Auto-Login';btn.disabled=false}
     })
 }
