@@ -230,7 +230,10 @@ body.has-status-bar .scroll{padding-top:28px}
       <div class="pulse-dot" id="pulseDot"></div>
       <h1>Tickets</h1>
     </div>
-    <div class="refresh-time" id="refreshTime">Loading...</div>
+    <div class="topbar-right" style="display:flex;align-items:center;gap:8px">
+      <button id="autologinBtn" onclick="doAutologin()" style="padding:4px 10px;border:1px solid var(--border);background:rgba(63,185,80,0.15);color:var(--success);border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">&#128274; Auto-Login</button>
+      <div class="refresh-time" id="refreshTime">Loading...</div>
+    </div>
   </div>
   <div class="update-banner" id="updateBanner">
     <span id="updateBannerText"></span>
@@ -880,6 +883,27 @@ function assignToMe(key){
     if(e||!d||!d.number){showToast('Failed to send','error');return}
     showToast('Sent to aipro (Issue #'+d.number+')','success')
   })
+}
+
+// ===== AUTOLOGIN (instant, no AI) =====
+function doAutologin(){
+  var btn=document.getElementById('autologinBtn');
+  if(btn){btn.textContent='\u23F3 Launching...';btn.disabled=true}
+  fetch('http://127.0.0.1:9291/autologin',{method:'GET'})
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if(d.ok){
+        showToast('\u2705 Edge launched with autologin tabs','success');
+        if(btn){btn.textContent='\uD83D\uDD12 Auto-Login';btn.disabled=false}
+      } else {
+        showToast('Autologin failed: '+(d.error||'unknown'),'error');
+        if(btn){btn.textContent='\uD83D\uDD12 Auto-Login';btn.disabled=false}
+      }
+    })
+    .catch(function(e){
+      showToast('Autologin: server not running on :9291','error');
+      if(btn){btn.textContent='\uD83D\uDD12 Auto-Login';btn.disabled=false}
+    })
 }
 
 function investigateTicket(key){
