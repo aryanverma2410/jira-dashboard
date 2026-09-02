@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-02T06:57:48.937Z",
+  "generatedAt": "2026-09-02T06:58:30.051Z",
   "totalTickets": 7,
   "tickets": [
     {
@@ -278,7 +278,7 @@
       }
     ],
     "pid": 39780,
-    "uptime": 90629,
+    "uptime": 90668,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -287,7 +287,7 @@
         "issueTitle": "Investigate ticket PC-53423",
         "snippet": "Auto-triggered investigation for new ticket PC-53423.\n\nTicket: PC-53423\nSummary: Script to cancel order without refund\n\n",
         "pid": 24580,
-        "elapsed": 184
+        "elapsed": 223
       }
     ],
     "startTime": "2026-09-01T05:47:18.875Z",
@@ -298,7 +298,7 @@
       {
         "pid": 21524,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 219838,
+        "ageSeconds": 219879,
         "status": "running",
         "isChild": false,
         "taskSummary": "the RCA when being scrolled, keeps jumping to the top of the rca while reading which is annoying,...",
@@ -308,17 +308,17 @@
       {
         "pid": 30788,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 212393,
+        "ageSeconds": 212435,
         "status": "running",
         "isChild": false,
-        "taskSummary": "Use this sccript for creating a script for PKHME-927 and raise PC : //NOTE ITGC_JIRA: (PC-3182) V...",
-        "lastExchange": "Use this sccript for creating a script for PKHME-927 and raise PC :\t\t//NOTE ITGC_JIRA: (PC-3182) VNME-11802\n\t\tpackage my.bookstore.core.groovy\n\n\t\timport de.hybris.platform.basecommerce.enums.ConsignmentStatus\n\n\t\timport de.hybris.platform.core.enums.OrderStatus\n\n\t\timport de.hybris.platform.processengine.enums.ProcessState\n\n\t\t \n\n\t\tfss = spring.getBean(\"flexibleSearchService\")\n\n\t\tmodelService = spring.getBean(\"modelService\")\n\n\t\tbusinessProcessService = spring.getBean(\"businessProcessService\")\n\n\t\t \n\n\t\tdef consignmentStatus = ConsignmentStatus.CANCELLED\n\n\t\tdef orderStatus = OrderStatus.CANCELLED\n\n\t\t//def list = new ArrayList<String>()\n\n\t\tint counter = 0;\n\n\t\t//Add order numbers\n\t\t//list.add(\"RU210418-32230071\")\n\n\tdef multiLineOrderListString = \"\"\"\n\n\nVN260727-52872060\t\nVN260723-50118626\t\nVN260724-50818772\n \n\t\"\"\"\n\n\tdef set = multiLineOrderListString.readLines().findAll { it.trim() }.collect { it.trim() } as Set\n\n\tprintln(\"Cancelling following orders (without refund): \"+set)\n\n\n\t\tfor (orderNumber in set) {\n\n\t\tcounter++\n\n\t\tdef query = \"SELECT {pk} FROM {order} WHERE {code} = '$orderNumber' AND {originalversion} is null\"\n\n\t\tdef order = fss.search(query).result.get(0)\n\n\t\tprintln(\"\\n....................$counter | ORDER \" + order.getCode() + \"....................\")\n\n\t\t \n\n\t\t// Update order process first\n\n\t\trunOrderProcess(order, orderStatus)\n\n\t\t\n\n\t\t// Update consignment process next\n\n\t\tdef consignments = order.getConsignments()\n\n\t\tif (consignments.size() < 1) {\n\n\t\t\t   println(\"Order \" + order.getCode() + \" has no consignment/s.\")\n\n\t\t} else {\n\n\t\t\t   updateConsignmentStatus(order, consignments, consignmentStatus)\n\n\t\t}\n\n\t\t\t   //finally set the orders to CANCELED\n\n\t\t\t   updateOrderStatus(order, orderStatus)\n\n\t\t}\n\n\t\t \n\n\t\tdef updateConsignmentStatus(order, consignments, status) {\n\n\t\t\t   def repairProcess = \"failed\"\n\n\t\t\t   for (consignment in consignments) {\n\n\t\t\t   def oldStatus = consignment.getStatus()\n\n\t\t\t   // Process only consignment that is not COMPLETED and CANCELLED.\n\n\t\t\t   if (ConsignmentStatus.COMPLETED != oldStatus && ConsignmentStatus.CANCELLED != oldStatus) {\n\n\t\t\t   consignment.setStatus(status)\n\n\t\t\t   modelService.save(consignment)\n\n\t\t\t   println(\"Consignment $consignment.code set to $status.code from $oldStatus\")\n\n\t\t\t   } else {\n\n\t\t\t   println(\"Consignment $consignment.code status is already: [$oldStatus]\")\n\n\t\t\t   }\n\n\t\t\t   // Run consignment process that is not yet in its final state: [ProcessState.SUCCEEDED/ProcessState.FAILED].\n\n\t\t\t   runConsignmentProcess(consignment.getConsignmentProcesses(), repairProcess)\n\n\t\t\t   }\n\n\t\t}\n\n\t\tdef runConsignmentProcess(processes, repairProcess) {\n\n\t\t\t   if (processes.size() < 1) {\n\n\t\t\t\t\t   println(\"No business process found.\")\n\n\t\t\t\t\t   return\n\n\t\t\t   }\n\n\t\t\t   processes.each { process ->\n\n\t\t\t   def processState = process.getState()\n\n\t\t\t   // Repair only consignment process.\n\n\t\t\t   if (process.getProcessDefinitionName().startsWith(\"consignment-process-v\")) {\n\n\t\t\t   if (ProcessState.SUCCEEDED != processState && ProcessState.FAILED != processState) {\n\n\t\t\t   // Repair to failed\n\n\t\t\t\t\t   businessProcessService.restartProcess(process, \"failed\");\n\n\t\t\t   } else {\n\n\t\t\t\t\t   println(\"Consignment process state is already: [$processState] - [$process.code].\")\n\n\t\t\t   }\n\n\t\t\t   }\n\n\t\t\t   }\n\n\t\t}\n\n\t\tdef runOrderProcess(order, orderStatus) {\n\n\t\t\t   def processes = order.getOrderProcess()\n\n\t\t\t   def repairProcess = \"releaseVirtualStockIfApplicable\"\n\n\t\t\t   processes. each { process ->\n\n\t\t\t   def processState = process.getState()\n\n\t\t\t   if (process.getProcessDefinitionName().startsWith(\"order-process-v\")\n\n\t\t\t   || process.getProcessDefinitionName().startsWith(\"return-refund-process-v\")\n\n\t\t\t   || process.getProcessDefinitionName().startsWith(\"return-replacement-order-process-v\")) {\n\n\t\t\t\t\t   if (ProcessState.SUCCEEDED != processState && ProcessState.FAILED != processState) {\n\n\t\t\t\t\t\t\t   // Repair to failed\n\n\t\t\t\t\t\t\t   businessProcessService.restartProcess(process, repairProcess)\n\n\t\t\t\t\t\t\t   println(\"Repaired to [$repairProcess] for process [$process.code].\")\n\n\t\t\t\t\t   } else {\n\n\t\t\t\t\t\t\t   println(\"Process state is already: [$processState] - [$process].\")\n\n\t\t\t\t\t   }\n\n\t\t\t   }\n\n\t\t\t   }\n\n\t\t}\n\n\t\tdef updateOrderStatus(order, orderStatus) {\n\n\t\t\t   def oldStatus = order.getStatus()\n\n\t\t\t   // Set to canceled\n\n\t\t\t   order.setStatus(orderStatus)\n\n\t\t\t   modelService.save(order)\n\n\t\t\t   println(\"Finally! Order $order.code has been updated from $oldStatus to $order.status.\")\n\n\t\t}",
+        "taskSummary": "yes update to new PC number",
+        "lastExchange": "yes update to new PC number",
         "sessionId": "bin"
       },
       {
         "pid": 30880,
         "cwd": "c:\\windows",
-        "ageSeconds": 212338,
+        "ageSeconds": 212379,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -328,7 +328,7 @@
       {
         "pid": 13076,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 185094,
+        "ageSeconds": 185135,
         "status": "running",
         "isChild": false,
         "taskSummary": "the RCA when being scrolled, keeps jumping to the top of the rca while reading which is annoying,...",
@@ -338,7 +338,7 @@
       {
         "pid": 28204,
         "cwd": "unknown",
-        "ageSeconds": 164981,
+        "ageSeconds": 165023,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
