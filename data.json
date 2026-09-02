@@ -1,37 +1,7 @@
 {
-  "generatedAt": "2026-09-02T04:23:36.845Z",
-  "totalTickets": 6,
+  "generatedAt": "2026-09-02T04:24:16.792Z",
+  "totalTickets": 5,
   "tickets": [
-    {
-      "key": "HGE-11941",
-      "summary": "[PROD] [SMI] Unable Login with Galaxy Device ",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Hybris Global Operation",
-      "projectKey": "HGE",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-02T12:19:10.000+0900",
-      "created": "2026-09-02T10:27:27.000+0900",
-      "description": "Pre Condition\nLogin Samsung account\n\nSteps to reproduce\n\n1. Go to Samsung estore\n2. Click human icon in Homepage\n3. Choose \"Sign in with Galaxy device\"\n4. Verify login process\n\nActual result \n\n4.1 User cant login\n^Galaxy login.mp4\n!Image 2026-09-02 at 08.29.58.jpeg|thumbnail!\n\n\nExpected result\n\n4.2 ",
-      "commentsCount": 0,
-      "recentComments": [],
-      "lastCommentBy": "",
-      "lastCommentSnippet": "",
-      "lastCommentDate": "",
-      "url": "https://jira.secext.samsung.net/browse/HGE-11941",
-      "solution": {
-        "status": "found",
-        "excerpt": "[PROD] [SMI] Unable Login with Galaxy Device\r\nGenerated: 2026-09-02T12:30:00.000Z\r\n\r\nHi Achmad Zaffri ,\r\n\r\nThe issue is that users are unable to login using the \"Sign in with Galaxy device\" option on Samsung eStore. This is affecting 7 regions simultaneously: TR (Turkey), IQ (Iraq), EG (Egypt), JO (Jordan), PK (Pakistan), OM (Oman), and BH (Bahrain), as confirmed by 7 linked Zephyr test tickets all in Failed status.\r\n\r\nThe \"Sign in with Galaxy device\" option on Samsung eStore triggers the Samsung SSO (Samsung Mobile Identity) login flow. The Hybris storefront redirects the user to Samsung Account (account.samsung.com) for authentication via 'TokoSSOFacadeImpl.getSSOLoginUrl()'. This method constructs the SSO login URL using either the V2 flow (configured via 'toko.sso.v2.signin.url' property, defaulting to the Samsung Account signIn gate) or the V3 headless flow (controlled by the 'samsung.sso.v3.headless.enabled' DB property, using 'toko.sso.v3.signin.url' which resolves to '/login/v3').\r\n\r\nThe login strategy is resolved by 'TokoGlobalSSOLoginStrategy.generateKey()' which checks the 'samsung.sso.external.login.enabled.<storeUid>' property. For all affected MENA region stores, the DEFAULT strategy ('TokoSamsungSSOV2LoginStrategy') applies, which delegates to 'TokoSSOFacadeImpl' for the Samsung Account redirect.\r\n\r\nHybris does not handle the actual Galaxy device authentication. It performs the following:\r\n1. Constructs the SSO login URL and redirects the user to Samsung Account\r\n2. Samsung Account authenticates the user (Galaxy device biometric/device-based login)\r\n3. Samsung Account redirects back to Hybris with an authorization code\r\n4. Hybris exchanges the auth code for an SSO token via 'TokoSSOFacadeImpl.getSSOAuthToken()'\r\n5. Hybris sets SSO cookies and logs the user in\r\n\r\nThe simultaneous failure across 7 different regions confirms this is an external Samsung Account service issue, not a region-specific Hybris configuration problem. If a Hybris config issue existed, it would affect individual stores or clusters, not 7 regions across different clusters simultaneously.\r\n\r\nNo Hybris-side errors were found in the codebase related to this flow. Kibana log search could not be completed due to Kibana MENA DNS resolution issues from the investigation environment. However, the pattern of 7 simultaneous regional failures with identical symptoms matches the historical precedent: TKME-22 (PROD SMI TR: Sign-in to Galaxy Device returns customers to Homepage), CNME-10553 (PROD SMZ: Unable to Login with Galaxy Account Error 404), GMT-12438 (SMI 404 spike in SA Login), and AEME-4348 (Smoke Test OM: User unable to login using Galaxy device) all showed the same external dependency issue.\r\n\r\nThis is not a Hybris platform issue. No platform bug or code defect was involved. The Samsung Account team needs to investigate the Galaxy device authentication service.\r\n\r\nNo further investigation is required from the Hybris side.\r\n\r\nThanks,\r\n\r\nAryan.",
-        "sections": {
-          "issue": "",
-          "rca": "[PROD] [SMI] Unable Login with Galaxy Device\r\nGenerated: 2026-09-02T12:30:00.000Z\r\n\r\nHi Achmad Zaffri ,\r\n\r\nThe issue is that users are unable to login using the \"Sign in with Galaxy device\" option on Samsung eStore. This is affecting 7 regions simultaneously: TR (Turkey), IQ (Iraq), EG (Egypt), JO (Jordan), PK (Pakistan), OM (Oman), and BH (Bahrain), as confirmed by 7 linked Zephyr test tickets all in Failed status.\r\n\r\nThe \"Sign in with Galaxy device\" option on Samsung eStore triggers the Samsung SSO (Samsung Mobile Identity) login flow. The Hybris storefront redirects the user to Samsung Account (account.samsung.com) for authentication via 'TokoSSOFacadeImpl.getSSOLoginUrl()'. This method constructs the SSO login URL using either the V2 flow (configured via 'toko.sso.v2.signin.url' property, defaulting to the Samsung Account signIn gate) or the V3 headless flow (controlled by the 'samsung.sso.v3.headless.enabled' DB property, using 'toko.sso.v3.signin.url' which resolves to '/login/v3').\r\n\r\nThe login strategy is resolved by 'TokoGlobalSSOLoginStrategy.generateKey()' which checks the 'samsung.sso.external.login.enabled.<storeUid>' property. For all affected MENA region stores, the DEFAULT strategy ('TokoSamsungSSOV2LoginStrategy') applies, which delegates to 'TokoSSOFacadeImpl' for the Samsung Account redirect.\r\n\r\nHybris does not handle the actual Galaxy device authentication. It performs the following:\r\n1. Constructs the SSO login URL and redirects the user to Samsung Account\r\n2. Samsung Account authenticates the user (Galaxy device biometric/device-based login)\r\n3. Samsung Account redirects back to Hybris with an authorization code\r\n4. Hybris exchanges the auth code for an SSO token via 'TokoSSOFacadeImpl.getSSOAuthToken()'\r\n5. Hybris sets SSO cookies and logs the user in\r\n\r\nThe simultaneous failure across 7 different regions confirms this is an external Samsung Account service issue, not a region-specific Hybris configuration problem. If a Hybris config issue existed, it would affect individual stores or clusters, not 7 regions across different clusters simultaneously.\r\n\r\nNo Hybris-side errors were found in the codebase related to this flow. Kibana log search could not be completed due to Kibana MENA DNS resolution issues from the investigation environment. However, the pattern of 7 simultaneous regional failures with identical symptoms matches the historical precedent: TKME-22 (PROD SMI TR: Sign-in to Galaxy Device returns customers to Homepage), CNME-10553 (PROD SMZ: Unable to Login with Galaxy Account Error 404), GMT-12438 (SMI 404 spike in SA Login), and AEME-4348 (Smoke Test OM: User unable to login using Galaxy device) all showed the same external dependency issue.\r\n\r\nThis is not a Hybris platform issue. No platform bug or code defect was involved. The Samsung Account team needs to investigate the Galaxy device authentication service.\r\n\r\nNo further investigation is required from the Hybris side.\r\n\r\nThanks,\r\n\r\nAryan.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-02T04:09:23.497Z"
-      }
-    },
     {
       "key": "PC-53378",
       "summary": "Script to set FOC entry price to 0.01 and retrigger consignment process",
@@ -243,7 +213,7 @@
       }
     ],
     "pid": 39780,
-    "uptime": 81378,
+    "uptime": 81418,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -255,7 +225,7 @@
       {
         "pid": 21524,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 210585,
+        "ageSeconds": 210625,
         "status": "running",
         "isChild": false,
         "taskSummary": "the RCA when being scrolled, keeps jumping to the top of the rca while reading which is annoying,...",
@@ -265,7 +235,7 @@
       {
         "pid": 30788,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 203141,
+        "ageSeconds": 203181,
         "status": "running",
         "isChild": false,
         "taskSummary": "is it working for any other region after today's deployment or any recent deployment?",
@@ -275,7 +245,7 @@
       {
         "pid": 30880,
         "cwd": "c:\\windows",
-        "ageSeconds": 203085,
+        "ageSeconds": 203125,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -285,7 +255,7 @@
       {
         "pid": 13076,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 175841,
+        "ageSeconds": 175881,
         "status": "running",
         "isChild": false,
         "taskSummary": "the RCA when being scrolled, keeps jumping to the top of the rca while reading which is annoying,...",
@@ -295,7 +265,7 @@
       {
         "pid": 28204,
         "cwd": "unknown",
-        "ageSeconds": 155729,
+        "ageSeconds": 155769,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
