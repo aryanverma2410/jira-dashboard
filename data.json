@@ -1,48 +1,7 @@
 {
-  "generatedAt": "2026-09-02T07:22:28.335Z",
-  "totalTickets": 7,
+  "generatedAt": "2026-09-02T07:23:07.067Z",
+  "totalTickets": 6,
   "tickets": [
-    {
-      "key": "TKME-2307",
-      "summary": "For Creation: POS I Usergroup I Omnichannel Dealer Master Data",
-      "status": "QA Server Review",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Turkey Maintenance & Enhancements",
-      "projectKey": "TKME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-02T16:22:19.000+0900",
-      "created": "2026-08-31T21:04:14.000+0900",
-      "description": "Hi Team,\n\n \n\nRequesting for your support in creating the following in backoffice. Please refer to the attached file for the details. ^POS Creation File_SETK Filled (1).xlsx\n\n \n\n1. Create the POS, Usergroup and Omni Channel Dealer Master Data\n|Store ID/External Id|\n|C750_020_80167|\n\n \n\nThank you.\n\nGe",
-      "commentsCount": 2,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-02T16:22:19.084+0900",
-          "snippet": "Hi ~@email ,\n\nThe impex in deployed.\n\nCould you please check and verify at your end as well.\n\nThanks and Regards\n\nAryan"
-        },
-        {
-          "author": "Georgina Semblante",
-          "date": "2026-08-31T23:49:24.054+0900",
-          "snippet": "Hi ~@email ,\n\nCould you please create also the POS, Usergroup and Omni Channel Dealer Master Data for the following\n\nFile : ^POS_DealerMasterData_Template_SETK Filled_C750_0034_00678_C750_0034_00294.xlsx\n|Store ID/External Id|\n|C750_0034_00678|\n|C750_0034_00294|\n\n \n\nThank you.\n\nGeorj"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi ~@email ,\n\nThe impex in deployed.\n\nCould you please check and verify at your end as well.\n\nThanks and Regards\n\nAryan",
-      "lastCommentDate": "2026-09-02T16:22:19.084+0900",
-      "url": "https://jira.secext.samsung.net/browse/TKME-2307",
-      "solution": {
-        "status": "found",
-        "excerpt": "Let me start the investigation workflow. First, I need to read past learnings, check the Aryantone style guide, and read MEMORY.md, and check for existing lock files.\nGood - I've reviewed the learnings and MEMORY.md. A lock file already exists for PC-53353 (likely from the dashboard auto-trigger). Let me read the Aryantone style guide and check how to fetch Jira tickets.\nLet me fetch the PC-53353 ticket details using a script similar to the existing pattern, and read a previous RCA for Aryantone style reference.\nNow let me fetch the ticket details and also read a proper RCA for style reference.\nGood, I have the AEME-6433 RCA as a style reference. Let me fix the PowerShell command to fetch the ticket.\nExcellent, I have the full ticket details. Let me analyze:\n\n**PC-53353 Summary:**\n- **Type**: ImpEx master data creation for 3 TR stores\n- **Stores**: C750_020_80167, C750_0034_00678, C750_0034_00294\n- **Parent**: TKME-2307 (QA Server Review)\n- **Similar PCs**: PC-49087, PC-50301\n- **Labels**: i=masterdata, sc=scripting\n- **Status**: To do\n- **Implementation**: Attached ImpEx script\n- **Verification**: POS, StoreEmployeeGroup, UserGroup, Address and OmnichannelDealer created for all 3 stores in backoffice\n- **Rollback**: Remove the created POS, UserGroups and OmnichannelDealer entries for the 3 stores\n\nThis is a master data creation ticket, not an incident investigation. Let me launch parallel investigations to understand the codebase types and check for similar PC patterns.\nThe codebase investigator hit workspace restrictions. Let me search the codebase directly via PowerShell and fetch the similar PC tickets.\nI found the key files. OmnichannelDealer is defined in `tokocore-items.xml` and there's already an ImpEx file `TKME-2307.impex` in `confluence-pc-scripts/`. Let me read the relevant files and fetch similar PC tickets.\nExcellent, I have the ImpEx script and all the ticket details. Let me also check the OmnichannelDealer type definition and read the previous similar ImpEx scripts.\nNow I have all the information needed. Let me synthesize and write the RCA. This is a master data creation ticket (not an incident), so the RCA will be an analysis of the request, the script, and verification approach.\nNow delete the lock file to signal RCA completion to the dashboard.\nInvestigation of PC-53353 is complete. Here's what was found:\n\nPC-53353 is a master data creation ticket (not an incident) to create PointOfService, StoreEmployeeGroup, UserGroup, Address, and OmnichannelDealer entries for 3 TR-region stores: C750_020_80167 (Denizli), C750_0034_00678 (Istanbul Bakirkoy), and C750_0034_00294 (Istanbul Kucukcekmece).\n\nThe ImpEx script TKME-2307.impex follows the exact same 6-step pattern as two prior closed PC tickets (PC-49087 for 5 stores, PC-50301 for 3 stores). Both were approved and executed successfully in production. The OmnichannelDealer type is a custom Samsung Toko type defined in tokocore-items.xml (line 40183, typecode 10736).\n\nNo defects, no errors, no system issues. Straightforward master data provisioning. The script is ready for approval and execution on SMI-P1.\n\nRCA saved to ticket-rca/PC-53353.md. Lock file deleted.",
-        "sections": {
-          "issue": "",
-          "rca": "Let me start the investigation workflow. First, I need to read past learnings, check the Aryantone style guide, and read MEMORY.md, and check for existing lock files.\nGood - I've reviewed the learnings and MEMORY.md. A lock file already exists for PC-53353 (likely from the dashboard auto-trigger). Let me read the Aryantone style guide and check how to fetch Jira tickets.\nLet me fetch the PC-53353 ticket details using a script similar to the existing pattern, and read a previous RCA for Aryantone style reference.\nNow let me fetch the ticket details and also read a proper RCA for style reference.\nGood, I have the AEME-6433 RCA as a style reference. Let me fix the PowerShell command to fetch the ticket.\nExcellent, I have the full ticket details. Let me analyze:\n\n**PC-53353 Summary:**\n- **Type**: ImpEx master data creation for 3 TR stores\n- **Stores**: C750_020_80167, C750_0034_00678, C750_0034_00294\n- **Parent**: TKME-2307 (QA Server Review)\n- **Similar PCs**: PC-49087, PC-50301\n- **Labels**: i=masterdata, sc=scripting\n- **Status**: To do\n- **Implementation**: Attached ImpEx script\n- **Verification**: POS, StoreEmployeeGroup, UserGroup, Address and OmnichannelDealer created for all 3 stores in backoffice\n- **Rollback**: Remove the created POS, UserGroups and OmnichannelDealer entries for the 3 stores\n\nThis is a master data creation ticket, not an incident investigation. Let me launch parallel investigations to understand the codebase types and check for similar PC patterns.\nThe codebase investigator hit workspace restrictions. Let me search the codebase directly via PowerShell and fetch the similar PC tickets.\nI found the key files. OmnichannelDealer is defined in `tokocore-items.xml` and there's already an ImpEx file `TKME-2307.impex` in `confluence-pc-scripts/`. Let me read the relevant files and fetch similar PC tickets.\nExcellent, I have the ImpEx script and all the ticket details. Let me also check the OmnichannelDealer type definition and read the previous similar ImpEx scripts.\nNow I have all the information needed. Let me synthesize and write the RCA. This is a master data creation ticket (not an incident), so the RCA will be an analysis of the request, the script, and verification approach.\nNow delete the lock file to signal RCA completion to the dashboard.\nInvestigation of PC-53353 is complete. Here's what was found:\n\nPC-53353 is a master data creation ticket (not an incident) to create PointOfService, StoreEmployeeGroup, UserGroup, Address, and OmnichannelDealer entries for 3 TR-region stores: C750_020_80167 (Denizli), C750_0034_00678 (Istanbul Bakirkoy), and C750_0034_00294 (Istanbul Kucukcekmece).\n\nThe ImpEx script TKME-2307.impex follows the exact same 6-step pattern as two prior closed PC tickets (PC-49087 for 5 stores, PC-50301 for 3 stores). Both were approved and executed successfully in production. The OmnichannelDealer type is a custom Samsung Toko type defined in tokocore-items.xml (line 40183, typecode 10736).\n\nNo defects, no errors, no system issues. Straightforward master data provisioning. The script is ready for approval and execution on SMI-P1.\n\nRCA saved to ticket-rca/PC-53353.md. Lock file deleted.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-01T09:53:47.073Z"
-      }
-    },
     {
       "key": "PC-53423",
       "summary": "Script to cancel order without refund",
@@ -289,7 +248,7 @@
       }
     ],
     "pid": 49696,
-    "uptime": 40,
+    "uptime": 80,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -301,7 +260,7 @@
       {
         "pid": 21524,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 221317,
+        "ageSeconds": 221356,
         "status": "running",
         "isChild": false,
         "taskSummary": "the RCA when being scrolled, keeps jumping to the top of the rca while reading which is annoying,...",
@@ -311,7 +270,7 @@
       {
         "pid": 30788,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 213873,
+        "ageSeconds": 213911,
         "status": "running",
         "isChild": false,
         "taskSummary": "FlexibleSearch query is not legal Exception message:",
@@ -321,7 +280,7 @@
       {
         "pid": 30880,
         "cwd": "c:\\windows",
-        "ageSeconds": 213817,
+        "ageSeconds": 213856,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -331,7 +290,7 @@
       {
         "pid": 13076,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 186573,
+        "ageSeconds": 186612,
         "status": "running",
         "isChild": false,
         "taskSummary": "the RCA when being scrolled, keeps jumping to the top of the rca while reading which is annoying,...",
@@ -341,7 +300,7 @@
       {
         "pid": 28204,
         "cwd": "unknown",
-        "ageSeconds": 166461,
+        "ageSeconds": 166499,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
