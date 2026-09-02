@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-02T04:46:02.782Z",
+  "generatedAt": "2026-09-02T04:46:42.580Z",
   "totalTickets": 6,
   "tickets": [
     {
@@ -32,9 +32,15 @@
       "lastCommentDate": "2026-09-01T19:00:11.825+0900",
       "url": "https://jira.secext.samsung.net/browse/PKHME-927",
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-09-02T04:38:43.681Z"
+        "status": "found",
+        "excerpt": "Credit Card | Order not Converted | Payment Deducted\r\nGenerated: 2026-09-02T14:00:00.000Z\r\n\r\nIssue:\r\n\r\nOrder PK260816-61163937_260823115706539 was placed on Aug 23 at approximately 5:31 PM IST using Cybersource credit card payment (pk-CybersourceCcPaymentModeV2). The customer was successfully charged and the payment authorization was confirmed by the Cybersource payment portal (Request ID: 7874865289346261303129). However, the order remained in temporary status and was never converted to a real order. The tokoCleanUpTemporaryOrdersJob subsequently expired the order to TEMPORARY_EXPIRED status. On Aug 31, admin.vamshi.s manually converted the temp order to normal, but it landed at CHECKED_INVALID because critical payment data was never created. The reporter has now requested to cancel the order.\r\n\r\nRCA:\r\n\r\nThe root cause is a missing Cybersource notification callback. After the customer completed the Cybersource payment authorization, Cybersource was supposed to send a server-to-server notification to the Hybris endpoint at /notification/provider/{paymentProvider}/. This notification triggers the payment notification handler strategy, which is responsible for converting the temporary order to a real order by creating the CreditCardPaymentInfo and PaymentTransaction entries.\r\n\r\nThe notification callback was never received by Hybris. Without it, the notification handler strategy was not invoked, and the temp-to-real order conversion never occurred. The Cybersource saveSubscription() step, which normally creates the CreditCardPaymentInfo during this notification flow, also never ran. As a result, no paymentInfo and no PaymentTransaction entries were created for this order.\r\n\r\nApproximately 1 hour and 21 minutes after order creation (6:52 PM IST), the tokoCleanUpTemporaryOrdersJob ran. This job checks for temporary orders that have exceeded their configured temporaryOrderRemovalTimeoutHours threshold. For pk-CybersourceCcPaymentModeV2, this timeout is set to 1 hour. Since no payment notification had been received, the order appeared as an abandoned temporary order and was set to TEMPORARY_EXPIRED.\r\n\r\nOn Aug 31, admin.vamshi.s performed a manual remediation to convert the TEMPORARY_EXPIRED order to a normal order (CREATED status). However, this manual conversion only changed the order status without creating any of the payment-related artifacts that the normal notification flow would have produced. Specifically, the following are missing from the order: paymentInfo (CreditCardPaymentInfo link), PaymentTransaction entries with paymentProvider set to cybersourceCc, requestToken containing the Cybersource response token, Order.deliveryMode, and Order.paymentStatus. The DefaultCheckOrderService.check() method detected the missing paymentInfo at the null check and set the order to CHECKED_INVALID.\r\n\r\nPrevious investigation confirmed that the two CreditCardPaymentInfo objects in the customer profile were both created on March 15, 2026 (5 months prior to this August order) and belong to a different completed order. No new paymentInfo was created during the August checkout because the Cybersource notification flow that creates it never executed. This means there is no recoverable payment data on the Hybris side to link the customer's deducted payment to this order.\r\n\r\nThe failure is on the Cybersource (payment provider) side. The payment was authorized successfully but the notification callback to Hybris was not sent or was not received. This is confirmed by the payment provider themselves, who acknowledged the authorization and instructed the team to proceed with settlement on the Hybris end (Comment 6). However, without the notification having created the necessary payment artifacts, settlement cannot be triggered from Hybris.\r\n\r\nPossible remediation:\r\n\r\nThe reporter has explicitly requested to cancel the order (Comment 10, Sep 1). Given that the order is stuck at CHECKED_INVALID with no recoverable payment data on the Hybris side and no payment transaction entries to link the deducted payment, cancellation is the appropriate remediation path.\r\n\r\n1. Cancel the order PK260816-61163937_260823115706539 and move it to CANCELLED status via a HAC Groovy script. This will clear the stuck order from the system.\r\n\r\n2. Since the customer's payment was deducted by Cybersource (authorization was successful), a refund must be processed for the customer. The refund should be initiated from the Cybersource payment portal directly, as there are no PaymentTransaction entries on the Hybris side to trigger an automated refund. Alternatively, the payment provider can void the authorization if settlement has not yet occurred.\r\n\r\n3. No further Hybris-side remediation (such as creating paymentInfo or payment transactions) is recommended, as the reporter has decided to cancel rather than attempt a full payment data reconstruction. This is the correct decision given the complexity of reconstructing payment artifacts that were never created through the normal flow.\r\n\r\n4. Investigate with Cybersource why the notification callback was not sent for this specific transaction. This is a payment-provider-side issue that could affect other orders if it recurs. The temporaryOrderRemovalTimeoutHours of 1 hour for pk-CybersourceCcPaymentModeV2 is relatively tight; if Cybersource notifications can be delayed beyond 1 hour under certain conditions, consider increasing the timeout to provide a larger window for late-arriving notifications.",
+        "sections": {
+          "issue": "Order PK260816-61163937_260823115706539 was placed on Aug 23 at approximately 5:31 PM IST using Cybersource credit card payment (pk-CybersourceCcPaymentModeV2). The customer was successfully charged and the payment authorization was confirmed by the Cybersource payment portal (Request ID: 7874865289346261303129). However, the order remained in temporary status and was never converted to a real order. The tokoCleanUpTemporaryOrdersJob subsequently expired the order to TEMPORARY_EXPIRED status. On Aug 31, admin.vamshi.s manually converted the temp order to normal, but it landed at CHECKED_INVALID because critical payment data was never created. The reporter has now requested to cancel the order.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-02T04:46:18.992Z"
       }
     },
     {
@@ -215,8 +221,8 @@
         "issueNum": 78,
         "title": "Investigate ticket PKHME-927",
         "received": "2026-09-02T04:38:54.918Z",
-        "responded": "",
-        "responseSnippet": ""
+        "responded": "2026-09-02T04:46:37.913Z",
+        "responseSnippet": "Starting the investigation workflow. Let me read prerequisites and check the existing lock file in parallel.\nGood - I see learnings from a previous PKHME-927 investigation (LEARNING-4 and LEARNING-5). Let me check if an RCA file already exists and read it.\nThe lock file already exists. I have extensive learnings from a previous PKHME-927 investigation (LEARNING-4, LEARNING-5). Let me fetch the ticket to get current details and then launch the full investigation.\nNow launching Phase 1 parallel su"
       },
       {
         "issueNum": 77,
@@ -248,27 +254,19 @@
       }
     ],
     "pid": 39780,
-    "uptime": 82721,
+    "uptime": 82760,
     "failures": 0,
-    "activeJobCount": 1,
-    "jobs": [
-      {
-        "issueNum": 78,
-        "issueTitle": "Investigate ticket PKHME-927",
-        "snippet": "Auto-triggered investigation for new ticket PKHME-927.\n\nTicket: PKHME-927\nSummary: Credit Card | Order not Converted | P",
-        "pid": 55896,
-        "elapsed": 424
-      }
-    ],
+    "activeJobCount": 0,
+    "jobs": [],
     "startTime": "2026-09-01T05:47:18.875Z",
     "version": "v3",
-    "lastResponseAt": "2026-09-02T04:10:04.137Z",
-    "lastResponseIssue": 77,
+    "lastResponseAt": "2026-09-02T04:46:37.916Z",
+    "lastResponseIssue": 78,
     "ideSessions": [
       {
         "pid": 21524,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 211931,
+        "ageSeconds": 211971,
         "status": "running",
         "isChild": false,
         "taskSummary": "the RCA when being scrolled, keeps jumping to the top of the rca while reading which is annoying,...",
@@ -278,7 +276,7 @@
       {
         "pid": 30788,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 204487,
+        "ageSeconds": 204527,
         "status": "running",
         "isChild": false,
         "taskSummary": "is it working for any other region after today's deployment or any recent deployment?",
@@ -288,7 +286,7 @@
       {
         "pid": 30880,
         "cwd": "c:\\windows",
-        "ageSeconds": 204431,
+        "ageSeconds": 204471,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -298,7 +296,7 @@
       {
         "pid": 13076,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 177187,
+        "ageSeconds": 177227,
         "status": "running",
         "isChild": false,
         "taskSummary": "the RCA when being scrolled, keeps jumping to the top of the rca while reading which is annoying,...",
@@ -308,7 +306,7 @@
       {
         "pid": 28204,
         "cwd": "unknown",
-        "ageSeconds": 157075,
+        "ageSeconds": 157115,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -317,6 +315,15 @@
       }
     ],
     "activityLog": [
+      {
+        "id": "1788324397918-m1gyaf",
+        "timestamp": "2026-09-02T04:46:37.918Z",
+        "type": "agent-response",
+        "source": "bridge",
+        "title": "Investigate ticket PKHME-927",
+        "detail": "Starting the investigation workflow. Let me read prerequisites and check the existing lock file in parallel.\nGood - I see learnings from a previous PKHME-927 investigation (LEARNING-4 and LEARNING-5).",
+        "status": "success"
+      },
       {
         "id": "1788323935635-s0ut29",
         "timestamp": "2026-09-02T04:38:55.635Z",
@@ -577,15 +584,6 @@
         "title": "Investigate ticket GMT-20410",
         "detail": "#66",
         "status": "pending"
-      },
-      {
-        "id": "1788237482609-dwzzcp",
-        "timestamp": "2026-09-01T04:38:02.609Z",
-        "type": "bridge-event",
-        "source": "dashboard",
-        "title": "WAKE UP: Restart dashboard server",
-        "detail": "Dashboard server restarted (PID 40436)",
-        "status": "success"
       }
     ],
     "sessionMeta": {
@@ -1073,13 +1071,15 @@
         "issueNum": 78,
         "title": "Investigate ticket PKHME-927",
         "startTime": "2026-09-02T04:38:55.820Z",
-        "status": "thinking",
+        "status": "done",
         "commandHistory": [
           {
             "title": "Investigate ticket PKHME-927",
             "time": "2026-09-02T04:38:55.820Z"
           }
-        ]
+        ],
+        "endTime": "2026-09-02T04:46:37.919Z",
+        "lastOutput": "Starting the investigation workflow. Let me read prerequisites and check the existing lock file in parallel.\nGood - I see learnings from a previous PKHME-927 investigation (LEARNING-4 and LEARNING-5). Let me check if an RCA file already exists and read it.\nThe lock file already exists. I have extensive learnings from a previous PKHME-927 investigation (LEARNING-4, LEARNING-5). Let me fetch the ticket to get current details and then launch the full investigation.\nNow launching Phase 1 parallel su"
       }
     }
   },
