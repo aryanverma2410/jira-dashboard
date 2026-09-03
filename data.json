@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-03T13:49:04.665Z",
+  "generatedAt": "2026-09-03T13:49:47.232Z",
   "totalTickets": 6,
   "tickets": [
     {
@@ -116,9 +116,15 @@
       "lastCommentDate": "2026-09-01T23:16:19.187+0900",
       "url": "https://jira.secext.samsung.net/browse/SAM-24720",
       "solution": {
-        "status": "investigating",
-        "issueNumber": "auto-trigger",
-        "lockedAt": "2026-09-03T00:00:00Z"
+        "status": "found",
+        "excerpt": "I'll start the investigation workflow. Let me do the pre-flight checks in parallel: read past learnings, read Aryantone style guide, check for existing cache/lock files, and fetch the ticket.\nNo existing cache or lock. Let me read Aryantone style guide, fetch the Jira ticket, and create the lock file.\nNow I need to fetch the Jira ticket. Let me check the existing fetch scripts and the MCP availability.\nGood, I see the pattern for fetching Jira tickets. Let me create a fetch script for PC-53529 based on the existing pattern.\nExcellent. I now have all the context I need. Let me synthesize and write the RCA.\n\nKey findings:\n- **PC-53529**: Scripting PC by aryan.v1 for SMI cluster DB cleanup — 6 Groovy scripts + 1 ImpEx already attached\n- **SAM-24720**: Parent ticket — SMI has frequent high DB storage issues, SAP provided 6 DELETE queries\n- **PC-49614**: Identical pattern done by Pulkesh for SEAO (SAM-20914, which SAM-24720 clones) — all 7 jobs FINISHED/SUCCESS, Closed\n- This is a proactive maintenance scripting task, not an incident investigation\nNow delete the lock file and write the cache file in the background.\nInvestigation complete for PC-53529. Here's the RCA:\n\nIssue:\nThe SMI (Samsung India) Hybris cluster experiences frequent high DB storage issues due to stale records accumulating in six database tables: tasklogs, users4sn, paymentinfos42sn, pricerows1055sn, addresses23sn, and tokoeventlog. No automated cleanup cronjobs exist for the SMI cluster, requiring manual SAP intervention each time storage reaches critical levels.\n\nRCA:\nSAM-24720 was raised by Arvind Panchal reporting recurring high DB storage on SMI, with SAP providing 6 DELETE queries with specific retention periods. The same pattern was already implemented successfully by Pulkesh in PC-49614 for the SEAO cluster (SAM-20914, which SAM-24720 clones) -- all 7 jobs completed FINISHED/SUCCESS. PC-53529 replicates this proven pattern for SMI. Six Groovy scripts use Spring JdbcTemplate with batch deletion (TOP 10000 per batch, max 200000 rows per run) with table-specific retention: tasklogs 2 months, users4sn 1 month, paymentinfos42sn/pricerows1055sn/addresses23sn/tokoeventlog 3 months each. The ImpEx creates 6 Script+ScriptingJob+CronJob entries, 1 CompositeCronJob (CleanupComposite) chaining them, and a Trigger firing every 6 hours. The root cause is the absence of automated cleanup for these tables on the SMI cluster.\n\nPossible remediation:\n1. Import the ImpEx on SMI stg2 to create all cronjob entries plus the composite job and 6-hour trigger.\n2. Execute CleanupComposite manually on stg2 to validate all 6 jobs finish with SUCCESS.\n3. Check job logs for per-table deletion counts.\n4. Once validated, import the ImpEx on SMI production.\n5. Monitor DB storage over 24-48 hours.\n6. Rollback: remove composite job trigger or set active=false. Deleted records are stale per retention policy.\n\nRCA saved to ticket-rca/PC-53529.md. Lock file deleted. Cache file written.",
+        "sections": {
+          "issue": "The SMI (Samsung India) Hybris cluster experiences frequent high DB storage issues due to stale records accumulating in six database tables: tasklogs, users4sn, paymentinfos42sn, pricerows1055sn, addresses23sn, and tokoeventlog. No automated cleanup cronjobs exist for the SMI cluster, requiring manual SAP intervention each time storage reaches critical levels.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-03T13:49:47.226Z"
       }
     },
     {
@@ -234,7 +240,7 @@
       }
     ],
     "pid": 45404,
-    "uptime": 991,
+    "uptime": 1034,
     "failures": 0,
     "activeJobCount": 2,
     "jobs": [
@@ -243,14 +249,14 @@
         "issueTitle": "Investigate ticket SAM-24720",
         "snippet": "Auto-triggered investigation for new ticket SAM-24720.\n\nTicket: SAM-24720\nSummary:  Update or create Cronjob for autocle",
         "pid": 38676,
-        "elapsed": 977
+        "elapsed": 1020
       },
       {
         "issueNum": 91,
         "issueTitle": "Investigate ticket SAME-3958",
         "snippet": "Auto-triggered investigation for new ticket SAME-3958.\n\nTicket: SAME-3958\nSummary: Sales Report - Additional Columns\n\nUs",
         "pid": 59892,
-        "elapsed": 981
+        "elapsed": 1024
       }
     ],
     "startTime": "2026-09-03T13:32:31.867Z",
@@ -261,7 +267,7 @@
       {
         "pid": 21524,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 330914,
+        "ageSeconds": 330957,
         "status": "running",
         "isChild": false,
         "taskSummary": "remove the header saying LIVE-updated 45s ago. only show that red bar when something is down, not...",
@@ -271,7 +277,7 @@
       {
         "pid": 13076,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 296170,
+        "ageSeconds": 296213,
         "status": "running",
         "isChild": false,
         "taskSummary": "remember this learning and verify always after making a PC ticket",
@@ -281,7 +287,7 @@
       {
         "pid": 10608,
         "cwd": "c:\\windows",
-        "ageSeconds": 26783,
+        "ageSeconds": 26826,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -291,7 +297,7 @@
       {
         "pid": 58504,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 26218,
+        "ageSeconds": 26261,
         "status": "running",
         "isChild": false,
         "taskSummary": "remove the header saying LIVE-updated 45s ago. only show that red bar when something is down, not...",
@@ -301,7 +307,7 @@
       {
         "pid": 10048,
         "cwd": "unknown",
-        "ageSeconds": 14707,
+        "ageSeconds": 14750,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -311,7 +317,7 @@
       {
         "pid": 51344,
         "cwd": "unknown",
-        "ageSeconds": 14704,
+        "ageSeconds": 14747,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
