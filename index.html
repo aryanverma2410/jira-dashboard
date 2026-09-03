@@ -1494,39 +1494,25 @@ document.addEventListener('touchend',function(){swipeTarget=null}, {passive:true
 
 // ===== HAC REPORT VIEW =====
 function loadHacReport(){
-  fetch('http://127.0.0.1:9293/hac-report?t='+Date.now())
-    .then(function(r){return r.json()})
-    .then(function(d){
-      if(d.error&&!d.queryDate){
-        document.getElementById('hacReportMeta').textContent='No report yet';
-        document.getElementById('hacReportContent').innerHTML='<div class="hac-loading">Click "Run Now" to generate the report</div>';
-        return;
-      }
-      renderHacReport(d);
-    })
-    .catch(function(e){
-      document.getElementById('hacReportMeta').textContent='Server not reachable';
-      document.getElementById('hacReportContent').innerHTML='<div class="hac-loading">Local server (port 9293) not reachable. The report runs automatically at 9 AM.</div>';
-    });
+  var d=rawData&&rawData.hacReport;
+  if(!d||(d.error&&!d.queryDate)){
+    document.getElementById('hacReportMeta').textContent='No report yet';
+    document.getElementById('hacReportContent').innerHTML='<div class="hac-loading">Click "Run Now" to generate the report</div>';
+    return;
+  }
+  renderHacReport(d);
 }
 
 function runHacReport(){
   var btn=document.getElementById('hacRunBtn');
   var icon=document.getElementById('hacRunIcon');
-  btn.disabled=true;icon.innerHTML='&#8987;';btn.lastChild.textContent=' Running...';
-  document.getElementById('hacReportContent').innerHTML='<div class="hac-loading"><div class="hac-spinner"></div><br>Running HAC queries...</div>';
-  fetch('http://127.0.0.1:9293/hac-report/run?t='+Date.now())
-    .then(function(r){return r.json()})
-    .then(function(d){
-      btn.disabled=false;icon.innerHTML='&#9654;';btn.lastChild.textContent=' Run Now';
-      renderHacReport(d);
-      showToast('HAC report generated!','success');
-    })
-    .catch(function(e){
-      btn.disabled=false;icon.innerHTML='&#9654;';btn.lastChild.textContent=' Run Now';
-      document.getElementById('hacReportContent').innerHTML='<div class="hac-loading" style="color:var(--danger)">Error: '+escapeHtml(e.message)+'</div>';
-      showToast('HAC report failed','error');
-    });
+  btn.disabled=true;icon.innerHTML='&#8987;';btn.lastChild.textContent=' Sending...';
+  showToast('Triggering HAC report via agent-bridge...','');
+  createIssue('Run HAC Daily Report','Run this command now: node "C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\hac-daily-report.cjs"\n\nThis script authenticates to HAC backoffice and runs two FlexibleSearch queries for samsungRewardPoints payment provider, writing results to hac-report.json. Execute it without modifications.\nSent from dashboard',function(e,d){
+    btn.disabled=false;icon.innerHTML='&#9654;';btn.lastChild.textContent=' Run Now';
+    if(e||!d||!d.number){showToast('Failed to trigger HAC report','error');return}
+    showToast('HAC report triggered (Issue #'+d.number+'). Check back in ~1 min.','success');
+  });
 }
 
 function renderHacReport(d){
@@ -1606,18 +1592,16 @@ function copyHacReport(){
 var _tasksData=null;
 
 function loadTasks(){
-  fetch('http://127.0.0.1:9293/scheduled-jobs?t='+Date.now(),{cache:'no-store'})
-    .then(function(r){return r.json()})
-    .then(function(d){
-      _tasksData=d;
-      renderTasks(d);
-      var el=document.getElementById('tasksRefreshTime');
-      if(el)el.textContent=formatTime(new Date());
-    })
-    .catch(function(e){
-      var el=document.getElementById('tasksList');
-      if(el)el.innerHTML='<div class="task-empty">Server not reachable. Make sure the dashboard server is running.</div>';
-    });
+  var d=rawData&&rawData.scheduledJobs;
+  if(!d||!d.jobs){
+    var el=document.getElementById('tasksList');
+    if(el)el.innerHTML='<div class="task-empty">No task data available. Wait for next data refresh.</div>';
+    return;
+  }
+  _tasksData=d;
+  renderTasks(d);
+  var tr=document.getElementById('tasksRefreshTime');
+  if(tr)tr.textContent=formatTime(new Date());
 }
 
 function renderTasks(d){
@@ -1698,32 +1682,35 @@ function renderTasks(d){
 }
 
 function startJobNow(id){
-  fetch('http://127.0.0.1:9293/scheduled-jobs/run?id='+encodeURIComponent(id))
-    .then(function(r){return r.json()})
-    .then(function(d){
-      toast(d.message||'Job started');
-      setTimeout(loadTasks,500);
-    })
-    .catch(function(e){toast('Failed to start job');});
+  var job=_tasksData&&_tasksData.jobs?_tasksData.jobs.find(function(j){return j.id===id}):null;
+  var name=job?job.name:'job';
+  var prompt=job?job.prompt:'';
+  showToast('Triggering "'+name+'" via agent-bridge...','');
+  createIssue('Run scheduled job: '+name,'Execute this prompt now:\n'+prompt+'\n\nSent from dashboard',function(e,d){
+    if(e||!d||!d.number){showToast('Failed to trigger job','error');return}
+    showToast('"'+name+'" triggered (Issue #'+d.number+')','success');
+  });
 }
 
 function toggleJobEnabled(id,enable){
-  fetch('http://127.0.0.1:9293/scheduled-jobs?id='+encodeURIComponent(id),{
-    method:'PUT',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({enabled:enable})
-  })
-    .then(function(r){return r.json()})
-    .then(function(){toast(enable?'Job enabled':'Job disabled');loadTasks()})
-    .catch(function(e){toast('Failed to update job');});
+  var job=_tasksData&&_tasksData.jobs?_tasksData.jobs.find(function(j){return j.id===id}):null;
+  var name=job?job.name:'job';
+  showToast(enable?'Enabling':'Disabling'+' "'+name+'"...','');
+  createIssue('Update scheduled job: '+name,'Edit the file C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\scheduled-jobs.json and set the job with id "'+id+'" to enabled='+enable+'. Do not change anything else.\nSent from dashboard',function(e,d){
+    if(e||!d||!d.number){showToast('Failed to send','error');return}
+    showToast(enable?'Job enable sent':'Job disable sent','success');
+  });
 }
 
 function deleteJob(id){
   if(!confirm('Delete this job? This cannot be undone.'))return;
-  fetch('http://127.0.0.1:9293/scheduled-jobs?id='+encodeURIComponent(id),{method:'DELETE'})
-    .then(function(r){return r.json()})
-    .then(function(){toast('Job deleted');loadTasks()})
-    .catch(function(e){toast('Failed to delete job');});
+  var job=_tasksData&&_tasksData.jobs?_tasksData.jobs.find(function(j){return j.id===id}):null;
+  var name=job?job.name:'job';
+  showToast('Deleting "'+name+'"...','');
+  createIssue('Delete scheduled job: '+name,'Edit the file C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\scheduled-jobs.json and remove the job with id "'+id+'". Do not change anything else.\nSent from dashboard',function(e,d){
+    if(e||!d||!d.number){showToast('Failed to send','error');return}
+    showToast('Delete request sent (Issue #'+d.number+')','success');
+  });
 }
 
 function viewJobOutput(id){
@@ -1733,20 +1720,14 @@ function viewJobOutput(id){
     return;
   }
   el.style.display='block';
-  el.innerHTML='<div class="task-output">Loading...</div>';
-  fetch('http://127.0.0.1:9293/scheduled-jobs/output?id='+encodeURIComponent(id))
-    .then(function(r){return r.json()})
-    .then(function(d){
-      var html='';
-      if(d.lastOutputAt){
-        html+='<div class="task-output-time">Output from '+formatTime(new Date(d.lastOutputAt))+' (status: '+d.lastStatus+')</div>';
-      }
-      html+='<pre class="task-output">'+escapeHtml(d.lastOutput||'(no output yet)')+'</pre>';
-      el.innerHTML=html;
-    })
-    .catch(function(e){
-      el.innerHTML='<div class="task-output">Failed to load output</div>';
-    });
+  var job=_tasksData&&_tasksData.jobs?_tasksData.jobs.find(function(j){return j.id===id}):null;
+  if(!job){el.innerHTML='<div class="task-output">Job not found</div>';return}
+  var html='';
+  if(job.lastOutputAt){
+    html+='<div class="task-output-time">Output from '+new Date(job.lastOutputAt).toLocaleString()+' (status: '+(job.lastStatus||'unknown')+')</div>';
+  }
+  html+='<pre class="task-output">'+escapeHtml(job.lastOutput||'(no output yet)')+'</pre>';
+  el.innerHTML=html;
 }
 
 function openTaskForm(){
@@ -1804,38 +1785,36 @@ function saveTaskForm(){
   if(!name){toast('Job name is required');return;}
   if(!prompt){toast('Prompt is required');return;}
 
-  var body=JSON.stringify({
-    name:name,
-    prompt:prompt,
-    enabled:enabled,
-    schedule:{
-      type:type,
-      time:time||'09:00',
-      frequency:freq||null,
-      customMinutes:customMin
-    }
-  });
+  var schedDesc='Type: '+type+', Time: '+(time||'09:00');
+  if(freq==='daily')schedDesc+=', daily';
+  else if(freq==='hourly')schedDesc+=', hourly';
+  else if(freq==='custom')schedDesc+=', every '+customMin+' min';
 
   if(id){
-    // Update
-    fetch('http://127.0.0.1:9293/scheduled-jobs?id='+encodeURIComponent(id),{
-      method:'PUT',
-      headers:{'Content-Type':'application/json'},
-      body:body
-    })
-      .then(function(r){return r.json()})
-      .then(function(){toast('Job updated');closeTaskForm();loadTasks()})
-      .catch(function(e){toast('Failed to update job');});
+    showToast('Updating job...','');
+    createIssue('Update scheduled job: '+name,
+      'Edit the file C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\scheduled-jobs.json.\n'+
+      'Find the job with id "'+id+'" and update it with:\n'+
+      '- name: '+name+'\n- prompt: '+prompt+'\n- enabled: '+enabled+'\n- schedule: '+schedDesc+'\n'+
+      'Do not change anything else.\nSent from dashboard',
+      function(e,d){
+        if(e||!d||!d.number){showToast('Failed to send','error');return}
+        showToast('Job update sent (Issue #'+d.number+')','success');
+        closeTaskForm();
+      });
   } else {
-    // Create
-    fetch('http://127.0.0.1:9293/scheduled-jobs',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:body
-    })
-      .then(function(r){return r.json()})
-      .then(function(){toast('Job created');closeTaskForm();loadTasks()})
-      .catch(function(e){toast('Failed to create job');});
+    showToast('Creating job...','');
+    createIssue('Create scheduled job: '+name,
+      'Add a new job to the file C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\scheduled-jobs.json.\n'+
+      'New job details:\n'+
+      '- name: '+name+'\n- prompt: '+prompt+'\n- enabled: '+enabled+'\n- schedule: '+schedDesc+'\n'+
+      'Use a unique id (e.g. "'+name.toLowerCase().replace(/[^a-z0-9]/g,'')+'-'+Date.now()+'").\n'+
+      'Follow the existing job structure in the file.\nSent from dashboard',
+      function(e,d){
+        if(e||!d||!d.number){showToast('Failed to send','error');return}
+        showToast('Job creation sent (Issue #'+d.number+')','success');
+        closeTaskForm();
+      });
   }
 }
 
