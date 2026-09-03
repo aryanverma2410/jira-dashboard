@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-03T13:42:41.289Z",
+  "generatedAt": "2026-09-03T13:43:24.549Z",
   "totalTickets": 6,
   "tickets": [
     {
@@ -21,9 +21,15 @@
       "lastCommentDate": "",
       "url": "https://jira.secext.samsung.net/browse/PC-53529",
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-09-03T13:35:10.495Z"
+        "status": "found",
+        "excerpt": "[SAM-24720] Create DB cleanup cronjobs for SMI cluster\r\nGenerated: 2026-09-03T20:00:00+09:00\r\n\r\nIssue:\r\nThe SMI (Samsung India) Hybris cluster experiences frequent high DB storage issues due to stale records accumulating in six database tables: tasklogs (process engine task logs), users4sn (anonymous user sessions), paymentinfos42sn (stale payment info snapshots), pricerows1055sn (expired price row entries), addresses23sn (orphaned address records), and tokoeventlog (Toko event log entries). Currently no automated cleanup cronjobs exist for the SMI cluster, requiring manual SAP intervention to purge old data each time storage reaches critical levels.\r\n\r\nRCA:\r\nSAM-24720 was raised by Arvind Panchal reporting that SMI faces frequent high DB storage issues, requesting automated cleanup jobs with specific retention periods. SAP provided 6 DELETE queries targeting the six tables above. The same pattern was already implemented successfully by Pulkesh in PC-49614 for the SEAO cluster (SAM-20914, which SAM-24720 clones), where 6 individual scripting cronjobs plus a composite job were created, all completing with FINISHED/SUCCESS status. PC-53529 replicates this proven pattern for the SMI cluster. Six Groovy scripts have been attached, each using Spring JdbcTemplate with batch deletion (TOP 10000 per batch, max 200000 rows per run) and table-specific retention windows: tasklogs retains 2 months, users4sn retains 1 month, and paymentinfos42sn, pricerows1055sn, addresses23sn, and tokoeventlog each retain 3 months. The accompanying ImpEx creates 6 Script + ScriptingJob + CronJob entries, 1 CompositeCronJob (CleanupComposite) chaining all 6 jobs sequentially, and a Trigger firing every 6 hours. This is a standard Hybris scripting pattern with no custom Java code or new extension required. The root cause of the recurring DB storage issue is the absence of automated cleanup for these tables on the SMI cluster.\r\n\r\nPossible remediation:\r\n1. Import the ImpEx file (script-SAM-24720-db-cleanup-cronjobs.impex) on SMI stg2 to create all 6 Script + ScriptingJob + CronJob entries plus the CleanupComposite composite job and its 6-hour trigger.\r\n2. Execute the CleanupComposite job manually on stg2 to validate all 6 individual jobs complete with FINISHED/SUCCESS status.\r\n3. Check the job logs for per-table deletion counts to confirm the batch deletion logic is working correctly.\r\n4. Once validated on stg2, import the ImpEx on SMI production.\r\n5. Monitor DB storage levels over the next 24-48 hours to confirm the cleanup jobs are effectively reducing storage.\r\n6. Rollback if needed: remove the composite job trigger or set active=false. No data restoration is needed as deleted records are stale per the retention policy.\r\n\r\n## Remediation\r\n\r\n**Ticket Type**: DB cleanup cronjob creation (proactive maintenance)\r\n**Parent**: SAM-24720 (Code Review)\r\n**Similar Ticket**: PC-49614 (Closed, SEAO cluster, identical pattern)\r\n**Scripts Attached**: 6 Groovy scripts + 1 ImpEx (already on ticket)\r\n**Verification**: All 6 individual cronjobs + CleanupComposite should be FINISHED with SUCCESS. Check logs for per-table deletion counts.\r\n**Rollback**: Remove composite job trigger or set active=false. Deleted records are stale per retention policy.\r\n**Cluster**: SMI (customfield_18776 = SMI)\r\n**Region**: All (customfield_19634/19635/19636 = All)",
+        "sections": {
+          "issue": "The SMI (Samsung India) Hybris cluster experiences frequent high DB storage issues due to stale records accumulating in six database tables: tasklogs (process engine task logs), users4sn (anonymous user sessions), paymentinfos42sn (stale payment info snapshots), pricerows1055sn (expired price row entries), addresses23sn (orphaned address records), and tokoeventlog (Toko event log entries). Currently no automated cleanup cronjobs exist for the SMI cluster, requiring manual SAP intervention to purge old data each time storage reaches critical levels.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-03T13:43:05.289Z"
       }
     },
     {
@@ -222,7 +228,7 @@
       }
     ],
     "pid": 45404,
-    "uptime": 608,
+    "uptime": 648,
     "failures": 0,
     "activeJobCount": 6,
     "jobs": [
@@ -231,42 +237,42 @@
         "issueTitle": "Investigate ticket AEME-6282",
         "snippet": "Auto-triggered investigation for new ticket AEME-6282.\n\nTicket: AEME-6282\nSummary: [For approval] Redeem rewards on impa",
         "pid": 38748,
-        "elapsed": 564
+        "elapsed": 604
       },
       {
         "issueNum": 85,
         "issueTitle": "Investigate ticket PC-53503",
         "snippet": "Auto-triggered investigation for new ticket PC-53503.\n\nTicket: PC-53503\nSummary: Redeem rewards points (partial) for 4 A",
         "pid": 52388,
-        "elapsed": 591
+        "elapsed": 632
       },
       {
         "issueNum": 87,
         "issueTitle": "Investigate ticket SAM-24720",
         "snippet": "Auto-triggered investigation for new ticket SAM-24720.\n\nTicket: SAM-24720\nSummary:  Update or create Cronjob for autocle",
         "pid": 38676,
-        "elapsed": 594
+        "elapsed": 634
       },
       {
         "issueNum": 88,
         "issueTitle": "Investigate ticket SAHME-3357",
         "snippet": "Auto-triggered investigation for new ticket SAHME-3357.\n\nTicket: SAHME-3357\nSummary: SMC Errors-ProcessExternalServices\n",
         "pid": 45996,
-        "elapsed": 595
+        "elapsed": 635
       },
       {
         "issueNum": 89,
         "issueTitle": "Investigate ticket PC-53529",
         "snippet": "Auto-triggered investigation for new ticket PC-53529.\n\nTicket: PC-53529\nSummary: [SAM-24720] Create DB cleanup cronjobs ",
         "pid": 31116,
-        "elapsed": 596
+        "elapsed": 636
       },
       {
         "issueNum": 91,
         "issueTitle": "Investigate ticket SAME-3958",
         "snippet": "Auto-triggered investigation for new ticket SAME-3958.\n\nTicket: SAME-3958\nSummary: Sales Report - Additional Columns\n\nUs",
         "pid": 59892,
-        "elapsed": 598
+        "elapsed": 638
       }
     ],
     "startTime": "2026-09-03T13:32:31.867Z",
@@ -277,7 +283,7 @@
       {
         "pid": 21524,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 330532,
+        "ageSeconds": 330574,
         "status": "running",
         "isChild": false,
         "taskSummary": "remove the header saying LIVE-updated 45s ago. only show that red bar when something is down, not...",
@@ -287,7 +293,7 @@
       {
         "pid": 13076,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 295788,
+        "ageSeconds": 295830,
         "status": "running",
         "isChild": false,
         "taskSummary": "remember this learning and verify always after making a PC ticket",
@@ -297,7 +303,7 @@
       {
         "pid": 10608,
         "cwd": "c:\\windows",
-        "ageSeconds": 26401,
+        "ageSeconds": 26443,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -307,7 +313,7 @@
       {
         "pid": 58504,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 25837,
+        "ageSeconds": 25878,
         "status": "running",
         "isChild": false,
         "taskSummary": "remove the header saying LIVE-updated 45s ago. only show that red bar when something is down, not...",
@@ -317,7 +323,7 @@
       {
         "pid": 10048,
         "cwd": "unknown",
-        "ageSeconds": 14325,
+        "ageSeconds": 14367,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -327,7 +333,7 @@
       {
         "pid": 51344,
         "cwd": "unknown",
-        "ageSeconds": 14322,
+        "ageSeconds": 14364,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
