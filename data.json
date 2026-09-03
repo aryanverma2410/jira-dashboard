@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-03T06:05:57.179Z",
-  "totalTickets": 6,
+  "generatedAt": "2026-09-03T06:06:48.993Z",
+  "totalTickets": 5,
   "tickets": [
     {
       "key": "TKME-2311",
@@ -54,47 +54,6 @@
         "status": "investigating",
         "issueNumber": null,
         "lockedAt": "2026-09-03T05:13:45.322Z"
-      }
-    },
-    {
-      "key": "PC-53423",
-      "summary": "Script to cancel order without refund",
-      "status": "Approved-ES",
-      "statusCategory": "To Do",
-      "priority": "Low",
-      "project": "PROD Change",
-      "projectKey": "PC",
-      "issuetype": "Hybris Platform",
-      "updated": "2026-09-02T20:05:20.000+0900",
-      "created": "2026-09-02T15:54:19.000+0900",
-      "description": "For order mentioned in ticket : PKHME-927\n\nSimilar PC: [Jira Link]\n\nScript: ^script-PKHME-927-cancel-without-refund.groovy",
-      "commentsCount": 2,
-      "recentComments": [
-        {
-          "author": "Sathishkumar Senamohan",
-          "date": "2026-09-02T20:05:13.925+0900",
-          "snippet": "Approved by D2C Team. Requesting you to validate the fix and update the status in the ticket cc: ~@email~@email"
-        },
-        {
-          "author": "Vaibhav Jain",
-          "date": "2026-09-02T17:04:31.994+0900",
-          "snippet": "Reviewed"
-        }
-      ],
-      "lastCommentBy": "Sathishkumar Senamohan",
-      "lastCommentSnippet": "Approved by D2C Team. Requesting you to validate the fix and update the status in the ticket cc: ~@email~@email",
-      "lastCommentDate": "2026-09-02T20:05:13.925+0900",
-      "url": "https://jira.secext.samsung.net/browse/PC-53423",
-      "solution": {
-        "status": "found",
-        "excerpt": "Script to cancel order without refund\r\nGenerated: 2026-09-02T16:00:00.000Z\r\n\r\nIssue:\r\n\r\nOrder PK260816-61163937_260823115706539 was placed on Aug 23 at approximately 5:31 PM IST using Cybersource credit card payment (pk-CybersourceCcPaymentModeV2). The customer was charged successfully, but Cybersource never sent the server-to-server notification callback to the Hybris /notification/provider/{paymentProvider}/ endpoint. Without this notification, the temp-to-real order conversion never occurred. The tokoCleanUpTemporaryOrdersJob expired the order to TEMPORARY_EXPIRED after the 1-hour timeout. On Aug 31, admin.vamshi.s manually converted the temp order to CREATED, but it landed at CHECKED_INVALID because no payment artifacts (CreditCardPaymentInfo, PaymentTransaction entries) were ever created by the missing notification flow. After extended discussion, the reporter (Sairam K) explicitly requested cancellation in Comment 10 of PKHME-927.\r\n\r\nRCA:\r\n\r\nThe root cause is a missing Cybersource notification callback. The normal flow requires Cybersource to send a server-to-server notification after payment authorization, which triggers the payment notification handler strategy to convert the temporary order to a real order and create all payment artifacts (CreditCardPaymentInfo, PaymentTransaction, requestToken). This callback was never received by Hybris. The order remained temporary until the cleanup job expired it. The subsequent manual conversion by admin.vamshi.s only changed the order status field without creating any of the payment-related artifacts that the normal notification flow produces. DefaultCheckOrderService.check() detected the missing paymentInfo and set the order to CHECKED_INVALID.\r\n\r\nThe order is now stuck at CHECKED_INVALID with no recoverable payment data on the Hybris side. There are no PaymentTransaction entries, no CreditCardPaymentInfo link, no paymentProvider field, and no requestToken. The two CreditCardPaymentInfo objects in the customer profile both belong to a different March order and were not created during this August checkout. The customer's payment was deducted by Cybersource (authorization confirmed by the payment provider themselves in Comment 6), but the payment data exists only on the Cybersource side, not in Hybris.\r\n\r\nGiven that payment data reconstruction would be extremely complex and the reporter has explicitly decided to cancel rather than attempt reconstruction, cancellation without refund is the appropriate remediation. The refund should be handled directly from the Cybersource payment portal, as there are no PaymentTransaction entries on the Hybris side to trigger an automated refund flow.\r\n\r\nThe attached script (script-PKHME-927-cancel-without-refund.groovy) follows the approved pattern from PC-3182 (Closed, approved by Oliver Leung). The script repairs business processes by restarting failed processes, sets consignment status to CANCELLED, repairs consignment processes, and finally sets the order status to CANCELLED. This is a direct model-level update that bypasses the normal cancellation flow which would trigger payment reversal. The script does NOT touch PaymentTransaction entries or attempt any refund operation, ensuring the cancellation is purely a status change without financial reversal.\r\n\r\nPossible remediation:\r\n\r\n1. Execute the attached Groovy script script-PKHME-927-cancel-without-refund.groovy on the PK PROD HAC console. The script will:\r\n   a. Repair order-level business processes by restarting processes not in SUCCEEDED/FAILED state to the \"releaseVirtualStockIfApplicable\" action.\r\n   b. Set all consignments to CANCELLED status (only those not already COMPLETED or CANCELLED).\r\n   c. Repair consignment processes by restarting non-terminal processes to the \"failed\" action.\r\n   d. Set the order status to CANCELLED.\r\n\r\n2. The refund for the customer's deducted payment must be processed separately from the Cybersource payment portal, as there are no PaymentTransaction entries on the Hybris side to trigger an automated refund. The payment provider has confirmed the authorization was successful, so either a void (if settlement has not occurred) or a manual refund should be initiated from the Cybersource merchant dashboard.\r\n\r\n3. No further Hybris-side remediation is needed. The order will move from CHECKED_INVALID to CANCELLED, clearing the stuck order from the system.\r\n\r\n## Remediation\r\n- Script: script-PKHME-927-cancel-without-refund.groovy (attached to PC-53423)\r\n- Similar PC: PC-3182 (Closed, approved by Oliver Leung)\r\n- Parent ticket: PKHME-927 (QA Server Review)",
-        "sections": {
-          "issue": "Order PK260816-61163937_260823115706539 was placed on Aug 23 at approximately 5:31 PM IST using Cybersource credit card payment (pk-CybersourceCcPaymentModeV2). The customer was charged successfully, but Cybersource never sent the server-to-server notification callback to the Hybris /notification/provider/{paymentProvider}/ endpoint. Without this notification, the temp-to-real order conversion never occurred. The tokoCleanUpTemporaryOrdersJob expired the order to TEMPORARY_EXPIRED after the 1-hour timeout. On Aug 31, admin.vamshi.s manually converted the temp order to CREATED, but it landed at CHECKED_INVALID because no payment artifacts (CreditCardPaymentInfo, PaymentTransaction entries) were ever created by the missing notification flow. After extended discussion, the reporter (Sairam K) explicitly requested cancellation in Comment 10 of PKHME-927.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-02T07:12:03.920Z"
       }
     },
     {
@@ -255,7 +214,58 @@
     "version": "v3",
     "lastResponseAt": "2026-09-02T13:47:23.866Z",
     "lastResponseIssue": 80,
-    "ideSessions": [],
+    "ideSessions": [
+      {
+        "pid": 21524,
+        "cwd": "c:\\users\\aryan.v1",
+        "ageSeconds": 303178,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "the bridge is usually up but I feel when jira is not connected, it keeps showing as the dashboard...",
+        "lastExchange": "the bridge is usually up but I feel when jira is not connected, it keeps showing as the dashboard is down. when in reality only jira is down. check this logical bug and fix it so even if jira is dow, I can click on \"autologin\" button and it starts the mentioned script on this machine. Also for the scheduled task, make a gui page where I can see my scheduled tasks and there should be input bars for \"time\", \"command\" and a selector asking if its \"1-time/repeats everyday\", also, a field for frequency(once a day\\ every hour\\ custom \\ if left null then just works at the time specified). build whole CRUD for these jobs and create it properly. plan with superpowers and ask me questions. and each job should have a start now button as well. each job should notify the aipro window to work just like the  hac daily report task one. create a queue for jobs making sure they go into a queue and work sequentially. make it foolproof and it shouldnt just disappear after the command.",
+        "sessionId": "aryan-v1"
+      },
+      {
+        "pid": 30788,
+        "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
+        "ageSeconds": 295734,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "create a PC ticket for it with least amount of changes",
+        "lastExchange": "create a PC ticket for it with least amount of changes",
+        "sessionId": "bin"
+      },
+      {
+        "pid": 30880,
+        "cwd": "c:\\windows",
+        "ageSeconds": 295678,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "windows",
+        "lastExchange": null,
+        "sessionId": "windows"
+      },
+      {
+        "pid": 13076,
+        "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
+        "ageSeconds": 268434,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "the bridge is usually up but I feel when jira is not connected, it keeps showing as the dashboard...",
+        "lastExchange": "the bridge is usually up but I feel when jira is not connected, it keeps showing as the dashboard is down. when in reality only jira is down. check this logical bug and fix it so even if jira is dow, I can click on \"autologin\" button and it starts the mentioned script on this machine. Also for the scheduled task, make a gui page where I can see my scheduled tasks and there should be input bars for \"time\", \"command\" and a selector asking if its \"1-time/repeats everyday\", also, a field for frequency(once a day\\ every hour\\ custom \\ if left null then just works at the time specified). build whole CRUD for these jobs and create it properly. plan with superpowers and ask me questions. and each job should have a start now button as well. each job should notify the aipro window to work just like the  hac daily report task one. create a queue for jobs making sure they go into a queue and work sequentially. make it foolproof and it shouldnt just disappear after the command.",
+        "sessionId": "aryan-v1-1"
+      },
+      {
+        "pid": 28204,
+        "cwd": "unknown",
+        "ageSeconds": 248322,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "aipro session",
+        "lastExchange": null,
+        "sessionId": null
+      }
+    ],
     "activityLog": [
       {
         "id": "1788356843869-cbvzo9",
