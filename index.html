@@ -673,20 +673,10 @@ function checkStaleness(){
       if(wb)wb.style.display='inline-block';
     }
   } else {
-    // Fresh data
-    bar.className='status-bar show live';
-    txt.textContent='LIVE — updated '+relTime(dataGeneratedAt);
-    document.body.classList.add('has-status-bar');
+    // Fresh data — everything fine, hide the status bar entirely
+    bar.className='status-bar';
+    document.body.classList.remove('has-status-bar');
     if(wb)wb.style.display='none';
-    // Auto-hide after 5 seconds if very fresh
-    if(ageSec<30){
-      setTimeout(function(){
-        if(dataGeneratedAt && Math.floor((Date.now()-new Date(dataGeneratedAt).getTime())/1000)<STALE_THRESHOLD){
-          bar.classList.remove('show');
-          document.body.classList.remove('has-status-bar');
-        }
-      },5000);
-    }
   }
 }
 
