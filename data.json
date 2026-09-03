@@ -1,7 +1,48 @@
 {
-  "generatedAt": "2026-09-03T06:19:32.467Z",
-  "totalTickets": 7,
+  "generatedAt": "2026-09-03T06:20:13.870Z",
+  "totalTickets": 8,
   "tickets": [
+    {
+      "key": "PC-53378",
+      "summary": "Script to set FOC entry price to 0.01 and retrigger consignment process",
+      "status": "Approved-ES",
+      "statusCategory": "To Do",
+      "priority": "Medium",
+      "project": "PROD Change",
+      "projectKey": "PC",
+      "issuetype": "Hybris Platform",
+      "updated": "2026-09-03T15:19:52.000+0900",
+      "created": "2026-09-01T20:55:07.000+0900",
+      "description": "For orders mentioned in ticket : SAHME-3403. NERP not accepting 0.00 value from promotion rule discounted FOCs. Script sets totalPrice to 0.01 on FOC order entries and retriggers YS03 consignment business process from sendConsignmentToExternalERP.",
+      "commentsCount": 3,
+      "recentComments": [
+        {
+          "author": "Sathishkumar Senamohan",
+          "date": "2026-09-03T15:19:37.937+0900",
+          "snippet": "Approved by D2C Team. Requesting you to validate the fix and update the status in the ticket cc: ~@email~@email"
+        },
+        {
+          "author": "Vaibhav Jain",
+          "date": "2026-09-02T17:46:15.679+0900",
+          "snippet": "Reviewed"
+        }
+      ],
+      "lastCommentBy": "Sathishkumar Senamohan",
+      "lastCommentSnippet": "Approved by D2C Team. Requesting you to validate the fix and update the status in the ticket cc: ~@email~@email",
+      "lastCommentDate": "2026-09-03T15:19:37.937+0900",
+      "url": "https://jira.secext.samsung.net/browse/PC-53378",
+      "solution": {
+        "status": "found",
+        "excerpt": "Script to set FOC entry price to 0.01 and retrigger consignment process\r\nGenerated: 2026-09-01T20:58:00.000Z\r\n\r\n---\r\n\r\nHi Lerato ,\r\n\r\nThis PC ticket carries the remediation script for the 30 orders listed in SAHME-3403. The accessory consignments on these orders are stuck because NERP is rejecting the zero-price line items sent by Hybris.\r\n\r\nPromotion rules on the ZA store set the accessory totalprice to 0.00 (Free of Charge) while the baseprice retains the original value (e.g. 1499.00 or 1295.00). When Hybris sends the consignment feed to NERP, the TokoSDAdditionalDataPopulator.populateGiftWithPurchaseData() method detects the 0.00 totalprice via TokoOrderService.doesConsignmentContainFOCNonPromotion() and classifies the entry as FOC non-promotion. This triggers a DOC_TYPE override from the region's normal sales order type (YS10) to the FOC order type (YS03). NERP then attempts to look up a valid T184 entry for the combination YS03 + the material's Item Category Group + the FOC item category (YNB1), finds no valid mapping, and rejects the consignment with the error \"This order type is not accepted (YS03)\".\r\n\r\nDB verification confirms this across all 30 orders. Each order is split into two consignments: the _1 consignment containing the phone (SM-F*) shipped successfully with a GERP billing number, while the original consignment containing the accessory (EF-* or EB-* or EP-*) is stuck at SHIPPING_REQUESTED (27 orders) or SHIPPING_PREPARATION (1 order) because NERP never created the sales order. The order process is stuck at waitForWarehouseSubprocessEnd waiting for the accessory consignment to complete. All payments are captured successfully.\r\n\r\nBy setting the accessory entry totalprice from 0.00 to 0.01, the entry will no longer be classified as FOC non-promotion by doesConsignmentContainFOCNonPromotion(). This prevents the DOC_TYPE override, keeping it as YS10 (normal order), and the item category will use the standard mapping. T184 has valid entries for YS10 + the accessory material groups, so NERP will accept the order. The consignment process is then restarted from the sendConsignmentToExternalERP node to re-send the corrected feed to NERP.\r\n\r\nThis is the same remediation approach confirmed and successfully applied in SAHME-3392 and SAHME-3386 for the ZA region, and in CLME-2989, CLME-2836, and CLME-4092 for the Chile region where the NERP teams approved sending the zero-price SKU value as a nominal amount.\r\n\r\nThe script is attached to this PC ticket (script-SAHME-3403-foc-price-remediation.groovy). It is idempotent (only modifies entries where totalprice equals zero) and only restarts processes in ERROR or WAITING state. A reusable approved PC ticket exists under PC-52664 (Closed, REUSABLE label) originally created for SAHME-3375 with the same logic.\r\n\r\nRollback: set totalPrice back to 0.00 and nonGiveAwayFOC back to true on the affected order entries.\r\n\r\nThanks,\r\nAryan.\r\n\r\n## Remediation\r\n- Reusable PC ticket: PC-52664 (Closed, REUSABLE, approved by D2C Team)\r\n- Similar PC: PC-52664 (referenced in ticket description)\r\n- Script: script-SAHME-3403-foc-price-remediation.groovy (attached to PC-53378)\r\n- Parent ticket: SAHME-3403 (Blocks relationship, In Progress)\r\n- Logic: Set FOC entry totalprice from 0.00 to 0.01 on YS03 consignments, restart consignment process from sendConsignmentToExternalERP\r\n- Orders: 30 ZA-region orders from SAHME-3403\r\n- Rollback: Set totalPrice back to 0.00 and nonGiveAwayFOC back to true",
+        "sections": {
+          "issue": "",
+          "rca": "Script to set FOC entry price to 0.01 and retrigger consignment process\r\nGenerated: 2026-09-01T20:58:00.000Z\r\n\r\n---\r\n\r\nHi Lerato ,\r\n\r\nThis PC ticket carries the remediation script for the 30 orders listed in SAHME-3403. The accessory consignments on these orders are stuck because NERP is rejecting the zero-price line items sent by Hybris.\r\n\r\nPromotion rules on the ZA store set the accessory totalprice to 0.00 (Free of Charge) while the baseprice retains the original value (e.g. 1499.00 or 1295.00). When Hybris sends the consignment feed to NERP, the TokoSDAdditionalDataPopulator.populateGiftWithPurchaseData() method detects the 0.00 totalprice via TokoOrderService.doesConsignmentContainFOCNonPromotion() and classifies the entry as FOC non-promotion. This triggers a DOC_TYPE override from the region's normal sales order type (YS10) to the FOC order type (YS03). NERP then attempts to look up a valid T184 entry for the combination YS03 + the material's Item Category Group + the FOC item category (YNB1), finds no valid mapping, and rejects the consignment with the error \"This order type is not accepted (YS03)\".\r\n\r\nDB verification confirms this across all 30 orders. Each order is split into two consignments: the _1 consignment containing the phone (SM-F*) shipped successfully with a GERP billing number, while the original consignment containing the accessory (EF-* or EB-* or EP-*) is stuck at SHIPPING_REQUESTED (27 orders) or SHIPPING_PREPARATION (1 order) because NERP never created the sales order. The order process is stuck at waitForWarehouseSubprocessEnd waiting for the accessory consignment to complete. All payments are captured successfully.\r\n\r\nBy setting the accessory entry totalprice from 0.00 to 0.01, the entry will no longer be classified as FOC non-promotion by doesConsignmentContainFOCNonPromotion(). This prevents the DOC_TYPE override, keeping it as YS10 (normal order), and the item category will use the standard mapping. T184 has valid entries for YS10 + the accessory material groups, so NERP will accept the order. The consignment process is then restarted from the sendConsignmentToExternalERP node to re-send the corrected feed to NERP.\r\n\r\nThis is the same remediation approach confirmed and successfully applied in SAHME-3392 and SAHME-3386 for the ZA region, and in CLME-2989, CLME-2836, and CLME-4092 for the Chile region where the NERP teams approved sending the zero-price SKU value as a nominal amount.\r\n\r\nThe script is attached to this PC ticket (script-SAHME-3403-foc-price-remediation.groovy). It is idempotent (only modifies entries where totalprice equals zero) and only restarts processes in ERROR or WAITING state. A reusable approved PC ticket exists under PC-52664 (Closed, REUSABLE label) originally created for SAHME-3375 with the same logic.\r\n\r\nRollback: set totalPrice back to 0.00 and nonGiveAwayFOC back to true on the affected order entries.\r\n\r\nThanks,\r\nAryan.\r\n\r\n## Remediation\r\n- Reusable PC ticket: PC-52664 (Closed, REUSABLE, approved by D2C Team)\r\n- Similar PC: PC-52664 (referenced in ticket description)\r\n- Script: script-SAHME-3403-foc-price-remediation.groovy (attached to PC-53378)\r\n- Parent ticket: SAHME-3403 (Blocks relationship, In Progress)\r\n- Logic: Set FOC entry totalprice from 0.00 to 0.01 on YS03 consignments, restart consignment process from sendConsignmentToExternalERP\r\n- Orders: 30 ZA-region orders from SAHME-3403\r\n- Rollback: Set totalPrice back to 0.00 and nonGiveAwayFOC back to true",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-01T12:02:29.500Z"
+      }
+    },
     {
       "key": "PC-53498",
       "summary": "TKME-2311 || For Creation: POS I Usergroup I Omnichannel Dealer Master Data",
@@ -277,17 +318,17 @@
       {
         "pid": 21524,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 303941,
+        "ageSeconds": 303983,
         "status": "running",
         "isChild": false,
-        "taskSummary": "the bridge is usually up but I feel when jira is not connected, it keeps showing as the dashboard...",
-        "lastExchange": "the bridge is usually up but I feel when jira is not connected, it keeps showing as the dashboard is down. when in reality only jira is down. check this logical bug and fix it so even if jira is dow, I can click on \"autologin\" button and it starts the mentioned script on this machine. Also for the scheduled task, make a gui page where I can see my scheduled tasks and there should be input bars for \"time\", \"command\" and a selector asking if its \"1-time/repeats everyday\", also, a field for frequency(once a day\\ every hour\\ custom \\ if left null then just works at the time specified). build whole CRUD for these jobs and create it properly. plan with superpowers and ask me questions. and each job should have a start now button as well. each job should notify the aipro window to work just like the  hac daily report task one. create a queue for jobs making sure they go into a queue and work sequentially. make it foolproof and it shouldnt just disappear after the command.",
+        "taskSummary": "The MCPs section doesnt seem to accurately reflect the actual MCP state to know which MPCs are do...",
+        "lastExchange": "The MCPs section doesnt seem to accurately reflect the actual MCP state to know which MPCs are down and which are working. it should ping every minute. the HAC section has start button that is somehow connected to localhost andit is on web so that doesnt work and keeps saying port is unavailable. why is the port important here. it just needs to send a command to Aipro and reflect the output back here in the format given. Eash task that has performed should have an output with it that we can see when we click on that specific task. the output is whatever aipro responds back with. In EOD bar, there is no need of description. in the today's work section, first of all it is always on the fallback, check that and it should give me a summary of what all I have done today. No need to mention MCps and stuff as its not needed to be mentioned. only things relevant to tickets that are worked upon. it should say what tickets I have worked upon today, 1 line for what I did on them.  and then tickets that are open and 1 line for each ticket what is to be done there. doploy all these fixes.",
         "sessionId": "aryan-v1"
       },
       {
         "pid": 30788,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 296497,
+        "ageSeconds": 296539,
         "status": "running",
         "isChild": false,
         "taskSummary": "update the script now. keep the changes to a minimum, just those checks",
@@ -297,7 +338,7 @@
       {
         "pid": 30880,
         "cwd": "c:\\windows",
-        "ageSeconds": 296441,
+        "ageSeconds": 296483,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -307,17 +348,17 @@
       {
         "pid": 13076,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 269197,
+        "ageSeconds": 269239,
         "status": "running",
         "isChild": false,
-        "taskSummary": "the bridge is usually up but I feel when jira is not connected, it keeps showing as the dashboard...",
-        "lastExchange": "the bridge is usually up but I feel when jira is not connected, it keeps showing as the dashboard is down. when in reality only jira is down. check this logical bug and fix it so even if jira is dow, I can click on \"autologin\" button and it starts the mentioned script on this machine. Also for the scheduled task, make a gui page where I can see my scheduled tasks and there should be input bars for \"time\", \"command\" and a selector asking if its \"1-time/repeats everyday\", also, a field for frequency(once a day\\ every hour\\ custom \\ if left null then just works at the time specified). build whole CRUD for these jobs and create it properly. plan with superpowers and ask me questions. and each job should have a start now button as well. each job should notify the aipro window to work just like the  hac daily report task one. create a queue for jobs making sure they go into a queue and work sequentially. make it foolproof and it shouldnt just disappear after the command.",
+        "taskSummary": "The MCPs section doesnt seem to accurately reflect the actual MCP state to know which MPCs are do...",
+        "lastExchange": "The MCPs section doesnt seem to accurately reflect the actual MCP state to know which MPCs are down and which are working. it should ping every minute. the HAC section has start button that is somehow connected to localhost andit is on web so that doesnt work and keeps saying port is unavailable. why is the port important here. it just needs to send a command to Aipro and reflect the output back here in the format given. Eash task that has performed should have an output with it that we can see when we click on that specific task. the output is whatever aipro responds back with. In EOD bar, there is no need of description. in the today's work section, first of all it is always on the fallback, check that and it should give me a summary of what all I have done today. No need to mention MCps and stuff as its not needed to be mentioned. only things relevant to tickets that are worked upon. it should say what tickets I have worked upon today, 1 line for what I did on them.  and then tickets that are open and 1 line for each ticket what is to be done there. doploy all these fixes.",
         "sessionId": "aryan-v1-1"
       },
       {
         "pid": 28204,
         "cwd": "unknown",
-        "ageSeconds": 249085,
+        "ageSeconds": 249127,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
