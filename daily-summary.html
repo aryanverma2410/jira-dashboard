@@ -13,8 +13,7 @@
 --radius:12px;--blur:blur(10px);
 }
 html,body{height:100%;overflow-y:auto}
-body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;padding-bottom:40px}
-
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;-webkit-font-smoothing:antiialiased;padding-bottom:40px}
 ::-webkit-scrollbar{width:0;height:0}
 
 .topbar{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(13,17,23,0.85);backdrop-filter:var(--blur);border-bottom:1px solid var(--border)}
@@ -24,43 +23,66 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .dot{width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 8px var(--success);animation:pulse 2s infinite;flex-shrink:0}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 
-.content{max-width:680px;margin:0 auto;padding:16px}
+.content{max-width:760px;margin:0 auto;padding:16px}
+
+/* Stats row */
+.stats-row{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.stat-pill{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:20px;background:var(--card);backdrop-filter:var(--blur);border:1px solid var(--border);font-size:13px}
+.stat-pill .val{font-weight:700;color:var(--accent)}
+.stat-pill .val.green{color:var(--success)}
+.stat-pill .val.orange{color:var(--warning)}
 
 /* Section headers */
-.section-header{font-size:12px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin:20px 0 10px;display:flex;align-items:center;gap:8px}
+.section-header{font-size:13px;font-weight:700;color:var(--text);margin:24px 0 12px;display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--border)}
 .section-header .icon{font-size:16px}
-.section-divider{height:1px;background:var(--border);margin:24px 0}
+.section-header .count{font-size:12px;font-weight:400;color:var(--text-dim);margin-left:auto}
 
-/* Card */
-.card{background:var(--card);backdrop-filter:var(--blur);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;transition:border-color 0.3s}
-.card:hover{border-color:rgba(255,255,255,0.2)}
+/* Ticket card */
+.ticket-card{background:var(--card);backdrop-filter:var(--blur);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px;transition:border-color 0.3s}
+.ticket-card:hover{border-color:rgba(255,255,255,0.2)}
+.ticket-card.worked{border-left:3px solid var(--success)}
+.ticket-card.open{border-left:3px solid var(--accent)}
 
-/* Goodnight skill section */
-.skill-card{position:relative;overflow:hidden}
-.skill-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:16px;background:rgba(88,166,255,0.15);border:1px solid rgba(88,166,255,0.3);font-size:11px;color:var(--accent);margin-bottom:10px}
-.skill-badge .dot{width:6px;height:6px;box-shadow:none}
-.skill-title{font-size:15px;font-weight:700;margin-bottom:6px}
-.skill-desc{font-size:13px;color:var(--text-dim);line-height:1.5;margin-bottom:12px}
-.trigger-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-.trigger-chip{padding:4px 10px;border-radius:12px;background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);font-size:12px;color:var(--success);font-family:monospace}
-.output-label{font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
-.output-box{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:14px;font-family:'Cascadia Code','Fira Code',monospace;font-size:13px;line-height:1.6;white-space:pre-wrap;color:var(--text);max-height:500px;overflow-y:auto;margin-bottom:12px}
-.copy-btn{padding:8px 16px;border-radius:8px;background:rgba(88,166,255,0.1);border:1px solid var(--border);color:var(--accent);font-size:13px;cursor:pointer;transition:all 0.2s}
+.tk-head{display:flex;align-items:baseline;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.tk-key{font-size:13px;font-weight:700;font-family:monospace;color:var(--accent)}
+.ticket-card.worked .tk-key{color:var(--success)}
+.tk-key a{color:inherit;text-decoration:none}
+.tk-key a:hover{text-decoration:underline}
+.tk-summary{font-size:14px;font-weight:600;line-height:1.4;flex:1;min-width:0}
+.tk-status{font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;white-space:nowrap}
+.tk-status.todo{background:rgba(88,166,255,0.15);color:var(--accent)}
+.tk-status.progress{background:rgba(210,153,34,0.15);color:var(--warning)}
+.tk-status.review{background:rgba(163,113,247,0.15);color:#a371f7}
+.tk-status.qa{background:rgba(163,113,247,0.15);color:#a371f7}
+.tk-status.other{background:rgba(139,148,158,0.15);color:var(--text-dim)}
+
+.tk-line{font-size:13px;line-height:1.6;color:var(--text);padding:4px 0;display:flex;gap:8px;align-items:flex-start}
+.tk-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;min-width:48px;flex-shrink:0;padding-top:2px}
+.tk-label.done{color:var(--success)}
+.tk-label.rca{color:#f0883e}
+.tk-label.todo{color:var(--accent)}
+.tk-text{flex:1;min-width:0}
+.tk-text.muted{color:var(--text-dim)}
+
+.tk-wl{font-size:11px;color:var(--success);font-weight:600;margin-left:auto;white-space:nowrap}
+
+/* Copy button */
+.copy-btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:8px;background:rgba(88,166,255,0.1);border:1px solid var(--border);color:var(--accent);font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;margin-top:16px}
 .copy-btn:active{background:rgba(88,166,255,0.2);transform:scale(0.98)}
 .copy-btn.copied{background:rgba(63,185,80,0.15);border-color:var(--success);color:var(--success)}
 
 /* Source badge */
-.source-badge{display:inline-block;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
+.source-badge{display:inline-block;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
 .source-badge.skill{background:rgba(63,185,80,0.15);color:var(--success);border:1px solid rgba(63,185,80,0.3)}
 .source-badge.auto{background:rgba(63,185,80,0.15);color:var(--success);border:1px solid rgba(63,185,80,0.3)}
-.source-badge.fallback{background:rgba(210,153,34,0.15);color:var(--warning);border:1px solid rgba(210,153,34,0.3)}
 
-/* Loading / empty states */
+/* States */
 .loading{text-align:center;padding:40px 20px;color:var(--text-dim)}
 .error{text-align:center;padding:40px 20px;color:var(--danger)}
+.empty{text-align:center;padding:20px;color:var(--text-dim);font-size:13px}
 
 /* Back link */
-.back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text-dim);text-decoration:none;padding:4px 0}
+.back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text-dim);text-decoration:none;padding:4px 0;margin-top:20px}
 .back-link:hover{color:var(--accent)}
 </style>
 </head>
@@ -76,51 +98,9 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 
 <div class="content">
 
-  <!-- SECTION 1: GOODNIGHT SKILL -->
-  <div class="section-header"><span class="icon">&#9790;</span> Goodnight Skill</div>
-
-  <div class="card skill-card">
-    <div class="skill-badge"><span class="dot"></span> jira-daily-summary</div>
-    <div class="skill-title">End-of-Day Work Summary</div>
-    <div class="skill-desc">
-      Generates a manager-ready narrative summary of all Jira tickets worked on today, written in AryanTone. Scans activity logs, IDE sessions, bridge commands, and Jira actions, then recalls what was actually done — investigations, code traces, scripts written, RCAs posted, tools fixed. Output is flowing narrative paragraphs ready to paste into Teams or email.
-    </div>
-    <div class="trigger-list">
-      <span class="trigger-chip">goodnight</span>
-      <span class="trigger-chip">adios</span>
-      <span class="trigger-chip">end of day</span>
-      <span class="trigger-chip">eod summary</span>
-      <span class="trigger-chip">sign off</span>
-    </div>
-    <div class="output-label">Sample Output (AryanTone)</div>
-    <div class="output-box" id="sampleOutput">Hi ,
-
-Here is the end-of-day summary for 30 August 2026.
-
-Work today was focused on SAM-24707, the AE store GNB navigation difference ticket. The HAC MCP went down mid-session with bad credential errors, so I built a standalone HAC client (_hac-client.js) that authenticates directly and supports FlexiSearch and Groovy execution. FlexiSearch is working — I used it to confirm that aeDotComCmsNavSyncJob last ran on August 27th, three days stale, while every other store's NavSync job runs daily. The Groovy execution function was fixed but hasn't been tested yet.
-
-The Confluence MCP was also down, so I built a search script using cached browser cookies. That search came back incomplete — the script has a newline escaping bug that still needs fixing.
-
-On the investigation side, I traced the full GNB sync architecture through the codebase: TokoDotComCmsNavSyncCronJob pulls GNB data from AEM's navigation API, maps it through GNBMenuMapperV5ToOldResponse for GNB v5, and syncs from Staged to Online in the aeContentCatalog. Kibana logs confirmed GNB v5 is active with both v4 and v5 feature flags enabled. The root cause is clear — the AE NavSync cronjob hasn't triggered since August 27th, so Hybris cart page GNB is three days behind AEM's real-time content.
-
-I prepared a remediation script (script-SAM-24707-ae-navsync-trigger.groovy) that triggers aeDotComCmsNavSyncJob, waits up to five minutes, and reports the result. It has not been executed yet — it's waiting for approval. No Jira worklogs were logged today. No PC ticket was raised for this one yet.
-
-Thanks,
-
-Aryan</div>
-    <button class="copy-btn" id="copySampleBtn" onclick="copySample()">Copy Sample</button>
-  </div>
-
-  <div class="section-divider"></div>
-
-  <!-- SECTION 2: TODAY'S WORK SUMMARY -->
-  <div class="section-header"><span class="icon">&#128203;</span> Today's Work Summary</div>
-
   <div id="summaryContainer">
     <div class="loading">Loading today's summary...</div>
   </div>
-
-  <div class="section-divider"></div>
 
   <a class="back-link" href="https://aryanverma2410.github.io/jira-dashboard/">&#8592; Back to Dashboard</a>
 
@@ -129,6 +109,7 @@ Aryan</div>
 <script>
 var DATA_URL = 'https://aryanverma2410.github.io/jira-dashboard/summary.json';
 var CACHE_BUST = '?t=' + Date.now();
+var _lastNarrative = '';
 
 function fetchSummary() {
   fetch(DATA_URL + CACHE_BUST)
@@ -137,8 +118,10 @@ function fetchSummary() {
       return r.json();
     })
     .then(function(data) {
+      _lastNarrative = data.narrative || data.summaryText || '';
       renderSummary(data);
-      document.getElementById('refreshTime').textContent = 'Updated ' + new Date(data.generatedAt).toLocaleTimeString();
+      var ts = data.generatedAt ? new Date(data.generatedAt).toLocaleTimeString() : '';
+      document.getElementById('refreshTime').textContent = ts ? 'Updated ' + ts : '';
       document.getElementById('liveDot').style.background = 'var(--success)';
     })
     .catch(function(err) {
@@ -146,6 +129,20 @@ function fetchSummary() {
       document.getElementById('refreshTime').textContent = 'Error';
       document.getElementById('liveDot').style.background = 'var(--danger)';
     });
+}
+
+function statusClass(s) {
+  s = (s||'').toLowerCase();
+  if (s.indexOf('to do')>=0||s==='open') return 'todo';
+  if (s.indexOf('progress')>=0) return 'progress';
+  if (s.indexOf('code review')>=0||s.indexOf('review')>=0) return 'review';
+  if (s.indexOf('qa')>=0) return 'qa';
+  return 'other';
+}
+
+function esc(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 function renderSummary(data) {
@@ -156,41 +153,80 @@ function renderSummary(data) {
     html += '<div class="source-badge ' + data.source + '">' + data.source + '</div>';
   }
 
-  // Narrative text
-  var narrative = data.narrative || data.summaryText || '';
-  if (narrative) {
-    html += '<div class="card">';
-    html += '<div class="output-box">' + escapeHtml(narrative) + '</div>';
-    html += '<button class="copy-btn" onclick="copyFull()">Copy Summary</button>';
-    html += '</div>';
+  // Stats row
+  var totalWork = data.totalWorkToday || (data.stats && data.stats.totalWorkToday) || '';
+  var workedCount = (data.workedTickets || []).length;
+  var openCount = (data.openTickets || []).length;
+  html += '<div class="stats-row">';
+  if (totalWork) html += '<div class="stat-pill">&#9201; Total work: <span class="val green">' + esc(totalWork) + '</span></div>';
+  html += '<div class="stat-pill">&#128203; Worked: <span class="val">' + workedCount + '</span></div>';
+  html += '<div class="stat-pill">&#128193; Open: <span class="val orange">' + openCount + '</span></div>';
+  html += '</div>';
+
+  // Section 1: Tickets worked on today
+  html += '<div class="section-header"><span class="icon">&#128203;</span> Tickets Worked On Today<span class="count">' + workedCount + ' tickets</span></div>';
+
+  if (data.workedTickets && data.workedTickets.length > 0) {
+    data.workedTickets.forEach(function(t) {
+      html += '<div class="ticket-card worked">';
+      html += '<div class="tk-head">';
+      html += '<span class="tk-key"><a href="https://jira.secext.samsung.net/browse/' + esc(t.key) + '" target="_blank">' + esc(t.key) + '</a></span>';
+      html += '<span class="tk-summary">' + esc(t.summary) + '</span>';
+      if (t.worklogTime) html += '<span class="tk-wl">' + esc(t.worklogTime) + '</span>';
+      html += '</div>';
+      // Done line
+      if (t.actions && t.actions.length > 0) {
+        html += '<div class="tk-line"><span class="tk-label done">Done</span><span class="tk-text">' + esc(t.actions.join(', ')) + '</span></div>';
+      }
+      // RCA line
+      if (t.rca) {
+        html += '<div class="tk-line"><span class="tk-label rca">RCA</span><span class="tk-text muted">' + esc(t.rca) + '</span></div>';
+      } else {
+        html += '<div class="tk-line"><span class="tk-label rca">RCA</span><span class="tk-text muted">No RCA on file.</span></div>';
+      }
+      html += '</div>';
+    });
   } else {
-    html += '<div class="card"><div class="loading">No summary available yet.</div></div>';
+    html += '<div class="empty">No ticket activity recorded today.</div>';
+  }
+
+  // Section 2: Open tickets
+  html += '<div class="section-header"><span class="icon">&#128193;</span> Open Tickets<span class="count">' + openCount + ' tickets</span></div>';
+
+  if (data.openTickets && data.openTickets.length > 0) {
+    data.openTickets.forEach(function(t) {
+      var sc = statusClass(t.status);
+      html += '<div class="ticket-card open">';
+      html += '<div class="tk-head">';
+      html += '<span class="tk-key"><a href="https://jira.secext.samsung.net/browse/' + esc(t.key) + '" target="_blank">' + esc(t.key) + '</a></span>';
+      html += '<span class="tk-status ' + sc + '">' + esc(t.status) + '</span>';
+      html += '<span class="tk-summary">' + esc(t.summary) + '</span>';
+      html += '</div>';
+      if (t.nextStep) {
+        html += '<div class="tk-line"><span class="tk-label todo">Todo</span><span class="tk-text">' + esc(t.nextStep) + '</span></div>';
+      }
+      html += '</div>';
+    });
+  } else {
+    html += '<div class="empty">No open tickets.</div>';
+  }
+
+  // Copy button for full narrative
+  if (data.narrative || data.summaryText) {
+    html += '<button class="copy-btn" onclick="copyFull(this)">&#128203; Copy Full Summary</button>';
   }
 
   document.getElementById('summaryContainer').innerHTML = html;
 }
 
-function escapeHtml(text) {
-  if (!text) return '';
-  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function copyText(text, btn) {
-  navigator.clipboard.writeText(text).then(function() {
-    var orig = btn.textContent;
+function copyFull(btn) {
+  if (!_lastNarrative) return;
+  navigator.clipboard.writeText(_lastNarrative).then(function() {
+    var orig = btn.innerHTML;
     btn.classList.add('copied');
-    btn.textContent = 'Copied!';
-    setTimeout(function() { btn.classList.remove('copied'); btn.textContent = orig; }, 2000);
+    btn.innerHTML = '&#10003; Copied!';
+    setTimeout(function() { btn.classList.remove('copied'); btn.innerHTML = orig; }, 2000);
   });
-}
-
-function copySample() {
-  copyText(document.getElementById('sampleOutput').textContent, document.getElementById('copySampleBtn'));
-}
-
-function copyFull() {
-  var container = document.querySelector('#summaryContainer .output-box');
-  if (container) copyText(container.textContent, event.target);
 }
 
 // Initial load
