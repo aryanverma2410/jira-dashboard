@@ -281,6 +281,43 @@ body.has-status-bar .scroll{padding-top:28px}
 .hac-spinner{display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:12px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .hac-text-output{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-word;color:var(--text);margin-top:12px;font-family:monospace}
+
+/* Tasks (Scheduled Jobs) View */
+.tasks-container{max-width:800px;margin:0 auto;padding:8px 0}
+.tasks-queue{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:16px}
+.tasks-queue-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-dim);margin-bottom:8px}
+.tasks-queue-item{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px}
+.tasks-queue-spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0}
+.tasks-queue-waiting{color:var(--text-dim);font-size:10px}
+.task-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px}
+.task-card.disabled{opacity:0.5}
+.task-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.task-card-name{font-size:14px;font-weight:600}
+.task-status-badge{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:600}
+.task-status-badge.idle{background:rgba(128,128,128,0.2);color:var(--text-dim)}
+.task-status-badge.running{background:rgba(88,166,255,0.2);color:var(--accent)}
+.task-status-badge.success{background:rgba(46,160,67,0.2);color:#2ea043}
+.task-status-badge.failed{background:rgba(248,81,81,0.2);color:#f85149}
+.task-card-meta{font-size:11px;color:var(--text-dim);margin-bottom:8px;display:flex;gap:12px;flex-wrap:wrap}
+.task-card-actions{display:flex;gap:8px;flex-wrap:wrap}
+.task-btn{background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer}
+.task-btn:hover{background:rgba(88,166,255,0.1)}
+.task-btn.primary{background:var(--accent);color:#fff;border:none}
+.task-btn.danger{color:#f85149}
+.task-btn.danger:hover{background:rgba(248,81,81,0.1)}
+.task-output{font-family:monospace;white-space:pre-wrap;background:var(--bg);border:1px solid var(--border);padding:12px;font-size:11px;max-height:300px;overflow-y:auto;margin-top:8px;border-radius:8px}
+.task-output-time{font-size:10px;color:var(--text-dim);margin-top:4px}
+.task-form-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:300;display:none;align-items:center;justify-content:center}
+.task-form-overlay.show{display:flex}
+.task-form{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:20px;max-width:500px;width:90vw;max-height:90vh;overflow-y:auto}
+.task-form h3{font-size:16px;margin-bottom:16px}
+.task-form label{font-size:12px;font-weight:600;color:var(--text-dim);display:block;margin-bottom:4px;margin-top:12px}
+.task-form input[type=text],.task-form input[type=time],.task-form select,.task-form textarea{width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:13px;box-sizing:border-box}
+.task-form textarea{min-height:80px;resize:vertical;font-family:monospace;font-size:12px}
+.task-form .checkbox-row{display:flex;align-items:center;gap:8px;margin-top:12px}
+.task-form .checkbox-row label{margin:0;cursor:pointer}
+.task-form-actions{display:flex;gap:8px;margin-top:20px;justify-content:flex-end}
+.task-empty{text-align:center;padding:40px;color:var(--text-dim);font-size:14px}
 </style>
 </head>
 <body>
@@ -441,6 +478,28 @@ body.has-status-bar .scroll{padding-top:28px}
   </div>
 </div>
 
+<!-- Tasks (Scheduled Jobs) view -->
+<div class="view" id="view-tasks" style="display:none">
+  <div class="topbar">
+    <span class="pulse-dot" id="tasksPulseDot"></span>
+    <span class="topbar-title">Scheduled Tasks</span>
+    <span class="refresh-time" id="tasksRefreshTime"></span>
+  </div>
+  <div class="scroll" id="tasksScroll">
+    <div class="tasks-container">
+      <div class="tasks-queue" id="tasksQueue" style="display:none">
+        <div class="tasks-queue-title">Queue</div>
+        <div id="tasksQueueList"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font-size:14px;font-weight:600">Jobs</span>
+        <button class="task-btn primary" onclick="openTaskForm()">+ New Job</button>
+      </div>
+      <div id="tasksList"></div>
+    </div>
+  </div>
+</div>
+
 <!-- FAB -->
 <button class="fab hidden" id="fab" onclick="switchView('view-command')">&#9998;</button>
 
@@ -474,6 +533,10 @@ body.has-status-bar .scroll{padding-top:28px}
     <div class="nav-icon">&#128202;</div>
     <span>HAC</span>
   </div>
+  <a class="nav-item" data-nav="view-tasks" onclick="switchView('view-tasks')">
+    <span class="nav-icon">&#9201;</span>
+    <span class="nav-label">Tasks</span>
+  </a>
   <a class="nav-item" href="daily-summary.html" style="text-decoration:none">
     <div class="nav-icon">&#9790;</div>
     <span>EOD</span>
@@ -494,6 +557,44 @@ body.has-status-bar .scroll{padding-top:28px}
   <div class="detail-body" id="detailBody"></div>
 </div>
 
+<!-- Task form overlay -->
+<div class="task-form-overlay" id="taskFormOverlay" onclick="if(event.target===this)closeTaskForm()">
+  <div class="task-form">
+    <h3 id="taskFormTitle">New Job</h3>
+    <input type="hidden" id="taskFormId">
+    <label>Job Name</label>
+    <input type="text" id="taskFormName" placeholder="e.g. HAC Daily Report">
+    <label>Prompt (sent to aipro)</label>
+    <textarea id="taskFormPrompt" placeholder="Run this command now: node script.cjs..."></textarea>
+    <label>Type</label>
+    <select id="taskFormType">
+      <option value="once">One-time</option>
+      <option value="daily">Repeats daily</option>
+    </select>
+    <label>Time (24h, HH:MM)</label>
+    <input type="text" id="taskFormTime" placeholder="09:00" value="09:00">
+    <label>Frequency</label>
+    <select id="taskFormFreq">
+      <option value="">Just at the time specified</option>
+      <option value="daily">Once a day</option>
+      <option value="hourly">Every hour</option>
+      <option value="custom">Custom interval</option>
+    </select>
+    <div id="taskFormCustomRow" style="display:none">
+      <label>Custom interval (minutes)</label>
+      <input type="text" id="taskFormCustomMin" placeholder="30" value="30">
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="taskFormEnabled" checked>
+      <label for="taskFormEnabled">Enabled</label>
+    </div>
+    <div class="task-form-actions">
+      <button class="task-btn" onclick="closeTaskForm()">Cancel</button>
+      <button class="task-btn primary" onclick="saveTaskForm()">Save</button>
+    </div>
+  </div>
+</div>
+
 <script>
 var _p=['ghp_2','JfmDbE','rUdypU','SSwCOC','HQ2eoO','0X3Zb2','OXyGU'];
 var GH_TOKEN=_p.join('');
@@ -511,13 +612,23 @@ var searchTerm='';
 var lastFetchOk=false;
 var lastFetchTime=null;
 var dataGeneratedAt=null;
+var localHealthOk=null; // null=checking, true=server up, false=server down
 var STALE_THRESHOLD=90; // seconds — data older than this is stale (3 missed 30s polls)
 var NL=String.fromCharCode(10);
+
+// ===== LOCAL HEALTH CHECK =====
+function checkLocalHealth(){
+  fetch('http://127.0.0.1:9293/health?t='+Date.now(),{cache:'no-store'})
+    .then(function(r){if(!r.ok)throw new Error('bad');return r.json()})
+    .then(function(d){localHealthOk=true;checkStaleness()})
+    .catch(function(){localHealthOk=false;checkStaleness()});
+}
 
 // ===== STALENESS DETECTION =====
 function checkStaleness(){
   var bar=document.getElementById('statusBar');
   var txt=document.getElementById('statusBarText');
+  var wb=document.getElementById('wakeBtn');
   if(!dataGeneratedAt){
     // No data yet — connecting
     bar.className='status-bar';
@@ -529,25 +640,44 @@ function checkStaleness(){
   var ageSec=Math.floor((Date.now()-new Date(dataGeneratedAt).getTime())/1000);
   if(ageSec<0)ageSec=0;
   if(!lastFetchOk){
-    // Fetch failed entirely — show stale
-    bar.className='status-bar show stale';
-    txt.textContent='OFFLINE — showing data from '+relTime(dataGeneratedAt);
-    document.body.classList.add('has-status-bar');
-    updateRefreshTime(); // update all refresh-time labels to show 'Offline'
-    var wb=document.getElementById('wakeBtn');if(wb)wb.style.display='inline-block';
+    // GitHub fetch failed entirely
+    if(localHealthOk){
+      // Server is up but GitHub is unreachable — data might be stale
+      bar.className='status-bar show stale';
+      txt.textContent='JIRA ISSUE — showing data from '+relTime(dataGeneratedAt)+' (server up, GitHub stale)';
+      document.body.classList.add('has-status-bar');
+      if(wb)wb.style.display='none';
+    } else {
+      // Both GitHub and server unreachable — truly offline
+      bar.className='status-bar show stale';
+      txt.textContent='OFFLINE — showing data from '+relTime(dataGeneratedAt);
+      document.body.classList.add('has-status-bar');
+      if(wb)wb.style.display='inline-block';
+    }
+    updateRefreshTime();
   } else if(ageSec>STALE_THRESHOLD){
-    // Fetch succeeded but data is old — server down
-    bar.className='status-bar show stale';
-    var ageStr=ageSec<3600?Math.floor(ageSec/60)+'m':Math.floor(ageSec/3600)+'h';
-    txt.textContent='STALE — data is '+ageStr+' old (server may be down)';
-    document.body.classList.add('has-status-bar');
-    var wb=document.getElementById('wakeBtn');if(wb)wb.style.display='inline-block';
+    // Fetch succeeded but data is old
+    if(localHealthOk){
+      // Server is up — Jira is down, not the server
+      bar.className='status-bar show stale';
+      var ageStr=ageSec<3600?Math.floor(ageSec/60)+'m':Math.floor(ageSec/3600)+'h';
+      txt.textContent='JIRA DOWN — data is '+ageStr+' old (server up, autologin available)';
+      document.body.classList.add('has-status-bar');
+      if(wb)wb.style.display='none';
+    } else {
+      // Server is also down
+      bar.className='status-bar show stale';
+      var ageStr2=ageSec<3600?Math.floor(ageSec/60)+'m':Math.floor(ageSec/3600)+'h';
+      txt.textContent='SERVER DOWN — data is '+ageStr2+' old';
+      document.body.classList.add('has-status-bar');
+      if(wb)wb.style.display='inline-block';
+    }
   } else {
     // Fresh data
     bar.className='status-bar show live';
     txt.textContent='LIVE — updated '+relTime(dataGeneratedAt);
     document.body.classList.add('has-status-bar');
-    var wb=document.getElementById('wakeBtn');if(wb)wb.style.display='none';
+    if(wb)wb.style.display='none';
     // Auto-hide after 5 seconds if very fresh
     if(ageSec<30){
       setTimeout(function(){
@@ -575,6 +705,8 @@ function wakeUpServer(){
 function relTime(ds){if(!ds)return '';var d=new Date(ds);var n=Date.now();var df=Math.floor((n-d.getTime())/1000);if(df<0)df=0;if(df<10)return 'just now';if(df<60)return df+'s ago';if(df<3600)return Math.floor(df/60)+'m ago';if(df<86400)return Math.floor(df/3600)+'h ago';if(df<604800)return Math.floor(df/86400)+'d ago';return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}
 function fmtUptime(s){if(!s||s<0)return '0s';var h=Math.floor(s/3600);var m=Math.floor((s%3600)/60);var ss=Math.floor(s%60);if(h>0)return h+'h '+m+'m';if(m>0)return m+'m '+ss+'s';return ss+'s'}
 function showToast(msg,type){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(type||'');setTimeout(function(){t.classList.remove('show')},3500)}
+function toast(msg){showToast(msg,'')}
+function formatTime(d){return d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
 function escapeHtml(str){if(!str)return '';return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 function statusClass(st,cat){var s=(st||'').toLowerCase();var c=(cat||'').toLowerCase();if(s.indexOf('open')===0||c==='to do')return 'open';if(s.indexOf('progress')>=0||c==='in progress')return 'in-progress';if(s==='reopened')return 'reopened';if(s==='done'||s==='closed'||s==='resolved'||c==='done')return 'done';return 'other'}
 function priorityColor(p){p=(p||'').toLowerCase();if(p==='highest'||p==='critical')return '#f85149';if(p==='high')return '#d29922';if(p==='medium')return '#58a6ff';if(p==='low'||p==='lowest')return '#3fb950';return '#8b949e'}
@@ -1289,11 +1421,16 @@ document.getElementById('searchInput').addEventListener('input',function(e){sear
 
 // ===== INIT =====
 fetchData();
+checkLocalHealth();
 setInterval(fetchData,10000);
+setInterval(checkLocalHealth,10000);
 setInterval(updateRefreshTime,5000);
 setInterval(checkStaleness,5000);
 setInterval(updateRelativeTimes,30000);
 setInterval(updateLiveUptimes,1000);
+setInterval(function(){
+  if(document.getElementById('view-tasks').style.display!=='none')loadTasks();
+},5000);
 
 // ===== PULL TO REFRESH =====
 var ptrStartY=0,ptrPulling=false,ptrThreshold=80;
@@ -1465,11 +1602,257 @@ function copyHacReport(){
   }
 }
 
+// ===== TASKS (Scheduled Jobs) =====
+var _tasksData=null;
+
+function loadTasks(){
+  fetch('http://127.0.0.1:9293/scheduled-jobs?t='+Date.now(),{cache:'no-store'})
+    .then(function(r){return r.json()})
+    .then(function(d){
+      _tasksData=d;
+      renderTasks(d);
+      var el=document.getElementById('tasksRefreshTime');
+      if(el)el.textContent=formatTime(new Date());
+    })
+    .catch(function(e){
+      var el=document.getElementById('tasksList');
+      if(el)el.innerHTML='<div class="task-empty">Server not reachable. Make sure the dashboard server is running.</div>';
+    });
+}
+
+function renderTasks(d){
+  // Render queue section
+  var qEl=document.getElementById('tasksQueue');
+  var qList=document.getElementById('tasksQueueList');
+  var running=(d.queue&&d.queue.running)||[];
+  var pending=(d.queue&&d.queue.pending)||[];
+
+  if(running.length===0&&pending.length===0){
+    qEl.style.display='none';
+  } else {
+    qEl.style.display='block';
+    var html='';
+    if(running.length>0){
+      running.forEach(function(id){
+        var job=d.jobs.find(function(j){return j.id===id});
+        if(!job)return;
+        html+='<div class="tasks-queue-item"><span class="tasks-queue-spinner"></span><strong>'+escapeHtml(job.name)+'</strong> <span style="color:var(--accent)">running...</span></div>';
+      });
+    }
+    if(pending.length>0){
+      pending.forEach(function(id,idx){
+        var job=d.jobs.find(function(j){return j.id===id});
+        if(!job)return;
+        html+='<div class="tasks-queue-item"><span class="tasks-queue-waiting">&#9679;</span><strong>'+escapeHtml(job.name)+'</strong> <span style="color:var(--text-dim)">queued (#'+(idx+1)+')</span></div>';
+      });
+    }
+    qList.innerHTML=html;
+  }
+
+  // Render job list
+  var list=document.getElementById('tasksList');
+  if(!d.jobs||d.jobs.length===0){
+    list.innerHTML='<div class="task-empty">No scheduled jobs yet. Click "+ New Job" to create one.</div>';
+    return;
+  }
+
+  var html='';
+  d.jobs.forEach(function(job){
+    var cls='task-card'+(job.enabled?'':' disabled');
+    var statusCls='task-status-badge '+(job.lastStatus||'idle');
+    var statusText=job.lastStatus||'idle';
+
+    var scheduleText='';
+    if(job.schedule){
+      if(job.schedule.frequency==='hourly')scheduleText='Every hour';
+      else if(job.schedule.frequency==='custom'&&job.schedule.customMinutes)scheduleText='Every '+job.schedule.customMinutes+' min';
+      else if(job.schedule.type==='once')scheduleText='Once at '+(job.schedule.time||'');
+      else scheduleText='Daily at '+(job.schedule.time||'');
+    }
+
+    var nextRun=job.nextRunAt?relTime(job.nextRunAt):'—';
+    var lastRun=job.lastRunAt?relTime(job.lastRunAt):'never';
+
+    html+='<div class="'+cls+'">';
+    html+='<div class="task-card-header">';
+    html+='<span class="task-card-name">'+escapeHtml(job.name)+'</span>';
+    html+='<span class="'+statusCls+'">'+escapeHtml(statusText)+'</span>';
+    html+='</div>';
+    html+='<div class="task-card-meta">';
+    html+='<span>📅 '+escapeHtml(scheduleText)+'</span>';
+    html+='<span>⏭ Next: '+escapeHtml(nextRun)+'</span>';
+    html+='<span>✓ Last: '+escapeHtml(lastRun)+'</span>';
+    if(!job.enabled)html+='<span style="color:#f85149">DISABLED</span>';
+    html+='</div>';
+    html+='<div class="task-card-actions">';
+    html+='<button class="task-btn primary" onclick="startJobNow(\''+job.id+'\')">▶ Start Now</button>';
+    html+='<button class="task-btn" onclick="toggleJobEnabled(\''+job.id+'\','+(!job.enabled)+')">'+(job.enabled?'⏸ Disable':'▶ Enable')+'</button>';
+    html+='<button class="task-btn" onclick="editJob(\''+job.id+'\')">✎ Edit</button>';
+    html+='<button class="task-btn" onclick="viewJobOutput(\''+job.id+'\')">📋 Output</button>';
+    html+='<button class="task-btn danger" onclick="deleteJob(\''+job.id+'\')">🗑 Delete</button>';
+    html+='</div>';
+    html+='<div id="task-output-'+job.id+'" style="display:none"></div>';
+    html+='</div>';
+  });
+  list.innerHTML=html;
+}
+
+function startJobNow(id){
+  fetch('http://127.0.0.1:9293/scheduled-jobs/run?id='+encodeURIComponent(id))
+    .then(function(r){return r.json()})
+    .then(function(d){
+      toast(d.message||'Job started');
+      setTimeout(loadTasks,500);
+    })
+    .catch(function(e){toast('Failed to start job');});
+}
+
+function toggleJobEnabled(id,enable){
+  fetch('http://127.0.0.1:9293/scheduled-jobs?id='+encodeURIComponent(id),{
+    method:'PUT',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({enabled:enable})
+  })
+    .then(function(r){return r.json()})
+    .then(function(){toast(enable?'Job enabled':'Job disabled');loadTasks()})
+    .catch(function(e){toast('Failed to update job');});
+}
+
+function deleteJob(id){
+  if(!confirm('Delete this job? This cannot be undone.'))return;
+  fetch('http://127.0.0.1:9293/scheduled-jobs?id='+encodeURIComponent(id),{method:'DELETE'})
+    .then(function(r){return r.json()})
+    .then(function(){toast('Job deleted');loadTasks()})
+    .catch(function(e){toast('Failed to delete job');});
+}
+
+function viewJobOutput(id){
+  var el=document.getElementById('task-output-'+id);
+  if(el.style.display!=='none'){
+    el.style.display='none';
+    return;
+  }
+  el.style.display='block';
+  el.innerHTML='<div class="task-output">Loading...</div>';
+  fetch('http://127.0.0.1:9293/scheduled-jobs/output?id='+encodeURIComponent(id))
+    .then(function(r){return r.json()})
+    .then(function(d){
+      var html='';
+      if(d.lastOutputAt){
+        html+='<div class="task-output-time">Output from '+formatTime(new Date(d.lastOutputAt))+' (status: '+d.lastStatus+')</div>';
+      }
+      html+='<pre class="task-output">'+escapeHtml(d.lastOutput||'(no output yet)')+'</pre>';
+      el.innerHTML=html;
+    })
+    .catch(function(e){
+      el.innerHTML='<div class="task-output">Failed to load output</div>';
+    });
+}
+
+function openTaskForm(){
+  document.getElementById('taskFormTitle').textContent='New Job';
+  document.getElementById('taskFormId').value='';
+  document.getElementById('taskFormName').value='';
+  document.getElementById('taskFormPrompt').value='';
+  document.getElementById('taskFormType').value='daily';
+  document.getElementById('taskFormTime').value='09:00';
+  document.getElementById('taskFormFreq').value='';
+  document.getElementById('taskFormCustomRow').style.display='none';
+  document.getElementById('taskFormCustomMin').value='30';
+  document.getElementById('taskFormEnabled').checked=true;
+  document.getElementById('taskFormOverlay').classList.add('show');
+}
+
+function editJob(id){
+  var job=_tasksData.jobs.find(function(j){return j.id===id});
+  if(!job)return;
+  document.getElementById('taskFormTitle').textContent='Edit Job';
+  document.getElementById('taskFormId').value=job.id;
+  document.getElementById('taskFormName').value=job.name||'';
+  document.getElementById('taskFormPrompt').value=job.prompt||'';
+  document.getElementById('taskFormType').value=(job.schedule&&job.schedule.type)||'daily';
+  document.getElementById('taskFormTime').value=(job.schedule&&job.schedule.time)||'09:00';
+  var freq=(job.schedule&&job.schedule.frequency)||'';
+  document.getElementById('taskFormFreq').value=freq;
+  if(freq==='custom'){
+    document.getElementById('taskFormCustomRow').style.display='block';
+    document.getElementById('taskFormCustomMin').value=(job.schedule&&job.schedule.customMinutes)||'30';
+  } else {
+    document.getElementById('taskFormCustomRow').style.display='none';
+  }
+  document.getElementById('taskFormEnabled').checked=job.enabled!==false;
+  document.getElementById('taskFormOverlay').classList.add('show');
+}
+
+function closeTaskForm(){
+  document.getElementById('taskFormOverlay').classList.remove('show');
+}
+
+function saveTaskForm(){
+  var id=document.getElementById('taskFormId').value;
+  var name=document.getElementById('taskFormName').value.trim();
+  var prompt=document.getElementById('taskFormPrompt').value.trim();
+  var type=document.getElementById('taskFormType').value;
+  var time=document.getElementById('taskFormTime').value.trim();
+  var freq=document.getElementById('taskFormFreq').value;
+  var customMin=null;
+  if(freq==='custom'){
+    customMin=parseInt(document.getElementById('taskFormCustomMin').value,10)||30;
+  }
+  var enabled=document.getElementById('taskFormEnabled').checked;
+
+  if(!name){toast('Job name is required');return;}
+  if(!prompt){toast('Prompt is required');return;}
+
+  var body=JSON.stringify({
+    name:name,
+    prompt:prompt,
+    enabled:enabled,
+    schedule:{
+      type:type,
+      time:time||'09:00',
+      frequency:freq||null,
+      customMinutes:customMin
+    }
+  });
+
+  if(id){
+    // Update
+    fetch('http://127.0.0.1:9293/scheduled-jobs?id='+encodeURIComponent(id),{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:body
+    })
+      .then(function(r){return r.json()})
+      .then(function(){toast('Job updated');closeTaskForm();loadTasks()})
+      .catch(function(e){toast('Failed to update job');});
+  } else {
+    // Create
+    fetch('http://127.0.0.1:9293/scheduled-jobs',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:body
+    })
+      .then(function(r){return r.json()})
+      .then(function(){toast('Job created');closeTaskForm();loadTasks()})
+      .catch(function(e){toast('Failed to create job');});
+  }
+}
+
+// Show/hide custom frequency field
+document.getElementById('taskFormFreq').addEventListener('change',function(){
+  document.getElementById('taskFormCustomRow').style.display=this.value==='custom'?'block':'none';
+});
+
+// Load tasks on view switch
+var tasksOrigSwitchView;
+
 // Load HAC report on view switch
 var hacOrigSwitchView=switchView;
 switchView=function(id){
   hacOrigSwitchView(id);
   if(id==='view-hac')loadHacReport();
+  if(id==='view-tasks')loadTasks();
 };
 </script>
 </body>
