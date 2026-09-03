@@ -1,7 +1,68 @@
 {
-  "generatedAt": "2026-09-03T10:14:35.743Z",
-  "totalTickets": 5,
+  "generatedAt": "2026-09-03T10:15:18.273Z",
+  "totalTickets": 6,
   "tickets": [
+    {
+      "key": "PC-53529",
+      "summary": "[SAM-24720] Create DB cleanup cronjobs for SMI cluster",
+      "status": "To do",
+      "statusCategory": "To Do",
+      "priority": "High",
+      "project": "PROD Change",
+      "projectKey": "PC",
+      "issuetype": "Hybris Platform",
+      "updated": "2026-09-03T19:15:13.000+0900",
+      "created": "2026-09-03T19:14:43.000+0900",
+      "description": "As per ticket SAM-24720, SAP has recommended scheduling automated DB cleanup jobs for the SMI cluster to address frequent high DB storage issues. SAP provided 6 DELETE queries with varying retention periods for tasklogs (2 months), users4sn (1 month), paymentinfos42sn (3 months), pricerows1055sn (3 ",
+      "commentsCount": 0,
+      "recentComments": [],
+      "lastCommentBy": "",
+      "lastCommentSnippet": "",
+      "lastCommentDate": "",
+      "url": "https://jira.secext.samsung.net/browse/PC-53529",
+      "solution": {
+        "status": "investigating",
+        "issueNumber": null,
+        "lockedAt": "2026-09-03T10:15:17.067Z"
+      }
+    },
+    {
+      "key": "SAM-24720",
+      "summary": " Update or create Cronjob for autocleanup",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "High",
+      "project": "Samsung Maintanance",
+      "projectKey": "SAM",
+      "issuetype": "Bug",
+      "updated": "2026-09-03T19:14:46.000+0900",
+      "created": "2026-08-28T00:37:31.000+0900",
+      "description": "Hello Ops Team,\n\nThere is frequent issue of high DB storage in SMI and we had to request to SAP for manual cleanup.\n\nPlease help to schedule or update existing jobs with below retention  period so that we do not have to request SAP for manual cleanup.\n\nDELETE top(200000) from tasklogs WHERE createdT",
+      "commentsCount": 2,
+      "recentComments": [
+        {
+          "author": "Arvind Panchal",
+          "date": "2026-09-01T23:16:19.187+0900",
+          "snippet": "Hi ~@email,\n   Please find below details : \nSAP incident : https://me.sap.com/cases/002075129500011086542026/overview\nSap asked us to execute these queries at our end from application for data cleanup\n\nUpdated 26.08.2026 at 17:27 by SAP Agent    \nInfo for Customer\nDear Customer,\nas the DBA does not "
+        },
+        {
+          "author": "Vaibhav Jain",
+          "date": "2026-09-01T17:04:46.712+0900",
+          "snippet": "~@email : Please share background to it.. \n\nIncase of any communication from SAP or Suwon on it,"
+        }
+      ],
+      "lastCommentBy": "Arvind Panchal",
+      "lastCommentSnippet": "Hi ~@email,\n   Please find below details : \nSAP incident : https://me.sap.com/cases/002075129500011086542026/overview\nSap asked us to execute these queries at our end from application for data cleanup\n\nUpdated 26.08.2026 at 17:27 by SAP Agent    \nInfo for Customer\nDear Customer,\nas the DBA does not ",
+      "lastCommentDate": "2026-09-01T23:16:19.187+0900",
+      "url": "https://jira.secext.samsung.net/browse/SAM-24720",
+      "solution": {
+        "status": "none",
+        "excerpt": "",
+        "source": "",
+        "foundAt": "",
+        "issueNumber": null
+      }
+    },
     {
       "key": "SAHME-3357",
       "summary": "SMC Errors-ProcessExternalServices",
@@ -103,43 +164,6 @@
       }
     },
     {
-      "key": "SAM-24720",
-      "summary": " Update or create Cronjob for autocleanup",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "High",
-      "project": "Samsung Maintanance",
-      "projectKey": "SAM",
-      "issuetype": "Bug",
-      "updated": "2026-09-03T15:29:06.000+0900",
-      "created": "2026-08-28T00:37:31.000+0900",
-      "description": "Hello Ops Team,\n\nThere is frequent issue of high DB storage in SMI and we had to request to SAP for manual cleanup.\n\nPlease help to schedule or update existing jobs with below retention  period so that we do not have to request SAP for manual cleanup.\n\nDELETE top(200000) from tasklogs WHERE createdT",
-      "commentsCount": 2,
-      "recentComments": [
-        {
-          "author": "Arvind Panchal",
-          "date": "2026-09-01T23:16:19.187+0900",
-          "snippet": "Hi ~@email,\n   Please find below details : \nSAP incident : https://me.sap.com/cases/002075129500011086542026/overview\nSap asked us to execute these queries at our end from application for data cleanup\n\nUpdated 26.08.2026 at 17:27 by SAP Agent    \nInfo for Customer\nDear Customer,\nas the DBA does not "
-        },
-        {
-          "author": "Vaibhav Jain",
-          "date": "2026-09-01T17:04:46.712+0900",
-          "snippet": "~@email : Please share background to it.. \n\nIncase of any communication from SAP or Suwon on it,"
-        }
-      ],
-      "lastCommentBy": "Arvind Panchal",
-      "lastCommentSnippet": "Hi ~@email,\n   Please find below details : \nSAP incident : https://me.sap.com/cases/002075129500011086542026/overview\nSap asked us to execute these queries at our end from application for data cleanup\n\nUpdated 26.08.2026 at 17:27 by SAP Agent    \nInfo for Customer\nDear Customer,\nas the DBA does not ",
-      "lastCommentDate": "2026-09-01T23:16:19.187+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAM-24720",
-      "solution": {
-        "status": "none",
-        "excerpt": "",
-        "source": "",
-        "foundAt": "",
-        "issueNumber": null
-      }
-    },
-    {
       "key": "AEME-6535",
       "summary": "[PROD] | Update SC+ Automated Report",
       "status": "In Progress",
@@ -223,7 +247,7 @@
       {
         "pid": 21524,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 318045,
+        "ageSeconds": 318087,
         "status": "running",
         "isChild": false,
         "taskSummary": "resume and maintain a state file to know whats done and whats remaining",
@@ -233,7 +257,7 @@
       {
         "pid": 13076,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 283301,
+        "ageSeconds": 283343,
         "status": "running",
         "isChild": false,
         "taskSummary": "we need to create cronjobs. create PC forit. similar PC was raised by Pulkesh SAM-24720",
@@ -243,7 +267,7 @@
       {
         "pid": 10608,
         "cwd": "c:\\windows",
-        "ageSeconds": 13913,
+        "ageSeconds": 13956,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -253,7 +277,7 @@
       {
         "pid": 58504,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 13349,
+        "ageSeconds": 13392,
         "status": "running",
         "isChild": false,
         "taskSummary": "resume and maintain a state file to know whats done and whats remaining",
@@ -263,7 +287,7 @@
       {
         "pid": 10048,
         "cwd": "unknown",
-        "ageSeconds": 1838,
+        "ageSeconds": 1880,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -273,7 +297,7 @@
       {
         "pid": 51344,
         "cwd": "unknown",
-        "ageSeconds": 1835,
+        "ageSeconds": 1877,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
