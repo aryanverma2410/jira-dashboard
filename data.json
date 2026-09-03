@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-03T13:46:59.211Z",
+  "generatedAt": "2026-09-03T13:47:42.078Z",
   "totalTickets": 6,
   "tickets": [
     {
@@ -177,9 +177,15 @@
       "lastCommentDate": "",
       "url": "https://jira.secext.samsung.net/browse/PC-53503",
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-09-03T13:36:47.994Z"
+        "status": "found",
+        "excerpt": "# RCA: PC-53503\nSummary: Redeem rewards points (partial) for 4 AE orders - AEME-6282\nGenerated: 2026-09-03T18:35:00+0900\n\nIssue:\nFour completed AE-region orders have Samsung reward points that were incorrectly cancelled and returned to customers while the orders themselves were never cancelled or returned. The rewards remediation team attempted to re-redeem the full point amounts via the existing PC-48490 (W1-Positive) script, but GCRM rejected all four with \"Not enough point\" because the customers' current reward point balances are insufficient for the full amounts. The business (Talib Raza Zaidi, approved by Dilip Boddula) has approved partial redemption — deducting only the available points from each customer's account. However, the PC-48490 script cannot process these orders for partial redemption due to two guard checks that prevent the script from selecting them, and because the script always charges the full plannedAmount rather than a partial amount.\n\nRCA:\nAll four orders are in COMPLETED status with samsungRewardPoints PaymentTransactions. DB verification reveals two distinct patterns among the four orders:\n\nOrders AE231010-55304250 (plannedAmount=118, remainingAmount=118) and AE260227-08123022 (plannedAmount=474, remainingAmount=474) have AUTHORIZATION and CAPTURE entries only — no VOID entry. Their remainingAmount equals the full plannedAmount, indicating the reward points were never successfully deducted from the customer accounts (or were reversed without leaving a VOID trail).\n\nOrders AE241124-37771964 (plannedAmount=655, remainingAmount=0) and AE250515-43260061 (plannedAmount=76, remainingAmount=0) have AUTHORIZATION, CAPTURE, and VOID entries. The VOID entries are dated months after the original capture (e.g., AE241124-37771964 VOID on 2025-04-15, original capture on 2025-03-21). The remainingAmount is 0 on both, meaning the system considers the reward deduction fully reversed. Notably, AE250515-43260061's CAPTURE-3 entry has a different requestId (4cd6ae12-350b-40e0-b453-ec35c9a395f8, the Tabby payment ID) compared to the original rewards requestId (2025000020453552).\n\nThe PC-48490 (W1-Positive) script was designed for a different remediation pattern — where the transactionId on the PaymentTransaction does NOT match the one saved in the completed order's PTEs. It has two guard checks that disqualify all four orders:\n\n1. requestId mismatch check: The W1-Positive script expects PT.requestId to differ from PTE.requestId. All four orders have matching requestIds (e.g., PT.requestId=2023000003900711, PTE.requestId=2023000003900711), so the script would skip all of them.\n\n2. remainingAmount equality check: The script verifies remainingAmount equals plannedAmount (ensuring the full amount still needs redemption). Two of the four orders (AE241124-37771964, AE250515-43260061) have remainingAmount=0 due to prior VOID entries, so this check would also reject them.\n\nAdditionally, the business approved charging only the available partial amounts (confirmed by GCRM), not the full plannedAmount. The available amounts per customer as of 2026-09-01 are: AE231010-55304250 = 51.17 AED (vs 118.00 needed), AE241124-37771964 = 186.13 AED (vs 655.00 needed), AE250515-43260061 = 58.96 AED (vs 76.00 needed), AE260227-08123022 = 233.41 AED (vs 474.00 needed). The PC-48490 script always charges the full plannedAmount and has no mechanism for partial redemption.\n\nPossible remediation:\nRun the adapted script attached to PC-53503 (script-AEME-6282-rewards-partial-redemption.groovy), which is based on PC-48490 with the following modifications:\n\n1. Removed the requestId mismatch check (W1-Positive guard) — all four orders have matching requestIds and should still be processed.\n2. Removed the remainingAmount equality check — two orders have remainingAmount=0 due to VOID entries but still need partial redemption.\n3. The script charges the available partial amount per order instead of the full plannedAmount:\n\n   AE231010-55304250: charge 51.17 (GCRM requestId 2023000003900711)\n   AE241124-37771964: charge 186.13 (GCRM requestId 2025000016897277)\n   AE250515-43260061: charge 58.96 (GCRM requestId 2025000020453552)\n   AE260227-08123022: charge 233.41 (GCRM requestId 2026000041598630)\n\n4. After successful partial redemption, the script should create a new CAPTURE PaymentTransactionEntry with the partial amount and update the PaymentTransaction remainingAmount to reflect the unredeemed balance (plannedAmount minus charged amount).\n\n5. The script should NOT update the Remediation Description on the order to avoid re-interfacing the order to GCRM (per PC-48490 NOTE).\n\nThe script should be executed under PC-53503 in the HAC console. This ticket is labelled REUSABLE for future partial rewards redemption scenarios where customers have insufficient points for full redemption.",
+        "sections": {
+          "issue": "Four completed AE-region orders have Samsung reward points that were incorrectly cancelled and returned to customers while the orders themselves were never cancelled or returned. The rewards remediation team attempted to re-redeem the full point amounts via the existing PC-48490 (W1-Positive) script, but GCRM rejected all four with \"Not enough point\" because the customers' current reward point balances are insufficient for the full amounts. The business (Talib Raza Zaidi, approved by Dilip Boddula) has approved partial redemption — deducting only the available points from each customer's account. However, the PC-48490 script cannot process these orders for partial redemption due to two guard checks that prevent the script from selecting them, and because the script always charges the full plannedAmount rather than a partial amount.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-03T13:47:40.877Z"
       }
     }
   ],
@@ -228,7 +234,7 @@
       }
     ],
     "pid": 45404,
-    "uptime": 865,
+    "uptime": 909,
     "failures": 0,
     "activeJobCount": 3,
     "jobs": [
@@ -237,21 +243,21 @@
         "issueTitle": "Investigate ticket PC-53503",
         "snippet": "Auto-triggered investigation for new ticket PC-53503.\n\nTicket: PC-53503\nSummary: Redeem rewards points (partial) for 4 A",
         "pid": 52388,
-        "elapsed": 848
+        "elapsed": 892
       },
       {
         "issueNum": 87,
         "issueTitle": "Investigate ticket SAM-24720",
         "snippet": "Auto-triggered investigation for new ticket SAM-24720.\n\nTicket: SAM-24720\nSummary:  Update or create Cronjob for autocle",
         "pid": 38676,
-        "elapsed": 851
+        "elapsed": 895
       },
       {
         "issueNum": 91,
         "issueTitle": "Investigate ticket SAME-3958",
         "snippet": "Auto-triggered investigation for new ticket SAME-3958.\n\nTicket: SAME-3958\nSummary: Sales Report - Additional Columns\n\nUs",
         "pid": 59892,
-        "elapsed": 855
+        "elapsed": 899
       }
     ],
     "startTime": "2026-09-03T13:32:31.867Z",
@@ -262,7 +268,7 @@
       {
         "pid": 21524,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 330788,
+        "ageSeconds": 330832,
         "status": "running",
         "isChild": false,
         "taskSummary": "remove the header saying LIVE-updated 45s ago. only show that red bar when something is down, not...",
@@ -272,7 +278,7 @@
       {
         "pid": 13076,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 296044,
+        "ageSeconds": 296088,
         "status": "running",
         "isChild": false,
         "taskSummary": "remember this learning and verify always after making a PC ticket",
@@ -282,7 +288,7 @@
       {
         "pid": 10608,
         "cwd": "c:\\windows",
-        "ageSeconds": 26657,
+        "ageSeconds": 26701,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -292,7 +298,7 @@
       {
         "pid": 58504,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 26093,
+        "ageSeconds": 26136,
         "status": "running",
         "isChild": false,
         "taskSummary": "remove the header saying LIVE-updated 45s ago. only show that red bar when something is down, not...",
@@ -302,7 +308,7 @@
       {
         "pid": 10048,
         "cwd": "unknown",
-        "ageSeconds": 14582,
+        "ageSeconds": 14625,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -312,7 +318,7 @@
       {
         "pid": 51344,
         "cwd": "unknown",
-        "ageSeconds": 14578,
+        "ageSeconds": 14622,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
