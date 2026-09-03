@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-03T14:43:09.277Z",
+  "generatedAt": "2026-09-03T14:43:50.131Z",
   "totalTickets": 7,
   "tickets": [
     {
@@ -21,9 +21,15 @@
       "lastCommentDate": "",
       "url": "https://jira.secext.samsung.net/browse/SAME-3960",
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-09-03T14:18:43.290Z"
+        "status": "found",
+        "excerpt": "# RCA: SAME-3960\n\nOrder Refund Issue - SA260812-58244972 (Screen Repair)\nGenerated: 2026-09-03T23:30:00+09:00\n\nHi Arjenelle ,\n\nThe issue reported on SAME-3960 is that a return cannot be created for order SA260812-58244972, which is an Expert Cleaning Service (screen repair) order placed in the SA/KSA region on 2026-08-12. The order itself is in a healthy state: status is COMPLETED, the consignment is COMPLETED, all four business processes have SUCCEEDED, and the payment (Checkout.com Flow) was fully authorized and captured at 999.00 SAR. No return requests exist for this order, confirming that the customer or CS agent was unable to initiate one.\n\nThe root cause is in the backoffice return creation flow. When a CS agent attempts to create a return from the Backoffice Cockpit, the method blockExpertCleaningServiceAndExpertCareServiceReturn() in TokoCreateReturnRequestController (line 4487) is invoked before the return is processed. This method checks whether the order has an Expert Cleaning Service external service with provider GCIC_EXPERT_CLEANING_STANDALONE, which this order does (status UPDATED, product SKU P-GT-LCXOS0GW).\n\nThe method first checks the config parameter RETURN_REQUEST_ENABLED_FOR_CLEANING_SERVICE_STANDALONE (key: \"isReturnEnabledForCleaningService\") on the AddedServiceConfig. If this is set to true, the block is bypassed and the return proceeds. If not set or false, the method falls through to call checkCancelOrderStatusForExpertCleaningService() in TokoExpertCleaningExternalServicesImpl (line 135).\n\nThis method makes a real-time API call to the GCIC (Samsung's external cleaning service partner) status check endpoint, sending the service order number stored in the ExternalService's provider response parameters. The GCIC API returns a job status code (format STxxx). The method returns true only if the numeric portion of this status is between 10 and 30 (ST010 to ST030), meaning the service order is still in a cancellable state. If the status is outside this range (e.g., the repair has already been completed, dispatched, or is in a post-service state), the method returns false, and the controller throws a TokoOrderReturnException with the message: \"Cancellation is not allowed due to GCIC Service Order status, please contact your support.\"\n\nSince this order was placed on August 12 and the service (screen repair) has likely been completed by GCIC, the service order status is now beyond ST030. The GCIC partner has progressed the service order past the cancellable window, so the Hybris platform correctly blocks the return because cancelling a completed repair is not supported by the external service provider.\n\nThe order's deliveryMode being NULL at the order level (while the consignment has sa-cleaning-delivery) is a known characteristic of service orders in this region and is not the blocking factor. The payment state is clean with both AUTHORIZATION and CAPTURE entries successful, so a refund is technically possible if the return can be initiated.\n\nPossible remediation:\n1. Check the GCIC service order status directly via the GCIC portal or API to confirm the current status code. If the service is still in a pre-completion state (ST010-ST030), the return should be possible and the error may be a transient API connectivity issue.\n2. If the GCIC service order is in a post-completion status (beyond ST030), the return cannot be created through the standard Backoffice flow. The options are: (a) contact the GCIC team to request a manual cancellation or status rollback on their side, then retry the return in Hybris, or (b) enable the config parameter \"isReturnEnabledForCleaningService\" on the SA store's AddedServiceConfig for EXPERT_CLEANING_SERVICE to bypass the GCIC status check and allow returns regardless of external service status.\n3. If a refund is needed urgently and the GCIC status cannot be changed, a manual refund can be initiated directly via HAC by creating a ReturnRequest and triggering the refund process, bypassing the Backoffice validation. However this should only be done with appropriate approvals since it skips the external service cancellation.\n\nThanks,\nAryan",
+        "sections": {
+          "issue": "",
+          "rca": "# RCA: SAME-3960\n\nOrder Refund Issue - SA260812-58244972 (Screen Repair)\nGenerated: 2026-09-03T23:30:00+09:00\n\nHi Arjenelle ,\n\nThe issue reported on SAME-3960 is that a return cannot be created for order SA260812-58244972, which is an Expert Cleaning Service (screen repair) order placed in the SA/KSA region on 2026-08-12. The order itself is in a healthy state: status is COMPLETED, the consignment is COMPLETED, all four business processes have SUCCEEDED, and the payment (Checkout.com Flow) was fully authorized and captured at 999.00 SAR. No return requests exist for this order, confirming that the customer or CS agent was unable to initiate one.\n\nThe root cause is in the backoffice return creation flow. When a CS agent attempts to create a return from the Backoffice Cockpit, the method blockExpertCleaningServiceAndExpertCareServiceReturn() in TokoCreateReturnRequestController (line 4487) is invoked before the return is processed. This method checks whether the order has an Expert Cleaning Service external service with provider GCIC_EXPERT_CLEANING_STANDALONE, which this order does (status UPDATED, product SKU P-GT-LCXOS0GW).\n\nThe method first checks the config parameter RETURN_REQUEST_ENABLED_FOR_CLEANING_SERVICE_STANDALONE (key: \"isReturnEnabledForCleaningService\") on the AddedServiceConfig. If this is set to true, the block is bypassed and the return proceeds. If not set or false, the method falls through to call checkCancelOrderStatusForExpertCleaningService() in TokoExpertCleaningExternalServicesImpl (line 135).\n\nThis method makes a real-time API call to the GCIC (Samsung's external cleaning service partner) status check endpoint, sending the service order number stored in the ExternalService's provider response parameters. The GCIC API returns a job status code (format STxxx). The method returns true only if the numeric portion of this status is between 10 and 30 (ST010 to ST030), meaning the service order is still in a cancellable state. If the status is outside this range (e.g., the repair has already been completed, dispatched, or is in a post-service state), the method returns false, and the controller throws a TokoOrderReturnException with the message: \"Cancellation is not allowed due to GCIC Service Order status, please contact your support.\"\n\nSince this order was placed on August 12 and the service (screen repair) has likely been completed by GCIC, the service order status is now beyond ST030. The GCIC partner has progressed the service order past the cancellable window, so the Hybris platform correctly blocks the return because cancelling a completed repair is not supported by the external service provider.\n\nThe order's deliveryMode being NULL at the order level (while the consignment has sa-cleaning-delivery) is a known characteristic of service orders in this region and is not the blocking factor. The payment state is clean with both AUTHORIZATION and CAPTURE entries successful, so a refund is technically possible if the return can be initiated.\n\nPossible remediation:\n1. Check the GCIC service order status directly via the GCIC portal or API to confirm the current status code. If the service is still in a pre-completion state (ST010-ST030), the return should be possible and the error may be a transient API connectivity issue.\n2. If the GCIC service order is in a post-completion status (beyond ST030), the return cannot be created through the standard Backoffice flow. The options are: (a) contact the GCIC team to request a manual cancellation or status rollback on their side, then retry the return in Hybris, or (b) enable the config parameter \"isReturnEnabledForCleaningService\" on the SA store's AddedServiceConfig for EXPERT_CLEANING_SERVICE to bypass the GCIC status check and allow returns regardless of external service status.\n3. If a refund is needed urgently and the GCIC status cannot be changed, a manual refund can be initiated directly via HAC by creating a ReturnRequest and triggering the refund process, bypassing the Backoffice validation. However this should only be done with appropriate approvals since it skips the external service cancellation.\n\nThanks,\nAryan",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-03T14:43:17.845Z"
       }
     },
     {
@@ -270,7 +276,7 @@
       }
     ],
     "pid": 45404,
-    "uptime": 4237,
+    "uptime": 4277,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -279,7 +285,7 @@
         "issueTitle": "Investigate ticket SAME-3960",
         "snippet": "Auto-triggered investigation for new ticket SAME-3960.\n\nTicket: SAME-3960\nSummary: Order Refund Issue - SA260812-5824497",
         "pid": 28000,
-        "elapsed": 1460
+        "elapsed": 1500
       }
     ],
     "startTime": "2026-09-03T13:32:31.867Z",
@@ -290,7 +296,7 @@
       {
         "pid": 21524,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 334159,
+        "ageSeconds": 334199,
         "status": "running",
         "isChild": false,
         "taskSummary": "remove the header saying LIVE-updated 45s ago. only show that red bar when something is down, not...",
@@ -300,7 +306,7 @@
       {
         "pid": 13076,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 299415,
+        "ageSeconds": 299455,
         "status": "running",
         "isChild": false,
         "taskSummary": "remember this learning and verify always after making a PC ticket",
@@ -310,7 +316,7 @@
       {
         "pid": 10608,
         "cwd": "c:\\windows",
-        "ageSeconds": 30027,
+        "ageSeconds": 30068,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -320,7 +326,7 @@
       {
         "pid": 58504,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 29463,
+        "ageSeconds": 29503,
         "status": "running",
         "isChild": false,
         "taskSummary": "remove the header saying LIVE-updated 45s ago. only show that red bar when something is down, not...",
@@ -330,7 +336,7 @@
       {
         "pid": 10048,
         "cwd": "unknown",
-        "ageSeconds": 17952,
+        "ageSeconds": 17992,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -340,7 +346,7 @@
       {
         "pid": 51344,
         "cwd": "unknown",
-        "ageSeconds": 17948,
+        "ageSeconds": 17989,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
