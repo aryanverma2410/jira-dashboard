@@ -1,7 +1,37 @@
 {
-  "generatedAt": "2026-09-03T05:17:51.699Z",
+  "generatedAt": "2026-09-03T05:18:33.078Z",
   "totalTickets": 7,
   "tickets": [
+    {
+      "key": "TKME-2311",
+      "summary": "For Creation: POS I Usergroup I Omnichannel Dealer Master Data",
+      "status": "QA Server Review",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Turkey Maintenance & Enhancements",
+      "projectKey": "TKME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-09-03T14:18:17.000+0900",
+      "created": "2026-09-02T21:27:05.000+0900",
+      "description": "Hi Team,\n\n \n\nRequesting for your support in creating the following in backoffice. Please refer to the attached file for the details . ^POS_DealerMasterData_Template_SETK Filled_C750_007_31536.xlsx\n\n \n\n1. Create the POS, Usergroup and Omni Channel Dealer Master Data\n|Store ID/External Id|\n|C750_007_3",
+      "commentsCount": 0,
+      "recentComments": [],
+      "lastCommentBy": "",
+      "lastCommentSnippet": "",
+      "lastCommentDate": "",
+      "url": "https://jira.secext.samsung.net/browse/TKME-2311",
+      "solution": {
+        "status": "found",
+        "excerpt": "For Creation: POS I Usergroup I Omnichannel Dealer Master Data\r\nGenerated: 2026-09-02T14:10:00.000Z\r\n\r\nHi Georgina ,\r\n\r\nThis is a master data creation request for a single TR-region store. The ticket requests creation of PointOfService, StoreEmployeeGroup, UserGroup, Address, and OmnichannelDealer entries in the Hybris backoffice for store C750_007_31536 (HARK MUHENDISLIK, Antalya, TR-07).\r\n\r\nThe attached Excel file POS_DealerMasterData_Template_SETK Filled_C750_007_31536.xlsx contains the store details on the \"Store Details\" sheet. The store is an ACS (Authorized Counter Store) type located at Yesilbayir Mah. Hasim Iscan Cad. No: 4 A, Dosemealti, Antalya, postal code 07100, town code TR-07. Managing partner is Umit Ozkurt. Sold To/Partner No. is 7116147, Ship To/Partner is 7116147, phone 5458249532, email info@harkmuhendislik.com, static IP 78.187.209.106, company code 7116147, branch code HARKMUH, latitude 30.60721, longitude 36.98057.\r\n\r\nNo platform bug or code defect was involved. This is a straightforward master data provisioning request.\r\n\r\nThe same pattern has been executed 8 times prior via PC tickets: PC-49087 (TKME-2175), PC-50301 (TKME-2222), PC-51658 (TKME-2246), PC-52311 (TKME-2262), PC-52505 (TKME-2286), PC-52670 (TKME-2292), and most recently PC-53353 (TKME-2307, created by aryan.v1 for 3 TR stores). All 8 tickets are Closed and the ImpEx scripts were successfully executed in production.\r\n\r\nThe remediation is to generate an ImpEx script from the Excel data following the same 6-step pattern used in PC-53353: INSERT_UPDATE PointOfService, INSERT_UPDATE StoreEmployeeGroup, INSERT_UPDATE UserGroup, INSERT_UPDATE Address, INSERT_UPDATE OmnichannelDealer, and the POS-UserGroup link. The OmnichannelDealer type is a custom Samsung Toko type defined in tokocore-items.xml (typecode 10736).\r\n\r\nPer the lesson learned from TKME-2307, every field in the generated ImpEx must be cross-checked against the raw Excel source data before uploading to the PC ticket. A typo in the branchCode (DRKKFLORYA instead of DRKFLORYA) was caught during TKME-2307 only because the user asked for a manual cross-check. This time the verification will be done proactively.\r\n\r\nPossible remediation:\r\n1. Generate the ImpEx script from the Excel attachment data for store C750_007_31536\r\n2. Perform a field-by-field cross-check of every value in the ImpEx against the raw Excel source data\r\n3. Create a PC ticket with the ImpEx attached, following the PC-53353 pattern (labels: i=masterdata, sc=scripting)\r\n4. After PC approval and execution on SMI-P1, verify in backoffice that POS, StoreEmployeeGroup, UserGroup, Address, and OmnichannelDealer were created for C750_007_31536\r\n5. Rollback: remove the created POS, UserGroups, and OmnichannelDealer entries for C750_007_31536\r\n\r\nThanks,\r\nAryan.",
+        "sections": {
+          "issue": "",
+          "rca": "For Creation: POS I Usergroup I Omnichannel Dealer Master Data\r\nGenerated: 2026-09-02T14:10:00.000Z\r\n\r\nHi Georgina ,\r\n\r\nThis is a master data creation request for a single TR-region store. The ticket requests creation of PointOfService, StoreEmployeeGroup, UserGroup, Address, and OmnichannelDealer entries in the Hybris backoffice for store C750_007_31536 (HARK MUHENDISLIK, Antalya, TR-07).\r\n\r\nThe attached Excel file POS_DealerMasterData_Template_SETK Filled_C750_007_31536.xlsx contains the store details on the \"Store Details\" sheet. The store is an ACS (Authorized Counter Store) type located at Yesilbayir Mah. Hasim Iscan Cad. No: 4 A, Dosemealti, Antalya, postal code 07100, town code TR-07. Managing partner is Umit Ozkurt. Sold To/Partner No. is 7116147, Ship To/Partner is 7116147, phone 5458249532, email info@harkmuhendislik.com, static IP 78.187.209.106, company code 7116147, branch code HARKMUH, latitude 30.60721, longitude 36.98057.\r\n\r\nNo platform bug or code defect was involved. This is a straightforward master data provisioning request.\r\n\r\nThe same pattern has been executed 8 times prior via PC tickets: PC-49087 (TKME-2175), PC-50301 (TKME-2222), PC-51658 (TKME-2246), PC-52311 (TKME-2262), PC-52505 (TKME-2286), PC-52670 (TKME-2292), and most recently PC-53353 (TKME-2307, created by aryan.v1 for 3 TR stores). All 8 tickets are Closed and the ImpEx scripts were successfully executed in production.\r\n\r\nThe remediation is to generate an ImpEx script from the Excel data following the same 6-step pattern used in PC-53353: INSERT_UPDATE PointOfService, INSERT_UPDATE StoreEmployeeGroup, INSERT_UPDATE UserGroup, INSERT_UPDATE Address, INSERT_UPDATE OmnichannelDealer, and the POS-UserGroup link. The OmnichannelDealer type is a custom Samsung Toko type defined in tokocore-items.xml (typecode 10736).\r\n\r\nPer the lesson learned from TKME-2307, every field in the generated ImpEx must be cross-checked against the raw Excel source data before uploading to the PC ticket. A typo in the branchCode (DRKKFLORYA instead of DRKFLORYA) was caught during TKME-2307 only because the user asked for a manual cross-check. This time the verification will be done proactively.\r\n\r\nPossible remediation:\r\n1. Generate the ImpEx script from the Excel attachment data for store C750_007_31536\r\n2. Perform a field-by-field cross-check of every value in the ImpEx against the raw Excel source data\r\n3. Create a PC ticket with the ImpEx attached, following the PC-53353 pattern (labels: i=masterdata, sc=scripting)\r\n4. After PC approval and execution on SMI-P1, verify in backoffice that POS, StoreEmployeeGroup, UserGroup, Address, and OmnichannelDealer were created for C750_007_31536\r\n5. Rollback: remove the created POS, UserGroups, and OmnichannelDealer entries for C750_007_31536\r\n\r\nThanks,\r\nAryan.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-02T13:47:00.057Z"
+      }
+    },
     {
       "key": "PC-53498",
       "summary": "TKME-2311 || For Creation: POS I Usergroup I Omnichannel Dealer Master Data",
@@ -24,36 +54,6 @@
         "status": "investigating",
         "issueNumber": null,
         "lockedAt": "2026-09-03T05:13:45.322Z"
-      }
-    },
-    {
-      "key": "TKME-2311",
-      "summary": "For Creation: POS I Usergroup I Omnichannel Dealer Master Data",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Turkey Maintenance & Enhancements",
-      "projectKey": "TKME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-03T14:13:13.000+0900",
-      "created": "2026-09-02T21:27:05.000+0900",
-      "description": "Hi Team,\n\n \n\nRequesting for your support in creating the following in backoffice. Please refer to the attached file for the details . ^POS_DealerMasterData_Template_SETK Filled_C750_007_31536.xlsx\n\n \n\n1. Create the POS, Usergroup and Omni Channel Dealer Master Data\n|Store ID/External Id|\n|C750_007_3",
-      "commentsCount": 0,
-      "recentComments": [],
-      "lastCommentBy": "",
-      "lastCommentSnippet": "",
-      "lastCommentDate": "",
-      "url": "https://jira.secext.samsung.net/browse/TKME-2311",
-      "solution": {
-        "status": "found",
-        "excerpt": "For Creation: POS I Usergroup I Omnichannel Dealer Master Data\r\nGenerated: 2026-09-02T14:10:00.000Z\r\n\r\nHi Georgina ,\r\n\r\nThis is a master data creation request for a single TR-region store. The ticket requests creation of PointOfService, StoreEmployeeGroup, UserGroup, Address, and OmnichannelDealer entries in the Hybris backoffice for store C750_007_31536 (HARK MUHENDISLIK, Antalya, TR-07).\r\n\r\nThe attached Excel file POS_DealerMasterData_Template_SETK Filled_C750_007_31536.xlsx contains the store details on the \"Store Details\" sheet. The store is an ACS (Authorized Counter Store) type located at Yesilbayir Mah. Hasim Iscan Cad. No: 4 A, Dosemealti, Antalya, postal code 07100, town code TR-07. Managing partner is Umit Ozkurt. Sold To/Partner No. is 7116147, Ship To/Partner is 7116147, phone 5458249532, email info@harkmuhendislik.com, static IP 78.187.209.106, company code 7116147, branch code HARKMUH, latitude 30.60721, longitude 36.98057.\r\n\r\nNo platform bug or code defect was involved. This is a straightforward master data provisioning request.\r\n\r\nThe same pattern has been executed 8 times prior via PC tickets: PC-49087 (TKME-2175), PC-50301 (TKME-2222), PC-51658 (TKME-2246), PC-52311 (TKME-2262), PC-52505 (TKME-2286), PC-52670 (TKME-2292), and most recently PC-53353 (TKME-2307, created by aryan.v1 for 3 TR stores). All 8 tickets are Closed and the ImpEx scripts were successfully executed in production.\r\n\r\nThe remediation is to generate an ImpEx script from the Excel data following the same 6-step pattern used in PC-53353: INSERT_UPDATE PointOfService, INSERT_UPDATE StoreEmployeeGroup, INSERT_UPDATE UserGroup, INSERT_UPDATE Address, INSERT_UPDATE OmnichannelDealer, and the POS-UserGroup link. The OmnichannelDealer type is a custom Samsung Toko type defined in tokocore-items.xml (typecode 10736).\r\n\r\nPer the lesson learned from TKME-2307, every field in the generated ImpEx must be cross-checked against the raw Excel source data before uploading to the PC ticket. A typo in the branchCode (DRKKFLORYA instead of DRKFLORYA) was caught during TKME-2307 only because the user asked for a manual cross-check. This time the verification will be done proactively.\r\n\r\nPossible remediation:\r\n1. Generate the ImpEx script from the Excel attachment data for store C750_007_31536\r\n2. Perform a field-by-field cross-check of every value in the ImpEx against the raw Excel source data\r\n3. Create a PC ticket with the ImpEx attached, following the PC-53353 pattern (labels: i=masterdata, sc=scripting)\r\n4. After PC approval and execution on SMI-P1, verify in backoffice that POS, StoreEmployeeGroup, UserGroup, Address, and OmnichannelDealer were created for C750_007_31536\r\n5. Rollback: remove the created POS, UserGroups, and OmnichannelDealer entries for C750_007_31536\r\n\r\nThanks,\r\nAryan.",
-        "sections": {
-          "issue": "",
-          "rca": "For Creation: POS I Usergroup I Omnichannel Dealer Master Data\r\nGenerated: 2026-09-02T14:10:00.000Z\r\n\r\nHi Georgina ,\r\n\r\nThis is a master data creation request for a single TR-region store. The ticket requests creation of PointOfService, StoreEmployeeGroup, UserGroup, Address, and OmnichannelDealer entries in the Hybris backoffice for store C750_007_31536 (HARK MUHENDISLIK, Antalya, TR-07).\r\n\r\nThe attached Excel file POS_DealerMasterData_Template_SETK Filled_C750_007_31536.xlsx contains the store details on the \"Store Details\" sheet. The store is an ACS (Authorized Counter Store) type located at Yesilbayir Mah. Hasim Iscan Cad. No: 4 A, Dosemealti, Antalya, postal code 07100, town code TR-07. Managing partner is Umit Ozkurt. Sold To/Partner No. is 7116147, Ship To/Partner is 7116147, phone 5458249532, email info@harkmuhendislik.com, static IP 78.187.209.106, company code 7116147, branch code HARKMUH, latitude 30.60721, longitude 36.98057.\r\n\r\nNo platform bug or code defect was involved. This is a straightforward master data provisioning request.\r\n\r\nThe same pattern has been executed 8 times prior via PC tickets: PC-49087 (TKME-2175), PC-50301 (TKME-2222), PC-51658 (TKME-2246), PC-52311 (TKME-2262), PC-52505 (TKME-2286), PC-52670 (TKME-2292), and most recently PC-53353 (TKME-2307, created by aryan.v1 for 3 TR stores). All 8 tickets are Closed and the ImpEx scripts were successfully executed in production.\r\n\r\nThe remediation is to generate an ImpEx script from the Excel data following the same 6-step pattern used in PC-53353: INSERT_UPDATE PointOfService, INSERT_UPDATE StoreEmployeeGroup, INSERT_UPDATE UserGroup, INSERT_UPDATE Address, INSERT_UPDATE OmnichannelDealer, and the POS-UserGroup link. The OmnichannelDealer type is a custom Samsung Toko type defined in tokocore-items.xml (typecode 10736).\r\n\r\nPer the lesson learned from TKME-2307, every field in the generated ImpEx must be cross-checked against the raw Excel source data before uploading to the PC ticket. A typo in the branchCode (DRKKFLORYA instead of DRKFLORYA) was caught during TKME-2307 only because the user asked for a manual cross-check. This time the verification will be done proactively.\r\n\r\nPossible remediation:\r\n1. Generate the ImpEx script from the Excel attachment data for store C750_007_31536\r\n2. Perform a field-by-field cross-check of every value in the ImpEx against the raw Excel source data\r\n3. Create a PC ticket with the ImpEx attached, following the PC-53353 pattern (labels: i=masterdata, sc=scripting)\r\n4. After PC approval and execution on SMI-P1, verify in backoffice that POS, StoreEmployeeGroup, UserGroup, Address, and OmnichannelDealer were created for C750_007_31536\r\n5. Rollback: remove the created POS, UserGroups, and OmnichannelDealer entries for C750_007_31536\r\n\r\nThanks,\r\nAryan.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-02T13:47:00.057Z"
       }
     },
     {
@@ -296,7 +296,7 @@
       {
         "pid": 21524,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 300240,
+        "ageSeconds": 300282,
         "status": "running",
         "isChild": false,
         "taskSummary": "the bridge is usually up but I feel when jira is not connected, it keeps showing as the dashboard...",
@@ -306,7 +306,7 @@
       {
         "pid": 30788,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 292796,
+        "ageSeconds": 292837,
         "status": "running",
         "isChild": false,
         "taskSummary": "reset the script to what it was originally, and just add the orders there. no cahnges",
@@ -316,7 +316,7 @@
       {
         "pid": 30880,
         "cwd": "c:\\windows",
-        "ageSeconds": 292740,
+        "ageSeconds": 292782,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -326,7 +326,7 @@
       {
         "pid": 13076,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 265496,
+        "ageSeconds": 265538,
         "status": "running",
         "isChild": false,
         "taskSummary": "the bridge is usually up but I feel when jira is not connected, it keeps showing as the dashboard...",
@@ -336,7 +336,7 @@
       {
         "pid": 28204,
         "cwd": "unknown",
-        "ageSeconds": 245384,
+        "ageSeconds": 245425,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
