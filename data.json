@@ -1,35 +1,87 @@
 {
-  "generatedAt": "2026-09-04T01:30:01.232Z",
-  "totalTickets": 7,
+  "generatedAt": "2026-09-04T10:27:28.476Z",
+  "totalTickets": 8,
   "tickets": [
     {
-      "key": "SAME-3960",
-      "summary": "Order Refund Issue - SA260812-58244972 (Screen Repair)",
+      "key": "TKME-2308",
+      "summary": "Stuck order on Hybris",
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "None",
-      "project": "Kingdom of Saudi Arabia Maintenance & Enhancements",
-      "projectKey": "SAME",
+      "project": "Turkey Maintenance & Enhancements",
+      "projectKey": "TKME",
       "issuetype": "Maintenance Request",
-      "updated": "2026-09-03T23:18:33.000+0900",
-      "created": "2026-09-03T22:59:23.000+0900",
-      "description": "Hi Team,\n\nPlease check why we cannot create return for order SA260812-58244972.\n\nBelow error is showing.\n\n!image-2026-09-03-17-58-53-111.png!\n\n!image-2026-09-03-17-59-04-203.png!\n\n \n\nThanks,\n\nArj\n\n~@email",
-      "commentsCount": 0,
-      "recentComments": [],
-      "lastCommentBy": "",
-      "lastCommentSnippet": "",
-      "lastCommentDate": "",
-      "url": "https://jira.secext.samsung.net/browse/SAME-3960",
+      "updated": "2026-09-04T16:37:20.000+0900",
+      "created": "2026-09-01T16:57:03.000+0900",
+      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|TR260831-72955234|2026/08/31|WAITING_FOR_SEND_FINANCIAL|\n|TR260830-71999966|2026/08/30|WAITING_FOR_FINANCIAL|\n|TR260829-71694545|2026/08/29|CANCELLED|\n|TR260829-71455203|",
+      "commentsCount": 2,
+      "recentComments": [
+        {
+          "author": "Rajeshbabu Yatirajula",
+          "date": "2026-09-04T16:37:13.551+0900",
+          "snippet": "Hi ~@email \n # I/O error : It's a known issue with NERP and the fix is not yet identified. We've an auto-heal job which re-triggers these I/O error orders.\n # This errors occurs when there is a lead already created, recently we'd few issue with GetMobil and we're working with them.\n # Refund failure"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-09-01T18:15:30.588+0900",
+          "snippet": "Hi Team,\n\nFollowing orders were found to be stuck with various issues. Below is the root cause analysis for each category:\n\n1. Financial Integration (FI) Connection Errors (8 orders):\n\nTR260831-72955234: isInitialFISuccess rc=ERROR\nTR260830-71999966: completeFinancialUpdate - I/O error: Connection r"
+        }
+      ],
+      "lastCommentBy": "Rajeshbabu Yatirajula",
+      "lastCommentSnippet": "Hi ~@email \n # I/O error : It's a known issue with NERP and the fix is not yet identified. We've an auto-heal job which re-triggers these I/O error orders.\n # This errors occurs when there is a lead already created, recently we'd few issue with GetMobil and we're working with them.\n # Refund failure",
+      "lastCommentDate": "2026-09-04T16:37:13.551+0900",
+      "url": "https://jira.secext.samsung.net/browse/TKME-2308",
       "solution": {
         "status": "found",
-        "excerpt": "# RCA: SAME-3960\n\nOrder Refund Issue - SA260812-58244972 (Screen Repair)\nGenerated: 2026-09-03T23:30:00+09:00\n\nHi Arjenelle ,\n\nThe issue reported on SAME-3960 is that a return cannot be created for order SA260812-58244972, which is an Expert Cleaning Service (screen repair) order placed in the SA/KSA region on 2026-08-12. The order itself is in a healthy state: status is COMPLETED, the consignment is COMPLETED, all four business processes have SUCCEEDED, and the payment (Checkout.com Flow) was fully authorized and captured at 999.00 SAR. No return requests exist for this order, confirming that the customer or CS agent was unable to initiate one.\n\nThe root cause is in the backoffice return creation flow. When a CS agent attempts to create a return from the Backoffice Cockpit, the method blockExpertCleaningServiceAndExpertCareServiceReturn() in TokoCreateReturnRequestController (line 4487) is invoked before the return is processed. This method checks whether the order has an Expert Cleaning Service external service with provider GCIC_EXPERT_CLEANING_STANDALONE, which this order does (status UPDATED, product SKU P-GT-LCXOS0GW).\n\nThe method first checks the config parameter RETURN_REQUEST_ENABLED_FOR_CLEANING_SERVICE_STANDALONE (key: \"isReturnEnabledForCleaningService\") on the AddedServiceConfig. If this is set to true, the block is bypassed and the return proceeds. If not set or false, the method falls through to call checkCancelOrderStatusForExpertCleaningService() in TokoExpertCleaningExternalServicesImpl (line 135).\n\nThis method makes a real-time API call to the GCIC (Samsung's external cleaning service partner) status check endpoint, sending the service order number stored in the ExternalService's provider response parameters. The GCIC API returns a job status code (format STxxx). The method returns true only if the numeric portion of this status is between 10 and 30 (ST010 to ST030), meaning the service order is still in a cancellable state. If the status is outside this range (e.g., the repair has already been completed, dispatched, or is in a post-service state), the method returns false, and the controller throws a TokoOrderReturnException with the message: \"Cancellation is not allowed due to GCIC Service Order status, please contact your support.\"\n\nSince this order was placed on August 12 and the service (screen repair) has likely been completed by GCIC, the service order status is now beyond ST030. The GCIC partner has progressed the service order past the cancellable window, so the Hybris platform correctly blocks the return because cancelling a completed repair is not supported by the external service provider.\n\nThe order's deliveryMode being NULL at the order level (while the consignment has sa-cleaning-delivery) is a known characteristic of service orders in this region and is not the blocking factor. The payment state is clean with both AUTHORIZATION and CAPTURE entries successful, so a refund is technically possible if the return can be initiated.\n\nPossible remediation:\n1. Check the GCIC service order status directly via the GCIC portal or API to confirm the current status code. If the service is still in a pre-completion state (ST010-ST030), the return should be possible and the error may be a transient API connectivity issue.\n2. If the GCIC service order is in a post-completion status (beyond ST030), the return cannot be created through the standard Backoffice flow. The options are: (a) contact the GCIC team to request a manual cancellation or status rollback on their side, then retry the return in Hybris, or (b) enable the config parameter \"isReturnEnabledForCleaningService\" on the SA store's AddedServiceConfig for EXPERT_CLEANING_SERVICE to bypass the GCIC status check and allow returns regardless of external service status.\n3. If a refund is needed urgently and the GCIC status cannot be changed, a manual refund can be initiated directly via HAC by creating a ReturnRequest and triggering the refund process, bypassing the Backoffice validation. However this should only be done with appropriate approvals since it skips the external service cancellation.\n\nThanks,\nAryan",
+        "excerpt": "I'll activate the investigate skill to handle the TKME-2308 investigation workflow.\nNow let me read the past learnings and check if a lock file already exists, and read the Aryantone style guide.\nLet me read the Aryantone style guide and an existing fetch script to understand the pattern.\nGood. A lock file exists but no RCA MD file yet. Let me create the fetch script for TKME-2308 and run it to get the ticket details.\nExcellent. I have the ticket details. This is a healthcheck ticket with 17 stuck orders in the TR (Turkey) region. The ticket already has a detailed comment from Aryan categorizing the issues. Now I need to verify the DB state for these orders and check Kibana logs. Let me launch parallel investigations.\n\nFirst, let me update the lock file with the issue number, then launch the parallel fan-out investigation.\nGood. I have the ticket details. This is a healthcheck ticket with 17 stuck TR-region orders across 5 categories. The ticket already has a detailed comment from Aryan categorizing the issues. Per LEARNING-1, I must verify DB state before writing the RCA. Let me launch parallel investigations - DB state verification, Kibana logs, and REUSABLE PC ticket search.\nGood. I have the ticket details. This is a healthcheck with 17 stuck TR-region orders. The ticket already has a detailed comment from Aryan categorizing the issues. Per LEARNING-1, I must verify DB state before writing the RCA. Let me check what HAC scripts are available and run DB verification.\nThe ticket has 17 TR-region orders across 5 categories, and the comment already has a detailed analysis. Per LEARNING-1, I must verify DB state before finalizing the RCA. Let me launch parallel sub-agents for DB verification, Kibana logs, codebase trace, and REUSABLE PC ticket search.\nSub-agent D returned DB state verification. Sub-agent E failed. Let me run the REUSABLE PC ticket search myself and also search for the process retrigger script pattern from the previous TKME-2302 investigation.\nGood. I have all the data I need. Let me now synthesize all findings and write the RCA. Here's what I have:\n\n1. **Ticket details**: 17 TR-region stuck orders, 5 categories, already has a detailed comment from Aryan\n2. **DB state verification**: 5 orders already fully resolved (CANCELLED), 4 WAITING_FOR_FINANCIAL with process ERROR, 2 PAYMENT_CAPTURED with process ERROR (GetMobil), 2 REFUND_FAILED, 3 other stuck states, 1 active returns\n3. **REUSABLE PC tickets**: PC-52678 exists for SC+ remediation (not applicable here). No REUSABLE PC tickets specifically for FI retrigger or refund retrigger by aryan.v1.\n\nLet me now write the RCA and save it.\nNow delete the lock file to signal RCA completion.\nInvestigation complete for TKME-2308. RCA saved to `ticket-rca/TKME-2308.md` and lock file deleted.\n\nSummary: 17 TR-region stuck orders investigated via HAC DB verification. 5 orders already resolved (CANCELLED). Remaining 12 orders across 5 root causes:\n\n- **5 orders** (FI connection errors): WAITING_FOR_FINANCIAL/WAITING_FOR_SEND_FINANCIAL, process ERROR. Transient GERP connection resets/timeouts. Need process retrigger after confirming FI endpoint.\n- **2 orders** (GetMobil NPE): PAYMENT_CAPTURED, process ERROR. GetMobil returned null, NPE on getLead_id(). Need retrigger after confirming GetMobil endpoint.\n- **2 orders** (Refund failures): REFUND_FAILED. Payment gateway rejected follow-on refund. Need manual refund retry after gateway investigation.\n- **1 order** (ORDER_SPLIT): Consignments READY but not dispatched. WMS team attention needed.\n- **1 order** (COMPLETED with failed subprocesses): Main order done, consignment subprocesses FAILED. WMS team to release blocks.\n- **1 order** (PARTIAL_RETURN_SHIPPING_PREPARATION): No shipping date set, 5 return processes RUNNING. Logistics/WMS to set shipping date.\n\nNo reusable PC ticket exists for FI retrigger or refund retrigger. PC-52678 only covers SC+ remediation. A new PC ticket would be needed if scripting is approved.",
         "sections": {
           "issue": "",
-          "rca": "# RCA: SAME-3960\n\nOrder Refund Issue - SA260812-58244972 (Screen Repair)\nGenerated: 2026-09-03T23:30:00+09:00\n\nHi Arjenelle ,\n\nThe issue reported on SAME-3960 is that a return cannot be created for order SA260812-58244972, which is an Expert Cleaning Service (screen repair) order placed in the SA/KSA region on 2026-08-12. The order itself is in a healthy state: status is COMPLETED, the consignment is COMPLETED, all four business processes have SUCCEEDED, and the payment (Checkout.com Flow) was fully authorized and captured at 999.00 SAR. No return requests exist for this order, confirming that the customer or CS agent was unable to initiate one.\n\nThe root cause is in the backoffice return creation flow. When a CS agent attempts to create a return from the Backoffice Cockpit, the method blockExpertCleaningServiceAndExpertCareServiceReturn() in TokoCreateReturnRequestController (line 4487) is invoked before the return is processed. This method checks whether the order has an Expert Cleaning Service external service with provider GCIC_EXPERT_CLEANING_STANDALONE, which this order does (status UPDATED, product SKU P-GT-LCXOS0GW).\n\nThe method first checks the config parameter RETURN_REQUEST_ENABLED_FOR_CLEANING_SERVICE_STANDALONE (key: \"isReturnEnabledForCleaningService\") on the AddedServiceConfig. If this is set to true, the block is bypassed and the return proceeds. If not set or false, the method falls through to call checkCancelOrderStatusForExpertCleaningService() in TokoExpertCleaningExternalServicesImpl (line 135).\n\nThis method makes a real-time API call to the GCIC (Samsung's external cleaning service partner) status check endpoint, sending the service order number stored in the ExternalService's provider response parameters. The GCIC API returns a job status code (format STxxx). The method returns true only if the numeric portion of this status is between 10 and 30 (ST010 to ST030), meaning the service order is still in a cancellable state. If the status is outside this range (e.g., the repair has already been completed, dispatched, or is in a post-service state), the method returns false, and the controller throws a TokoOrderReturnException with the message: \"Cancellation is not allowed due to GCIC Service Order status, please contact your support.\"\n\nSince this order was placed on August 12 and the service (screen repair) has likely been completed by GCIC, the service order status is now beyond ST030. The GCIC partner has progressed the service order past the cancellable window, so the Hybris platform correctly blocks the return because cancelling a completed repair is not supported by the external service provider.\n\nThe order's deliveryMode being NULL at the order level (while the consignment has sa-cleaning-delivery) is a known characteristic of service orders in this region and is not the blocking factor. The payment state is clean with both AUTHORIZATION and CAPTURE entries successful, so a refund is technically possible if the return can be initiated.\n\nPossible remediation:\n1. Check the GCIC service order status directly via the GCIC portal or API to confirm the current status code. If the service is still in a pre-completion state (ST010-ST030), the return should be possible and the error may be a transient API connectivity issue.\n2. If the GCIC service order is in a post-completion status (beyond ST030), the return cannot be created through the standard Backoffice flow. The options are: (a) contact the GCIC team to request a manual cancellation or status rollback on their side, then retry the return in Hybris, or (b) enable the config parameter \"isReturnEnabledForCleaningService\" on the SA store's AddedServiceConfig for EXPERT_CLEANING_SERVICE to bypass the GCIC status check and allow returns regardless of external service status.\n3. If a refund is needed urgently and the GCIC status cannot be changed, a manual refund can be initiated directly via HAC by creating a ReturnRequest and triggering the refund process, bypassing the Backoffice validation. However this should only be done with appropriate approvals since it skips the external service cancellation.\n\nThanks,\nAryan",
+          "rca": "I'll activate the investigate skill to handle the TKME-2308 investigation workflow.\nNow let me read the past learnings and check if a lock file already exists, and read the Aryantone style guide.\nLet me read the Aryantone style guide and an existing fetch script to understand the pattern.\nGood. A lock file exists but no RCA MD file yet. Let me create the fetch script for TKME-2308 and run it to get the ticket details.\nExcellent. I have the ticket details. This is a healthcheck ticket with 17 stuck orders in the TR (Turkey) region. The ticket already has a detailed comment from Aryan categorizing the issues. Now I need to verify the DB state for these orders and check Kibana logs. Let me launch parallel investigations.\n\nFirst, let me update the lock file with the issue number, then launch the parallel fan-out investigation.\nGood. I have the ticket details. This is a healthcheck ticket with 17 stuck TR-region orders across 5 categories. The ticket already has a detailed comment from Aryan categorizing the issues. Per LEARNING-1, I must verify DB state before writing the RCA. Let me launch parallel investigations - DB state verification, Kibana logs, and REUSABLE PC ticket search.\nGood. I have the ticket details. This is a healthcheck with 17 stuck TR-region orders. The ticket already has a detailed comment from Aryan categorizing the issues. Per LEARNING-1, I must verify DB state before writing the RCA. Let me check what HAC scripts are available and run DB verification.\nThe ticket has 17 TR-region orders across 5 categories, and the comment already has a detailed analysis. Per LEARNING-1, I must verify DB state before finalizing the RCA. Let me launch parallel sub-agents for DB verification, Kibana logs, codebase trace, and REUSABLE PC ticket search.\nSub-agent D returned DB state verification. Sub-agent E failed. Let me run the REUSABLE PC ticket search myself and also search for the process retrigger script pattern from the previous TKME-2302 investigation.\nGood. I have all the data I need. Let me now synthesize all findings and write the RCA. Here's what I have:\n\n1. **Ticket details**: 17 TR-region stuck orders, 5 categories, already has a detailed comment from Aryan\n2. **DB state verification**: 5 orders already fully resolved (CANCELLED), 4 WAITING_FOR_FINANCIAL with process ERROR, 2 PAYMENT_CAPTURED with process ERROR (GetMobil), 2 REFUND_FAILED, 3 other stuck states, 1 active returns\n3. **REUSABLE PC tickets**: PC-52678 exists for SC+ remediation (not applicable here). No REUSABLE PC tickets specifically for FI retrigger or refund retrigger by aryan.v1.\n\nLet me now write the RCA and save it.\nNow delete the lock file to signal RCA completion.\nInvestigation complete for TKME-2308. RCA saved to `ticket-rca/TKME-2308.md` and lock file deleted.\n\nSummary: 17 TR-region stuck orders investigated via HAC DB verification. 5 orders already resolved (CANCELLED). Remaining 12 orders across 5 root causes:\n\n- **5 orders** (FI connection errors): WAITING_FOR_FINANCIAL/WAITING_FOR_SEND_FINANCIAL, process ERROR. Transient GERP connection resets/timeouts. Need process retrigger after confirming FI endpoint.\n- **2 orders** (GetMobil NPE): PAYMENT_CAPTURED, process ERROR. GetMobil returned null, NPE on getLead_id(). Need retrigger after confirming GetMobil endpoint.\n- **2 orders** (Refund failures): REFUND_FAILED. Payment gateway rejected follow-on refund. Need manual refund retry after gateway investigation.\n- **1 order** (ORDER_SPLIT): Consignments READY but not dispatched. WMS team attention needed.\n- **1 order** (COMPLETED with failed subprocesses): Main order done, consignment subprocesses FAILED. WMS team to release blocks.\n- **1 order** (PARTIAL_RETURN_SHIPPING_PREPARATION): No shipping date set, 5 return processes RUNNING. Logistics/WMS to set shipping date.\n\nNo reusable PC ticket exists for FI retrigger or refund retrigger. PC-52678 only covers SC+ remediation. A new PC ticket would be needed if scripting is approved.",
           "remediation": ""
         },
         "source": "RCA MD",
-        "foundAt": "2026-09-03T14:43:17.845Z"
+        "foundAt": "2026-09-04T10:27:26.159Z"
+      }
+    },
+    {
+      "key": "TKME-2311",
+      "summary": "For Creation: POS I Usergroup I Omnichannel Dealer Master Data",
+      "status": "QA Server Review",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Turkey Maintenance & Enhancements",
+      "projectKey": "TKME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-09-04T15:12:19.000+0900",
+      "created": "2026-09-02T21:27:05.000+0900",
+      "description": "Hi Team,\n\n \n\nRequesting for your support in creating the following in backoffice. Please refer to the attached file for the details . ^POS_DealerMasterData_Template_SETK Filled_C750_007_31536.xlsx\n\n \n\n1. Create the POS, Usergroup and Omni Channel Dealer Master Data\n|Store ID/External Id|\n|C750_007_3",
+      "commentsCount": 2,
+      "recentComments": [
+        {
+          "author": "Georgina Semblante",
+          "date": "2026-09-04T15:12:19.255+0900",
+          "snippet": "Hi ~@email ,\n\nI have updated the following attributes based on the file attached. The rest is confirmed\n|O2O Type|\n|LATITUDE|\n|LONGITUDE|\n\nThank you.\n\nGeorj"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-09-03T19:02:03.173+0900",
+          "snippet": "Hi ~@email ,\n\nPOS,UserGroup and Omnichallen data created with PC-53498.\n\nKindly check and validate at your end as well.\n\nThanks and Regards\n\nAryan"
+        }
+      ],
+      "lastCommentBy": "Georgina Semblante",
+      "lastCommentSnippet": "Hi ~@email ,\n\nI have updated the following attributes based on the file attached. The rest is confirmed\n|O2O Type|\n|LATITUDE|\n|LONGITUDE|\n\nThank you.\n\nGeorj",
+      "lastCommentDate": "2026-09-04T15:12:19.255+0900",
+      "url": "https://jira.secext.samsung.net/browse/TKME-2311",
+      "solution": {
+        "status": "found",
+        "excerpt": "For Creation: POS I Usergroup I Omnichannel Dealer Master Data\r\nGenerated: 2026-09-02T14:10:00.000Z\r\n\r\nHi Georgina ,\r\n\r\nThis is a master data creation request for a single TR-region store. The ticket requests creation of PointOfService, StoreEmployeeGroup, UserGroup, Address, and OmnichannelDealer entries in the Hybris backoffice for store C750_007_31536 (HARK MUHENDISLIK, Antalya, TR-07).\r\n\r\nThe attached Excel file POS_DealerMasterData_Template_SETK Filled_C750_007_31536.xlsx contains the store details on the \"Store Details\" sheet. The store is an ACS (Authorized Counter Store) type located at Yesilbayir Mah. Hasim Iscan Cad. No: 4 A, Dosemealti, Antalya, postal code 07100, town code TR-07. Managing partner is Umit Ozkurt. Sold To/Partner No. is 7116147, Ship To/Partner is 7116147, phone 5458249532, email info@harkmuhendislik.com, static IP 78.187.209.106, company code 7116147, branch code HARKMUH, latitude 30.60721, longitude 36.98057.\r\n\r\nNo platform bug or code defect was involved. This is a straightforward master data provisioning request.\r\n\r\nThe same pattern has been executed 8 times prior via PC tickets: PC-49087 (TKME-2175), PC-50301 (TKME-2222), PC-51658 (TKME-2246), PC-52311 (TKME-2262), PC-52505 (TKME-2286), PC-52670 (TKME-2292), and most recently PC-53353 (TKME-2307, created by aryan.v1 for 3 TR stores). All 8 tickets are Closed and the ImpEx scripts were successfully executed in production.\r\n\r\nThe remediation is to generate an ImpEx script from the Excel data following the same 6-step pattern used in PC-53353: INSERT_UPDATE PointOfService, INSERT_UPDATE StoreEmployeeGroup, INSERT_UPDATE UserGroup, INSERT_UPDATE Address, INSERT_UPDATE OmnichannelDealer, and the POS-UserGroup link. The OmnichannelDealer type is a custom Samsung Toko type defined in tokocore-items.xml (typecode 10736).\r\n\r\nPer the lesson learned from TKME-2307, every field in the generated ImpEx must be cross-checked against the raw Excel source data before uploading to the PC ticket. A typo in the branchCode (DRKKFLORYA instead of DRKFLORYA) was caught during TKME-2307 only because the user asked for a manual cross-check. This time the verification will be done proactively.\r\n\r\nPossible remediation:\r\n1. Generate the ImpEx script from the Excel attachment data for store C750_007_31536\r\n2. Perform a field-by-field cross-check of every value in the ImpEx against the raw Excel source data\r\n3. Create a PC ticket with the ImpEx attached, following the PC-53353 pattern (labels: i=masterdata, sc=scripting)\r\n4. After PC approval and execution on SMI-P1, verify in backoffice that POS, StoreEmployeeGroup, UserGroup, Address, and OmnichannelDealer were created for C750_007_31536\r\n5. Rollback: remove the created POS, UserGroups, and OmnichannelDealer entries for C750_007_31536\r\n\r\nThanks,\r\nAryan.",
+        "sections": {
+          "issue": "",
+          "rca": "For Creation: POS I Usergroup I Omnichannel Dealer Master Data\r\nGenerated: 2026-09-02T14:10:00.000Z\r\n\r\nHi Georgina ,\r\n\r\nThis is a master data creation request for a single TR-region store. The ticket requests creation of PointOfService, StoreEmployeeGroup, UserGroup, Address, and OmnichannelDealer entries in the Hybris backoffice for store C750_007_31536 (HARK MUHENDISLIK, Antalya, TR-07).\r\n\r\nThe attached Excel file POS_DealerMasterData_Template_SETK Filled_C750_007_31536.xlsx contains the store details on the \"Store Details\" sheet. The store is an ACS (Authorized Counter Store) type located at Yesilbayir Mah. Hasim Iscan Cad. No: 4 A, Dosemealti, Antalya, postal code 07100, town code TR-07. Managing partner is Umit Ozkurt. Sold To/Partner No. is 7116147, Ship To/Partner is 7116147, phone 5458249532, email info@harkmuhendislik.com, static IP 78.187.209.106, company code 7116147, branch code HARKMUH, latitude 30.60721, longitude 36.98057.\r\n\r\nNo platform bug or code defect was involved. This is a straightforward master data provisioning request.\r\n\r\nThe same pattern has been executed 8 times prior via PC tickets: PC-49087 (TKME-2175), PC-50301 (TKME-2222), PC-51658 (TKME-2246), PC-52311 (TKME-2262), PC-52505 (TKME-2286), PC-52670 (TKME-2292), and most recently PC-53353 (TKME-2307, created by aryan.v1 for 3 TR stores). All 8 tickets are Closed and the ImpEx scripts were successfully executed in production.\r\n\r\nThe remediation is to generate an ImpEx script from the Excel data following the same 6-step pattern used in PC-53353: INSERT_UPDATE PointOfService, INSERT_UPDATE StoreEmployeeGroup, INSERT_UPDATE UserGroup, INSERT_UPDATE Address, INSERT_UPDATE OmnichannelDealer, and the POS-UserGroup link. The OmnichannelDealer type is a custom Samsung Toko type defined in tokocore-items.xml (typecode 10736).\r\n\r\nPer the lesson learned from TKME-2307, every field in the generated ImpEx must be cross-checked against the raw Excel source data before uploading to the PC ticket. A typo in the branchCode (DRKKFLORYA instead of DRKFLORYA) was caught during TKME-2307 only because the user asked for a manual cross-check. This time the verification will be done proactively.\r\n\r\nPossible remediation:\r\n1. Generate the ImpEx script from the Excel attachment data for store C750_007_31536\r\n2. Perform a field-by-field cross-check of every value in the ImpEx against the raw Excel source data\r\n3. Create a PC ticket with the ImpEx attached, following the PC-53353 pattern (labels: i=masterdata, sc=scripting)\r\n4. After PC approval and execution on SMI-P1, verify in backoffice that POS, StoreEmployeeGroup, UserGroup, Address, and OmnichannelDealer were created for C750_007_31536\r\n5. Rollback: remove the created POS, UserGroups, and OmnichannelDealer entries for C750_007_31536\r\n\r\nThanks,\r\nAryan.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-02T13:47:00.057Z"
       }
     },
     {
@@ -275,78 +327,53 @@
         "responseSnippet": "Now let me begin Phase 0: Read past learnings, check for existing cache, and create the lock file.\nGood. No existing cache. Let me create the lock file and start fetching the ticket. Let me also check how previous ticket fetch scripts work.\nNow let me create the lock file and fetch the ticket. I'll create a fetch script for SAM-24720:\nI have the full ticket details. Let me analyze what we're dealing with:\n\n**SAM-24720**: Update or create Cronjob for autocleanup\n- Status: Code Review, Priority: H"
       }
     ],
-    "pid": 45404,
-    "uptime": 43049,
+    "pid": 17328,
+    "uptime": 84,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
-    "startTime": "2026-09-03T13:32:31.867Z",
+    "startTime": "2026-09-04T10:26:06.748Z",
     "version": "v3",
     "lastResponseAt": "2026-09-03T20:28:17.014Z",
     "lastResponseIssue": 95,
-    "ideSessions": [
-      {
-        "pid": 21524,
-        "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 372970,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "remove the header saying LIVE-updated 45s ago. only show that red bar when something is down, not...",
-        "lastExchange": "remove the header saying LIVE-updated 45s ago. only show that red bar when something is down, not when w=everything is perfectly fine and live.",
-        "sessionId": "aryan-v1"
-      },
-      {
-        "pid": 13076,
-        "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 338226,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "remember this learning and verify always after making a PC ticket",
-        "lastExchange": "remember this learning and verify always after making a PC ticket",
-        "sessionId": "bin"
-      },
-      {
-        "pid": 10608,
-        "cwd": "c:\\windows",
-        "ageSeconds": 68838,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "windows",
-        "lastExchange": null,
-        "sessionId": "windows"
-      },
-      {
-        "pid": 58504,
-        "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 68274,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "remove the header saying LIVE-updated 45s ago. only show that red bar when something is down, not...",
-        "lastExchange": "remove the header saying LIVE-updated 45s ago. only show that red bar when something is down, not when w=everything is perfectly fine and live.",
-        "sessionId": "aryan-v1-1"
-      },
-      {
-        "pid": 10048,
-        "cwd": "unknown",
-        "ageSeconds": 56763,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "aipro session",
-        "lastExchange": null,
-        "sessionId": null
-      },
-      {
-        "pid": 51344,
-        "cwd": "unknown",
-        "ageSeconds": 56760,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "aipro session",
-        "lastExchange": null,
-        "sessionId": null
-      }
-    ],
+    "ideSessions": [],
     "activityLog": [
+      {
+        "id": "1788517578743-afh306",
+        "timestamp": "2026-09-04T10:26:18.743Z",
+        "type": "bridge-event",
+        "source": "dashboard",
+        "title": "WAKE UP: Restart dashboard server",
+        "detail": "Dashboard server restarted (PID 19356)",
+        "status": "success"
+      },
+      {
+        "id": "1788517570760-atc67q",
+        "timestamp": "2026-09-04T10:26:10.760Z",
+        "type": "bridge-event",
+        "source": "dashboard",
+        "title": "WAKE UP: Restart dashboard server",
+        "detail": "#98",
+        "status": "pending"
+      },
+      {
+        "id": "1788496255178-nphlh8",
+        "timestamp": "2026-09-04T04:30:55.178Z",
+        "type": "bridge-event",
+        "source": "dashboard",
+        "title": "WAKE UP: Restart dashboard server",
+        "detail": "Dashboard server restarted (PID 3904)",
+        "status": "success"
+      },
+      {
+        "id": "1788496249744-55qyth",
+        "timestamp": "2026-09-04T04:30:49.744Z",
+        "type": "bridge-event",
+        "source": "dashboard",
+        "title": "WAKE UP: Restart dashboard server",
+        "detail": "#97",
+        "status": "pending"
+      },
       {
         "id": "1788467297016-02igth",
         "timestamp": "2026-09-03T20:28:17.016Z",
@@ -579,42 +606,6 @@
         "source": "aryanverma2410",
         "title": "Investigate ticket SAHME-3357",
         "detail": "#88",
-        "status": "pending"
-      },
-      {
-        "id": "1788442363582-5x1bvw",
-        "timestamp": "2026-09-03T13:32:43.582Z",
-        "type": "command",
-        "source": "aryanverma2410",
-        "title": "Investigate ticket PC-53529",
-        "detail": "#89",
-        "status": "pending"
-      },
-      {
-        "id": "1788442362578-f80h84",
-        "timestamp": "2026-09-03T13:32:42.578Z",
-        "type": "command",
-        "source": "aryanverma2410",
-        "title": "Investigate ticket PC-53535",
-        "detail": "#90",
-        "status": "pending"
-      },
-      {
-        "id": "1788442361583-6d41ag",
-        "timestamp": "2026-09-03T13:32:41.584Z",
-        "type": "command",
-        "source": "aryanverma2410",
-        "title": "Investigate ticket SAME-3958",
-        "detail": "#91",
-        "status": "pending"
-      },
-      {
-        "id": "1788442360627-n6s6ll",
-        "timestamp": "2026-09-03T13:32:40.627Z",
-        "type": "command",
-        "source": "aryanverma2410",
-        "title": "Any findings on gmt-18732",
-        "detail": "#92",
         "status": "pending"
       }
     ],
@@ -1340,42 +1331,11 @@
       }
     }
   },
-  "mcps": [
-    {
-      "name": "Jira",
-      "status": "up",
-      "type": "process",
-      "dir": "mcp-jira"
-    },
-    {
-      "name": "Kibana",
-      "status": "up",
-      "type": "process",
-      "dir": "mcp-kibana"
-    },
-    {
-      "name": "HAC",
-      "status": "up",
-      "type": "process",
-      "dir": "mcp-hac"
-    },
-    {
-      "name": "Confluence",
-      "status": "down",
-      "type": "process",
-      "dir": "mcp-confluence"
-    },
-    {
-      "name": "Workflow",
-      "status": "up",
-      "type": "process",
-      "dir": "mcp-workflow"
-    }
-  ],
+  "mcps": [],
   "hacReport": {
-    "generatedAt": "2026-09-02T08:21:36.668Z",
-    "generatedAtLocal": "Sep 2, 2026, 01:51:36 PM",
-    "queryDate": "2026-09-01",
+    "generatedAt": "2026-09-04T03:30:30.700Z",
+    "generatedAtLocal": "Sep 4, 2026, 09:00:30 AM",
+    "queryDate": "2026-09-03",
     "modified": {
       "headers": [
         "CLUSTER",
@@ -1387,11 +1347,11 @@
       ],
       "rows": [
         {
-          "CLUSTER": "SMU",
+          "CLUSTER": "SMI",
           "YEAR": "2026",
           "MONTH": "Sep",
-          "DAY": "1",
-          "COUNT": "1032",
+          "DAY": "3",
+          "COUNT": "594",
           "TYPE": "MODIFIED"
         }
       ],
@@ -1408,17 +1368,17 @@
       ],
       "rows": [
         {
-          "CLUSTER": "SMU",
+          "CLUSTER": "SMI",
           "YEAR": "2026",
           "MONTH": "Sep",
-          "DAY": "1",
-          "COUNT": "358",
+          "DAY": "3",
+          "COUNT": "198",
           "TYPE": "CREATED"
         }
       ],
       "error": null
     },
-    "textReport": "Hi Reglo, Tin,\nPFA the results for SMI\n\nCLUSTER\tYEAR\tMONTH\tDAY\tCOUNT\tTYPE\nSMU\t2026\tSep\t1\t1032\tMODIFIED\n\nCLUSTER\tYEAR\tMONTH\tDAY\tCOUNT\tTYPE\nSMU\t2026\tSep\t1\t358\tCREATED"
+    "textReport": "Hi Reglo, Tin,\nPFA the results for SMI\n\nCLUSTER\tYEAR\tMONTH\tDAY\tCOUNT\tTYPE\nSMI\t2026\tSep\t3\t594\tMODIFIED\n\nCLUSTER\tYEAR\tMONTH\tDAY\tCOUNT\tTYPE\nSMI\t2026\tSep\t3\t198\tCREATED"
   },
   "scheduledJobs": {
     "jobs": [
@@ -1434,11 +1394,11 @@
         },
         "enabled": true,
         "createdAt": "2026-09-03T05:31:01.816Z",
-        "lastRunAt": null,
-        "lastOutput": "",
-        "lastOutputAt": null,
-        "lastStatus": "idle",
-        "nextRunAt": "2026-09-04T03:30:00.000Z"
+        "lastRunAt": "2026-09-04T03:30:39.091Z",
+        "lastOutput": "Warning: Ignoring extra certs from `C:\\SDSI_GDC.crt`, load failed: error:80000002:system library::No such file or directory\r\nWarning: 256-color support not detected. Using a terminal with at least 256-color support is recommended for a better visual experience.\nYOLO mode is enabled. All tool calls will be automatically approved.\nYOLO mode is enabled. All tool calls will be automatically approved.\n(node:29448) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.\n(Use `node --trace-warnings ...` to show where the warning was created)\nRipgrep is not available. Falling back to GrepTool.\nC:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\n\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\n\r\nNode.js v22.22.0\r\nScript executed successfully. Results:\n\n| Cluster | Year | Month | Day | Count | Type |\n|---------|------|-------|-----|-------|------|\n| SMI | 2026 | Sep | 3 | **594** | MODIFIED |\n| SMI | 2026 | Sep | 3 | **198** | CREATED |\n\nReport written to `hac-report.json`.\n",
+        "lastOutputAt": "2026-09-04T03:30:39.092Z",
+        "lastStatus": "success",
+        "nextRunAt": "2026-09-05T03:30:00.000Z"
       }
     ],
     "queue": {
