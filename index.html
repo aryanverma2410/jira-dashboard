@@ -125,7 +125,8 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .stat-line{font-size:12px;color:var(--text-dim);margin-bottom:4px}
 .list-item{padding:10px;border-radius:8px;background:var(--card);border:1px solid var(--border);margin-bottom:8px}
 .list-item-title{font-size:13px;font-weight:600;margin-bottom:4px}
-.list-item-sub{font-size:12px;color:var(--text-dim);margin-bottom:4px}
+.list-item-sub{font-size:12px;color:var(--text-dim);margin-bottom:4px;max-height:40px;overflow:hidden;cursor:pointer}
+.list-item-sub.expanded{max-height:none}
 .list-item-time{font-size:11px;color:var(--text-dim)}
 .pending-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--warning);margin-left:6px;animation:pulse 1.5s infinite}
 
@@ -166,7 +167,9 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .cmd-h-item{padding:10px;border-radius:8px;background:var(--card);border:1px solid var(--border);margin-bottom:8px}
 .cmd-h-cmd{font-size:13px;font-weight:600;margin-bottom:4px}
 .cmd-h-time{font-size:11px;color:var(--text-dim)}
-.cmd-h-resp{font-size:12px;color:var(--success);margin-top:6px;padding:6px 8px;background:rgba(63,185,80,0.08);border-radius:6px}
+.cmd-h-resp{font-size:12px;color:var(--success);margin-top:6px;padding:6px 8px;background:rgba(63,185,80,0.08);border-radius:6px;max-height:60px;overflow-y:auto}
+.cmd-h-item .cmd-h-resp.expanded{max-height:none}
+.cmd-h-toggle{font-size:10px;color:var(--text-dim);margin-top:4px;cursor:pointer;text-align:center;user-select:none}
 .cmd-h-pending{font-size:12px;color:var(--warning);margin-top:6px}
 
 /* Solution Section (inside expanded ticket cards) */
@@ -359,7 +362,6 @@ body.has-status-bar .scroll{padding-top:28px}
     <button onclick="document.getElementById('updateBanner').classList.remove('show')">&times;</button>
   </div>
   <div class="scroll" id="ticketsScroll">
-    <div class="stats-row" id="statsRow"></div>
     <div class="controls">
       <input type="text" class="search-input" id="searchInput" placeholder="Search by key, summary, or project...">
       <div class="filter-row" id="filterRow"></div>
@@ -696,15 +698,21 @@ function checkStaleness(){
 }
 
 function wakeUpServer(){
-  var btn=document.getElementById('wakeBtn');
-  if(btn){btn.textContent='Waking...';btn.disabled=true}
-  fetchData();
-  var token=GH_TOKEN;
-  var body=JSON.stringify({title:'WAKE UP: Restart dashboard server',body:'Dashboard data is stale. Please restart the dashboard server process.\nSent from dashboard'});
-  fetch('https://api.github.com/repos/aryanverma2410/agent-bridge/issues',{method:'POST',headers:{'Authorization':'Bearer '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:body})
-    .then(function(r){return r.json()})
-    .then(function(){if(btn){btn.textContent='Wake sent!';setTimeout(function(){if(btn){btn.textContent='Wake Up';btn.disabled=false;btn.style.display='none'}},3000)}})
-    .catch(function(){if(btn){btn.textContent='Wake failed';btn.disabled=false}})
+  var wb=document.getElementById('wakeBtn');
+  if(wb){wb.textContent='Waking...';wb.disabled=true}
+  createIssue('WAKE UP: Restart dashboard server',
+    'The dashboard server (port 9293) appears to be down.\n'+
+    'Please restart it immediately:\n'+
+    '1. Kill any existing instance: Stop-Process -Name node -Force (or find the PID using port 9293)\n'+
+    '2. Start new instance: node "C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\jira-dashboard-server.js"\n'+
+    '3. Verify it started: curl http://127.0.0.1:9293/health\n'+
+    'This is urgent — the dashboard is offline. Just restart the server, no investigation needed.\n'+
+    'Sent from dashboard',
+    function(e,d){
+      if(wb){wb.textContent='Wake Up';wb.disabled=false}
+      if(e||!d||!d.number){showToast('Failed to send wake command','error');return}
+      showToast('Wake up sent (Issue #'+d.number+'). Server should restart in ~30s.','success')
+    })
 }
 
 function relTime(ds){if(!ds)return '';var d=new Date(ds);var n=Date.now();var df=Math.floor((n-d.getTime())/1000);if(df<0)df=0;if(df<10)return 'just now';if(df<60)return df+'s ago';if(df<3600)return Math.floor(df/60)+'m ago';if(df<86400)return Math.floor(df/3600)+'h ago';if(df<604800)return Math.floor(df/86400)+'d ago';return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}
@@ -776,7 +784,7 @@ function onData(data){
   localStorage.setItem('lastVisit',Date.now().toString());
   ticketState=newState;
   rawData=data;
-  renderStats(data);renderFilters(data);renderTickets(data,changedKeys);
+  renderFilters(data);renderTickets(data,changedKeys);
   renderSessions(data);renderActivity(data);renderMcps(data);renderCmdHistory();
   pollCmdResponses(data);updateNavBadges(data);
 }
@@ -797,26 +805,16 @@ function updateNavBadges(data){
   if(downCount>0)document.getElementById('navBadgeMcps').classList.add('show');
 }
 
-// ===== STATS =====
-function renderStats(data){
-  var row=document.getElementById('statsRow');
-  var ts=data.tickets||[];
-  var c={total:ts.length,ip:0,op:0,re:0};
-  ts.forEach(function(t){var sc=statusClass(t.status,t.statusCategory);if(sc==='in-progress')c.ip++;else if(sc==='open')c.op++;else if(sc==='reopened')c.re++});
-  row.innerHTML='<div class="stat-chip"><span>Total</span><span class="count">'+c.total+'</span></div>'+
-    '<div class="stat-chip"><span>In Progress</span><span class="count">'+c.ip+'</span></div>'+
-    '<div class="stat-chip"><span>Open</span><span class="count">'+c.op+'</span></div>'+
-    '<div class="stat-chip"><span>Reopened</span><span class="count">'+c.re+'</span></div>'
-}
-
 // ===== FILTERS =====
 function renderFilters(data){
   var row=document.getElementById('filterRow');
   var ts=data.tickets||[];
+  var counts={All:ts.length};
+  ts.forEach(function(t){if(t.issuetype){counts[t.issuetype]=(counts[t.issuetype]||0)+1}});
   var types={All:true};
   ts.forEach(function(t){if(t.issuetype)types[t.issuetype]=true});
   var h='';
-  Object.keys(types).forEach(function(tk){var a=(currentFilter===tk)?' active':'';h+='<div class="filter-chip'+a+'" data-filter="'+escapeHtml(tk)+'">'+escapeHtml(tk)+'</div>'});
+  Object.keys(types).forEach(function(tk){var a=(currentFilter===tk)?' active':'';var cnt=counts[tk]||0;h+='<div class="filter-chip'+a+'" data-filter="'+escapeHtml(tk)+'">'+escapeHtml(tk)+' ('+cnt+')</div>'});
   row.innerHTML=h
 }
 function setFilter(f){currentFilter=f;if(rawData){renderFilters(rawData);renderTickets(rawData,[])}}
@@ -1229,24 +1227,22 @@ function assignToMe(key){
   })
 }
 
-// ===== AUTOLOGIN (instant, no AI) =====
+// ===== AUTOLOGIN (via GitHub Issue -> bridge -> aipro) =====
 function doAutologin(){
-  var btn=document.getElementById('autologinBtn');
-  if(btn){btn.textContent='\u23F3 Launching...';btn.disabled=true}
-  fetch('http://127.0.0.1:9293/autologin',{method:'GET'})
-    .then(function(r){return r.json()})
-    .then(function(d){
-      if(d.ok){
-        showToast('\u2705 Edge launched with autologin tabs','success');
-        if(btn){btn.textContent='\uD83D\uDD12 Auto-Login';btn.disabled=false}
-      } else {
-        showToast('Autologin failed: '+(d.error||'unknown'),'error');
-        if(btn){btn.textContent='\uD83D\uDD12 Auto-Login';btn.disabled=false}
-      }
-    })
-    .catch(function(e){
-      showToast('Autologin: server not running on :9293','error');
+  var btn=document.querySelector('[onclick*="doAutologin"]');
+  if(btn){btn.textContent='\u23F3 Sending...';btn.disabled=true}
+  createIssue('AUTOLOGIN: Run Samsung Auto Login',
+    'Run the Samsung Auto Login script immediately.\n'+
+    'Execute one of these commands (pick whichever works):\n'+
+    '1. Run: python "C:\\Users\\aryan.v1\\.gemini\\tmp\\bin\\samsung-autologin-bundle\\samsung_auto_login.py"\n'+
+    '2. Or trigger the Windows Scheduled Task: schtasks /Run /TN "SamsungAutoLogin"\n'+
+    '3. Or run: powershell -NoProfile -ExecutionPolicy Bypass -File "C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\startup_edge.ps1"\n'+
+    'This triggers autologin on the desktop. Just run the command, no investigation needed.\n'+
+    'Sent from dashboard',
+    function(e,d){
       if(btn){btn.textContent='\uD83D\uDD12 Auto-Login';btn.disabled=false}
+      if(e||!d||!d.number){showToast('Failed to send autologin command','error');return}
+      showToast('Autologin triggered (Issue #'+d.number+'). Check desktop in ~30s.','success')
     })
 }
 
@@ -1285,6 +1281,23 @@ function sendCommand(){
   })
 }
 
+function filterAiproOutput(text){
+  if(!text)return '';
+  var lines=text.split('\n');
+  var filtered=[];
+  lines.forEach(function(line){
+    var trimmed=line.trim();
+    if(!trimmed)return;
+    var lower=trimmed.toLowerCase();
+    if(lower.indexOf('let me ')===0||lower.indexOf("i'll ")===0||lower.indexOf('checking ')===0||
+       lower.indexOf('looking at ')===0||lower.indexOf('fetching ')===0||lower.indexOf('searching ')===0||
+       lower.indexOf('now ')===0||lower.indexOf("let's ")===0)return;
+    if(lower.indexOf('tool call')>=0||lower.indexOf('searching for')>=0||lower.indexOf('fetching')>=0)return;
+    filtered.push(line);
+  });
+  return filtered.join('\n').trim();
+}
+
 function renderCmdHistory(){
   var hist=JSON.parse(localStorage.getItem('cmdHistory')||'[]');
   var el=document.getElementById('cmdHistoryList');
@@ -1292,7 +1305,11 @@ function renderCmdHistory(){
   var h='';
   hist.forEach(function(item){
     h+='<div class="cmd-h-item"><div class="cmd-h-cmd">'+escapeHtml(item.command)+'</div><div class="cmd-h-time">'+relTime(new Date(item.timestamp).toISOString())+' (Issue #'+item.issueNum+')</div>';
-    if(item.response)h+='<div class="cmd-h-resp">'+escapeHtml(item.response)+'</div>';
+    if(item.response){
+      var resp=filterAiproOutput(item.response);
+      h+='<div class="cmd-h-resp" onclick="this.classList.toggle(\'expanded\')">'+escapeHtml(resp)+'</div>';
+      h+='<div class="cmd-h-toggle" onclick="var r=this.previousElementSibling;r.classList.toggle(\'expanded\');this.textContent=r.classList.contains(\'expanded\')?\'\\u25B2 collapse\':\'\\u25BC expand\'">\u25BC expand</div>';
+    }
     else h+='<div class="cmd-h-pending">Waiting for response...<span class="pending-dot"></span></div>';
     h+='</div>'
   });
@@ -1337,7 +1354,7 @@ function renderActivity(data){
     var stIcon=entry.status==='failed'?'<span style="color:var(--danger)">&#10007;</span>':entry.status==='success'?'<span style="color:var(--success)">&#10003;</span>':'<span class="pending-dot"></span>';
     fh+='<div class="list-item">'+
       '<div class="list-item-title"><span style="color:'+color+';margin-right:6px">'+icon+'</span>'+escapeHtml(entry.title||'')+'</div>'+
-      (entry.detail?'<div class="list-item-sub">'+escapeHtml(entry.detail)+'</div>':'')+
+      (entry.detail?'<div class="list-item-sub" onclick="this.classList.toggle(\'expanded\')">'+escapeHtml(entry.detail)+'</div>':'')+
       '<div class="list-item-time">'+relTime(entry.timestamp)+' &middot; '+escapeHtml(entry.source||'')+ ' ' + stIcon + '</div>'+
     '</div>'
   });
@@ -1628,7 +1645,7 @@ function loadTasks(){
   var d=rawData&&rawData.scheduledJobs;
   if(!d||!d.jobs){
     var el=document.getElementById('tasksList');
-    if(el)el.innerHTML='<div class="task-empty">No task data available. Wait for next data refresh.</div>';
+    if(el)el.innerHTML='<div class="task-empty"><div class="hac-spinner"></div>Loading scheduled tasks...</div>';
     return;
   }
   _tasksData=d;
