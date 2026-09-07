@@ -635,7 +635,7 @@ var NL=String.fromCharCode(10);
 
 // ===== LOCAL HEALTH CHECK =====
 function checkLocalHealth(){
-  fetch('http://127.0.0.1:9293/health?t='+Date.now(),{cache:'no-store'})
+  fetch('http://localhost:9293/health?t='+Date.now(),{cache:'no-store'})
     .then(function(r){if(!r.ok)throw new Error('bad');return r.json()})
     .then(function(d){localHealthOk=true;checkStaleness()})
     .catch(function(){localHealthOk=false;checkStaleness()});
@@ -1247,7 +1247,7 @@ function doAutologin(){
   var btn=document.querySelector('[onclick*="doAutologin"]');
   if(btn){btn.textContent='\u23F3 Sending...';btn.disabled=true}
   // Try direct localhost first (instant, works on same WiFi/PC)
-  fetch('http://127.0.0.1:9293/autologin?t='+Date.now(),{cache:'no-store',method:'GET',signal:AbortSignal.timeout(5000)})
+  fetch('http://localhost:9293/autologin?t='+Date.now(),{cache:'no-store',method:'GET',signal:AbortSignal.timeout(5000)})
     .then(function(r){if(!r.ok)throw new Error('bad');return r.json()})
     .then(function(d){
       if(btn){btn.textContent='\uD83D\uDD12 Auto-Login';btn.disabled=false}
