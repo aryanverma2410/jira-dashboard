@@ -813,8 +813,10 @@ function renderFilters(data){
   ts.forEach(function(t){if(t.issuetype){counts[t.issuetype]=(counts[t.issuetype]||0)+1}});
   var types={All:true};
   ts.forEach(function(t){if(t.issuetype)types[t.issuetype]=true});
+  var circled=['⓪','①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫','⑬','⑭','⑮','⑯','⑰','⑱','⑲','⑳'];
+  function numEmoji(n){return n>=0&&n<=20?circled[n]:'('+n+')'}
   var h='';
-  Object.keys(types).forEach(function(tk){var a=(currentFilter===tk)?' active':'';var cnt=counts[tk]||0;h+='<div class="filter-chip'+a+'" data-filter="'+escapeHtml(tk)+'">'+escapeHtml(tk)+' ('+cnt+')</div>'});
+  Object.keys(types).forEach(function(tk){var a=(currentFilter===tk)?' active':'';var cnt=counts[tk]||0;h+='<div class="filter-chip'+a+'" data-filter="'+escapeHtml(tk)+'">'+escapeHtml(tk)+' '+numEmoji(cnt)+'</div>'});
   row.innerHTML=h
 }
 function setFilter(f){currentFilter=f;if(rawData){renderFilters(rawData);renderTickets(rawData,[])}}
@@ -1169,7 +1171,20 @@ function createIssue(title,body,cb){
     method:'POST',
     headers:{'Authorization':'Bearer '+GH_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
     body:JSON.stringify({title:title,body:body||'Sent from dashboard'})
-  }).then(function(r){return r.json()}).then(function(d){if(cb)cb(null,d)}).catch(function(e){if(cb)cb(e,null)})
+  }).then(function(r){
+    if(!r.ok){
+      r.text().then(function(txt){
+        var msg='GitHub API '+r.status+': '+txt.substring(0,200);
+        console.error('createIssue error:',msg);
+        if(cb)cb(new Error(msg),null)
+      })
+    } else {
+      r.json().then(function(d){if(cb)cb(null,d)})
+    }
+  }).catch(function(e){
+    console.error('createIssue fetch error:',e);
+    if(cb)cb(e,null)
+  })
 }
 
 function submitComment(key){
@@ -1227,22 +1242,37 @@ function assignToMe(key){
   })
 }
 
-// ===== AUTOLOGIN (via GitHub Issue -> bridge -> aipro) =====
+// ===== AUTOLOGIN (try direct localhost first, fall back to GitHub Issue) =====
 function doAutologin(){
   var btn=document.querySelector('[onclick*="doAutologin"]');
   if(btn){btn.textContent='\u23F3 Sending...';btn.disabled=true}
-  createIssue('AUTOLOGIN: Run Samsung Auto Login',
-    'Run the Samsung Auto Login script immediately.\n'+
-    'Execute one of these commands (pick whichever works):\n'+
-    '1. Run: python "C:\\Users\\aryan.v1\\.gemini\\tmp\\bin\\samsung-autologin-bundle\\samsung_auto_login.py"\n'+
-    '2. Or trigger the Windows Scheduled Task: schtasks /Run /TN "SamsungAutoLogin"\n'+
-    '3. Or run: powershell -NoProfile -ExecutionPolicy Bypass -File "C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\startup_edge.ps1"\n'+
-    'This triggers autologin on the desktop. Just run the command, no investigation needed.\n'+
-    'Sent from dashboard',
-    function(e,d){
+  // Try direct localhost first (instant, works on same WiFi/PC)
+  fetch('http://127.0.0.1:9293/autologin?t='+Date.now(),{cache:'no-store',method:'GET',signal:AbortSignal.timeout(5000)})
+    .then(function(r){if(!r.ok)throw new Error('bad');return r.json()})
+    .then(function(d){
       if(btn){btn.textContent='\uD83D\uDD12 Auto-Login';btn.disabled=false}
-      if(e||!d||!d.number){showToast('Failed to send autologin command','error');return}
-      showToast('Autologin triggered (Issue #'+d.number+'). Check desktop in ~30s.','success')
+      if(d.ok){showToast('Autologin executed instantly!','success')}
+      else{showToast('Autologin error: '+(d.error||'unknown'),'error')}
+    })
+    .catch(function(){
+      // Localhost failed — not on same WiFi. Fall back to GitHub Issue
+      createIssue('AUTOLOGIN: Run Samsung Auto Login',
+        'Run the Samsung Auto Login script immediately.\n'+
+        'Execute one of these commands (pick whichever works):\n'+
+        '1. Run: python "C:\\Users\\aryan.v1\\.gemini\\tmp\\bin\\samsung-autologin-bundle\\samsung_auto_login.py"\n'+
+        '2. Or trigger the Windows Scheduled Task: schtasks /Run /TN "SamsungAutoLogin"\n'+
+        '3. Or run: powershell -NoProfile -ExecutionPolicy Bypass -File "C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\startup_edge.ps1"\n'+
+        'This triggers autologin on the desktop. Just run the command, no investigation needed.\n'+
+        'Sent from dashboard',
+        function(e,d){
+          if(btn){btn.textContent='\uD83D\uDD12 Auto-Login';btn.disabled=false}
+          if(e||!d||!d.number){
+            console.error('Autologin createIssue error:',e);
+            showToast('Autologin failed — not on same WiFi and GitHub Issue creation failed','error');
+            return
+          }
+          showToast('Autologin sent via bridge (Issue #'+d.number+'). Check desktop in ~30s.','success')
+        })
     })
 }
 
