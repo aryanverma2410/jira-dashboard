@@ -174,15 +174,9 @@ function renderSummary(data) {
       html += '<span class="tk-summary">' + esc(t.summary) + '</span>';
       if (t.worklogTime) html += '<span class="tk-wl">' + esc(t.worklogTime) + '</span>';
       html += '</div>';
-      // Done line
-      if (t.actions && t.actions.length > 0) {
-        html += '<div class="tk-line"><span class="tk-label done">Done</span><span class="tk-text">' + esc(t.actions.join(', ')) + '</span></div>';
-      }
-      // RCA line
-      if (t.rca) {
-        html += '<div class="tk-line"><span class="tk-label rca">RCA</span><span class="tk-text muted">' + esc(t.rca) + '</span></div>';
-      } else {
-        html += '<div class="tk-line"><span class="tk-label rca">RCA</span><span class="tk-text muted">No RCA on file.</span></div>';
+      // Single summary line
+      if (t.oneLine) {
+        html += '<div class="tk-line"><span class="tk-label done">Summary</span><span class="tk-text">' + esc(t.oneLine) + '</span></div>';
       }
       html += '</div>';
     });
