@@ -1,46 +1,35 @@
 {
-  "generatedAt": "2026-09-07T10:52:56.109Z",
-  "totalTickets": 8,
+  "generatedAt": "2026-09-07T10:53:34.427Z",
+  "totalTickets": 7,
   "tickets": [
     {
-      "key": "AEME-6500",
-      "summary": "Stuck Order || 21-Aug",
-      "status": "QA Server Review",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-07T19:47:57.000+0900",
-      "created": "2026-08-21T16:09:34.000+0900",
-      "description": "Hi Team\n\n \n\nOrder is being stuck in Hybris. Please check that if it is due to stock absence, please add stock and push the order into NERP\n|AE260820-64424013|WAITING_FOR_SEND_FINANCIAL|20/08/2026|\n\n \n\nSC+ activation fails\n\nPlease find the orders below that are stuck in SC+. Kindly check and fix the ",
-      "commentsCount": 7,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-07T19:47:45.365+0900",
-          "snippet": "Hi ~@email ,\n\nSMC UPDATED for the order.\n\n!image-2026-09-07-16-17-31-101.png|width=431,height=256!\n\nRegards\n\nAryan"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-03T18:42:20.380+0900",
-          "snippet": "Hi ~@email ,\n\nPC is waiting for approval for the same.\n\nRegards\n\nAryan"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi ~@email ,\n\nSMC UPDATED for the order.\n\n!image-2026-09-07-16-17-31-101.png|width=431,height=256!\n\nRegards\n\nAryan",
-      "lastCommentDate": "2026-09-07T19:47:45.365+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6500",
+      "key": "PC-53689",
+      "summary": "Add Affiliate_Name and Multistore_VerificationCode columns to SA Sales Report",
+      "status": "To do",
+      "statusCategory": "To Do",
+      "priority": "Medium",
+      "project": "PROD Change",
+      "projectKey": "PC",
+      "issuetype": "Hybris Platform",
+      "updated": "2026-09-07T19:53:32.000+0900",
+      "created": "2026-09-07T19:15:42.000+0900",
+      "description": "Adding two new columns (affiliate_name, multistore_verificationcode) to the SA daily sales report cronjob (report-sa-tokoSalesReportJob-nonPII) as requested in SAME-3958.\n\nDelta:\n\n+ //NOTE ITGC_JIRA:PC-53689(SAME-3958)\n\n  // getColumns() — added two new columns:\n• 'Added_Services','Store_Name','Stor",
+      "commentsCount": 0,
+      "recentComments": [],
+      "lastCommentBy": "",
+      "lastCommentSnippet": "",
+      "lastCommentDate": "",
+      "url": "https://jira.secext.samsung.net/browse/PC-53689",
       "solution": {
         "status": "found",
-        "excerpt": "Stuck Order || 21-Aug\r\nGenerated: 2026-09-07T14:50:00+09:00\r\n\r\nHi Jaffar ,\r\n\r\nWe have verified the current DB state of all orders reported in this ticket. Below is the status and root cause for each order.\r\n\r\nAE260820-64424013: This order is now in COMPLETED status. The consignment (AE260820-64424013) is COMPLETED with tracking number 50960751402, shipped on Aug 21 and completed on Aug 22. The order process (order-process-v25-69) has SUCCEEDED. Payment was captured successfully (AED 1366.20). This order was previously stuck at WAITING_FOR_SEND_FINANCIAL due to stock absence. Stock was subsequently updated and the order progressed to completion. No further action is needed.\r\n\r\nAE260818-62761004: This order is in SHIPPING_REQUESTED status. The order has two consignments: the main consignment (AE260818-62761004) is in SHIPPING_REQUESTED, and the split consignment (AE260818-62761004_1) is COMPLETED with tracking 50960205074, shipped and completed on Aug 20. The order process (order-process-v25-69) is in RUNNING state, looping at waitForWarehouseSubprocessEnd and isProcessCompleted. The consignment process for the split consignment (AE260818-62761004_1) has SUCCEEDED.\r\n\r\nRegarding SC+, the External Service entries show: one SMC entry in CANCELLED status and one SMC entry in NEW status. The SMC service was created for consignment entry product SMC-MFRE-AE-MOB-50 (Samsung Care+ for the Galaxy Z Fold device SM-L715FZKAXSG). The CANCELLED entry is from the original consignment, and the NEW entry is from the split consignment where the SC+ service was re-created. The consignment process for the main consignment is in ERROR state.\r\n\r\nKibana logs for this order (18,784 events over 30 days) show the checkout, payment capture, and order processing all completed successfully. The SC+ external service invocation was processed via 'processExternalServicesAction' and 'processExternalServicesOnConditionAction' in the order process. The SMC entry moved to CANCELLED on the main consignment because the order was split (the product went to the _1 consignment which completed). However, the order process is stuck at waitForWarehouseSubprocessEnd because the main consignment (AE260818-62761004) is still in SHIPPING_REQUESTED and has not been shipped.\r\n\r\nThe root cause is that the main consignment remains in SHIPPING_REQUESTED because the warehouse (WC21-S701) has not confirmed shipment for this consignment. The split consignment has already shipped and completed, but the main consignment is still awaiting warehouse confirmation. The order process will remain in the waitForWarehouseSubprocessEnd loop until the main consignment is either shipped or cancelled.\r\n\r\nAE260819-63130115: This order is in SHIPPING_REQUESTED status. The order has two consignments: the main consignment (AE260819-63130115) is in SHIPPING_REQUESTED, and the split consignment (AE260819-63130115_1) is COMPLETED. The consignment process for the main consignment is in ERROR state. The order process is in RUNNING state, looping at waitForWarehouseSubprocessEnd.\r\n\r\nThe External Service entries show one SMC entry in CANCELLED and one SMC entry in UPDATE_ERROR. The SMC service product is SMC-MFRE-AE-MOB-45 (Samsung Care+ for Galaxy Z Fold SM-F976BZKPMEA). As previously communicated, the SMC activation failed during the device update call to the SMC server, leaving the ExternalService in UPDATE_ERROR. The consignment process is in ERROR due to this SMC failure.\r\n\r\nRemediation for this order is pending under PC-53305 (SMC re-registration, clear stale policy and re-register). PC-53305 is currently in \"To do\" status, awaiting approval.\r\n\r\nAE260819-63387054: This order is now in COMPLETED status. The order process has SUCCEEDED. The External Service entry shows STANDALONE_SMC with status UPDATED. Payment was captured successfully (AED 599.00). This order was remediated under PC-52918 (device model params updated on ExternalService and order process restarted). The order has reached completion. No further action is needed.\r\n\r\nAE260820-64120710: This order was stuck in ORDER_SPLIT status due to missing shipping address. After the shipping details were updated, the order moved to the next status. No further action is needed.\r\n\r\nSummary:\r\n- AE260820-64424013: COMPLETED. Resolved (stock updated).\r\n- AE260819-63387054: COMPLETED. Remediated via PC-52918.\r\n- AE260820-64120710: Resolved (shipping address updated).\r\n- AE260818-62761004: Stuck at SHIPPING_REQUESTED. Main consignment awaiting warehouse shipment confirmation. SC+ has CANCELLED + NEW entries.\r\n- AE260819-63130115: Stuck at SHIPPING_REQUESTED. SMC in UPDATE_ERROR. Remediation pending under PC-53305 (awaiting approval).\r\n\r\nThanks,\r\nAryan.",
+        "excerpt": "Add Affiliate_Name and Multistore_VerificationCode columns to SA Sales Report\r\nGenerated: 2026-09-07T19:30:00+09:00\r\n\r\nIssue:\r\nThe SA eStore daily sales report (cronjob report-sa-tokoSalesReportJob-Daily, also referred to as report-sa-tokoSalesReportJob-nonPII) was generating a 43-column report that did not include affiliate name or multistore verification code data. Parent ticket SAME-3958 requested these two additional columns be added so the report captures which affiliate drove each sale and which multistore verification code was used at checkout. This data is needed by the SA business team to track affiliate-driven sales performance and multistore verification compliance.\r\n\r\nRCA:\r\nThe SA Sales Report is a Groovy-based report job (type TokoGroovyBasedReportJob) that runs the SaSalesReport.groovy script, located in the sapreporting extension under resources/groovy/salesreport/. The script extends groovy.salesreport.SalesReport and uses SAP Reporting Boosters annotations (@ColumnMethod, @EntityMethod) to define report columns. The getColumns() method returns the ordered set of column names, and each column has a corresponding @ColumnMethod handler that populates the value per row.\r\n\r\nThe report was missing two columns because getColumns() did not include them and no @ColumnMethod handlers existed for them. The Order model already has native getters for both fields: order.getAffiliateName() and order.getVerificationCode(). These attributes are populated upstream during order placement when an affiliate referral or multistore verification occurs. No complex derivation logic is needed -- the Java-based TokoSalesReportServiceImpl.updateAffiliateName() method (which derives affiliate name from UserToMultiStoreLink.companyEmail using the ENABLE_AFFILIATE_FROM_EMAIL config) is used by non-Groovy report jobs for other regions, but the SA Groovy report can read the already-populated Order attribute directly.\r\n\r\nThe attached SaSalesReport.groovy script (25919 bytes) implements the solution by:\r\n1. Adding 'Affiliate_Name' and 'Multistore_VerificationCode' to the getColumns() Set, bringing the total from 43 to 45 columns\r\n2. Adding populateAffiliateName() with @ColumnMethod(name='Affiliate_Name', entity='Order') that sets report['Affiliate_Name'] = order.getAffiliateName()\r\n3. Adding populateMultistoreVerificationCode() with @ColumnMethod(name='Multistore_VerificationCode', entity='Order') that sets report['Multistore_VerificationCode'] = order.getVerificationCode()\r\n\r\nBoth handlers use entity='Order', meaning the OrderModel is passed directly to each handler. The Groovy script is loaded dynamically from a Script item in the Hybris database (code: toko-sa-groovy-tokoSalesReportJob-Daily), so no ImpEx reconfiguration of the cronjob is needed -- only the script content needs to be updated.\r\n\r\nPossible remediation:\r\nThe script SaSalesReport.groovy is already complete and attached to PC-53689. To deploy:\r\n1. Upload the updated SaSalesReport.groovy to the Hybris script repository (update the Script item with code toko-sa-groovy-tokoSalesReportJob-Daily in HAC or via ImpEx)\r\n2. No code build or deployment is required -- Groovy scripts are loaded dynamically at cronjob execution time\r\n3. Run the cronjob report-sa-tokoSalesReportJob-Daily manually to verify the two new columns appear in the output with correct data\r\n4. Verify that orders with affiliate referrals show non-null Affiliate_Name and orders placed through multistore show non-null Multistore_VerificationCode\r\n\r\nThe script is self-contained and requires no additional codebase changes. The Order type system already supports getAffiliateName() and getVerificationCode() as confirmed by the script's compilation and production usage.",
         "sections": {
-          "issue": "",
-          "rca": "Stuck Order || 21-Aug\r\nGenerated: 2026-09-07T14:50:00+09:00\r\n\r\nHi Jaffar ,\r\n\r\nWe have verified the current DB state of all orders reported in this ticket. Below is the status and root cause for each order.\r\n\r\nAE260820-64424013: This order is now in COMPLETED status. The consignment (AE260820-64424013) is COMPLETED with tracking number 50960751402, shipped on Aug 21 and completed on Aug 22. The order process (order-process-v25-69) has SUCCEEDED. Payment was captured successfully (AED 1366.20). This order was previously stuck at WAITING_FOR_SEND_FINANCIAL due to stock absence. Stock was subsequently updated and the order progressed to completion. No further action is needed.\r\n\r\nAE260818-62761004: This order is in SHIPPING_REQUESTED status. The order has two consignments: the main consignment (AE260818-62761004) is in SHIPPING_REQUESTED, and the split consignment (AE260818-62761004_1) is COMPLETED with tracking 50960205074, shipped and completed on Aug 20. The order process (order-process-v25-69) is in RUNNING state, looping at waitForWarehouseSubprocessEnd and isProcessCompleted. The consignment process for the split consignment (AE260818-62761004_1) has SUCCEEDED.\r\n\r\nRegarding SC+, the External Service entries show: one SMC entry in CANCELLED status and one SMC entry in NEW status. The SMC service was created for consignment entry product SMC-MFRE-AE-MOB-50 (Samsung Care+ for the Galaxy Z Fold device SM-L715FZKAXSG). The CANCELLED entry is from the original consignment, and the NEW entry is from the split consignment where the SC+ service was re-created. The consignment process for the main consignment is in ERROR state.\r\n\r\nKibana logs for this order (18,784 events over 30 days) show the checkout, payment capture, and order processing all completed successfully. The SC+ external service invocation was processed via 'processExternalServicesAction' and 'processExternalServicesOnConditionAction' in the order process. The SMC entry moved to CANCELLED on the main consignment because the order was split (the product went to the _1 consignment which completed). However, the order process is stuck at waitForWarehouseSubprocessEnd because the main consignment (AE260818-62761004) is still in SHIPPING_REQUESTED and has not been shipped.\r\n\r\nThe root cause is that the main consignment remains in SHIPPING_REQUESTED because the warehouse (WC21-S701) has not confirmed shipment for this consignment. The split consignment has already shipped and completed, but the main consignment is still awaiting warehouse confirmation. The order process will remain in the waitForWarehouseSubprocessEnd loop until the main consignment is either shipped or cancelled.\r\n\r\nAE260819-63130115: This order is in SHIPPING_REQUESTED status. The order has two consignments: the main consignment (AE260819-63130115) is in SHIPPING_REQUESTED, and the split consignment (AE260819-63130115_1) is COMPLETED. The consignment process for the main consignment is in ERROR state. The order process is in RUNNING state, looping at waitForWarehouseSubprocessEnd.\r\n\r\nThe External Service entries show one SMC entry in CANCELLED and one SMC entry in UPDATE_ERROR. The SMC service product is SMC-MFRE-AE-MOB-45 (Samsung Care+ for Galaxy Z Fold SM-F976BZKPMEA). As previously communicated, the SMC activation failed during the device update call to the SMC server, leaving the ExternalService in UPDATE_ERROR. The consignment process is in ERROR due to this SMC failure.\r\n\r\nRemediation for this order is pending under PC-53305 (SMC re-registration, clear stale policy and re-register). PC-53305 is currently in \"To do\" status, awaiting approval.\r\n\r\nAE260819-63387054: This order is now in COMPLETED status. The order process has SUCCEEDED. The External Service entry shows STANDALONE_SMC with status UPDATED. Payment was captured successfully (AED 599.00). This order was remediated under PC-52918 (device model params updated on ExternalService and order process restarted). The order has reached completion. No further action is needed.\r\n\r\nAE260820-64120710: This order was stuck in ORDER_SPLIT status due to missing shipping address. After the shipping details were updated, the order moved to the next status. No further action is needed.\r\n\r\nSummary:\r\n- AE260820-64424013: COMPLETED. Resolved (stock updated).\r\n- AE260819-63387054: COMPLETED. Remediated via PC-52918.\r\n- AE260820-64120710: Resolved (shipping address updated).\r\n- AE260818-62761004: Stuck at SHIPPING_REQUESTED. Main consignment awaiting warehouse shipment confirmation. SC+ has CANCELLED + NEW entries.\r\n- AE260819-63130115: Stuck at SHIPPING_REQUESTED. SMC in UPDATE_ERROR. Remediation pending under PC-53305 (awaiting approval).\r\n\r\nThanks,\r\nAryan.",
+          "issue": "The SA eStore daily sales report (cronjob report-sa-tokoSalesReportJob-Daily, also referred to as report-sa-tokoSalesReportJob-nonPII) was generating a 43-column report that did not include affiliate name or multistore verification code data. Parent ticket SAME-3958 requested these two additional columns be added so the report captures which affiliate drove each sale and which multistore verification code was used at checkout. This data is needed by the SA business team to track affiliate-driven sales performance and multistore verification compliance.",
+          "rca": "",
           "remediation": ""
         },
         "source": "RCA MD",
-        "foundAt": "2026-09-07T07:08:41.349Z"
+        "foundAt": "2026-09-07T10:24:29.030Z"
       }
     },
     {
@@ -71,36 +60,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-03T14:00:14.129Z"
-      }
-    },
-    {
-      "key": "PC-53689",
-      "summary": "Add Affiliate_Name and Multistore_VerificationCode columns to SA Sales Report",
-      "status": "To do",
-      "statusCategory": "To Do",
-      "priority": "Medium",
-      "project": "PROD Change",
-      "projectKey": "PC",
-      "issuetype": "Hybris Platform",
-      "updated": "2026-09-07T19:21:34.000+0900",
-      "created": "2026-09-07T19:15:42.000+0900",
-      "description": "Adding two new columns (affiliate_name, multistore_verificationcode) to the SA daily sales report cronjob (report-sa-tokoSalesReportJob-nonPII) as requested in SAME-3958.\n\nScript: ^SaSalesReport.groovy",
-      "commentsCount": 0,
-      "recentComments": [],
-      "lastCommentBy": "",
-      "lastCommentSnippet": "",
-      "lastCommentDate": "",
-      "url": "https://jira.secext.samsung.net/browse/PC-53689",
-      "solution": {
-        "status": "found",
-        "excerpt": "Add Affiliate_Name and Multistore_VerificationCode columns to SA Sales Report\r\nGenerated: 2026-09-07T19:30:00+09:00\r\n\r\nIssue:\r\nThe SA eStore daily sales report (cronjob report-sa-tokoSalesReportJob-Daily, also referred to as report-sa-tokoSalesReportJob-nonPII) was generating a 43-column report that did not include affiliate name or multistore verification code data. Parent ticket SAME-3958 requested these two additional columns be added so the report captures which affiliate drove each sale and which multistore verification code was used at checkout. This data is needed by the SA business team to track affiliate-driven sales performance and multistore verification compliance.\r\n\r\nRCA:\r\nThe SA Sales Report is a Groovy-based report job (type TokoGroovyBasedReportJob) that runs the SaSalesReport.groovy script, located in the sapreporting extension under resources/groovy/salesreport/. The script extends groovy.salesreport.SalesReport and uses SAP Reporting Boosters annotations (@ColumnMethod, @EntityMethod) to define report columns. The getColumns() method returns the ordered set of column names, and each column has a corresponding @ColumnMethod handler that populates the value per row.\r\n\r\nThe report was missing two columns because getColumns() did not include them and no @ColumnMethod handlers existed for them. The Order model already has native getters for both fields: order.getAffiliateName() and order.getVerificationCode(). These attributes are populated upstream during order placement when an affiliate referral or multistore verification occurs. No complex derivation logic is needed -- the Java-based TokoSalesReportServiceImpl.updateAffiliateName() method (which derives affiliate name from UserToMultiStoreLink.companyEmail using the ENABLE_AFFILIATE_FROM_EMAIL config) is used by non-Groovy report jobs for other regions, but the SA Groovy report can read the already-populated Order attribute directly.\r\n\r\nThe attached SaSalesReport.groovy script (25919 bytes) implements the solution by:\r\n1. Adding 'Affiliate_Name' and 'Multistore_VerificationCode' to the getColumns() Set, bringing the total from 43 to 45 columns\r\n2. Adding populateAffiliateName() with @ColumnMethod(name='Affiliate_Name', entity='Order') that sets report['Affiliate_Name'] = order.getAffiliateName()\r\n3. Adding populateMultistoreVerificationCode() with @ColumnMethod(name='Multistore_VerificationCode', entity='Order') that sets report['Multistore_VerificationCode'] = order.getVerificationCode()\r\n\r\nBoth handlers use entity='Order', meaning the OrderModel is passed directly to each handler. The Groovy script is loaded dynamically from a Script item in the Hybris database (code: toko-sa-groovy-tokoSalesReportJob-Daily), so no ImpEx reconfiguration of the cronjob is needed -- only the script content needs to be updated.\r\n\r\nPossible remediation:\r\nThe script SaSalesReport.groovy is already complete and attached to PC-53689. To deploy:\r\n1. Upload the updated SaSalesReport.groovy to the Hybris script repository (update the Script item with code toko-sa-groovy-tokoSalesReportJob-Daily in HAC or via ImpEx)\r\n2. No code build or deployment is required -- Groovy scripts are loaded dynamically at cronjob execution time\r\n3. Run the cronjob report-sa-tokoSalesReportJob-Daily manually to verify the two new columns appear in the output with correct data\r\n4. Verify that orders with affiliate referrals show non-null Affiliate_Name and orders placed through multistore show non-null Multistore_VerificationCode\r\n\r\nThe script is self-contained and requires no additional codebase changes. The Order type system already supports getAffiliateName() and getVerificationCode() as confirmed by the script's compilation and production usage.",
-        "sections": {
-          "issue": "The SA eStore daily sales report (cronjob report-sa-tokoSalesReportJob-Daily, also referred to as report-sa-tokoSalesReportJob-nonPII) was generating a 43-column report that did not include affiliate name or multistore verification code data. Parent ticket SAME-3958 requested these two additional columns be added so the report captures which affiliate drove each sale and which multistore verification code was used at checkout. This data is needed by the SA business team to track affiliate-driven sales performance and multistore verification compliance.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-07T10:24:29.030Z"
       }
     },
     {
@@ -321,7 +280,7 @@
       }
     ],
     "pid": 17144,
-    "uptime": 22495,
+    "uptime": 22533,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -333,7 +292,7 @@
       {
         "pid": 24068,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 22296,
+        "ageSeconds": 22334,
         "status": "running",
         "isChild": false,
         "taskSummary": "I want all the linked tickets to be listed down with their status along with each jira ticket sho...",
@@ -343,7 +302,7 @@
       {
         "pid": 1436,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 16000,
+        "ageSeconds": 16039,
         "status": "running",
         "isChild": false,
         "taskSummary": "remove the reusable label as its a cronjob not an order remediation script that we are goiing the...",
@@ -353,7 +312,7 @@
       {
         "pid": 24728,
         "cwd": "c:\\windows",
-        "ageSeconds": 15996,
+        "ageSeconds": 16034,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -363,7 +322,7 @@
       {
         "pid": 916,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 13638,
+        "ageSeconds": 13676,
         "status": "running",
         "isChild": false,
         "taskSummary": "I want all the linked tickets to be listed down with their status along with each jira ticket sho...",
@@ -373,7 +332,7 @@
       {
         "pid": 28640,
         "cwd": "unknown",
-        "ageSeconds": 13445,
+        "ageSeconds": 13483,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -383,7 +342,7 @@
       {
         "pid": 14316,
         "cwd": "unknown",
-        "ageSeconds": 8498,
+        "ageSeconds": 8536,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -393,7 +352,7 @@
       {
         "pid": 30076,
         "cwd": "unknown",
-        "ageSeconds": 7265,
+        "ageSeconds": 7303,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
