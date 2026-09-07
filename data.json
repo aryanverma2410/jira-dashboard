@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-07T12:51:52.386Z",
+  "generatedAt": "2026-09-07T12:52:29.839Z",
   "totalTickets": 6,
   "tickets": [
     {
@@ -277,9 +277,16 @@
     "online": true,
     "activeSessions": [],
     "stats": {
-      "totalProcessed": 57
+      "totalProcessed": 58
     },
     "recentActivity": [
+      {
+        "issueNum": 103,
+        "title": "Any open tickets I have?",
+        "received": "2026-09-07T12:52:23.124Z",
+        "responded": "",
+        "responseSnippet": ""
+      },
       {
         "issueNum": 102,
         "title": "Investigate ticket PC-53689",
@@ -307,20 +314,21 @@
         "received": "2026-09-07T05:27:02.654Z",
         "responded": "2026-09-07T05:51:02.173Z",
         "responseSnippet": "I'll investigate ticket AEME-6499. Let me activate the investigate workflow and fetch the ticket details.\nNow I need to fetch the ticket, check MCP availability, and prepare for investigation. Let me check for existing cache files, read MEMORY.md and Aryantone.md, and look at existing fetch scripts to understand the pattern.\nLock file already exists (likely from a previous interrupted attempt or auto-created by dashboard). No cache file exists - this is a fresh investigation. Let me fetch the ti"
-      },
-      {
-        "issueNum": 95,
-        "title": "Any findings on gmt-19732",
-        "received": "2026-09-03T20:26:36.513Z",
-        "responded": "2026-09-03T20:28:17.010Z",
-        "responseSnippet": "No cached data for GMT-19732. Let me fetch it from Jira now.\nHere are the findings on **GMT-19732**:\n\n**Summary:** SMU | Consignment stuck in SHIPPED — 19th August\n**Status:** Closed (Resolved: Done)\n**Project:** GMT — Global Monitoring\n**Reporter:** Mohamed Imran A | **Labels:** `c=platform_issue`, `gmt_triaged`, `llm`\n**Created:** 2026-08-19 | **Closed:** 2026-09-02\n\n**Timeline of findings:**\n\n1. Initially flagged ~2,068 consignments stuck in SHIPPED status as of 18 Aug 2026.\n\n2. Brent Mendoza"
       }
     ],
     "pid": 35920,
-    "uptime": 1939,
+    "uptime": 1979,
     "failures": 0,
-    "activeJobCount": 0,
-    "jobs": [],
+    "activeJobCount": 1,
+    "jobs": [
+      {
+        "issueNum": 103,
+        "issueTitle": "Any open tickets I have?",
+        "snippet": "Sent from dashboard",
+        "pid": 26424,
+        "elapsed": 4
+      }
+    ],
     "startTime": "2026-09-07T12:19:30.749Z",
     "version": "v3",
     "lastResponseAt": "2026-09-07T10:25:11.869Z",
@@ -329,7 +337,7 @@
       {
         "pid": 1436,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 23136,
+        "ageSeconds": 23174,
         "status": "running",
         "isChild": false,
         "taskSummary": "you have skipped from showing PC tickets as linked tickets. remove that entirely",
@@ -339,7 +347,7 @@
       {
         "pid": 916,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 20774,
+        "ageSeconds": 20811,
         "status": "running",
         "isChild": false,
         "taskSummary": "check logs of all the cronjobs to verify they ran correctly and check why 2 jobs errored",
@@ -349,7 +357,7 @@
       {
         "pid": 28640,
         "cwd": "c:\\windows",
-        "ageSeconds": 20581,
+        "ageSeconds": 20618,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -359,7 +367,7 @@
       {
         "pid": 35792,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 5109,
+        "ageSeconds": 5147,
         "status": "running",
         "isChild": false,
         "taskSummary": "you have skipped from showing PC tickets as linked tickets. remove that entirely",
@@ -369,7 +377,17 @@
       {
         "pid": 25896,
         "cwd": "unknown",
-        "ageSeconds": 1189,
+        "ageSeconds": 1227,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "aipro session",
+        "lastExchange": null,
+        "sessionId": null
+      },
+      {
+        "pid": 26760,
+        "cwd": "unknown",
+        "ageSeconds": 1,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -378,6 +396,15 @@
       }
     ],
     "activityLog": [
+      {
+        "id": "1788785544474-ziyfac",
+        "timestamp": "2026-09-07T12:52:24.474Z",
+        "type": "command",
+        "source": "aryanverma2410",
+        "title": "Any open tickets I have?",
+        "detail": "#103",
+        "status": "pending"
+      },
       {
         "id": "1788776711875-m0vs9i",
         "timestamp": "2026-09-07T10:25:11.875Z",
@@ -638,15 +665,6 @@
         "title": "Investigate ticket AEME-6282",
         "detail": "#81",
         "status": "pending"
-      },
-      {
-        "id": "1788442394824-2elq15",
-        "timestamp": "2026-09-03T13:33:14.824Z",
-        "type": "bridge-event",
-        "source": "dashboard",
-        "title": "WAKE UP: Restart dashboard server",
-        "detail": "Error restarting dashboard: spawnSync C:\\WINDOWS\\system32\\cmd.exe ETIMEDOUT",
-        "status": "success"
       }
     ],
     "sessionMeta": {
@@ -1428,10 +1446,54 @@
         ],
         "endTime": "2026-09-07T10:25:11.876Z",
         "lastOutput": "Let me check how previous fetch scripts worked and fix the PowerShell syntax:\nNow I see the pattern - they use a cookie bridge at 127.0.0.1:9292 and connect to jira.secext.samsung.net. Let me create the fetch script:\nGood. Ticket fetched. Now let me create the lock file, download the attachment, and investigate the codebase in parallel:\nBackslash escaping issue. Let me fix the download script and also search the codebase for the SA Sales Report:\nGood, attachment downloaded. Now let me read the f"
+      },
+      "103": {
+        "sessionId": "ce9f2056-d2c4-4b38-9a5b-82360ae59cef",
+        "issueNum": 103,
+        "title": "Any open tickets I have?",
+        "startTime": "2026-09-07T12:52:24.780Z",
+        "status": "thinking",
+        "commandHistory": [
+          {
+            "title": "Any open tickets I have?",
+            "time": "2026-09-07T12:52:24.780Z"
+          }
+        ]
       }
     }
   },
-  "mcps": [],
+  "mcps": [
+    {
+      "name": "Jira",
+      "status": "up",
+      "type": "process",
+      "dir": "mcp-jira"
+    },
+    {
+      "name": "Kibana",
+      "status": "up",
+      "type": "process",
+      "dir": "mcp-kibana"
+    },
+    {
+      "name": "HAC",
+      "status": "up",
+      "type": "process",
+      "dir": "mcp-hac"
+    },
+    {
+      "name": "Confluence",
+      "status": "down",
+      "type": "process",
+      "dir": "mcp-confluence"
+    },
+    {
+      "name": "Workflow",
+      "status": "up",
+      "type": "process",
+      "dir": "mcp-workflow"
+    }
+  ],
   "hacReport": {
     "generatedAt": "2026-09-07T04:34:31.519Z",
     "generatedAtLocal": "Sep 7, 2026, 10:04:31 AM",
