@@ -71,6 +71,14 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .status-badge.other{background:rgba(139,148,158,0.15);color:var(--text-dim)}
 .comment-badge{font-size:12px;color:var(--text-dim)}
 .last-comment-preview{font-size:12px;color:var(--text-dim);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-style:italic}
+.linked-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.linked-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;background:rgba(88,166,255,0.08);border:1px solid rgba(88,166,255,0.2);font-size:11px;text-decoration:none;color:var(--accent);transition:background 0.2s}
+.linked-chip:active{background:rgba(88,166,255,0.15)}
+.linked-chip .lc-key{font-weight:600;font-family:monospace;font-size:10px}
+.linked-chip .lc-status{font-size:9px;padding:1px 5px;border-radius:6px;color:var(--text-dim);background:rgba(139,148,158,0.15)}
+.linked-chip .lc-status.done{color:var(--success);background:rgba(63,185,80,0.15)}
+.linked-chip .lc-status.in-progress{color:var(--warning);background:rgba(210,153,34,0.15)}
+.linked-chip .lc-status.open{color:var(--accent);background:rgba(88,166,255,0.15)}
 .expanded-content{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
 .ticket-card.expanded .expanded-content{display:block}
 .ticket-description{font-size:13px;color:var(--text-dim);margin-bottom:12px;white-space:pre-wrap}
@@ -260,6 +268,13 @@ body.has-status-bar .scroll{padding-top:28px}
 .detail-solution .solution-section-body{max-height:none;overflow-y:visible}
 .detail-link{display:inline-block;margin-top:12px;font-size:12px;color:var(--accent);text-decoration:none}
 .detail-link:hover{text-decoration:underline}
+.detail-linked{display:flex;flex-direction:column;gap:8px}
+.detail-linked-item{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;border-left:3px solid rgba(88,166,255,0.3)}
+.detail-linked-top{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.detail-linked-key{font-family:monospace;font-size:12px;font-weight:600;color:var(--accent);text-decoration:none;white-space:nowrap}
+.detail-linked-relation{font-size:10px;padding:2px 6px;border-radius:6px;background:rgba(139,148,158,0.15);color:var(--text-dim);text-transform:capitalize;white-space:nowrap}
+.detail-linked-summary{font-size:12px;color:var(--text);margin-bottom:4px;line-height:1.4}
+.detail-linked-assignee{font-size:11px;color:var(--text-dim)}
 
 /* HAC Report View */
 .hac-report-container{max-width:800px;margin:0 auto;padding:8px 0}
@@ -867,6 +882,7 @@ function buildCard(t,exp,ch){
     '<div class="ticket-summary" data-field="summary">'+escapeHtml(t.summary)+'</div>'+
     '<div class="ticket-meta"><span class="priority-dot" style="background:'+pc+'"></span><span data-field="project">'+escapeHtml(t.project)+'</span><span>&middot;</span><span>'+escapeHtml(t.issuetype)+'</span><span>&middot;</span><span data-field="updated-rel">updated '+relTime(t.updated)+'</span><span class="comment-badge">&#128172; '+(t.commentsCount||0)+'</span></div>'+
     '<div class="last-comment-preview" data-field="last-comment">'+escapeHtml(lcp)+'</div>'+
+    (t.linkedTickets&&t.linkedTickets.length>0?'<div class="linked-chips" data-field="linked-chips">'+t.linkedTickets.map(function(lt){var lsc=statusClass(lt.status,lt.statusCategory);return '<a class="linked-chip" href="https://jira.secext.samsung.net/browse/'+encodeURIComponent(lt.key)+'" target="_blank" onclick="event.stopPropagation()"><span class="lc-key">'+escapeHtml(lt.key)+'</span><span class="lc-status '+lsc+'">'+escapeHtml(lt.status)+'</span></a>'}).join('')+'</div>':'')+
     '<div class="expanded-content">'+
       '<div class="ticket-description" data-field="desc">'+escapeHtml(t.description)+'</div>'+
       '<div data-field="comments">'+ch2+'</div>'+
@@ -898,6 +914,16 @@ function updateCard(card,t,ch){
   if(expandedTickets.has(t.key)&&t.recentComments){var cc=card.querySelector('[data-field="comments"]');if(cc){var hh='';t.recentComments.forEach(function(c){hh+='<div class="comment-item"><span class="comment-author">'+escapeHtml(c.author)+'</span><span class="comment-date">'+relTime(c.date)+'</span><div class="comment-snippet">'+escapeHtml(c.snippet)+'</div></div>'});cc.innerHTML=hh}var de=card.querySelector('[data-field="desc"]');if(de)de.textContent=t.description||''}
   // Update solution section
   var solEl=card.querySelector('[data-field="solution"]');if(solEl)solEl.innerHTML=buildSolutionHtml(t.solution);
+  // Update linked chips
+  var lcEl=card.querySelector('[data-field="linked-chips"]');
+  var hasLinked=t.linkedTickets&&t.linkedTickets.length>0;
+  if(hasLinked){
+    var chipsHtml=t.linkedTickets.map(function(lt){var lsc=statusClass(lt.status,lt.statusCategory);return '<a class="linked-chip" href="https://jira.secext.samsung.net/browse/'+encodeURIComponent(lt.key)+'" target="_blank" onclick="event.stopPropagation()"><span class="lc-key">'+escapeHtml(lt.key)+'</span><span class="lc-status '+lsc+'">'+escapeHtml(lt.status)+'</span></a>'}).join('');
+    if(lcEl){lcEl.innerHTML=chipsHtml}else{
+      var lcDiv=document.createElement('div');lcDiv.className='linked-chips';lcDiv.setAttribute('data-field','linked-chips');lcDiv.innerHTML=chipsHtml;
+      var lcp=card.querySelector('[data-field="last-comment"]');if(lcp)lcp.parentNode.insertBefore(lcDiv,lcp.nextSibling)
+    }
+  } else if(lcEl){lcEl.remove()}
 }
 
 // ===== TICKET DETAIL PAGE =====
@@ -937,6 +963,23 @@ function openTicketDetail(key){
     html+='<div class="detail-section"><div class="detail-section-title">Comments ('+t.commentsCount+')</div><div class="detail-comments">';
     t.recentComments.forEach(function(c){
       html+='<div class="detail-comment"><div><span class="detail-comment-author">'+escapeHtml(c.author)+'</span><span class="detail-comment-date">'+relTime(c.date)+'</span></div><div class="detail-comment-body">'+escapeHtml(c.body||c.snippet||'')+'</div></div>';
+    });
+    html+='</div></div>';
+  }
+  // Linked Tickets
+  if(t.linkedTickets&&t.linkedTickets.length>0){
+    html+='<div class="detail-section"><div class="detail-section-title">Linked Tickets ('+t.linkedTickets.length+')</div><div class="detail-linked">';
+    t.linkedTickets.forEach(function(lt){
+      var lsc=statusClass(lt.status,lt.statusCategory);
+      html+='<div class="detail-linked-item">'+
+        '<div class="detail-linked-top">'+
+          '<a href="https://jira.secext.samsung.net/browse/'+encodeURIComponent(lt.key)+'" target="_blank" class="detail-linked-key">'+escapeHtml(lt.key)+'</a>'+
+          '<span class="status-badge '+lsc+'">'+escapeHtml(lt.status)+'</span>'+
+          '<span class="detail-linked-relation">'+escapeHtml(lt.relation)+'</span>'+
+        '</div>'+
+        '<div class="detail-linked-summary">'+escapeHtml(lt.summary)+'</div>'+
+        '<div class="detail-linked-assignee">Assigned: '+escapeHtml(lt.assignee)+'</div>'+
+      '</div>';
     });
     html+='</div></div>';
   }
