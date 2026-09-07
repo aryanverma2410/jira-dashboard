@@ -49,8 +49,10 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .search-input{width:100%;padding:10px 14px;border-radius:var(--radius);background:var(--card);backdrop-filter:var(--blur);border:1px solid var(--border);color:var(--text);font-size:14px;outline:none;margin-bottom:10px}
 .search-input:focus{border-color:var(--accent)}
 .filter-row{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
-.filter-chip{padding:5px 12px;border-radius:16px;background:var(--card);border:1px solid var(--border);font-size:12px;color:var(--text-dim);white-space:nowrap;cursor:pointer;flex-shrink:0;transition:all 0.2s}
+.filter-chip{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:16px;background:var(--card);border:1px solid var(--border);font-size:12px;color:var(--text-dim);white-space:nowrap;cursor:pointer;flex-shrink:0;transition:all 0.2s}
 .filter-chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.filter-chip .filter-count{font-weight:700;color:var(--accent);font-size:13px}
+.filter-chip.active .filter-count{color:#fff}
 
 /* Ticket Cards */
 .ticket-card{background:var(--card);backdrop-filter:var(--blur);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin:0 16px 10px;cursor:pointer;transition:border-color 0.3s;position:relative;overflow:hidden}
@@ -629,17 +631,8 @@ var searchTerm='';
 var lastFetchOk=false;
 var lastFetchTime=null;
 var dataGeneratedAt=null;
-var localHealthOk=null; // null=checking, true=server up, false=server down
 var STALE_THRESHOLD=90; // seconds — data older than this is stale (3 missed 30s polls)
 var NL=String.fromCharCode(10);
-
-// ===== LOCAL HEALTH CHECK =====
-function checkLocalHealth(){
-  fetch('http://localhost:9293/health?t='+Date.now(),{cache:'no-store'})
-    .then(function(r){if(!r.ok)throw new Error('bad');return r.json()})
-    .then(function(d){localHealthOk=true;checkStaleness()})
-    .catch(function(){localHealthOk=false;checkStaleness()});
-}
 
 // ===== STALENESS DETECTION =====
 function checkStaleness(){
@@ -657,38 +650,18 @@ function checkStaleness(){
   var ageSec=Math.floor((Date.now()-new Date(dataGeneratedAt).getTime())/1000);
   if(ageSec<0)ageSec=0;
   if(!lastFetchOk){
-    // GitHub fetch failed entirely
-    if(localHealthOk){
-      // Server is up but GitHub is unreachable — data might be stale
-      bar.className='status-bar show stale';
-      txt.textContent='JIRA ISSUE — showing data from '+relTime(dataGeneratedAt)+' (server up, GitHub stale)';
-      document.body.classList.add('has-status-bar');
-      if(wb)wb.style.display='none';
-    } else {
-      // Both GitHub and server unreachable — truly offline
-      bar.className='status-bar show stale';
-      txt.textContent='OFFLINE — showing data from '+relTime(dataGeneratedAt);
-      document.body.classList.add('has-status-bar');
-      if(wb)wb.style.display='inline-block';
-    }
-    updateRefreshTime();
+    // GitHub fetch failed entirely — truly offline
+    bar.className='status-bar show stale';
+    txt.textContent='OFFLINE — showing data from '+relTime(dataGeneratedAt);
+    document.body.classList.add('has-status-bar');
+    if(wb)wb.style.display='inline-block';
   } else if(ageSec>STALE_THRESHOLD){
-    // Fetch succeeded but data is old
-    if(localHealthOk){
-      // Server is up — Jira is down, not the server
-      bar.className='status-bar show stale';
-      var ageStr=ageSec<3600?Math.floor(ageSec/60)+'m':Math.floor(ageSec/3600)+'h';
-      txt.textContent='JIRA DOWN — data is '+ageStr+' old (server up, autologin available)';
-      document.body.classList.add('has-status-bar');
-      if(wb)wb.style.display='none';
-    } else {
-      // Server is also down
-      bar.className='status-bar show stale';
-      var ageStr2=ageSec<3600?Math.floor(ageSec/60)+'m':Math.floor(ageSec/3600)+'h';
-      txt.textContent='SERVER DOWN — data is '+ageStr2+' old';
-      document.body.classList.add('has-status-bar');
-      if(wb)wb.style.display='inline-block';
-    }
+    // Fetch succeeded but data is old — Jira is likely down
+    bar.className='status-bar show stale';
+    var ageStr=ageSec<3600?Math.floor(ageSec/60)+'m':Math.floor(ageSec/3600)+'h';
+    txt.textContent='JIRA DOWN — data is '+ageStr+' old';
+    document.body.classList.add('has-status-bar');
+    if(wb)wb.style.display='none';
   } else {
     // Fresh data — everything fine, hide the status bar entirely
     bar.className='status-bar';
@@ -813,10 +786,8 @@ function renderFilters(data){
   ts.forEach(function(t){if(t.issuetype){counts[t.issuetype]=(counts[t.issuetype]||0)+1}});
   var types={All:true};
   ts.forEach(function(t){if(t.issuetype)types[t.issuetype]=true});
-  var circled=['⓪','①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫','⑬','⑭','⑮','⑯','⑰','⑱','⑲','⑳'];
-  function numEmoji(n){return n>=0&&n<=20?circled[n]:'('+n+')'}
   var h='';
-  Object.keys(types).forEach(function(tk){var a=(currentFilter===tk)?' active':'';var cnt=counts[tk]||0;h+='<div class="filter-chip'+a+'" data-filter="'+escapeHtml(tk)+'">'+escapeHtml(tk)+' '+numEmoji(cnt)+'</div>'});
+  Object.keys(types).forEach(function(tk){var a=(currentFilter===tk)?' active':'';var cnt=counts[tk]||0;h+='<div class="filter-chip'+a+'" data-filter="'+escapeHtml(tk)+'">'+escapeHtml(tk)+' <span class="filter-count">'+cnt+'</span></div>'});
   row.innerHTML=h
 }
 function setFilter(f){currentFilter=f;if(rawData){renderFilters(rawData);renderTickets(rawData,[])}}
@@ -1242,21 +1213,11 @@ function assignToMe(key){
   })
 }
 
-// ===== AUTOLOGIN (try direct localhost first, fall back to GitHub Issue) =====
+// ===== AUTOLOGIN (via GitHub Issue — bridge picks up and runs on desktop) =====
 function doAutologin(){
   var btn=document.querySelector('[onclick*="doAutologin"]');
   if(btn){btn.textContent='\u23F3 Sending...';btn.disabled=true}
-  // Try direct localhost first (instant, works on same WiFi/PC)
-  fetch('http://localhost:9293/autologin?t='+Date.now(),{cache:'no-store',method:'GET',signal:AbortSignal.timeout(5000)})
-    .then(function(r){if(!r.ok)throw new Error('bad');return r.json()})
-    .then(function(d){
-      if(btn){btn.textContent='\uD83D\uDD12 Auto-Login';btn.disabled=false}
-      if(d.ok){showToast('Autologin executed instantly!','success')}
-      else{showToast('Autologin error: '+(d.error||'unknown'),'error')}
-    })
-    .catch(function(){
-      // Localhost failed — not on same WiFi. Fall back to GitHub Issue
-      createIssue('AUTOLOGIN: Run Samsung Auto Login',
+  createIssue('AUTOLOGIN: Run Samsung Auto Login',
         'Run the Samsung Auto Login script immediately.\n'+
         'Execute one of these commands (pick whichever works):\n'+
         '1. Run: python "C:\\Users\\aryan.v1\\.gemini\\tmp\\bin\\samsung-autologin-bundle\\samsung_auto_login.py"\n'+
@@ -1268,12 +1229,11 @@ function doAutologin(){
           if(btn){btn.textContent='\uD83D\uDD12 Auto-Login';btn.disabled=false}
           if(e||!d||!d.number){
             console.error('Autologin createIssue error:',e);
-            showToast('Autologin failed — not on same WiFi and GitHub Issue creation failed','error');
+            showToast('Autologin failed — '+((e&&e.message)?e.message:'GitHub Issue creation failed'),'error');
             return
           }
           showToast('Autologin sent via bridge (Issue #'+d.number+'). Check desktop in ~30s.','success')
         })
-    })
 }
 
 function investigateTicket(key){
@@ -1501,9 +1461,7 @@ document.getElementById('searchInput').addEventListener('input',function(e){sear
 
 // ===== INIT =====
 fetchData();
-checkLocalHealth();
 setInterval(fetchData,10000);
-setInterval(checkLocalHealth,10000);
 setInterval(updateRefreshTime,5000);
 setInterval(checkStaleness,5000);
 setInterval(updateRelativeTimes,30000);
