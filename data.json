@@ -1,48 +1,7 @@
 {
-  "generatedAt": "2026-09-07T11:07:31.755Z",
-  "totalTickets": 7,
+  "generatedAt": "2026-09-07T11:08:08.625Z",
+  "totalTickets": 6,
   "tickets": [
-    {
-      "key": "TKME-2308",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Turkey Maintenance & Enhancements",
-      "projectKey": "TKME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-07T20:07:20.000+0900",
-      "created": "2026-09-01T16:57:03.000+0900",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|TR260831-72955234|2026/08/31|WAITING_FOR_SEND_FINANCIAL|\n|TR260830-71999966|2026/08/30|WAITING_FOR_FINANCIAL|\n|TR260829-71694545|2026/08/29|CANCELLED|\n|TR260829-71455203|",
-      "commentsCount": 3,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-07T20:07:20.099+0900",
-          "snippet": "Hi ~@email ,\n\nCould you please confirm if any remediation is required for these?\nIf No, then we can close the ticket.\n\nRegards\n\nAryan"
-        },
-        {
-          "author": "Rajeshbabu Yatirajula",
-          "date": "2026-09-04T16:37:13.551+0900",
-          "snippet": "Hi ~@email \n # I/O error : It's a known issue with NERP and the fix is not yet identified. We've an auto-heal job which re-triggers these I/O error orders.\n # This errors occurs when there is a lead already created, recently we'd few issue with GetMobil and we're working with them.\n # Refund failure"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi ~@email ,\n\nCould you please confirm if any remediation is required for these?\nIf No, then we can close the ticket.\n\nRegards\n\nAryan",
-      "lastCommentDate": "2026-09-07T20:07:20.099+0900",
-      "url": "https://jira.secext.samsung.net/browse/TKME-2308",
-      "solution": {
-        "status": "found",
-        "excerpt": "I'll activate the investigate skill to handle the TKME-2308 investigation workflow.\nNow let me read the past learnings and check if a lock file already exists, and read the Aryantone style guide.\nLet me read the Aryantone style guide and an existing fetch script to understand the pattern.\nGood. A lock file exists but no RCA MD file yet. Let me create the fetch script for TKME-2308 and run it to get the ticket details.\nExcellent. I have the ticket details. This is a healthcheck ticket with 17 stuck orders in the TR (Turkey) region. The ticket already has a detailed comment from Aryan categorizing the issues. Now I need to verify the DB state for these orders and check Kibana logs. Let me launch parallel investigations.\n\nFirst, let me update the lock file with the issue number, then launch the parallel fan-out investigation.\nGood. I have the ticket details. This is a healthcheck ticket with 17 stuck TR-region orders across 5 categories. The ticket already has a detailed comment from Aryan categorizing the issues. Per LEARNING-1, I must verify DB state before writing the RCA. Let me launch parallel investigations - DB state verification, Kibana logs, and REUSABLE PC ticket search.\nGood. I have the ticket details. This is a healthcheck with 17 stuck TR-region orders. The ticket already has a detailed comment from Aryan categorizing the issues. Per LEARNING-1, I must verify DB state before writing the RCA. Let me check what HAC scripts are available and run DB verification.\nThe ticket has 17 TR-region orders across 5 categories, and the comment already has a detailed analysis. Per LEARNING-1, I must verify DB state before finalizing the RCA. Let me launch parallel sub-agents for DB verification, Kibana logs, codebase trace, and REUSABLE PC ticket search.\nSub-agent D returned DB state verification. Sub-agent E failed. Let me run the REUSABLE PC ticket search myself and also search for the process retrigger script pattern from the previous TKME-2302 investigation.\nGood. I have all the data I need. Let me now synthesize all findings and write the RCA. Here's what I have:\n\n1. **Ticket details**: 17 TR-region stuck orders, 5 categories, already has a detailed comment from Aryan\n2. **DB state verification**: 5 orders already fully resolved (CANCELLED), 4 WAITING_FOR_FINANCIAL with process ERROR, 2 PAYMENT_CAPTURED with process ERROR (GetMobil), 2 REFUND_FAILED, 3 other stuck states, 1 active returns\n3. **REUSABLE PC tickets**: PC-52678 exists for SC+ remediation (not applicable here). No REUSABLE PC tickets specifically for FI retrigger or refund retrigger by aryan.v1.\n\nLet me now write the RCA and save it.\nNow delete the lock file to signal RCA completion.\nInvestigation complete for TKME-2308. RCA saved to `ticket-rca/TKME-2308.md` and lock file deleted.\n\nSummary: 17 TR-region stuck orders investigated via HAC DB verification. 5 orders already resolved (CANCELLED). Remaining 12 orders across 5 root causes:\n\n- **5 orders** (FI connection errors): WAITING_FOR_FINANCIAL/WAITING_FOR_SEND_FINANCIAL, process ERROR. Transient GERP connection resets/timeouts. Need process retrigger after confirming FI endpoint.\n- **2 orders** (GetMobil NPE): PAYMENT_CAPTURED, process ERROR. GetMobil returned null, NPE on getLead_id(). Need retrigger after confirming GetMobil endpoint.\n- **2 orders** (Refund failures): REFUND_FAILED. Payment gateway rejected follow-on refund. Need manual refund retry after gateway investigation.\n- **1 order** (ORDER_SPLIT): Consignments READY but not dispatched. WMS team attention needed.\n- **1 order** (COMPLETED with failed subprocesses): Main order done, consignment subprocesses FAILED. WMS team to release blocks.\n- **1 order** (PARTIAL_RETURN_SHIPPING_PREPARATION): No shipping date set, 5 return processes RUNNING. Logistics/WMS to set shipping date.\n\nNo reusable PC ticket exists for FI retrigger or refund retrigger. PC-52678 only covers SC+ remediation. A new PC ticket would be needed if scripting is approved.",
-        "sections": {
-          "issue": "",
-          "rca": "I'll activate the investigate skill to handle the TKME-2308 investigation workflow.\nNow let me read the past learnings and check if a lock file already exists, and read the Aryantone style guide.\nLet me read the Aryantone style guide and an existing fetch script to understand the pattern.\nGood. A lock file exists but no RCA MD file yet. Let me create the fetch script for TKME-2308 and run it to get the ticket details.\nExcellent. I have the ticket details. This is a healthcheck ticket with 17 stuck orders in the TR (Turkey) region. The ticket already has a detailed comment from Aryan categorizing the issues. Now I need to verify the DB state for these orders and check Kibana logs. Let me launch parallel investigations.\n\nFirst, let me update the lock file with the issue number, then launch the parallel fan-out investigation.\nGood. I have the ticket details. This is a healthcheck ticket with 17 stuck TR-region orders across 5 categories. The ticket already has a detailed comment from Aryan categorizing the issues. Per LEARNING-1, I must verify DB state before writing the RCA. Let me launch parallel investigations - DB state verification, Kibana logs, and REUSABLE PC ticket search.\nGood. I have the ticket details. This is a healthcheck with 17 stuck TR-region orders. The ticket already has a detailed comment from Aryan categorizing the issues. Per LEARNING-1, I must verify DB state before writing the RCA. Let me check what HAC scripts are available and run DB verification.\nThe ticket has 17 TR-region orders across 5 categories, and the comment already has a detailed analysis. Per LEARNING-1, I must verify DB state before finalizing the RCA. Let me launch parallel sub-agents for DB verification, Kibana logs, codebase trace, and REUSABLE PC ticket search.\nSub-agent D returned DB state verification. Sub-agent E failed. Let me run the REUSABLE PC ticket search myself and also search for the process retrigger script pattern from the previous TKME-2302 investigation.\nGood. I have all the data I need. Let me now synthesize all findings and write the RCA. Here's what I have:\n\n1. **Ticket details**: 17 TR-region stuck orders, 5 categories, already has a detailed comment from Aryan\n2. **DB state verification**: 5 orders already fully resolved (CANCELLED), 4 WAITING_FOR_FINANCIAL with process ERROR, 2 PAYMENT_CAPTURED with process ERROR (GetMobil), 2 REFUND_FAILED, 3 other stuck states, 1 active returns\n3. **REUSABLE PC tickets**: PC-52678 exists for SC+ remediation (not applicable here). No REUSABLE PC tickets specifically for FI retrigger or refund retrigger by aryan.v1.\n\nLet me now write the RCA and save it.\nNow delete the lock file to signal RCA completion.\nInvestigation complete for TKME-2308. RCA saved to `ticket-rca/TKME-2308.md` and lock file deleted.\n\nSummary: 17 TR-region stuck orders investigated via HAC DB verification. 5 orders already resolved (CANCELLED). Remaining 12 orders across 5 root causes:\n\n- **5 orders** (FI connection errors): WAITING_FOR_FINANCIAL/WAITING_FOR_SEND_FINANCIAL, process ERROR. Transient GERP connection resets/timeouts. Need process retrigger after confirming FI endpoint.\n- **2 orders** (GetMobil NPE): PAYMENT_CAPTURED, process ERROR. GetMobil returned null, NPE on getLead_id(). Need retrigger after confirming GetMobil endpoint.\n- **2 orders** (Refund failures): REFUND_FAILED. Payment gateway rejected follow-on refund. Need manual refund retry after gateway investigation.\n- **1 order** (ORDER_SPLIT): Consignments READY but not dispatched. WMS team attention needed.\n- **1 order** (COMPLETED with failed subprocesses): Main order done, consignment subprocesses FAILED. WMS team to release blocks.\n- **1 order** (PARTIAL_RETURN_SHIPPING_PREPARATION): No shipping date set, 5 return processes RUNNING. Logistics/WMS to set shipping date.\n\nNo reusable PC ticket exists for FI retrigger or refund retrigger. PC-52678 only covers SC+ remediation. A new PC ticket would be needed if scripting is approved.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-04T10:27:26.159Z"
-      }
-    },
     {
       "key": "PC-53503",
       "summary": "Redeem rewards points (partial) for 4 AE orders - AEME-6282",
@@ -280,7 +239,7 @@
       }
     ],
     "pid": 17144,
-    "uptime": 23370,
+    "uptime": 23410,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -292,7 +251,7 @@
       {
         "pid": 24068,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 23171,
+        "ageSeconds": 23208,
         "status": "running",
         "isChild": false,
         "taskSummary": "I want all the linked tickets to be listed down with their status along with each jira ticket sho...",
@@ -302,7 +261,7 @@
       {
         "pid": 1436,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 16876,
+        "ageSeconds": 16913,
         "status": "running",
         "isChild": false,
         "taskSummary": "write impexes",
@@ -312,7 +271,7 @@
       {
         "pid": 24728,
         "cwd": "c:\\windows",
-        "ageSeconds": 16871,
+        "ageSeconds": 16908,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -322,7 +281,7 @@
       {
         "pid": 916,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 14513,
+        "ageSeconds": 14550,
         "status": "running",
         "isChild": false,
         "taskSummary": "I want all the linked tickets to be listed down with their status along with each jira ticket sho...",
@@ -332,7 +291,7 @@
       {
         "pid": 28640,
         "cwd": "unknown",
-        "ageSeconds": 14320,
+        "ageSeconds": 14357,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
