@@ -1,7 +1,37 @@
 {
-  "generatedAt": "2026-09-07T06:53:36.008Z",
+  "generatedAt": "2026-09-07T06:54:17.042Z",
   "totalTickets": 9,
   "tickets": [
+    {
+      "key": "PC-53529",
+      "summary": "[SAM-24720] Create DB cleanup cronjobs for SMI cluster",
+      "status": "To do",
+      "statusCategory": "To Do",
+      "priority": "High",
+      "project": "PROD Change",
+      "projectKey": "PC",
+      "issuetype": "Hybris Platform",
+      "updated": "2026-09-07T15:53:42.000+0900",
+      "created": "2026-09-03T19:14:43.000+0900",
+      "description": "As per ticket SAM-24720, SAP has recommended scheduling automated DB cleanup jobs for the SMI cluster to address frequent high DB storage issues. SAP provided 6 DELETE queries with varying retention periods for tasklogs (2 months), users4sn (1 month), paymentinfos42sn (3 months), pricerows1055sn (3 ",
+      "commentsCount": 0,
+      "recentComments": [],
+      "lastCommentBy": "",
+      "lastCommentSnippet": "",
+      "lastCommentDate": "",
+      "url": "https://jira.secext.samsung.net/browse/PC-53529",
+      "solution": {
+        "status": "found",
+        "excerpt": "[SAM-24720] Create DB cleanup cronjobs for SMI cluster\r\nGenerated: 2026-09-03T20:00:00+09:00\r\n\r\nIssue:\r\nThe SMI (Samsung India) Hybris cluster experiences frequent high DB storage issues due to stale records accumulating in six database tables: tasklogs (process engine task logs), users4sn (anonymous user sessions), paymentinfos42sn (stale payment info snapshots), pricerows1055sn (expired price row entries), addresses23sn (orphaned address records), and tokoeventlog (Toko event log entries). Currently no automated cleanup cronjobs exist for the SMI cluster, requiring manual SAP intervention to purge old data each time storage reaches critical levels.\r\n\r\nRCA:\r\nSAM-24720 was raised by Arvind Panchal reporting that SMI faces frequent high DB storage issues, requesting automated cleanup jobs with specific retention periods. SAP provided 6 DELETE queries targeting the six tables above. The same pattern was already implemented successfully by Pulkesh in PC-49614 for the SEAO cluster (SAM-20914, which SAM-24720 clones), where 6 individual scripting cronjobs plus a composite job were created, all completing with FINISHED/SUCCESS status. PC-53529 replicates this proven pattern for the SMI cluster. Six Groovy scripts have been attached, each using Spring JdbcTemplate with batch deletion (TOP 10000 per batch, max 200000 rows per run) and table-specific retention windows: tasklogs retains 2 months, users4sn retains 1 month, and paymentinfos42sn, pricerows1055sn, addresses23sn, and tokoeventlog each retain 3 months. The accompanying ImpEx creates 6 Script + ScriptingJob + CronJob entries, 1 CompositeCronJob (CleanupComposite) chaining all 6 jobs sequentially, and a Trigger firing every 6 hours. This is a standard Hybris scripting pattern with no custom Java code or new extension required. The root cause of the recurring DB storage issue is the absence of automated cleanup for these tables on the SMI cluster.\r\n\r\nPossible remediation:\r\n1. Import the ImpEx file (script-SAM-24720-db-cleanup-cronjobs.impex) on SMI stg2 to create all 6 Script + ScriptingJob + CronJob entries plus the CleanupComposite composite job and its 6-hour trigger.\r\n2. Execute the CleanupComposite job manually on stg2 to validate all 6 individual jobs complete with FINISHED/SUCCESS status.\r\n3. Check the job logs for per-table deletion counts to confirm the batch deletion logic is working correctly.\r\n4. Once validated on stg2, import the ImpEx on SMI production.\r\n5. Monitor DB storage levels over the next 24-48 hours to confirm the cleanup jobs are effectively reducing storage.\r\n6. Rollback if needed: remove the composite job trigger or set active=false. No data restoration is needed as deleted records are stale per the retention policy.\r\n\r\n## Remediation\r\n\r\n**Ticket Type**: DB cleanup cronjob creation (proactive maintenance)\r\n**Parent**: SAM-24720 (Code Review)\r\n**Similar Ticket**: PC-49614 (Closed, SEAO cluster, identical pattern)\r\n**Scripts Attached**: 6 Groovy scripts + 1 ImpEx (already on ticket)\r\n**Verification**: All 6 individual cronjobs + CleanupComposite should be FINISHED with SUCCESS. Check logs for per-table deletion counts.\r\n**Rollback**: Remove composite job trigger or set active=false. Deleted records are stale per retention policy.\r\n**Cluster**: SMI (customfield_18776 = SMI)\r\n**Region**: All (customfield_19634/19635/19636 = All)",
+        "sections": {
+          "issue": "The SMI (Samsung India) Hybris cluster experiences frequent high DB storage issues due to stale records accumulating in six database tables: tasklogs (process engine task logs), users4sn (anonymous user sessions), paymentinfos42sn (stale payment info snapshots), pricerows1055sn (expired price row entries), addresses23sn (orphaned address records), and tokoeventlog (Toko event log entries). Currently no automated cleanup cronjobs exist for the SMI cluster, requiring manual SAP intervention to purge old data each time storage reaches critical levels.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-03T13:43:05.289Z"
+      }
+    },
     {
       "key": "SAME-3958",
       "summary": "Sales Report - Additional Columns",
@@ -180,36 +210,6 @@
       }
     },
     {
-      "key": "PC-53529",
-      "summary": "[SAM-24720] Create DB cleanup cronjobs for SMI cluster",
-      "status": "To do",
-      "statusCategory": "To Do",
-      "priority": "High",
-      "project": "PROD Change",
-      "projectKey": "PC",
-      "issuetype": "Hybris Platform",
-      "updated": "2026-09-03T21:15:20.000+0900",
-      "created": "2026-09-03T19:14:43.000+0900",
-      "description": "As per ticket SAM-24720, SAP has recommended scheduling automated DB cleanup jobs for the SMI cluster to address frequent high DB storage issues. SAP provided 6 DELETE queries with varying retention periods for tasklogs (2 months), users4sn (1 month), paymentinfos42sn (3 months), pricerows1055sn (3 ",
-      "commentsCount": 0,
-      "recentComments": [],
-      "lastCommentBy": "",
-      "lastCommentSnippet": "",
-      "lastCommentDate": "",
-      "url": "https://jira.secext.samsung.net/browse/PC-53529",
-      "solution": {
-        "status": "found",
-        "excerpt": "[SAM-24720] Create DB cleanup cronjobs for SMI cluster\r\nGenerated: 2026-09-03T20:00:00+09:00\r\n\r\nIssue:\r\nThe SMI (Samsung India) Hybris cluster experiences frequent high DB storage issues due to stale records accumulating in six database tables: tasklogs (process engine task logs), users4sn (anonymous user sessions), paymentinfos42sn (stale payment info snapshots), pricerows1055sn (expired price row entries), addresses23sn (orphaned address records), and tokoeventlog (Toko event log entries). Currently no automated cleanup cronjobs exist for the SMI cluster, requiring manual SAP intervention to purge old data each time storage reaches critical levels.\r\n\r\nRCA:\r\nSAM-24720 was raised by Arvind Panchal reporting that SMI faces frequent high DB storage issues, requesting automated cleanup jobs with specific retention periods. SAP provided 6 DELETE queries targeting the six tables above. The same pattern was already implemented successfully by Pulkesh in PC-49614 for the SEAO cluster (SAM-20914, which SAM-24720 clones), where 6 individual scripting cronjobs plus a composite job were created, all completing with FINISHED/SUCCESS status. PC-53529 replicates this proven pattern for the SMI cluster. Six Groovy scripts have been attached, each using Spring JdbcTemplate with batch deletion (TOP 10000 per batch, max 200000 rows per run) and table-specific retention windows: tasklogs retains 2 months, users4sn retains 1 month, and paymentinfos42sn, pricerows1055sn, addresses23sn, and tokoeventlog each retain 3 months. The accompanying ImpEx creates 6 Script + ScriptingJob + CronJob entries, 1 CompositeCronJob (CleanupComposite) chaining all 6 jobs sequentially, and a Trigger firing every 6 hours. This is a standard Hybris scripting pattern with no custom Java code or new extension required. The root cause of the recurring DB storage issue is the absence of automated cleanup for these tables on the SMI cluster.\r\n\r\nPossible remediation:\r\n1. Import the ImpEx file (script-SAM-24720-db-cleanup-cronjobs.impex) on SMI stg2 to create all 6 Script + ScriptingJob + CronJob entries plus the CleanupComposite composite job and its 6-hour trigger.\r\n2. Execute the CleanupComposite job manually on stg2 to validate all 6 individual jobs complete with FINISHED/SUCCESS status.\r\n3. Check the job logs for per-table deletion counts to confirm the batch deletion logic is working correctly.\r\n4. Once validated on stg2, import the ImpEx on SMI production.\r\n5. Monitor DB storage levels over the next 24-48 hours to confirm the cleanup jobs are effectively reducing storage.\r\n6. Rollback if needed: remove the composite job trigger or set active=false. No data restoration is needed as deleted records are stale per the retention policy.\r\n\r\n## Remediation\r\n\r\n**Ticket Type**: DB cleanup cronjob creation (proactive maintenance)\r\n**Parent**: SAM-24720 (Code Review)\r\n**Similar Ticket**: PC-49614 (Closed, SEAO cluster, identical pattern)\r\n**Scripts Attached**: 6 Groovy scripts + 1 ImpEx (already on ticket)\r\n**Verification**: All 6 individual cronjobs + CleanupComposite should be FINISHED with SUCCESS. Check logs for per-table deletion counts.\r\n**Rollback**: Remove composite job trigger or set active=false. Deleted records are stale per retention policy.\r\n**Cluster**: SMI (customfield_18776 = SMI)\r\n**Region**: All (customfield_19634/19635/19636 = All)",
-        "sections": {
-          "issue": "The SMI (Samsung India) Hybris cluster experiences frequent high DB storage issues due to stale records accumulating in six database tables: tasklogs (process engine task logs), users4sn (anonymous user sessions), paymentinfos42sn (stale payment info snapshots), pricerows1055sn (expired price row entries), addresses23sn (orphaned address records), and tokoeventlog (Toko event log entries). Currently no automated cleanup cronjobs exist for the SMI cluster, requiring manual SAP intervention to purge old data each time storage reaches critical levels.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-03T13:43:05.289Z"
-      }
-    },
-    {
       "key": "SAM-24720",
       "summary": " Update or create Cronjob for autocleanup",
       "status": "Code Review",
@@ -363,7 +363,7 @@
       }
     ],
     "pid": 17144,
-    "uptime": 8136,
+    "uptime": 8176,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -372,7 +372,7 @@
         "issueTitle": "Investigate ticket PC-53305",
         "snippet": "Auto-triggered investigation for new ticket PC-53305.\n\nTicket: PC-53305\nSummary: SMC Re-registration Remediation for AE2",
         "pid": 20792,
-        "elapsed": 135
+        "elapsed": 175
       }
     ],
     "startTime": "2026-09-07T04:37:58.312Z",
@@ -383,7 +383,7 @@
       {
         "pid": 24068,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 7936,
+        "ageSeconds": 7976,
         "status": "running",
         "isChild": false,
         "taskSummary": "remove the header saying LIVE-updated 45s ago. only show that red bar when something is down, not...",
@@ -393,7 +393,7 @@
       {
         "pid": 1436,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 1641,
+        "ageSeconds": 1681,
         "status": "running",
         "isChild": false,
         "taskSummary": "update labels then investigate SAME-3958",
@@ -403,7 +403,7 @@
       {
         "pid": 24728,
         "cwd": "c:\\windows",
-        "ageSeconds": 1636,
+        "ageSeconds": 1676,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
