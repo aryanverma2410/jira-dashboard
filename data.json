@@ -1,7 +1,78 @@
 {
-  "generatedAt": "2026-09-07T10:22:14.240Z",
+  "generatedAt": "2026-09-07T10:22:58.182Z",
   "totalTickets": 10,
   "tickets": [
+    {
+      "key": "AEME-6282",
+      "summary": "[For approval] Redeem rewards on impacted orders",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "UAE Maintenance & Enhancements",
+      "projectKey": "AEME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-09-07T19:22:53.000+0900",
+      "created": "2026-05-22T10:34:09.000+0900",
+      "description": "In line with our initiative to fix the rewards discrepancy between GCRM and Hybris, we have identified some old orders to be having this mismatch due to some intermittent issues where the redeemed points got cancelled and returned to customers.\n\nWe have identified most and fixed them already, howeve",
+      "commentsCount": 24,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-09-07T19:22:26.591+0900",
+          "snippet": "Hi ~@email ,\n\nPoints redeemed for remaining orders except AE241124-37771964: Not enough Points.\n\n \n\nAE241124-37771964 abstractOrderModel >> OrderModel (9114963279917@31)\nAE241124-37771964 pte >> PaymentTransactionEntryModel (9174673360949@3)\nAE241124-37771964 Redeeming 186.13, report txnId 202500001"
+        },
+        {
+          "author": "Tin Reglo",
+          "date": "2026-09-07T18:50:57.320+0900",
+          "snippet": "Hi ~@email \n\nYou can update the script to handle the specific amount accordingly as the checks were put there to make sure we are not refunding more than the redeemed points.\n\nBefore remediating, regardless of the categories, please double check the latest report from GCRM if the orders impacted sti"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi ~@email ,\n\nPoints redeemed for remaining orders except AE241124-37771964: Not enough Points.\n\n \n\nAE241124-37771964 abstractOrderModel >> OrderModel (9114963279917@31)\nAE241124-37771964 pte >> PaymentTransactionEntryModel (9174673360949@3)\nAE241124-37771964 Redeeming 186.13, report txnId 202500001",
+      "lastCommentDate": "2026-09-07T19:22:26.591+0900",
+      "url": "https://jira.secext.samsung.net/browse/AEME-6282",
+      "solution": {
+        "status": "found",
+        "excerpt": "# RCA: AEME-6282\nSummary: [For approval] Redeem rewards on impacted orders\nGenerated: 2026-09-03T19:14:59Z\n\nHi Tin ,\n\nTwenty-two UAE orders were identified with a discrepancy between Hybris and GCRM where Samsung Rewards points were incorrectly cancelled and returned to customers despite the orders remaining active. Eighteen of these orders were already remediated successfully via PC-48490. Four orders failed with \"Not enough point\" error because the customers' GCRM accounts have insufficient points for the full redemption amount. The team has approved partial deductions for the remaining four orders.\n\nThe intermittent issue occurs when customers exploit a multi-tab checkout flow to redeem rewards points and then cancel only the rewards payment transaction after the order is placed. This leaves the order active but the points are returned to the customer. The fix in HGE-10824 introduces a checkTransactionReviewStatus action in the order process that detects when a rewards payment transaction is in REVIEW status and attempts to re-authorize the redemption with GCRM. If re-authorization fails, the order moves to SUSPENDED instead of progressing.\n\nFor the four remaining orders (AE231010-55304250, AE241124-37771964, AE250515-43260061, AE260227-08123022), the GCRM API rejects the full redemption amount with \"Not enough point\" because the customers have lower balances than the original redeemed amounts. The available points and partial amounts to deduct are:\n\n1. AE231010-55304250 - available 51.17 AED (5,117 points), original 118.00 AED, deduct 51.17\n2. AE241124-37771964 - available 186.13 AED (18,613 points), original 655.00 AED, deduct 186.13\n3. AE250515-43260061 - available 58.96 AED (5,896 points), original 76.00 AED, deduct 58.96\n4. AE260227-08123022 - available 233.41 AED (23,341 points), original 474.00 AED, deduct 233.41\n\nThe PC-48490 W1-Positive script has two guard checks that prevent processing these four orders. First, the requestId equality check skips orders where the Hybris payment transaction entry requestId matches the transactionId from the discrepancy report. All four orders have matching requestIds. Second, the remainingAmount equality check skips orders where the remaining amount on the payment transaction does not equal the rewards refund amount being passed. Since we are now charging partial amounts instead of the full original amount, this check will always fail for these orders.\n\nA modified script (script-AEME-6282-rewards-partial-redemption.groovy) has been prepared under PC-53503. This script removes both guard checks and uses forceRedeem=true. The order list contains the four orders with their partial redemption amounts. The script flow is: find the AUTHORIZATION-type PaymentTransactionEntry for samsungRewardPoints provider, call tokorewardpaymentservicesFacade.updatePTEs to set the PT to REVIEW, call redeemCustomerRewardPoint with the partial amount, and if successful, update NOTIFICATION and CAPTURE entries with the new requestId from the AUTHORIZATION PTE. If the GCRM call fails, the PTEs are reverted to ACCEPTED status.\n\nThis is not a platform bug. The original points cancellation was an exploitation of the checkout flow before the HGE-10824 fix was deployed. The remediation is a business-approved data correction to align Hybris with GCRM records.\n\n## Remediation\n\nScript: script-AEME-6282-rewards-partial-redemption.groovy\nPC Ticket: PC-53503\n\nThe script is ready for execution under PC-53503. It will redeem the partial (available) amounts from the four remaining orders' GCRM accounts. After execution, the GCRM and Hybris records will be aligned for these orders.\n\nThanks,\n\nAryan",
+        "sections": {
+          "issue": "",
+          "rca": "# RCA: AEME-6282\nSummary: [For approval] Redeem rewards on impacted orders\nGenerated: 2026-09-03T19:14:59Z\n\nHi Tin ,\n\nTwenty-two UAE orders were identified with a discrepancy between Hybris and GCRM where Samsung Rewards points were incorrectly cancelled and returned to customers despite the orders remaining active. Eighteen of these orders were already remediated successfully via PC-48490. Four orders failed with \"Not enough point\" error because the customers' GCRM accounts have insufficient points for the full redemption amount. The team has approved partial deductions for the remaining four orders.\n\nThe intermittent issue occurs when customers exploit a multi-tab checkout flow to redeem rewards points and then cancel only the rewards payment transaction after the order is placed. This leaves the order active but the points are returned to the customer. The fix in HGE-10824 introduces a checkTransactionReviewStatus action in the order process that detects when a rewards payment transaction is in REVIEW status and attempts to re-authorize the redemption with GCRM. If re-authorization fails, the order moves to SUSPENDED instead of progressing.\n\nFor the four remaining orders (AE231010-55304250, AE241124-37771964, AE250515-43260061, AE260227-08123022), the GCRM API rejects the full redemption amount with \"Not enough point\" because the customers have lower balances than the original redeemed amounts. The available points and partial amounts to deduct are:\n\n1. AE231010-55304250 - available 51.17 AED (5,117 points), original 118.00 AED, deduct 51.17\n2. AE241124-37771964 - available 186.13 AED (18,613 points), original 655.00 AED, deduct 186.13\n3. AE250515-43260061 - available 58.96 AED (5,896 points), original 76.00 AED, deduct 58.96\n4. AE260227-08123022 - available 233.41 AED (23,341 points), original 474.00 AED, deduct 233.41\n\nThe PC-48490 W1-Positive script has two guard checks that prevent processing these four orders. First, the requestId equality check skips orders where the Hybris payment transaction entry requestId matches the transactionId from the discrepancy report. All four orders have matching requestIds. Second, the remainingAmount equality check skips orders where the remaining amount on the payment transaction does not equal the rewards refund amount being passed. Since we are now charging partial amounts instead of the full original amount, this check will always fail for these orders.\n\nA modified script (script-AEME-6282-rewards-partial-redemption.groovy) has been prepared under PC-53503. This script removes both guard checks and uses forceRedeem=true. The order list contains the four orders with their partial redemption amounts. The script flow is: find the AUTHORIZATION-type PaymentTransactionEntry for samsungRewardPoints provider, call tokorewardpaymentservicesFacade.updatePTEs to set the PT to REVIEW, call redeemCustomerRewardPoint with the partial amount, and if successful, update NOTIFICATION and CAPTURE entries with the new requestId from the AUTHORIZATION PTE. If the GCRM call fails, the PTEs are reverted to ACCEPTED status.\n\nThis is not a platform bug. The original points cancellation was an exploitation of the checkout flow before the HGE-10824 fix was deployed. The remediation is a business-approved data correction to align Hybris with GCRM records.\n\n## Remediation\n\nScript: script-AEME-6282-rewards-partial-redemption.groovy\nPC Ticket: PC-53503\n\nThe script is ready for execution under PC-53503. It will redeem the partial (available) amounts from the four remaining orders' GCRM accounts. After execution, the GCRM and Hybris records will be aligned for these orders.\n\nThanks,\n\nAryan",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-03T13:44:59.592Z"
+      }
+    },
+    {
+      "key": "SAME-3958",
+      "summary": "Sales Report - Additional Columns",
+      "status": "QA Server Review",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Kingdom of Saudi Arabia Maintenance & Enhancements",
+      "projectKey": "SAME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-09-07T19:22:32.000+0900",
+      "created": "2026-09-03T19:28:09.000+0900",
+      "description": "Hi Team,\n\nWe are receiving attached report from Grafana ( ^Grafana MOH.xlsx) and would like to have additional columns on the daily sales report from Hybris.\n\n \n\nCronjob:\n\nreport-sa-tokoSalesReportJob-nonPII\n\n \n\nAdditional Columns:\n\naffiliate_name\n\nmultistore_verificationcode\n\n \n\nAttached approval f",
+      "commentsCount": 0,
+      "recentComments": [],
+      "lastCommentBy": "",
+      "lastCommentSnippet": "",
+      "lastCommentDate": "",
+      "url": "https://jira.secext.samsung.net/browse/SAME-3958",
+      "solution": {
+        "status": "found",
+        "excerpt": "Sales Report - Additional Columns\r\nGenerated: 2026-09-03T00:00:00Z\r\n\r\nIssue:\r\n\r\nThe SA eStore daily sales report (cronjob report-sa-tokoSalesReportJob-nonPII) is missing two columns that the business needs: affiliate_name and multistore_verificationcode. The requestor attached a Grafana MOH.xlsx showing the columns they currently receive from Grafana and wants the Hybris-generated daily report to include these additional multistore-related fields for parity. The cronjob generates the report via a Groovy script (SaSalesReport.groovy) that defines its column set and column population methods, but neither affiliate_name nor multistore_verificationcode are currently in the column list or implemented as @ColumnMethod handlers in the script.\r\n\r\n\r\nRCA:\r\n\r\nThe SA daily sales report is generated by a TokoGroovyBasedReportJob cronjob (code: report-sa-tokoSalesReportJob-Daily, configured in estore-mastersalesreport-sa.impex). The cronjob delegates to a Groovy script registered as a Script item (code: toko-sa-groovy-tokoSalesReportJob-Daily) pointing to SaSalesReport.groovy under the sapreporting extension's groovy/salesreport/ directory.\r\n\r\nThe Groovy script extends SalesReport and defines its output columns in the getColumns() method. Currently 43 columns are defined (Site, Sales_Application, Product_Code, Additional_Info_Type, Additional_Info_Value, Order_Code, Order_Status, Order_Creation_Date, Order_Entry_Total_Price, Total_RRP, Total_Discounts, Order_Entry_Cancelled_Price, Order_Entry_Returns_Price, Order_Entry_Sit_Returns_Price, Order_Entry_Quantity, Voucher_Code, Promotion_Name, Payment_Mode, Payment_Transaction_Code, Shipping_Method, Gerp_Shipping_Method, Gerp_Sprocid, Customer_Type, Ean, Sales_Order, First_GI, Second_GI, Sent_To_Gerp, Delivery_Order, Return_Order, Return_Sales_Order, Return_Delivery_Order, Invoice_Carrier_Type, Invoice_Carrier_Reference, Membership_Number, Insurance, Shipping_Date, PreorderFlag, Super_Category, Popup_Store_Id, Added_Services, Store_Name, Store_Id). Neither affiliate_name nor multistore_verificationcode appear in this list.\r\n\r\nThe affiliate_name concept already exists in the codebase. The non-Groovy TokoSalesReportServiceImpl.java (used by other regions' TokoSalesReportJob-based cronjobs) has a constant MULTISTORE_AFFILIATE_NAME = \"Multistore_Affiliate_Name\" and an updateAffiliateName() method that resolves the affiliate name by looking up the order's user, checking the ENABLE_AFFILIATE_FROM_EMAIL config property, finding the active UserToMultiStoreLink for the order's site's TokoMultiStore, extracting the companyEmail, and taking the domain portion (substring after @). This logic is not present in the Groovy script.\r\n\r\nThe multistore_verificationcode attribute exists on the TokoMultiStore type system. The TokoMultiStore model has a tokoVerificationcode relation (Set<TokoVerificationCodeModel>) accessible via getTokoVerificationcode(). The TokoMultiStoreUtility.getVerificationCodeByDates() method returns the active verification codes filtered by date validity. Additionally, UserToMultiStoreLink has a verificationCodeUsed attribute. Neither of these is referenced anywhere in SaSalesReport.groovy.\r\n\r\nThe root cause is simply that the SaSalesReport.groovy script was authored before these multistore fields were needed for the SA report, and no one has added them. This is a feature gap, not a bug or system error. The infrastructure to support both columns fully exists in the Hybris type system and service layer; the Groovy script just needs two new @ColumnMethod handlers and two new entries in getColumns().\r\n\r\n\r\nPossible remediation:\r\n\r\n1. Add 'Multistore_Affiliate_Name' and 'Multistore_VerificationCode' to the getColumns() Set in SaSalesReport.groovy.\r\n\r\n2. Implement a @ColumnMethod for Multistore_Affiliate_Name that mirrors the existing updateAffiliateName logic from TokoSalesReportServiceImpl.java:\r\n   - Get the order from the order entry\r\n   - Check if the site is a CMSSiteModel with a TokoMultiStore\r\n   - Look up the order user's active UserToMultiStoreLink models matching the site's TokoMultiStore\r\n   - Extract the companyEmail, take the domain portion (substring after @), lowercase it\r\n   - Fall back to empty string if no match or if the ENABLE_AFFILIATE_FROM_EMAIL config is false\r\n\r\n3. Implement a @ColumnMethod for Multistore_VerificationCode that:\r\n   - Gets the TokoMultiStore from the order's CMSSite\r\n   - Calls TokoMultiStoreUtility.getVerificationCodeByDates() to get active verification codes\r\n   - Joins them with comma separator\r\n   - Falls back to the UserToMultiStoreLink's verificationCodeUsed if no store-level codes are active\r\n   - Returns null/empty if the site is not a multistore\r\n\r\n4. Update the SaSalesReport.groovy in the sapreporting extension's resources/groovy/salesreport/ directory.\r\n\r\n5. No ImpEx changes are needed for the cronjob configuration itself -- the Groovy script is loaded dynamically and the cronjob already points to the script via the localizedTemplate field. However, the Script item content in the database needs to be updated with the new script content, either via an ImpEx UPDATE Script statement or by updating the script file and re-importing.\r\n\r\n6. Test by running the cronjob manually in HAC/backoffice and verifying the output report contains the two new columns populated with correct data for multistore orders and empty/null for non-multistore orders.\r\n\r\nNo PC ticket or HAC remediation script is needed for this change. This is a code modification that requires a normal build and deployment of the sapreporting extension.\r\n\r\n\r\nThanks,\r\n\r\nAryan",
+        "sections": {
+          "issue": "The SA eStore daily sales report (cronjob report-sa-tokoSalesReportJob-nonPII) is missing two columns that the business needs: affiliate_name and multistore_verificationcode. The requestor attached a Grafana MOH.xlsx showing the columns they currently receive from Grafana and wants the Hybris-generated daily report to include these additional multistore-related fields for parity. The cronjob generates the report via a Groovy script (SaSalesReport.groovy) that defines its column set and column population methods, but neither affiliate_name nor multistore_verificationcode are currently in the column list or implemented as @ColumnMethod handlers in the script.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-03T14:00:14.129Z"
+      }
+    },
     {
       "key": "PC-53689",
       "summary": "Add Affiliate_Name and Multistore_VerificationCode columns to SA Sales Report",
@@ -24,77 +95,6 @@
         "status": "investigating",
         "issueNumber": null,
         "lockedAt": "2026-09-07T19:20:00+09:00"
-      }
-    },
-    {
-      "key": "SAME-3958",
-      "summary": "Sales Report - Additional Columns",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Kingdom of Saudi Arabia Maintenance & Enhancements",
-      "projectKey": "SAME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-07T19:15:47.000+0900",
-      "created": "2026-09-03T19:28:09.000+0900",
-      "description": "Hi Team,\n\nWe are receiving attached report from Grafana ( ^Grafana MOH.xlsx) and would like to have additional columns on the daily sales report from Hybris.\n\n \n\nCronjob:\n\nreport-sa-tokoSalesReportJob-nonPII\n\n \n\nAdditional Columns:\n\naffiliate_name\n\nmultistore_verificationcode\n\n \n\nAttached approval f",
-      "commentsCount": 0,
-      "recentComments": [],
-      "lastCommentBy": "",
-      "lastCommentSnippet": "",
-      "lastCommentDate": "",
-      "url": "https://jira.secext.samsung.net/browse/SAME-3958",
-      "solution": {
-        "status": "found",
-        "excerpt": "Sales Report - Additional Columns\r\nGenerated: 2026-09-03T00:00:00Z\r\n\r\nIssue:\r\n\r\nThe SA eStore daily sales report (cronjob report-sa-tokoSalesReportJob-nonPII) is missing two columns that the business needs: affiliate_name and multistore_verificationcode. The requestor attached a Grafana MOH.xlsx showing the columns they currently receive from Grafana and wants the Hybris-generated daily report to include these additional multistore-related fields for parity. The cronjob generates the report via a Groovy script (SaSalesReport.groovy) that defines its column set and column population methods, but neither affiliate_name nor multistore_verificationcode are currently in the column list or implemented as @ColumnMethod handlers in the script.\r\n\r\n\r\nRCA:\r\n\r\nThe SA daily sales report is generated by a TokoGroovyBasedReportJob cronjob (code: report-sa-tokoSalesReportJob-Daily, configured in estore-mastersalesreport-sa.impex). The cronjob delegates to a Groovy script registered as a Script item (code: toko-sa-groovy-tokoSalesReportJob-Daily) pointing to SaSalesReport.groovy under the sapreporting extension's groovy/salesreport/ directory.\r\n\r\nThe Groovy script extends SalesReport and defines its output columns in the getColumns() method. Currently 43 columns are defined (Site, Sales_Application, Product_Code, Additional_Info_Type, Additional_Info_Value, Order_Code, Order_Status, Order_Creation_Date, Order_Entry_Total_Price, Total_RRP, Total_Discounts, Order_Entry_Cancelled_Price, Order_Entry_Returns_Price, Order_Entry_Sit_Returns_Price, Order_Entry_Quantity, Voucher_Code, Promotion_Name, Payment_Mode, Payment_Transaction_Code, Shipping_Method, Gerp_Shipping_Method, Gerp_Sprocid, Customer_Type, Ean, Sales_Order, First_GI, Second_GI, Sent_To_Gerp, Delivery_Order, Return_Order, Return_Sales_Order, Return_Delivery_Order, Invoice_Carrier_Type, Invoice_Carrier_Reference, Membership_Number, Insurance, Shipping_Date, PreorderFlag, Super_Category, Popup_Store_Id, Added_Services, Store_Name, Store_Id). Neither affiliate_name nor multistore_verificationcode appear in this list.\r\n\r\nThe affiliate_name concept already exists in the codebase. The non-Groovy TokoSalesReportServiceImpl.java (used by other regions' TokoSalesReportJob-based cronjobs) has a constant MULTISTORE_AFFILIATE_NAME = \"Multistore_Affiliate_Name\" and an updateAffiliateName() method that resolves the affiliate name by looking up the order's user, checking the ENABLE_AFFILIATE_FROM_EMAIL config property, finding the active UserToMultiStoreLink for the order's site's TokoMultiStore, extracting the companyEmail, and taking the domain portion (substring after @). This logic is not present in the Groovy script.\r\n\r\nThe multistore_verificationcode attribute exists on the TokoMultiStore type system. The TokoMultiStore model has a tokoVerificationcode relation (Set<TokoVerificationCodeModel>) accessible via getTokoVerificationcode(). The TokoMultiStoreUtility.getVerificationCodeByDates() method returns the active verification codes filtered by date validity. Additionally, UserToMultiStoreLink has a verificationCodeUsed attribute. Neither of these is referenced anywhere in SaSalesReport.groovy.\r\n\r\nThe root cause is simply that the SaSalesReport.groovy script was authored before these multistore fields were needed for the SA report, and no one has added them. This is a feature gap, not a bug or system error. The infrastructure to support both columns fully exists in the Hybris type system and service layer; the Groovy script just needs two new @ColumnMethod handlers and two new entries in getColumns().\r\n\r\n\r\nPossible remediation:\r\n\r\n1. Add 'Multistore_Affiliate_Name' and 'Multistore_VerificationCode' to the getColumns() Set in SaSalesReport.groovy.\r\n\r\n2. Implement a @ColumnMethod for Multistore_Affiliate_Name that mirrors the existing updateAffiliateName logic from TokoSalesReportServiceImpl.java:\r\n   - Get the order from the order entry\r\n   - Check if the site is a CMSSiteModel with a TokoMultiStore\r\n   - Look up the order user's active UserToMultiStoreLink models matching the site's TokoMultiStore\r\n   - Extract the companyEmail, take the domain portion (substring after @), lowercase it\r\n   - Fall back to empty string if no match or if the ENABLE_AFFILIATE_FROM_EMAIL config is false\r\n\r\n3. Implement a @ColumnMethod for Multistore_VerificationCode that:\r\n   - Gets the TokoMultiStore from the order's CMSSite\r\n   - Calls TokoMultiStoreUtility.getVerificationCodeByDates() to get active verification codes\r\n   - Joins them with comma separator\r\n   - Falls back to the UserToMultiStoreLink's verificationCodeUsed if no store-level codes are active\r\n   - Returns null/empty if the site is not a multistore\r\n\r\n4. Update the SaSalesReport.groovy in the sapreporting extension's resources/groovy/salesreport/ directory.\r\n\r\n5. No ImpEx changes are needed for the cronjob configuration itself -- the Groovy script is loaded dynamically and the cronjob already points to the script via the localizedTemplate field. However, the Script item content in the database needs to be updated with the new script content, either via an ImpEx UPDATE Script statement or by updating the script file and re-importing.\r\n\r\n6. Test by running the cronjob manually in HAC/backoffice and verifying the output report contains the two new columns populated with correct data for multistore orders and empty/null for non-multistore orders.\r\n\r\nNo PC ticket or HAC remediation script is needed for this change. This is a code modification that requires a normal build and deployment of the sapreporting extension.\r\n\r\n\r\nThanks,\r\n\r\nAryan",
-        "sections": {
-          "issue": "The SA eStore daily sales report (cronjob report-sa-tokoSalesReportJob-nonPII) is missing two columns that the business needs: affiliate_name and multistore_verificationcode. The requestor attached a Grafana MOH.xlsx showing the columns they currently receive from Grafana and wants the Hybris-generated daily report to include these additional multistore-related fields for parity. The cronjob generates the report via a Groovy script (SaSalesReport.groovy) that defines its column set and column population methods, but neither affiliate_name nor multistore_verificationcode are currently in the column list or implemented as @ColumnMethod handlers in the script.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-03T14:00:14.129Z"
-      }
-    },
-    {
-      "key": "AEME-6282",
-      "summary": "[For approval] Redeem rewards on impacted orders",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-07T18:51:04.000+0900",
-      "created": "2026-05-22T10:34:09.000+0900",
-      "description": "In line with our initiative to fix the rewards discrepancy between GCRM and Hybris, we have identified some old orders to be having this mismatch due to some intermittent issues where the redeemed points got cancelled and returned to customers.\n\nWe have identified most and fixed them already, howeve",
-      "commentsCount": 23,
-      "recentComments": [
-        {
-          "author": "Tin Reglo",
-          "date": "2026-09-07T18:50:57.320+0900",
-          "snippet": "Hi ~@email \n\nYou can update the script to handle the specific amount accordingly as the checks were put there to make sure we are not refunding more than the redeemed points.\n\nBefore remediating, regardless of the categories, please double check the latest report from GCRM if the orders impacted sti"
-        },
-        {
-          "author": "Vaibhav Jain",
-          "date": "2026-09-04T14:44:31.534+0900",
-          "snippet": "~@email : Kindly confirm\n\n~@email : There was no specific handover given for this , kindly confirm the ask,"
-        }
-      ],
-      "lastCommentBy": "Tin Reglo",
-      "lastCommentSnippet": "Hi ~@email \n\nYou can update the script to handle the specific amount accordingly as the checks were put there to make sure we are not refunding more than the redeemed points.\n\nBefore remediating, regardless of the categories, please double check the latest report from GCRM if the orders impacted sti",
-      "lastCommentDate": "2026-09-07T18:50:57.320+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6282",
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: AEME-6282\nSummary: [For approval] Redeem rewards on impacted orders\nGenerated: 2026-09-03T19:14:59Z\n\nHi Tin ,\n\nTwenty-two UAE orders were identified with a discrepancy between Hybris and GCRM where Samsung Rewards points were incorrectly cancelled and returned to customers despite the orders remaining active. Eighteen of these orders were already remediated successfully via PC-48490. Four orders failed with \"Not enough point\" error because the customers' GCRM accounts have insufficient points for the full redemption amount. The team has approved partial deductions for the remaining four orders.\n\nThe intermittent issue occurs when customers exploit a multi-tab checkout flow to redeem rewards points and then cancel only the rewards payment transaction after the order is placed. This leaves the order active but the points are returned to the customer. The fix in HGE-10824 introduces a checkTransactionReviewStatus action in the order process that detects when a rewards payment transaction is in REVIEW status and attempts to re-authorize the redemption with GCRM. If re-authorization fails, the order moves to SUSPENDED instead of progressing.\n\nFor the four remaining orders (AE231010-55304250, AE241124-37771964, AE250515-43260061, AE260227-08123022), the GCRM API rejects the full redemption amount with \"Not enough point\" because the customers have lower balances than the original redeemed amounts. The available points and partial amounts to deduct are:\n\n1. AE231010-55304250 - available 51.17 AED (5,117 points), original 118.00 AED, deduct 51.17\n2. AE241124-37771964 - available 186.13 AED (18,613 points), original 655.00 AED, deduct 186.13\n3. AE250515-43260061 - available 58.96 AED (5,896 points), original 76.00 AED, deduct 58.96\n4. AE260227-08123022 - available 233.41 AED (23,341 points), original 474.00 AED, deduct 233.41\n\nThe PC-48490 W1-Positive script has two guard checks that prevent processing these four orders. First, the requestId equality check skips orders where the Hybris payment transaction entry requestId matches the transactionId from the discrepancy report. All four orders have matching requestIds. Second, the remainingAmount equality check skips orders where the remaining amount on the payment transaction does not equal the rewards refund amount being passed. Since we are now charging partial amounts instead of the full original amount, this check will always fail for these orders.\n\nA modified script (script-AEME-6282-rewards-partial-redemption.groovy) has been prepared under PC-53503. This script removes both guard checks and uses forceRedeem=true. The order list contains the four orders with their partial redemption amounts. The script flow is: find the AUTHORIZATION-type PaymentTransactionEntry for samsungRewardPoints provider, call tokorewardpaymentservicesFacade.updatePTEs to set the PT to REVIEW, call redeemCustomerRewardPoint with the partial amount, and if successful, update NOTIFICATION and CAPTURE entries with the new requestId from the AUTHORIZATION PTE. If the GCRM call fails, the PTEs are reverted to ACCEPTED status.\n\nThis is not a platform bug. The original points cancellation was an exploitation of the checkout flow before the HGE-10824 fix was deployed. The remediation is a business-approved data correction to align Hybris with GCRM records.\n\n## Remediation\n\nScript: script-AEME-6282-rewards-partial-redemption.groovy\nPC Ticket: PC-53503\n\nThe script is ready for execution under PC-53503. It will redeem the partial (available) amounts from the four remaining orders' GCRM accounts. After execution, the GCRM and Hybris records will be aligned for these orders.\n\nThanks,\n\nAryan",
-        "sections": {
-          "issue": "",
-          "rca": "# RCA: AEME-6282\nSummary: [For approval] Redeem rewards on impacted orders\nGenerated: 2026-09-03T19:14:59Z\n\nHi Tin ,\n\nTwenty-two UAE orders were identified with a discrepancy between Hybris and GCRM where Samsung Rewards points were incorrectly cancelled and returned to customers despite the orders remaining active. Eighteen of these orders were already remediated successfully via PC-48490. Four orders failed with \"Not enough point\" error because the customers' GCRM accounts have insufficient points for the full redemption amount. The team has approved partial deductions for the remaining four orders.\n\nThe intermittent issue occurs when customers exploit a multi-tab checkout flow to redeem rewards points and then cancel only the rewards payment transaction after the order is placed. This leaves the order active but the points are returned to the customer. The fix in HGE-10824 introduces a checkTransactionReviewStatus action in the order process that detects when a rewards payment transaction is in REVIEW status and attempts to re-authorize the redemption with GCRM. If re-authorization fails, the order moves to SUSPENDED instead of progressing.\n\nFor the four remaining orders (AE231010-55304250, AE241124-37771964, AE250515-43260061, AE260227-08123022), the GCRM API rejects the full redemption amount with \"Not enough point\" because the customers have lower balances than the original redeemed amounts. The available points and partial amounts to deduct are:\n\n1. AE231010-55304250 - available 51.17 AED (5,117 points), original 118.00 AED, deduct 51.17\n2. AE241124-37771964 - available 186.13 AED (18,613 points), original 655.00 AED, deduct 186.13\n3. AE250515-43260061 - available 58.96 AED (5,896 points), original 76.00 AED, deduct 58.96\n4. AE260227-08123022 - available 233.41 AED (23,341 points), original 474.00 AED, deduct 233.41\n\nThe PC-48490 W1-Positive script has two guard checks that prevent processing these four orders. First, the requestId equality check skips orders where the Hybris payment transaction entry requestId matches the transactionId from the discrepancy report. All four orders have matching requestIds. Second, the remainingAmount equality check skips orders where the remaining amount on the payment transaction does not equal the rewards refund amount being passed. Since we are now charging partial amounts instead of the full original amount, this check will always fail for these orders.\n\nA modified script (script-AEME-6282-rewards-partial-redemption.groovy) has been prepared under PC-53503. This script removes both guard checks and uses forceRedeem=true. The order list contains the four orders with their partial redemption amounts. The script flow is: find the AUTHORIZATION-type PaymentTransactionEntry for samsungRewardPoints provider, call tokorewardpaymentservicesFacade.updatePTEs to set the PT to REVIEW, call redeemCustomerRewardPoint with the partial amount, and if successful, update NOTIFICATION and CAPTURE entries with the new requestId from the AUTHORIZATION PTE. If the GCRM call fails, the PTEs are reverted to ACCEPTED status.\n\nThis is not a platform bug. The original points cancellation was an exploitation of the checkout flow before the HGE-10824 fix was deployed. The remediation is a business-approved data correction to align Hybris with GCRM records.\n\n## Remediation\n\nScript: script-AEME-6282-rewards-partial-redemption.groovy\nPC Ticket: PC-53503\n\nThe script is ready for execution under PC-53503. It will redeem the partial (available) amounts from the four remaining orders' GCRM accounts. After execution, the GCRM and Hybris records will be aligned for these orders.\n\nThanks,\n\nAryan",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-03T13:44:59.592Z"
       }
     },
     {
@@ -397,7 +397,7 @@
       }
     ],
     "pid": 17144,
-    "uptime": 20653,
+    "uptime": 20698,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -406,7 +406,7 @@
         "issueTitle": "Investigate ticket PC-53689",
         "snippet": "Auto-triggered investigation for new ticket PC-53689.\n\nTicket: PC-53689\nSummary: Add Affiliate_Name and Multistore_Verif",
         "pid": 28320,
-        "elapsed": 345
+        "elapsed": 390
       }
     ],
     "startTime": "2026-09-07T04:37:58.312Z",
@@ -417,7 +417,7 @@
       {
         "pid": 24068,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 20459,
+        "ageSeconds": 20498,
         "status": "running",
         "isChild": false,
         "taskSummary": "I want all the linked tickets to be listed down with their status along with each jira ticket sho...",
@@ -427,7 +427,7 @@
       {
         "pid": 1436,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 14163,
+        "ageSeconds": 14203,
         "status": "running",
         "isChild": false,
         "taskSummary": "modify the script that is already being used for this cronjob according to the new requirements a...",
@@ -437,7 +437,7 @@
       {
         "pid": 24728,
         "cwd": "c:\\windows",
-        "ageSeconds": 14158,
+        "ageSeconds": 14198,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -447,7 +447,7 @@
       {
         "pid": 916,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 11801,
+        "ageSeconds": 11840,
         "status": "running",
         "isChild": false,
         "taskSummary": "I want all the linked tickets to be listed down with their status along with each jira ticket sho...",
@@ -457,7 +457,7 @@
       {
         "pid": 28640,
         "cwd": "unknown",
-        "ageSeconds": 11608,
+        "ageSeconds": 11647,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -467,7 +467,7 @@
       {
         "pid": 14316,
         "cwd": "unknown",
-        "ageSeconds": 6661,
+        "ageSeconds": 6701,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -477,7 +477,7 @@
       {
         "pid": 30076,
         "cwd": "unknown",
-        "ageSeconds": 5428,
+        "ageSeconds": 5467,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
