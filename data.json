@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-07T17:39:29.576Z",
+  "generatedAt": "2026-09-07T17:40:06.646Z",
   "totalTickets": 7,
   "tickets": [
     {
@@ -328,9 +328,16 @@
     "online": true,
     "activeSessions": [],
     "stats": {
-      "totalProcessed": 67
+      "totalProcessed": 68
     },
     "recentActivity": [
+      {
+        "issueNum": 115,
+        "title": "Regenerate EOD Summaries",
+        "received": "2026-09-07T17:39:42.373Z",
+        "responded": "",
+        "responseSnippet": ""
+      },
       {
         "issueNum": 114,
         "title": "It just shows \"processed\" in the card and not the output, when I send a command Fix it.",
@@ -358,20 +365,21 @@
         "received": "2026-09-07T15:39:20.779Z",
         "responded": "2026-09-07T15:40:28.084Z",
         "responseSnippet": "Good, all 30 requested files exist. Let me read them all in parallel.\nNow I have all 30 RCA files. Let me compose the summaries and write the JSON output.\nDone. Read all 30 RCA files from `ticket-rca/` and wrote EOD summaries to `eod-summaries.json`.\n\nEach summary follows the 30-40 word format covering: what the issue was, what was done, and what remains. The JSON is structured with `\"date\":\"2026-09-07\"`, `\"source\":\"aipro\"`, and all 30 ticket keys mapped to their narratives."
-      },
-      {
-        "issueNum": 110,
-        "title": "Regenerate EOD Summaries",
-        "received": "2026-09-07T15:33:23.793Z",
-        "responded": "2026-09-07T15:34:30.013Z",
-        "responseSnippet": "All 30 files found. Now reading all RCA files in parallel.\nAll 30 files read. Now generating the summaries and writing the JSON file.\nDone. Read all 30 RCA files from `C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\ticket-rca\\` and wrote concise narrative summaries (30-40 words each) to `C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\eod-summaries.json`.\n\nAll 30 tickets covered: AEME-6282, AEME-6499, AEME-6500, AEME-6535, AEME-6540, GMT-18732, HGE-11941, NPSM-87977, NPSM-87995, PC-53051, PC-53305, PC-53353, PC-"
       }
     ],
     "pid": 35920,
-    "uptime": 19197,
+    "uptime": 19236,
     "failures": 0,
-    "activeJobCount": 0,
-    "jobs": [],
+    "activeJobCount": 1,
+    "jobs": [
+      {
+        "issueNum": 115,
+        "issueTitle": "Regenerate EOD Summaries",
+        "snippet": "Read the RCA markdown files for the following tickets from C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\ticket-rca directory:\n",
+        "pid": 12836,
+        "elapsed": 23
+      }
+    ],
     "startTime": "2026-09-07T12:19:30.749Z",
     "version": "v3",
     "lastResponseAt": "2026-09-07T16:25:14.297Z",
@@ -380,7 +388,7 @@
       {
         "pid": 1436,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 40393,
+        "ageSeconds": 40430,
         "status": "running",
         "isChild": false,
         "taskSummary": "c",
@@ -390,7 +398,7 @@
       {
         "pid": 916,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 38031,
+        "ageSeconds": 38068,
         "status": "running",
         "isChild": false,
         "taskSummary": "no, after making the comment , for this ticket, assign it to the reporter to verify, not me its a...",
@@ -400,7 +408,7 @@
       {
         "pid": 28640,
         "cwd": "c:\\windows",
-        "ageSeconds": 37838,
+        "ageSeconds": 37875,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -410,7 +418,7 @@
       {
         "pid": 35792,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 22366,
+        "ageSeconds": 22404,
         "status": "running",
         "isChild": false,
         "taskSummary": "c",
@@ -420,7 +428,7 @@
       {
         "pid": 25896,
         "cwd": "unknown",
-        "ageSeconds": 18446,
+        "ageSeconds": 18483,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -429,6 +437,15 @@
       }
     ],
     "activityLog": [
+      {
+        "id": "1788802783349-59rjy4",
+        "timestamp": "2026-09-07T17:39:43.349Z",
+        "type": "command",
+        "source": "aryanverma2410",
+        "title": "Regenerate EOD Summaries",
+        "detail": "#115",
+        "status": "pending"
+      },
       {
         "id": "1788798314301-dwz2x4",
         "timestamp": "2026-09-07T16:25:14.301Z",
@@ -689,15 +706,6 @@
         "title": "Investigate ticket AEME-6540",
         "detail": "Now I need to fetch the Jira ticket and check MCP availability. Let me look at existing fetch scripts and the MCP configuration.\nThe issue is the literal newline inside the string. Let me rewrite the ",
         "status": "success"
-      },
-      {
-        "id": "1788760742653-bcalxl",
-        "timestamp": "2026-09-07T05:59:02.653Z",
-        "type": "command",
-        "source": "aryanverma2410",
-        "title": "Investigate ticket AEME-6540",
-        "detail": "#100",
-        "status": "pending"
       }
     ],
     "sessionMeta": {
@@ -1629,6 +1637,19 @@
         ],
         "endTime": "2026-09-07T16:25:14.302Z",
         "lastOutput": "Now let me look at the dashboard HTML to find the command sending and display logic.\nNow let me check the `processed_issues.json` to understand the response data flow.\nFound the bug. The `pollCmdResponses` function in the dashboard HTML prematurely sets the response to `'Processed'` when it sees the issue appear in `recentActivity` — even before the agent has actually responded (i.e., `responseSnippet` is still empty). Once set to `'Processed'`, it never gets updated because the `!h.response` ch"
+      },
+      "115": {
+        "sessionId": "8938ca8d-0864-45f8-8fad-f345969f0f8d",
+        "issueNum": 115,
+        "title": "Regenerate EOD Summaries",
+        "startTime": "2026-09-07T17:39:43.527Z",
+        "status": "thinking",
+        "commandHistory": [
+          {
+            "title": "Regenerate EOD Summaries",
+            "time": "2026-09-07T17:39:43.527Z"
+          }
+        ]
       }
     }
   },
