@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-07T11:57:01.922Z",
+  "generatedAt": "2026-09-07T11:57:23.656Z",
   "totalTickets": 6,
   "tickets": [
     {
@@ -31,6 +31,16 @@
       "lastCommentSnippet": "Hi ~@email ,\n\n \n\nAccording to the API details, the requested amount exceeds the customer's current balance.\n\nThe customer's account currently maintains a balance of 18,593 points.\n\nPlease check the below screenshot.\n\n!image-2026-09-07-20-52-52-078.png!\n\n \n\nRegards\nKajal Vishwakarma\n~@email ~@email ~",
       "lastCommentDate": "2026-09-07T20:54:13.508+0900",
       "url": "https://jira.secext.samsung.net/browse/AEME-6282",
+      "linkedTickets": [
+        {
+          "key": "AEME-5680",
+          "summary": "[For approval] Redeem rewards on old orders",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "clones",
+          "assignee": "Unassigned"
+        }
+      ],
       "solution": {
         "status": "found",
         "excerpt": "# RCA: AEME-6282\nSummary: [For approval] Redeem rewards on impacted orders\nGenerated: 2026-09-03T19:14:59Z\n\nHi Tin ,\n\nTwenty-two UAE orders were identified with a discrepancy between Hybris and GCRM where Samsung Rewards points were incorrectly cancelled and returned to customers despite the orders remaining active. Eighteen of these orders were already remediated successfully via PC-48490. Four orders failed with \"Not enough point\" error because the customers' GCRM accounts have insufficient points for the full redemption amount. The team has approved partial deductions for the remaining four orders.\n\nThe intermittent issue occurs when customers exploit a multi-tab checkout flow to redeem rewards points and then cancel only the rewards payment transaction after the order is placed. This leaves the order active but the points are returned to the customer. The fix in HGE-10824 introduces a checkTransactionReviewStatus action in the order process that detects when a rewards payment transaction is in REVIEW status and attempts to re-authorize the redemption with GCRM. If re-authorization fails, the order moves to SUSPENDED instead of progressing.\n\nFor the four remaining orders (AE231010-55304250, AE241124-37771964, AE250515-43260061, AE260227-08123022), the GCRM API rejects the full redemption amount with \"Not enough point\" because the customers have lower balances than the original redeemed amounts. The available points and partial amounts to deduct are:\n\n1. AE231010-55304250 - available 51.17 AED (5,117 points), original 118.00 AED, deduct 51.17\n2. AE241124-37771964 - available 186.13 AED (18,613 points), original 655.00 AED, deduct 186.13\n3. AE250515-43260061 - available 58.96 AED (5,896 points), original 76.00 AED, deduct 58.96\n4. AE260227-08123022 - available 233.41 AED (23,341 points), original 474.00 AED, deduct 233.41\n\nThe PC-48490 W1-Positive script has two guard checks that prevent processing these four orders. First, the requestId equality check skips orders where the Hybris payment transaction entry requestId matches the transactionId from the discrepancy report. All four orders have matching requestIds. Second, the remainingAmount equality check skips orders where the remaining amount on the payment transaction does not equal the rewards refund amount being passed. Since we are now charging partial amounts instead of the full original amount, this check will always fail for these orders.\n\nA modified script (script-AEME-6282-rewards-partial-redemption.groovy) has been prepared under PC-53503. This script removes both guard checks and uses forceRedeem=true. The order list contains the four orders with their partial redemption amounts. The script flow is: find the AUTHORIZATION-type PaymentTransactionEntry for samsungRewardPoints provider, call tokorewardpaymentservicesFacade.updatePTEs to set the PT to REVIEW, call redeemCustomerRewardPoint with the partial amount, and if successful, update NOTIFICATION and CAPTURE entries with the new requestId from the AUTHORIZATION PTE. If the GCRM call fails, the PTEs are reverted to ACCEPTED status.\n\nThis is not a platform bug. The original points cancellation was an exploitation of the checkout flow before the HGE-10824 fix was deployed. The remediation is a business-approved data correction to align Hybris with GCRM records.\n\n## Remediation\n\nScript: script-AEME-6282-rewards-partial-redemption.groovy\nPC Ticket: PC-53503\n\nThe script is ready for execution under PC-53503. It will redeem the partial (available) amounts from the four remaining orders' GCRM accounts. After execution, the GCRM and Hybris records will be aligned for these orders.\n\nThanks,\n\nAryan",
@@ -61,6 +71,16 @@
       "lastCommentSnippet": "",
       "lastCommentDate": "",
       "url": "https://jira.secext.samsung.net/browse/PC-53503",
+      "linkedTickets": [
+        {
+          "key": "AEME-6282",
+          "summary": "[For approval] Redeem rewards on impacted orders",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "relation": "is blocked by",
+          "assignee": "Unassigned"
+        }
+      ],
       "solution": {
         "status": "found",
         "excerpt": "# RCA: PC-53503\nSummary: Redeem rewards points (partial) for 4 AE orders - AEME-6282\nGenerated: 2026-09-03T18:35:00+0900\n\nIssue:\nFour completed AE-region orders have Samsung reward points that were incorrectly cancelled and returned to customers while the orders themselves were never cancelled or returned. The rewards remediation team attempted to re-redeem the full point amounts via the existing PC-48490 (W1-Positive) script, but GCRM rejected all four with \"Not enough point\" because the customers' current reward point balances are insufficient for the full amounts. The business (Talib Raza Zaidi, approved by Dilip Boddula) has approved partial redemption — deducting only the available points from each customer's account. However, the PC-48490 script cannot process these orders for partial redemption due to two guard checks that prevent the script from selecting them, and because the script always charges the full plannedAmount rather than a partial amount.\n\nRCA:\nAll four orders are in COMPLETED status with samsungRewardPoints PaymentTransactions. DB verification reveals two distinct patterns among the four orders:\n\nOrders AE231010-55304250 (plannedAmount=118, remainingAmount=118) and AE260227-08123022 (plannedAmount=474, remainingAmount=474) have AUTHORIZATION and CAPTURE entries only — no VOID entry. Their remainingAmount equals the full plannedAmount, indicating the reward points were never successfully deducted from the customer accounts (or were reversed without leaving a VOID trail).\n\nOrders AE241124-37771964 (plannedAmount=655, remainingAmount=0) and AE250515-43260061 (plannedAmount=76, remainingAmount=0) have AUTHORIZATION, CAPTURE, and VOID entries. The VOID entries are dated months after the original capture (e.g., AE241124-37771964 VOID on 2025-04-15, original capture on 2025-03-21). The remainingAmount is 0 on both, meaning the system considers the reward deduction fully reversed. Notably, AE250515-43260061's CAPTURE-3 entry has a different requestId (4cd6ae12-350b-40e0-b453-ec35c9a395f8, the Tabby payment ID) compared to the original rewards requestId (2025000020453552).\n\nThe PC-48490 (W1-Positive) script was designed for a different remediation pattern — where the transactionId on the PaymentTransaction does NOT match the one saved in the completed order's PTEs. It has two guard checks that disqualify all four orders:\n\n1. requestId mismatch check: The W1-Positive script expects PT.requestId to differ from PTE.requestId. All four orders have matching requestIds (e.g., PT.requestId=2023000003900711, PTE.requestId=2023000003900711), so the script would skip all of them.\n\n2. remainingAmount equality check: The script verifies remainingAmount equals plannedAmount (ensuring the full amount still needs redemption). Two of the four orders (AE241124-37771964, AE250515-43260061) have remainingAmount=0 due to prior VOID entries, so this check would also reject them.\n\nAdditionally, the business approved charging only the available partial amounts (confirmed by GCRM), not the full plannedAmount. The available amounts per customer as of 2026-09-01 are: AE231010-55304250 = 51.17 AED (vs 118.00 needed), AE241124-37771964 = 186.13 AED (vs 655.00 needed), AE250515-43260061 = 58.96 AED (vs 76.00 needed), AE260227-08123022 = 233.41 AED (vs 474.00 needed). The PC-48490 script always charges the full plannedAmount and has no mechanism for partial redemption.\n\nPossible remediation:\nRun the adapted script attached to PC-53503 (script-AEME-6282-rewards-partial-redemption.groovy), which is based on PC-48490 with the following modifications:\n\n1. Removed the requestId mismatch check (W1-Positive guard) — all four orders have matching requestIds and should still be processed.\n2. Removed the remainingAmount equality check — two orders have remainingAmount=0 due to VOID entries but still need partial redemption.\n3. The script charges the available partial amount per order instead of the full plannedAmount:\n\n   AE231010-55304250: charge 51.17 (GCRM requestId 2023000003900711)\n   AE241124-37771964: charge 186.13 (GCRM requestId 2025000016897277)\n   AE250515-43260061: charge 58.96 (GCRM requestId 2025000020453552)\n   AE260227-08123022: charge 233.41 (GCRM requestId 2026000041598630)\n\n4. After successful partial redemption, the script should create a new CAPTURE PaymentTransactionEntry with the partial amount and update the PaymentTransaction remainingAmount to reflect the unredeemed balance (plannedAmount minus charged amount).\n\n5. The script should NOT update the Remediation Description on the order to avoid re-interfacing the order to GCRM (per PC-48490 NOTE).\n\nThe script should be executed under PC-53503 in the HAC console. This ticket is labelled REUSABLE for future partial rewards redemption scenarios where customers have insufficient points for full redemption.",
@@ -91,6 +111,7 @@
       "lastCommentSnippet": "",
       "lastCommentDate": "",
       "url": "https://jira.secext.samsung.net/browse/SAME-3958",
+      "linkedTickets": [],
       "solution": {
         "status": "found",
         "excerpt": "Sales Report - Additional Columns\r\nGenerated: 2026-09-03T00:00:00Z\r\n\r\nIssue:\r\n\r\nThe SA eStore daily sales report (cronjob report-sa-tokoSalesReportJob-nonPII) is missing two columns that the business needs: affiliate_name and multistore_verificationcode. The requestor attached a Grafana MOH.xlsx showing the columns they currently receive from Grafana and wants the Hybris-generated daily report to include these additional multistore-related fields for parity. The cronjob generates the report via a Groovy script (SaSalesReport.groovy) that defines its column set and column population methods, but neither affiliate_name nor multistore_verificationcode are currently in the column list or implemented as @ColumnMethod handlers in the script.\r\n\r\n\r\nRCA:\r\n\r\nThe SA daily sales report is generated by a TokoGroovyBasedReportJob cronjob (code: report-sa-tokoSalesReportJob-Daily, configured in estore-mastersalesreport-sa.impex). The cronjob delegates to a Groovy script registered as a Script item (code: toko-sa-groovy-tokoSalesReportJob-Daily) pointing to SaSalesReport.groovy under the sapreporting extension's groovy/salesreport/ directory.\r\n\r\nThe Groovy script extends SalesReport and defines its output columns in the getColumns() method. Currently 43 columns are defined (Site, Sales_Application, Product_Code, Additional_Info_Type, Additional_Info_Value, Order_Code, Order_Status, Order_Creation_Date, Order_Entry_Total_Price, Total_RRP, Total_Discounts, Order_Entry_Cancelled_Price, Order_Entry_Returns_Price, Order_Entry_Sit_Returns_Price, Order_Entry_Quantity, Voucher_Code, Promotion_Name, Payment_Mode, Payment_Transaction_Code, Shipping_Method, Gerp_Shipping_Method, Gerp_Sprocid, Customer_Type, Ean, Sales_Order, First_GI, Second_GI, Sent_To_Gerp, Delivery_Order, Return_Order, Return_Sales_Order, Return_Delivery_Order, Invoice_Carrier_Type, Invoice_Carrier_Reference, Membership_Number, Insurance, Shipping_Date, PreorderFlag, Super_Category, Popup_Store_Id, Added_Services, Store_Name, Store_Id). Neither affiliate_name nor multistore_verificationcode appear in this list.\r\n\r\nThe affiliate_name concept already exists in the codebase. The non-Groovy TokoSalesReportServiceImpl.java (used by other regions' TokoSalesReportJob-based cronjobs) has a constant MULTISTORE_AFFILIATE_NAME = \"Multistore_Affiliate_Name\" and an updateAffiliateName() method that resolves the affiliate name by looking up the order's user, checking the ENABLE_AFFILIATE_FROM_EMAIL config property, finding the active UserToMultiStoreLink for the order's site's TokoMultiStore, extracting the companyEmail, and taking the domain portion (substring after @). This logic is not present in the Groovy script.\r\n\r\nThe multistore_verificationcode attribute exists on the TokoMultiStore type system. The TokoMultiStore model has a tokoVerificationcode relation (Set<TokoVerificationCodeModel>) accessible via getTokoVerificationcode(). The TokoMultiStoreUtility.getVerificationCodeByDates() method returns the active verification codes filtered by date validity. Additionally, UserToMultiStoreLink has a verificationCodeUsed attribute. Neither of these is referenced anywhere in SaSalesReport.groovy.\r\n\r\nThe root cause is simply that the SaSalesReport.groovy script was authored before these multistore fields were needed for the SA report, and no one has added them. This is a feature gap, not a bug or system error. The infrastructure to support both columns fully exists in the Hybris type system and service layer; the Groovy script just needs two new @ColumnMethod handlers and two new entries in getColumns().\r\n\r\n\r\nPossible remediation:\r\n\r\n1. Add 'Multistore_Affiliate_Name' and 'Multistore_VerificationCode' to the getColumns() Set in SaSalesReport.groovy.\r\n\r\n2. Implement a @ColumnMethod for Multistore_Affiliate_Name that mirrors the existing updateAffiliateName logic from TokoSalesReportServiceImpl.java:\r\n   - Get the order from the order entry\r\n   - Check if the site is a CMSSiteModel with a TokoMultiStore\r\n   - Look up the order user's active UserToMultiStoreLink models matching the site's TokoMultiStore\r\n   - Extract the companyEmail, take the domain portion (substring after @), lowercase it\r\n   - Fall back to empty string if no match or if the ENABLE_AFFILIATE_FROM_EMAIL config is false\r\n\r\n3. Implement a @ColumnMethod for Multistore_VerificationCode that:\r\n   - Gets the TokoMultiStore from the order's CMSSite\r\n   - Calls TokoMultiStoreUtility.getVerificationCodeByDates() to get active verification codes\r\n   - Joins them with comma separator\r\n   - Falls back to the UserToMultiStoreLink's verificationCodeUsed if no store-level codes are active\r\n   - Returns null/empty if the site is not a multistore\r\n\r\n4. Update the SaSalesReport.groovy in the sapreporting extension's resources/groovy/salesreport/ directory.\r\n\r\n5. No ImpEx changes are needed for the cronjob configuration itself -- the Groovy script is loaded dynamically and the cronjob already points to the script via the localizedTemplate field. However, the Script item content in the database needs to be updated with the new script content, either via an ImpEx UPDATE Script statement or by updating the script file and re-importing.\r\n\r\n6. Test by running the cronjob manually in HAC/backoffice and verifying the output report contains the two new columns populated with correct data for multistore orders and empty/null for non-multistore orders.\r\n\r\nNo PC ticket or HAC remediation script is needed for this change. This is a code modification that requires a normal build and deployment of the sapreporting extension.\r\n\r\n\r\nThanks,\r\n\r\nAryan",
@@ -121,6 +142,16 @@
       "lastCommentSnippet": "",
       "lastCommentDate": "",
       "url": "https://jira.secext.samsung.net/browse/PC-53529",
+      "linkedTickets": [
+        {
+          "key": "SAM-24720",
+          "summary": " Update or create Cronjob for autocleanup",
+          "status": "Code Review",
+          "statusCategory": "In Progress",
+          "relation": "is blocked by",
+          "assignee": "Unassigned"
+        }
+      ],
       "solution": {
         "status": "found",
         "excerpt": "[SAM-24720] Create DB cleanup cronjobs for SMI cluster\r\nGenerated: 2026-09-03T20:00:00+09:00\r\n\r\nIssue:\r\nThe SMI (Samsung India) Hybris cluster experiences frequent high DB storage issues due to stale records accumulating in six database tables: tasklogs (process engine task logs), users4sn (anonymous user sessions), paymentinfos42sn (stale payment info snapshots), pricerows1055sn (expired price row entries), addresses23sn (orphaned address records), and tokoeventlog (Toko event log entries). Currently no automated cleanup cronjobs exist for the SMI cluster, requiring manual SAP intervention to purge old data each time storage reaches critical levels.\r\n\r\nRCA:\r\nSAM-24720 was raised by Arvind Panchal reporting that SMI faces frequent high DB storage issues, requesting automated cleanup jobs with specific retention periods. SAP provided 6 DELETE queries targeting the six tables above. The same pattern was already implemented successfully by Pulkesh in PC-49614 for the SEAO cluster (SAM-20914, which SAM-24720 clones), where 6 individual scripting cronjobs plus a composite job were created, all completing with FINISHED/SUCCESS status. PC-53529 replicates this proven pattern for the SMI cluster. Six Groovy scripts have been attached, each using Spring JdbcTemplate with batch deletion (TOP 10000 per batch, max 200000 rows per run) and table-specific retention windows: tasklogs retains 2 months, users4sn retains 1 month, and paymentinfos42sn, pricerows1055sn, addresses23sn, and tokoeventlog each retain 3 months. The accompanying ImpEx creates 6 Script + ScriptingJob + CronJob entries, 1 CompositeCronJob (CleanupComposite) chaining all 6 jobs sequentially, and a Trigger firing every 6 hours. This is a standard Hybris scripting pattern with no custom Java code or new extension required. The root cause of the recurring DB storage issue is the absence of automated cleanup for these tables on the SMI cluster.\r\n\r\nPossible remediation:\r\n1. Import the ImpEx file (script-SAM-24720-db-cleanup-cronjobs.impex) on SMI stg2 to create all 6 Script + ScriptingJob + CronJob entries plus the CleanupComposite composite job and its 6-hour trigger.\r\n2. Execute the CleanupComposite job manually on stg2 to validate all 6 individual jobs complete with FINISHED/SUCCESS status.\r\n3. Check the job logs for per-table deletion counts to confirm the batch deletion logic is working correctly.\r\n4. Once validated on stg2, import the ImpEx on SMI production.\r\n5. Monitor DB storage levels over the next 24-48 hours to confirm the cleanup jobs are effectively reducing storage.\r\n6. Rollback if needed: remove the composite job trigger or set active=false. No data restoration is needed as deleted records are stale per the retention policy.\r\n\r\n## Remediation\r\n\r\n**Ticket Type**: DB cleanup cronjob creation (proactive maintenance)\r\n**Parent**: SAM-24720 (Code Review)\r\n**Similar Ticket**: PC-49614 (Closed, SEAO cluster, identical pattern)\r\n**Scripts Attached**: 6 Groovy scripts + 1 ImpEx (already on ticket)\r\n**Verification**: All 6 individual cronjobs + CleanupComposite should be FINISHED with SUCCESS. Check logs for per-table deletion counts.\r\n**Rollback**: Remove composite job trigger or set active=false. Deleted records are stale per retention policy.\r\n**Cluster**: SMI (customfield_18776 = SMI)\r\n**Region**: All (customfield_19634/19635/19636 = All)",
@@ -151,6 +182,7 @@
       "lastCommentSnippet": "",
       "lastCommentDate": "",
       "url": "https://jira.secext.samsung.net/browse/AEME-6540",
+      "linkedTickets": [],
       "solution": {
         "status": "found",
         "excerpt": "Now I need to fetch the Jira ticket and check MCP availability. Let me look at existing fetch scripts and the MCP configuration.\nThe issue is the literal newline inside the string. Let me rewrite the file cleanly.\nGood. Ticket details extracted:\n- **2 orders**: AE260808-54285973 (SM-F971BZKIMEA, REJECTED, chargeback 2230) and AE260725-39348428 (SM-F971BZGOMEA, REJECTED, chargeback 2195)\n- **Both are Trade-In chargebacks** with label `i=chargeBack`\n- **Reporter**: Jaffar Ali, assigned to Aryan\n\nN",
@@ -192,6 +224,16 @@
       "lastCommentSnippet": "Hi ~@email,\n   Please find below details : \nSAP incident : https://me.sap.com/cases/002075129500011086542026/overview\nSap asked us to execute these queries at our end from application for data cleanup\n\nUpdated 26.08.2026 at 17:27 by SAP Agent    \nInfo for Customer\nDear Customer,\nas the DBA does not ",
       "lastCommentDate": "2026-09-01T23:16:19.187+0900",
       "url": "https://jira.secext.samsung.net/browse/SAM-24720",
+      "linkedTickets": [
+        {
+          "key": "SAM-20914",
+          "summary": "Update or create Cronjob for autocleanup",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "clones",
+          "assignee": "Unassigned"
+        }
+      ],
       "solution": {
         "status": "found",
         "excerpt": "Ticket Summary: Update or create Cronjob for autocleanup\nGenerated: 2026-09-03T20:00:00Z\n\nHi Arvind ,\n\nThe SMI cluster database is experiencing recurring high storage issues because several Hybris snapshot tables and custom event log tables grow unboundedly without any automated retention cleanup. SAP has raised incident 002075129500011086542026 and advised running batched DELETE statements from HAC per KBA 3716653, but this is a manual workaround and needs to be automated as a scheduled cronjob.\n\nThe six target tables fall into two categories. First, snapshot tables generated by Hybris when snapshot persistence is enabled for standard types: users4sn (User, typecode 4), paymentinfos42sn (PaymentInfo, typecode 42), pricerows1055sn (PriceRow, typecode 1055), and addresses23sn (Address, typecode 23). These tables follow Hybris naming convention where the numeric suffix is the typecode and the sn suffix denotes snapshot. They accumulate every versioned snapshot for their respective types and have no built-in expiry mechanism. Second, the tasklogs table which is the standard Hybris process engine task log, accumulating process execution metadata. Third, the tokoeventlog table which is a custom type defined in tokocore-items.xml at line 38446 with deployment table TokoEventLog and typecode 11164. The TokoEventLog type stores event messages with a target item reference, a message string, and an infoMap, indexed by itemtype, target, and creationtime. Both tasklogs and tokoeventlog are write-heavy tables that grow continuously during normal operation.\n\nNo existing DB-level cleanup cronjob exists in the Toko codebase for these tables. The codebase has several domain-specific cleanup jobs (CachedServiceabilityCleanupJob, TokoOtpSessionCleanupJob, TokoSimContractDocumentCleanupJob, TokoBackofficeReportsCleanupJobPerformable, TokoTradeInDataCleanupJob, AltchaCleanupJob), but all operate through the Hybris model layer using FlexibleSearch and ModelService.remove, not through raw SQL DELETE statements. The SAP-requested queries use DELETE TOP(200000) with DATEADD-based retention filtering, which is a SQL Server batched-delete pattern that bypasses the model layer entirely. This is intentional for performance: deleting 200K rows at a time avoids lock escalation and transaction log bloat on large tables.\n\nA PC ticket PC-53529 has already been created for this work, titled \"[SAM-24720] Create DB cleanup cronjobs for SMI cluster\" and is currently in To Do status. A previous similar ticket SAM-20914 (\"Update or create Cronjob for autocleanup\") was resolved as Closed, and HGE-8069 (\"TokoEventLog Cleanup\") is in Launch Verification status, indicating prior work has been done on TokoEventLog cleanup specifically. The ticket SAM-18467 (\"Please check tasklog, tokoeventlog table size\") was also completed, confirming these table sizes have been monitored before.\n\nThe recommended approach is to create a new JobPerformable class, TokoDbCleanupJobPerformable, in the tokocore extension that executes the six batched DELETE statements using direct JDBC (not FlexibleSearch) to match the SQL Server-specific syntax. The job should be configurable via project.properties for retention periods and batch sizes, scheduled via a CronJob instance with a Trigger in tokodeployment ImpEx, and configured to run during low-traffic windows. The existing PC-53529 should cover this implementation. The job should be created on all SMI cluster environments where snapshot persistence is enabled. No Kibana log analysis or HAC FlexiQuery was performed for this ticket as it is a database maintenance request, not an order-level issue.\n\nThanks,\n\nAryan\n\n## Remediation\n\n1. PC-53529 already exists for this work. Implement the TokoDbCleanupJobPerformable in tokocore with the six DELETE statements as specified.\n2. Configure retention periods via project.properties: toko.db.cleanup.tasklogs.retention.months=2, toko.db.cleanup.users.retention.months=1, toko.db.cleanup.paymentinfo.retention.months=3, toko.db.cleanup.pricerows.retention.months=3, toko.db.cleanup.addresses.retention.months=3, toko.db.cleanup.tokoeventlog.retention.months=3\n3. Create CronJob instance and Trigger via ImpEx in tokodeployment, scheduled to run daily during off-peak hours.\n4. Deploy to SMI cluster environments. Verify table sizes decrease after first run.\n5. Refer to HGE-8069 for prior TokoEventLog cleanup work and SAM-20914 for the previous autocleanup implementation pattern.",
@@ -250,7 +292,7 @@
       }
     ],
     "pid": 17144,
-    "uptime": 26341,
+    "uptime": 26361,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -262,7 +304,7 @@
       {
         "pid": 1436,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 19847,
+        "ageSeconds": 19869,
         "status": "running",
         "isChild": false,
         "taskSummary": "I want all the linked tickets to be listed down with their status along with each jira ticket sho...",
@@ -272,7 +314,7 @@
       {
         "pid": 24728,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 19842,
+        "ageSeconds": 19864,
         "status": "running",
         "isChild": false,
         "taskSummary": "default searching code through graphify always when codebase is researched/ insvestigated",
@@ -282,7 +324,7 @@
       {
         "pid": 916,
         "cwd": "c:\\windows",
-        "ageSeconds": 17485,
+        "ageSeconds": 17506,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -292,7 +334,7 @@
       {
         "pid": 28640,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 17292,
+        "ageSeconds": 17313,
         "status": "running",
         "isChild": false,
         "taskSummary": "I want all the linked tickets to be listed down with their status along with each jira ticket sho...",
@@ -302,7 +344,7 @@
       {
         "pid": 35792,
         "cwd": "unknown",
-        "ageSeconds": 1820,
+        "ageSeconds": 1842,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -1364,38 +1406,7 @@
       }
     }
   },
-  "mcps": [
-    {
-      "name": "Jira",
-      "status": "up",
-      "type": "process",
-      "dir": "mcp-jira"
-    },
-    {
-      "name": "Kibana",
-      "status": "up",
-      "type": "process",
-      "dir": "mcp-kibana"
-    },
-    {
-      "name": "HAC",
-      "status": "up",
-      "type": "process",
-      "dir": "mcp-hac"
-    },
-    {
-      "name": "Confluence",
-      "status": "down",
-      "type": "process",
-      "dir": "mcp-confluence"
-    },
-    {
-      "name": "Workflow",
-      "status": "up",
-      "type": "process",
-      "dir": "mcp-workflow"
-    }
-  ],
+  "mcps": [],
   "hacReport": {
     "generatedAt": "2026-09-07T04:34:31.519Z",
     "generatedAtLocal": "Sep 7, 2026, 10:04:31 AM",
