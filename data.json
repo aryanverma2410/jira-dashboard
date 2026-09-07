@@ -1,7 +1,43 @@
 {
-  "generatedAt": "2026-09-07T11:14:33.856Z",
+  "generatedAt": "2026-09-07T11:15:09.873Z",
   "totalTickets": 6,
   "tickets": [
+    {
+      "key": "PC-53689",
+      "summary": "Add Affiliate_Name and Multistore_VerificationCode columns to SA Sales Report",
+      "status": "Reviewed",
+      "statusCategory": "In Progress",
+      "priority": "Medium",
+      "project": "PROD Change",
+      "projectKey": "PC",
+      "issuetype": "Hybris Platform",
+      "updated": "2026-09-07T20:15:00.000+0900",
+      "created": "2026-09-07T19:15:42.000+0900",
+      "description": "Adding two new columns (affiliate_name, multistore_verificationcode) to the SA daily sales report cronjob (report-sa-tokoSalesReportJob-nonPII) as requested in SAME-3958.\n\nDelta:\n\n+ //NOTE ITGC_JIRA:PC-53689(SAME-3958)\n\n  // getColumns() — added two new columns:\n• 'Added_Services','Store_Name','Stor",
+      "commentsCount": 1,
+      "recentComments": [
+        {
+          "author": "Vaibhav Jain",
+          "date": "2026-09-07T20:14:55.959+0900",
+          "snippet": "Reviewed"
+        }
+      ],
+      "lastCommentBy": "Vaibhav Jain",
+      "lastCommentSnippet": "Reviewed",
+      "lastCommentDate": "2026-09-07T20:14:55.959+0900",
+      "url": "https://jira.secext.samsung.net/browse/PC-53689",
+      "solution": {
+        "status": "found",
+        "excerpt": "Add Affiliate_Name and Multistore_VerificationCode columns to SA Sales Report\r\nGenerated: 2026-09-07T19:30:00+09:00\r\n\r\nIssue:\r\nThe SA eStore daily sales report (cronjob report-sa-tokoSalesReportJob-Daily, also referred to as report-sa-tokoSalesReportJob-nonPII) was generating a 43-column report that did not include affiliate name or multistore verification code data. Parent ticket SAME-3958 requested these two additional columns be added so the report captures which affiliate drove each sale and which multistore verification code was used at checkout. This data is needed by the SA business team to track affiliate-driven sales performance and multistore verification compliance.\r\n\r\nRCA:\r\nThe SA Sales Report is a Groovy-based report job (type TokoGroovyBasedReportJob) that runs the SaSalesReport.groovy script, located in the sapreporting extension under resources/groovy/salesreport/. The script extends groovy.salesreport.SalesReport and uses SAP Reporting Boosters annotations (@ColumnMethod, @EntityMethod) to define report columns. The getColumns() method returns the ordered set of column names, and each column has a corresponding @ColumnMethod handler that populates the value per row.\r\n\r\nThe report was missing two columns because getColumns() did not include them and no @ColumnMethod handlers existed for them. The Order model already has native getters for both fields: order.getAffiliateName() and order.getVerificationCode(). These attributes are populated upstream during order placement when an affiliate referral or multistore verification occurs. No complex derivation logic is needed -- the Java-based TokoSalesReportServiceImpl.updateAffiliateName() method (which derives affiliate name from UserToMultiStoreLink.companyEmail using the ENABLE_AFFILIATE_FROM_EMAIL config) is used by non-Groovy report jobs for other regions, but the SA Groovy report can read the already-populated Order attribute directly.\r\n\r\nThe attached SaSalesReport.groovy script (25919 bytes) implements the solution by:\r\n1. Adding 'Affiliate_Name' and 'Multistore_VerificationCode' to the getColumns() Set, bringing the total from 43 to 45 columns\r\n2. Adding populateAffiliateName() with @ColumnMethod(name='Affiliate_Name', entity='Order') that sets report['Affiliate_Name'] = order.getAffiliateName()\r\n3. Adding populateMultistoreVerificationCode() with @ColumnMethod(name='Multistore_VerificationCode', entity='Order') that sets report['Multistore_VerificationCode'] = order.getVerificationCode()\r\n\r\nBoth handlers use entity='Order', meaning the OrderModel is passed directly to each handler. The Groovy script is loaded dynamically from a Script item in the Hybris database (code: toko-sa-groovy-tokoSalesReportJob-Daily), so no ImpEx reconfiguration of the cronjob is needed -- only the script content needs to be updated.\r\n\r\nPossible remediation:\r\nThe script SaSalesReport.groovy is already complete and attached to PC-53689. To deploy:\r\n1. Upload the updated SaSalesReport.groovy to the Hybris script repository (update the Script item with code toko-sa-groovy-tokoSalesReportJob-Daily in HAC or via ImpEx)\r\n2. No code build or deployment is required -- Groovy scripts are loaded dynamically at cronjob execution time\r\n3. Run the cronjob report-sa-tokoSalesReportJob-Daily manually to verify the two new columns appear in the output with correct data\r\n4. Verify that orders with affiliate referrals show non-null Affiliate_Name and orders placed through multistore show non-null Multistore_VerificationCode\r\n\r\nThe script is self-contained and requires no additional codebase changes. The Order type system already supports getAffiliateName() and getVerificationCode() as confirmed by the script's compilation and production usage.",
+        "sections": {
+          "issue": "The SA eStore daily sales report (cronjob report-sa-tokoSalesReportJob-Daily, also referred to as report-sa-tokoSalesReportJob-nonPII) was generating a 43-column report that did not include affiliate name or multistore verification code data. Parent ticket SAME-3958 requested these two additional columns be added so the report captures which affiliate drove each sale and which multistore verification code was used at checkout. This data is needed by the SA business team to track affiliate-driven sales performance and multistore verification compliance.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-07T10:24:29.030Z"
+      }
+    },
     {
       "key": "PC-53503",
       "summary": "Redeem rewards points (partial) for 4 AE orders - AEME-6282",
@@ -30,36 +66,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-03T13:47:40.877Z"
-      }
-    },
-    {
-      "key": "PC-53689",
-      "summary": "Add Affiliate_Name and Multistore_VerificationCode columns to SA Sales Report",
-      "status": "To do",
-      "statusCategory": "To Do",
-      "priority": "Medium",
-      "project": "PROD Change",
-      "projectKey": "PC",
-      "issuetype": "Hybris Platform",
-      "updated": "2026-09-07T19:53:32.000+0900",
-      "created": "2026-09-07T19:15:42.000+0900",
-      "description": "Adding two new columns (affiliate_name, multistore_verificationcode) to the SA daily sales report cronjob (report-sa-tokoSalesReportJob-nonPII) as requested in SAME-3958.\n\nDelta:\n\n+ //NOTE ITGC_JIRA:PC-53689(SAME-3958)\n\n  // getColumns() — added two new columns:\n• 'Added_Services','Store_Name','Stor",
-      "commentsCount": 0,
-      "recentComments": [],
-      "lastCommentBy": "",
-      "lastCommentSnippet": "",
-      "lastCommentDate": "",
-      "url": "https://jira.secext.samsung.net/browse/PC-53689",
-      "solution": {
-        "status": "found",
-        "excerpt": "Add Affiliate_Name and Multistore_VerificationCode columns to SA Sales Report\r\nGenerated: 2026-09-07T19:30:00+09:00\r\n\r\nIssue:\r\nThe SA eStore daily sales report (cronjob report-sa-tokoSalesReportJob-Daily, also referred to as report-sa-tokoSalesReportJob-nonPII) was generating a 43-column report that did not include affiliate name or multistore verification code data. Parent ticket SAME-3958 requested these two additional columns be added so the report captures which affiliate drove each sale and which multistore verification code was used at checkout. This data is needed by the SA business team to track affiliate-driven sales performance and multistore verification compliance.\r\n\r\nRCA:\r\nThe SA Sales Report is a Groovy-based report job (type TokoGroovyBasedReportJob) that runs the SaSalesReport.groovy script, located in the sapreporting extension under resources/groovy/salesreport/. The script extends groovy.salesreport.SalesReport and uses SAP Reporting Boosters annotations (@ColumnMethod, @EntityMethod) to define report columns. The getColumns() method returns the ordered set of column names, and each column has a corresponding @ColumnMethod handler that populates the value per row.\r\n\r\nThe report was missing two columns because getColumns() did not include them and no @ColumnMethod handlers existed for them. The Order model already has native getters for both fields: order.getAffiliateName() and order.getVerificationCode(). These attributes are populated upstream during order placement when an affiliate referral or multistore verification occurs. No complex derivation logic is needed -- the Java-based TokoSalesReportServiceImpl.updateAffiliateName() method (which derives affiliate name from UserToMultiStoreLink.companyEmail using the ENABLE_AFFILIATE_FROM_EMAIL config) is used by non-Groovy report jobs for other regions, but the SA Groovy report can read the already-populated Order attribute directly.\r\n\r\nThe attached SaSalesReport.groovy script (25919 bytes) implements the solution by:\r\n1. Adding 'Affiliate_Name' and 'Multistore_VerificationCode' to the getColumns() Set, bringing the total from 43 to 45 columns\r\n2. Adding populateAffiliateName() with @ColumnMethod(name='Affiliate_Name', entity='Order') that sets report['Affiliate_Name'] = order.getAffiliateName()\r\n3. Adding populateMultistoreVerificationCode() with @ColumnMethod(name='Multistore_VerificationCode', entity='Order') that sets report['Multistore_VerificationCode'] = order.getVerificationCode()\r\n\r\nBoth handlers use entity='Order', meaning the OrderModel is passed directly to each handler. The Groovy script is loaded dynamically from a Script item in the Hybris database (code: toko-sa-groovy-tokoSalesReportJob-Daily), so no ImpEx reconfiguration of the cronjob is needed -- only the script content needs to be updated.\r\n\r\nPossible remediation:\r\nThe script SaSalesReport.groovy is already complete and attached to PC-53689. To deploy:\r\n1. Upload the updated SaSalesReport.groovy to the Hybris script repository (update the Script item with code toko-sa-groovy-tokoSalesReportJob-Daily in HAC or via ImpEx)\r\n2. No code build or deployment is required -- Groovy scripts are loaded dynamically at cronjob execution time\r\n3. Run the cronjob report-sa-tokoSalesReportJob-Daily manually to verify the two new columns appear in the output with correct data\r\n4. Verify that orders with affiliate referrals show non-null Affiliate_Name and orders placed through multistore show non-null Multistore_VerificationCode\r\n\r\nThe script is self-contained and requires no additional codebase changes. The Order type system already supports getAffiliateName() and getVerificationCode() as confirmed by the script's compilation and production usage.",
-        "sections": {
-          "issue": "The SA eStore daily sales report (cronjob report-sa-tokoSalesReportJob-Daily, also referred to as report-sa-tokoSalesReportJob-nonPII) was generating a 43-column report that did not include affiliate name or multistore verification code data. Parent ticket SAME-3958 requested these two additional columns be added so the report captures which affiliate drove each sale and which multistore verification code was used at checkout. This data is needed by the SA business team to track affiliate-driven sales performance and multistore verification compliance.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-07T10:24:29.030Z"
       }
     },
     {
@@ -239,7 +245,7 @@
       }
     ],
     "pid": 17144,
-    "uptime": 23791,
+    "uptime": 23831,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -251,7 +257,7 @@
       {
         "pid": 24068,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 23593,
+        "ageSeconds": 23629,
         "status": "running",
         "isChild": false,
         "taskSummary": "I want all the linked tickets to be listed down with their status along with each jira ticket sho...",
@@ -261,17 +267,17 @@
       {
         "pid": 1436,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 17298,
+        "ageSeconds": 17334,
         "status": "running",
         "isChild": false,
-        "taskSummary": "proofread each value and check from learnings if the impex is correct and will work",
-        "lastExchange": "proofread each value and check from learnings if the impex is correct and will work",
+        "taskSummary": "have you checked hac to verify everything in logs? I dont want any guesswork",
+        "lastExchange": "have you checked hac to verify everything in logs? I dont want any guesswork",
         "sessionId": "bin"
       },
       {
         "pid": 24728,
         "cwd": "c:\\windows",
-        "ageSeconds": 17293,
+        "ageSeconds": 17329,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -281,7 +287,7 @@
       {
         "pid": 916,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 14935,
+        "ageSeconds": 14971,
         "status": "running",
         "isChild": false,
         "taskSummary": "I want all the linked tickets to be listed down with their status along with each jira ticket sho...",
@@ -291,7 +297,7 @@
       {
         "pid": 28640,
         "cwd": "unknown",
-        "ageSeconds": 14742,
+        "ageSeconds": 14778,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
