@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-07T15:42:41.386Z",
+  "generatedAt": "2026-09-07T15:43:21.064Z",
   "totalTickets": 7,
   "tickets": [
     {
@@ -328,9 +328,16 @@
     "online": true,
     "activeSessions": [],
     "stats": {
-      "totalProcessed": 64
+      "totalProcessed": 65
     },
     "recentActivity": [
+      {
+        "issueNum": 112,
+        "title": "Regenerate EOD Summaries",
+        "received": "2026-09-07T15:42:58.749Z",
+        "responded": "",
+        "responseSnippet": ""
+      },
       {
         "issueNum": 111,
         "title": "Regenerate EOD Summaries",
@@ -358,20 +365,21 @@
         "received": "2026-09-07T15:03:42.557Z",
         "responded": "2026-09-07T15:04:28.679Z",
         "responseSnippet": "I see this was already asked earlier today (issue #103). Let me run the Jira check script to get your current open tickets fresh.\nYou have 7 open tickets right now:\n\n1. **PC-53689** (Approved-ES, Medium) — Add Affiliate_Name and Multistore_VerificationCode columns to SA Sales Report. Last comment from Vamseedhara: please validate in production and monitor performance impact.\n\n2. **AEME-6282** (In Progress) — [For approval] Redeem rewards on impacted orders. Kajal flagged that the requested rewar"
-      },
-      {
-        "issueNum": 107,
-        "title": "AUTOLOGIN: Run Samsung Auto Login",
-        "received": "2026-09-07T14:45:38.651Z",
-        "responded": "2026-09-07T14:48:29.523Z",
-        "responseSnippet": "Ran both available methods:\n\n1. **Python script** — Executed successfully. It closed Edge, relaunched it, attempted CDP on port 9223 (not available), then fell back to keyboard automation (Tab+Tab+Enter sequence). Login submitted; browser left open.\n\n2. **Scheduled task** — `schtasks /Run /TN \"SamsungAutoLogin\"` returned SUCCESS as backup.\n\nSamsung auto-login triggered. If the keyboard fallback didn't fully log in, the browser is open for manual login."
       }
     ],
     "pid": 35920,
-    "uptime": 12190,
+    "uptime": 12230,
     "failures": 0,
-    "activeJobCount": 0,
-    "jobs": [],
+    "activeJobCount": 1,
+    "jobs": [
+      {
+        "issueNum": 112,
+        "issueTitle": "Regenerate EOD Summaries",
+        "snippet": "Read the RCA markdown files for the following tickets from C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\ticket-rca directory:\n",
+        "pid": 23672,
+        "elapsed": 20
+      }
+    ],
     "startTime": "2026-09-07T12:19:30.749Z",
     "version": "v3",
     "lastResponseAt": "2026-09-07T15:40:28.088Z",
@@ -380,7 +388,7 @@
       {
         "pid": 1436,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 33385,
+        "ageSeconds": 33425,
         "status": "running",
         "isChild": false,
         "taskSummary": "c",
@@ -390,7 +398,7 @@
       {
         "pid": 916,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 31023,
+        "ageSeconds": 31062,
         "status": "running",
         "isChild": false,
         "taskSummary": "no, after making the comment , for this ticket, assign it to the reporter to verify, not me its a...",
@@ -400,7 +408,7 @@
       {
         "pid": 28640,
         "cwd": "c:\\windows",
-        "ageSeconds": 30830,
+        "ageSeconds": 30869,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -410,7 +418,7 @@
       {
         "pid": 35792,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 15358,
+        "ageSeconds": 15398,
         "status": "running",
         "isChild": false,
         "taskSummary": "c",
@@ -420,7 +428,7 @@
       {
         "pid": 25896,
         "cwd": "unknown",
-        "ageSeconds": 11438,
+        "ageSeconds": 11478,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -429,6 +437,15 @@
       }
     ],
     "activityLog": [
+      {
+        "id": "1788795779617-tphbnt",
+        "timestamp": "2026-09-07T15:42:59.617Z",
+        "type": "command",
+        "source": "aryanverma2410",
+        "title": "Regenerate EOD Summaries",
+        "detail": "#112",
+        "status": "pending"
+      },
       {
         "id": "1788795628091-x4264s",
         "timestamp": "2026-09-07T15:40:28.091Z",
@@ -689,15 +706,6 @@
         "title": "WAKE UP: Restart dashboard server",
         "detail": "Dashboard server restarted (PID 3904)",
         "status": "success"
-      },
-      {
-        "id": "1788496249744-55qyth",
-        "timestamp": "2026-09-04T04:30:49.744Z",
-        "type": "bridge-event",
-        "source": "dashboard",
-        "title": "WAKE UP: Restart dashboard server",
-        "detail": "#97",
-        "status": "pending"
       }
     ],
     "sessionMeta": {
@@ -1584,10 +1592,54 @@
         ],
         "endTime": "2026-09-07T15:40:28.092Z",
         "lastOutput": "Good, all 30 requested files exist. Let me read them all in parallel.\nNow I have all 30 RCA files. Let me compose the summaries and write the JSON output.\nDone. Read all 30 RCA files from `ticket-rca/` and wrote EOD summaries to `eod-summaries.json`.\n\nEach summary follows the 30-40 word format covering: what the issue was, what was done, and what remains. The JSON is structured with `\"date\":\"2026-09-07\"`, `\"source\":\"aipro\"`, and all 30 ticket keys mapped to their narratives."
+      },
+      "112": {
+        "sessionId": "6a826d9b-d540-4461-93a5-9247aa865a71",
+        "issueNum": 112,
+        "title": "Regenerate EOD Summaries",
+        "startTime": "2026-09-07T15:42:59.795Z",
+        "status": "thinking",
+        "commandHistory": [
+          {
+            "title": "Regenerate EOD Summaries",
+            "time": "2026-09-07T15:42:59.795Z"
+          }
+        ]
       }
     }
   },
-  "mcps": [],
+  "mcps": [
+    {
+      "name": "Jira",
+      "status": "up",
+      "type": "process",
+      "dir": "mcp-jira"
+    },
+    {
+      "name": "Kibana",
+      "status": "up",
+      "type": "process",
+      "dir": "mcp-kibana"
+    },
+    {
+      "name": "HAC",
+      "status": "up",
+      "type": "process",
+      "dir": "mcp-hac"
+    },
+    {
+      "name": "Confluence",
+      "status": "down",
+      "type": "process",
+      "dir": "mcp-confluence"
+    },
+    {
+      "name": "Workflow",
+      "status": "up",
+      "type": "process",
+      "dir": "mcp-workflow"
+    }
+  ],
   "hacReport": {
     "generatedAt": "2026-09-07T13:07:58.703Z",
     "generatedAtLocal": "Sep 7, 2026, 06:37:58 PM",
