@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-08T13:45:24.990Z",
+  "generatedAt": "2026-09-08T13:46:05.816Z",
   "totalTickets": 4,
   "tickets": [
     {
@@ -187,9 +187,23 @@
     "online": true,
     "activeSessions": [],
     "stats": {
-      "totalProcessed": 84
+      "totalProcessed": 86
     },
     "recentActivity": [
+      {
+        "issueNum": 133,
+        "title": "Regenerate EOD Summaries",
+        "received": "2026-09-08T13:45:51.893Z",
+        "responded": "",
+        "responseSnippet": ""
+      },
+      {
+        "issueNum": 132,
+        "title": "Regenerate EOD Summaries",
+        "received": "2026-09-08T13:45:27.500Z",
+        "responded": "",
+        "responseSnippet": ""
+      },
       {
         "issueNum": 131,
         "title": "Regenerate EOD Summaries",
@@ -315,27 +329,28 @@
         "received": "2026-09-07T16:23:22.238Z",
         "responded": "2026-09-07T16:25:14.293Z",
         "responseSnippet": "Now let me look at the dashboard HTML to find the command sending and display logic.\nNow let me check the `processed_issues.json` to understand the response data flow.\nFound the bug. The `pollCmdResponses` function in the dashboard HTML prematurely sets the response to `'Processed'` when it sees the issue appear in `recentActivity` — even before the agent has actually responded (i.e., `responseSnippet` is still empty). Once set to `'Processed'`, it never gets updated because the `!h.response` ch"
-      },
-      {
-        "issueNum": 113,
-        "title": "Any new tickets in the last hour?",
-        "received": "2026-09-07T16:20:29.059Z",
-        "responded": "2026-09-07T16:21:32.199Z",
-        "responseSnippet": "Let me check Jira for any new tickets since the last check at ~15:04 UTC.\nThe `\\r\\n` in the string literal is being interpreted as a literal carriage return + newline in the JS source. Let me fix this.\nNo new tickets in the last hour. Zero new tickets assigned to you in the last 2 hours, and zero existing tickets have been updated in the last hour. All quiet."
-      },
-      {
-        "issueNum": 112,
-        "title": "Regenerate EOD Summaries",
-        "received": "2026-09-07T15:42:58.749Z",
-        "responded": "2026-09-07T15:44:44.166Z",
-        "responseSnippet": "I'll start by reading the RCA markdown files from the ticket-rca directory, then generate the EOD summaries JSON.\nGood, all files exist. Now I'll read them all in parallel batches. Let me read all 31 files.\nNow let me read the remaining files.\nAll 31 RCA files read. Now I'll synthesize the summaries and write the JSON file.\nDone. Wrote 31 ticket summaries to `C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\eod-summaries.json`. Each summary is a concise 30-40 word narrative covering the issue, what was do"
       }
     ],
     "pid": 38756,
-    "uptime": 7984,
+    "uptime": 8026,
     "failures": 0,
-    "activeJobCount": 0,
-    "jobs": [],
+    "activeJobCount": 2,
+    "jobs": [
+      {
+        "issueNum": 132,
+        "issueTitle": "Regenerate EOD Summaries",
+        "snippet": "Read the RCA markdown files for the following tickets from C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\ticket-rca directory:\n",
+        "pid": 43504,
+        "elapsed": 36
+      },
+      {
+        "issueNum": 133,
+        "issueTitle": "Regenerate EOD Summaries",
+        "snippet": "Read the RCA markdown files for the following tickets from C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\ticket-rca directory:\n",
+        "pid": 43820,
+        "elapsed": 12
+      }
+    ],
     "startTime": "2026-09-08T11:32:18.539Z",
     "version": "v3",
     "lastResponseAt": "2026-09-08T13:29:05.309Z",
@@ -344,7 +359,7 @@
       {
         "pid": 1436,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 112749,
+        "ageSeconds": 112790,
         "status": "running",
         "isChild": false,
         "taskSummary": "kibana isnt connected but it still shows up as connect4ed in the mcp section of dashboard",
@@ -354,7 +369,7 @@
       {
         "pid": 916,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 110387,
+        "ageSeconds": 110427,
         "status": "running",
         "isChild": false,
         "taskSummary": "the jira-action-log skill is to add things to queue not directly post it",
@@ -364,7 +379,7 @@
       {
         "pid": 28640,
         "cwd": "c:\\windows",
-        "ageSeconds": 110194,
+        "ageSeconds": 110234,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -374,7 +389,7 @@
       {
         "pid": 25896,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 90802,
+        "ageSeconds": 90843,
         "status": "running",
         "isChild": false,
         "taskSummary": "kibana isnt connected but it still shows up as connect4ed in the mcp section of dashboard",
@@ -384,7 +399,7 @@
       {
         "pid": 6080,
         "cwd": "unknown",
-        "ageSeconds": 23277,
+        "ageSeconds": 23318,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -394,7 +409,7 @@
       {
         "pid": 36180,
         "cwd": "unknown",
-        "ageSeconds": 21213,
+        "ageSeconds": 21254,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -403,6 +418,24 @@
       }
     ],
     "activityLog": [
+      {
+        "id": "1788875152850-9g96zn",
+        "timestamp": "2026-09-08T13:45:52.850Z",
+        "type": "command",
+        "source": "aryanverma2410",
+        "title": "Regenerate EOD Summaries",
+        "detail": "#133",
+        "status": "pending"
+      },
+      {
+        "id": "1788875128464-8ph46v",
+        "timestamp": "2026-09-08T13:45:28.464Z",
+        "type": "command",
+        "source": "aryanverma2410",
+        "title": "Regenerate EOD Summaries",
+        "detail": "#132",
+        "status": "pending"
+      },
       {
         "id": "1788874145311-cuxxep",
         "timestamp": "2026-09-08T13:29:05.311Z",
@@ -653,24 +686,6 @@
         "source": "bridge",
         "title": "Regenerate EOD Summaries",
         "detail": "All 30 RCA files read. Now writing the consolidated EOD summaries JSON.\nDone. Read all 30 RCA files and wrote `eod-summaries.json` with 30 narrative summaries covering issue, work done, and next steps",
-        "status": "success"
-      },
-      {
-        "id": "1788802783349-59rjy4",
-        "timestamp": "2026-09-07T17:39:43.349Z",
-        "type": "command",
-        "source": "aryanverma2410",
-        "title": "Regenerate EOD Summaries",
-        "detail": "#115",
-        "status": "pending"
-      },
-      {
-        "id": "1788798314301-dwz2x4",
-        "timestamp": "2026-09-07T16:25:14.301Z",
-        "type": "agent-response",
-        "source": "bridge",
-        "title": "It just shows \"processed\" in the card and not the output, when I send a command Fix it.",
-        "detail": "Now let me look at the dashboard HTML to find the command sending and display logic.\nNow let me check the `processed_issues.json` to understand the response data flow.\nFound the bug. The `pollCmdRespo",
         "status": "success"
       }
     ],
@@ -1848,6 +1863,32 @@
         ],
         "endTime": "2026-09-08T13:29:05.312Z",
         "lastOutput": "Now I have all 36 RCA files. Let me compose the summaries and write the JSON file.\nDone. Wrote 36 EOD summaries to `C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\eod-summaries.json`.\n\n**Breakdown:**\n- **30 tickets** had complete RCA `.md` files — summarized with full narrative (issue, action, next step)\n- **5 tickets** (GMT-20796, RT-702249, SAHME-3407, SAHME-3421, SAME-3962) had only lock files or residual EOD generation logs — noted as investigations in progress\n- **1 ticket** (PC-53768) had no RCA f"
+      },
+      "132": {
+        "sessionId": "8222736c-e8bb-4941-903e-b71db1372cb9",
+        "issueNum": 132,
+        "title": "Regenerate EOD Summaries",
+        "startTime": "2026-09-08T13:45:28.651Z",
+        "status": "thinking",
+        "commandHistory": [
+          {
+            "title": "Regenerate EOD Summaries",
+            "time": "2026-09-08T13:45:28.651Z"
+          }
+        ]
+      },
+      "133": {
+        "sessionId": "7903b76d-e885-4519-9aab-b7f9dd043974",
+        "issueNum": 133,
+        "title": "Regenerate EOD Summaries",
+        "startTime": "2026-09-08T13:45:53.028Z",
+        "status": "thinking",
+        "commandHistory": [
+          {
+            "title": "Regenerate EOD Summaries",
+            "time": "2026-09-08T13:45:53.028Z"
+          }
+        ]
       }
     }
   },
