@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-08T09:30:08.959Z",
+  "generatedAt": "2026-09-08T09:30:53.186Z",
   "totalTickets": 6,
   "tickets": [
     {
@@ -165,14 +165,14 @@
       "linkedTickets": [],
       "solution": {
         "status": "found",
-        "excerpt": "**Ticket**: [PROD] | Manual Chargeback || 07-Sep\r\n**Reporter**: Jaffar Ali\r\n**Generated**: 2026-09-07T15:00:00Z\r\n\r\nHi Jaffar ,\r\n\r\nThe trade-in clawback (chargeback) for both orders was already triggered automatically by the NorthLadder status check cronjob. The system detected the REJECTED trade-in status from NorthLadder and initiated the clawback process, which attempted to capture the trade-in discount amount from the customer's payment card via Checkout.com. However, the payment authorisation was declined by Checkout.com for both orders.\r\n\r\nAE260808-54285973 (AE-080826-719312, amount 2230 AED):\r\nOn 1 September at 02:01:33, the NorthLadder status check job detected the REJECTED status for trade-in ID AE-080826-719312 and initiated the clawback process. The system computed a clawback amount of 2230 AED (the full trade-in discount given to the customer). At 02:01:36, the clawback financial interface message was sent and Checkout.com was requested to capture 223000 fils (2230 AED) from the customer's card. Checkout.com returned a Declined response at 02:01:37 with payment_declined webhook event. The clawback process errored at the takeClawBackPaymentAction step. The payment transaction (AE260808-54285973_79d08db1) has AUTHORIZATION status ERROR.\r\n\r\nAE260725-39348428 (AE-280726-713980, amount 2195 AED):\r\nNorthLadder returned REJECTED status for trade-in ID AE-280726-713980 daily from 14 August onwards. On 23 August at 02:01:37, the clawback was initiated with amount 2195 AED. The Checkout.com payment authorisation was attempted at 02:01:43 but also resulted in ERROR status (payment transaction AE260725-39348428_eba5cfa2, AUTHORIZATION ERROR at 02:01:46).\r\n\r\nBoth orders are in COMPLETED status with all order and consignment processes SUCCEEDED. The ExternalService entries for NORTHLADDER show CANCELLED status, which is the expected state after the trade-in device was rejected. The SMC (Samsung Care+) external services are in UPDATED status and are not related to this clawback issue.\r\n\r\nThe clawback process is currently stuck at the payment step because the customer's card was declined. A manual re-trigger of the clawback can be performed via the Backoffice \"Initiate Trade-in Clawback\" action on each order, or via a Groovy script that calls tokoBrightstarNotificationService.doHandleNotification() to re-send the _TradeInNotification event and wake the clawback process. However, the payment will likely be declined again unless the customer's card details have been updated or an alternative payment method is available.\r\n\r\nKindly confirm if the customer's payment method has been updated so we can proceed with re-triggering the clawback.\r\n\r\nRegards\r\n\r\nAryan",
+        "excerpt": "# RCA: AEME-6540\n\n[PROD] | Manual Chargeback || 07-Sep\nGenerated: 2026-09-08T09:20:00Z\n\nHi Jaffar ,\n\nBoth orders AE260808-54285973 and AE260725-39348428 are in COMPLETED status with all order and consignment processes succeeded. The trade-in external service (NORTHLADDER) is in CANCELLED status, which confirms the trade-in devices were rejected by NorthLadder.\n\nThe clawback (chargeback) process was already auto-triggered by the NorthLadder status check cronjob (TokoNorthLadderStatusCheckJob) when it detected the REJECTED appraisal status. Both orders have a ClawbackProcess running with process definition clawback-process-v23, and both are currently stuck in RUNNING state with no end message.\n\nThe clawback payment authorization was attempted via Checkout.com but was declined. For order AE260808-54285973, the authorization attempt failed with ERROR status at 2026-09-01 02:01. For order AE260725-39348428, the authorization attempt failed with ERROR status at 2026-08-23 02:01. The error indicates the card used for the original purchase was declined when Checkout.com attempted to authorize the clawback debit.\n\nA similar issue was previously reported in SED-74835 (AEME-3427) where the clawback process failed at the reAuthorizeIfNeeded action because paymentInfo was null and Checkout.com could not re-authorize the card for the clawback amount. The resolution there was to use a different credit card.\n\nThe ClawbackProcess is stuck in RUNNING state because the payment authorization failed but the process never transitioned to ERROR or a retry state. The process is effectively waiting for a successful payment authorization that will not come without manual intervention.\n\nTo remediate this, a Groovy script can be written to re-trigger the clawback process from the takeClawBackPaymentAction step, which will attempt a fresh payment authorization via Checkout.com for the clawback amounts (2230 AED for AE260808-54285973 and 2195 AED for AE260725-39348428). If the card is still declined, the customer would need to provide an alternative payment method.\n\nNo reusable PC ticket exists for clawback remediation. Would you like me to write a remediation script for this?\n\nThanks,\nAryan.\n\n## Remediation\n\n- **Remediation type**: Clawback process re-trigger (new type — no reusable PC ticket exists)\n- **PC ticket**: None yet (pending user confirmation)\n- **Script**: Not yet created (pending user confirmation)\n- **Similar past ticket**: SED-74835 (AEME-3427) — clawback failed at reAuthorizeIfNeeded due to paymentInfo null\n- **Orders**: AE260808-54285973 (clawback amount 2230 AED), AE260725-39348428 (clawback amount 2195 AED)",
         "sections": {
           "issue": "",
-          "rca": "**Ticket**: [PROD] | Manual Chargeback || 07-Sep\r\n**Reporter**: Jaffar Ali\r\n**Generated**: 2026-09-07T15:00:00Z\r\n\r\nHi Jaffar ,\r\n\r\nThe trade-in clawback (chargeback) for both orders was already triggered automatically by the NorthLadder status check cronjob. The system detected the REJECTED trade-in status from NorthLadder and initiated the clawback process, which attempted to capture the trade-in discount amount from the customer's payment card via Checkout.com. However, the payment authorisation was declined by Checkout.com for both orders.\r\n\r\nAE260808-54285973 (AE-080826-719312, amount 2230 AED):\r\nOn 1 September at 02:01:33, the NorthLadder status check job detected the REJECTED status for trade-in ID AE-080826-719312 and initiated the clawback process. The system computed a clawback amount of 2230 AED (the full trade-in discount given to the customer). At 02:01:36, the clawback financial interface message was sent and Checkout.com was requested to capture 223000 fils (2230 AED) from the customer's card. Checkout.com returned a Declined response at 02:01:37 with payment_declined webhook event. The clawback process errored at the takeClawBackPaymentAction step. The payment transaction (AE260808-54285973_79d08db1) has AUTHORIZATION status ERROR.\r\n\r\nAE260725-39348428 (AE-280726-713980, amount 2195 AED):\r\nNorthLadder returned REJECTED status for trade-in ID AE-280726-713980 daily from 14 August onwards. On 23 August at 02:01:37, the clawback was initiated with amount 2195 AED. The Checkout.com payment authorisation was attempted at 02:01:43 but also resulted in ERROR status (payment transaction AE260725-39348428_eba5cfa2, AUTHORIZATION ERROR at 02:01:46).\r\n\r\nBoth orders are in COMPLETED status with all order and consignment processes SUCCEEDED. The ExternalService entries for NORTHLADDER show CANCELLED status, which is the expected state after the trade-in device was rejected. The SMC (Samsung Care+) external services are in UPDATED status and are not related to this clawback issue.\r\n\r\nThe clawback process is currently stuck at the payment step because the customer's card was declined. A manual re-trigger of the clawback can be performed via the Backoffice \"Initiate Trade-in Clawback\" action on each order, or via a Groovy script that calls tokoBrightstarNotificationService.doHandleNotification() to re-send the _TradeInNotification event and wake the clawback process. However, the payment will likely be declined again unless the customer's card details have been updated or an alternative payment method is available.\r\n\r\nKindly confirm if the customer's payment method has been updated so we can proceed with re-triggering the clawback.\r\n\r\nRegards\r\n\r\nAryan",
+          "rca": "# RCA: AEME-6540\n\n[PROD] | Manual Chargeback || 07-Sep\nGenerated: 2026-09-08T09:20:00Z\n\nHi Jaffar ,\n\nBoth orders AE260808-54285973 and AE260725-39348428 are in COMPLETED status with all order and consignment processes succeeded. The trade-in external service (NORTHLADDER) is in CANCELLED status, which confirms the trade-in devices were rejected by NorthLadder.\n\nThe clawback (chargeback) process was already auto-triggered by the NorthLadder status check cronjob (TokoNorthLadderStatusCheckJob) when it detected the REJECTED appraisal status. Both orders have a ClawbackProcess running with process definition clawback-process-v23, and both are currently stuck in RUNNING state with no end message.\n\nThe clawback payment authorization was attempted via Checkout.com but was declined. For order AE260808-54285973, the authorization attempt failed with ERROR status at 2026-09-01 02:01. For order AE260725-39348428, the authorization attempt failed with ERROR status at 2026-08-23 02:01. The error indicates the card used for the original purchase was declined when Checkout.com attempted to authorize the clawback debit.\n\nA similar issue was previously reported in SED-74835 (AEME-3427) where the clawback process failed at the reAuthorizeIfNeeded action because paymentInfo was null and Checkout.com could not re-authorize the card for the clawback amount. The resolution there was to use a different credit card.\n\nThe ClawbackProcess is stuck in RUNNING state because the payment authorization failed but the process never transitioned to ERROR or a retry state. The process is effectively waiting for a successful payment authorization that will not come without manual intervention.\n\nTo remediate this, a Groovy script can be written to re-trigger the clawback process from the takeClawBackPaymentAction step, which will attempt a fresh payment authorization via Checkout.com for the clawback amounts (2230 AED for AE260808-54285973 and 2195 AED for AE260725-39348428). If the card is still declined, the customer would need to provide an alternative payment method.\n\nNo reusable PC ticket exists for clawback remediation. Would you like me to write a remediation script for this?\n\nThanks,\nAryan.\n\n## Remediation\n\n- **Remediation type**: Clawback process re-trigger (new type — no reusable PC ticket exists)\n- **PC ticket**: None yet (pending user confirmation)\n- **Script**: Not yet created (pending user confirmation)\n- **Similar past ticket**: SED-74835 (AEME-3427) — clawback failed at reAuthorizeIfNeeded due to paymentInfo null\n- **Orders**: AE260808-54285973 (clawback amount 2230 AED), AE260725-39348428 (clawback amount 2195 AED)",
           "remediation": ""
         },
         "source": "RCA MD",
-        "foundAt": "2026-09-07T12:39:54.597Z"
+        "foundAt": "2026-09-08T09:30:11.034Z"
       }
     },
     {
@@ -385,7 +385,7 @@
       }
     ],
     "pid": 15900,
-    "uptime": 11081,
+    "uptime": 11122,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -394,7 +394,7 @@
         "issueTitle": "Regenerate EOD Summaries",
         "snippet": "Read the RCA markdown files for the following tickets from C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\ticket-rca directory:\n",
         "pid": 39832,
-        "elapsed": 213
+        "elapsed": 254
       }
     ],
     "startTime": "2026-09-08T06:25:27.679Z",
@@ -405,7 +405,7 @@
       {
         "pid": 1436,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 97434,
+        "ageSeconds": 97477,
         "status": "running",
         "isChild": false,
         "taskSummary": "edit the autologin script that open msedge every morning at 9 to open all these 5 tabs instead of...",
@@ -415,7 +415,7 @@
       {
         "pid": 916,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 95072,
+        "ageSeconds": 95115,
         "status": "running",
         "isChild": false,
         "taskSummary": "check for syntax errors. Let me know if it does everything that the script I gave you at the star...",
@@ -425,7 +425,7 @@
       {
         "pid": 28640,
         "cwd": "c:\\windows",
-        "ageSeconds": 94879,
+        "ageSeconds": 94922,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -435,7 +435,7 @@
       {
         "pid": 25896,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 75487,
+        "ageSeconds": 75530,
         "status": "running",
         "isChild": false,
         "taskSummary": "edit the autologin script that open msedge every morning at 9 to open all these 5 tabs instead of...",
@@ -445,7 +445,7 @@
       {
         "pid": 6080,
         "cwd": "unknown",
-        "ageSeconds": 7962,
+        "ageSeconds": 8005,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -455,7 +455,7 @@
       {
         "pid": 36180,
         "cwd": "unknown",
-        "ageSeconds": 5899,
+        "ageSeconds": 5942,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
