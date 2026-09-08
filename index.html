@@ -367,6 +367,11 @@ body.has-status-bar .scroll{padding-top:28px}
 .aq-action-chip.labels{background:rgba(126,231,135,0.1);border-color:rgba(126,231,135,0.2);color:#7ee787}
 .aq-empty{text-align:center;padding:24px;color:var(--text-dim);font-size:13px}
 .aq-item-created{font-size:10px;color:var(--text-dim);margin-top:6px}
+.aq-item-status{display:flex;align-items:center;gap:6px;margin-top:8px;padding:6px 10px;border-radius:6px;font-size:12px;font-weight:600}
+.aq-status-firing{background:rgba(88,166,255,0.1);border:1px solid rgba(88,166,255,0.2);color:var(--accent)}
+.aq-status-done{background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.2);color:var(--success)}
+.aq-status-failed{background:rgba(248,81,81,0.1);border:1px solid rgba(248,81,81,0.2);color:var(--danger)}
+.aq-status-spinner{display:inline-block;width:12px;height:12px;border:2px solid rgba(88,166,255,0.2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -1908,6 +1913,11 @@ document.getElementById('taskFormFreq').addEventListener('change',function(){
 var tasksOrigSwitchView;
 
 // ===== ACTION QUEUE (Jira Action Queue / logQueue) =====
+// Track firing status in localStorage: { itemId: { issueNum, status, firedAt } }
+function getAQStatuses(){return JSON.parse(localStorage.getItem('aqStatuses')||'{}')}
+function setAQStatus(id,status,issueNum){var s=getAQStatuses();s[id]={status:status,issueNum:issueNum||null,firedAt:Date.now()};localStorage.setItem('aqStatuses',JSON.stringify(s))}
+function getAQStatus(id){var s=getAQStatuses();return s[id]||null}
+
 function renderActionQueue(){
   var aq=rawData&&rawData.actionQueue||[];
   var container=document.getElementById('actionQueueContainer');
@@ -1915,16 +1925,84 @@ function renderActionQueue(){
   var countEl=document.getElementById('aqCount');
   var fireBtn=document.getElementById('aqFireBtn');
   if(!container||!listEl)return;
-  if(aq.length===0){
+
+  // Check for items that were firing but are now gone from the queue (done)
+  var statuses=getAQStatuses();
+  var currentIds=aq.map(function(i){return i.id});
+  Object.keys(statuses).forEach(function(sid){
+    var st=statuses[sid];
+    if(st.status==='firing'&&currentIds.indexOf(parseInt(sid))<0){
+      // Item disappeared — mark as done
+      st.status='done';st.completedAt=Date.now();
+      localStorage.setItem('aqStatuses',JSON.stringify(statuses));
+    }
+  });
+
+  // Also check bridge activity for failed items
+  var recentActivity=(rawData&&rawData.agent&&rawData.agent.recentActivity)||[];
+  Object.keys(statuses).forEach(function(sid){
+    var st=statuses[sid];
+    if(st.status==='firing'&&st.issueNum){
+      recentActivity.forEach(function(act){
+        if(act.issueNum===st.issueNum&&act.status==='failed'){
+          st.status='failed';
+          localStorage.setItem('aqStatuses',JSON.stringify(statuses));
+        }
+      });
+    }
+  });
+
+  // Build a combined list: current items + recently done/failed (show for 10s)
+  var now=Date.now();
+  var doneItems=[];
+  Object.keys(statuses).forEach(function(sid){
+    var st=statuses[sid];
+    if(st.status==='done'&&st.completedAt&&(now-st.completedAt<10000)){
+      doneItems.push({id:parseInt(sid),_status:'done',_completedAt:st.completedAt});
+    } else if(st.status==='failed'){
+      doneItems.push({id:parseInt(sid),_status:'failed'});
+    } else if(st.status==='done'&&(now-st.completedAt>=10000)){
+      // Clean up old done entries
+      delete statuses[sid];
+      localStorage.setItem('aqStatuses',JSON.stringify(statuses));
+    }
+  });
+
+  var allItems=aq.slice();
+  doneItems.forEach(function(d){
+    if(!allItems.find(function(a){return a.id===d.id}))allItems.push(d);
+  });
+
+  if(allItems.length===0){
     container.style.display='none';
     return;
   }
   container.style.display='block';
-  if(countEl)countEl.textContent='('+aq.length+')';
+  if(countEl)countEl.textContent='('+(aq.length)+' pending)';
   if(fireBtn)fireBtn.disabled=false;
+
   var html='';
-  aq.forEach(function(item){
+  allItems.forEach(function(item){
     var acts=item.actions||{};
+    var st=getAQStatus(item.id);
+    var statusHtml='';
+    if(item._status==='done'){
+      statusHtml='<div class="aq-item-status aq-status-done">&#10003; Done — executed &amp; removed from queue</div>';
+    } else if(item._status==='failed'){
+      statusHtml='<div class="aq-item-status aq-status-failed">&#10007; Failed — check Activity tab</div>';
+    } else if(st&&st.status==='firing'){
+      statusHtml='<div class="aq-item-status aq-status-firing"><span class="aq-status-spinner"></span>Firing... (Issue #'+st.issueNum+')</div>';
+    }
+
+    if(item._status==='done'||item._status==='failed'){
+      // Minimal card for done/failed — just status + ticket
+      html+='<div class="aq-item" style="opacity:'+(item._status==='done'?'0.6':'1')+'">';
+      html+='<div class="aq-item-header"><span class="aq-item-ticket">'+escapeHtml(item._status==='done'?'Item #'+item.id:item._status==='failed'?'Item #'+item.id:'')+'</span></div>';
+      html+=statusHtml;
+      html+='</div>';
+      return;
+    }
+
     var chips='';
     if(acts.comment)chips+='<span class="aq-action-chip comment">comment</span>';
     if(acts.worklogHours)chips+='<span class="aq-action-chip worklog">log '+acts.worklogHours+'h</span>';
@@ -1936,13 +2014,15 @@ function renderActionQueue(){
     html+='<div class="aq-item-header">';
     html+='<span class="aq-item-ticket">'+escapeHtml(item.ticket||'N/A')+'</span>';
     html+='<div class="aq-item-btns">';
-    html+='<button class="aq-item-fire" onclick="fireActionQueueItem('+item.id+')">&#9889; Fire</button>';
+    var fireDisabled=(st&&st.status==='firing')?'disabled':'';
+    html+='<button class="aq-item-fire" '+fireDisabled+' onclick="fireActionQueueItem('+item.id+')">'+(st&&st.status==='firing'?'&#8987; Firing...':'&#9889; Fire')+'</button>';
     html+='<button class="aq-item-remove" onclick="removeActionQueueItem('+item.id+')">&#10005; Remove</button>';
     html+='</div>';
     html+='</div>';
     if(item.notes)html+='<div class="aq-item-notes">'+escapeHtml(item.notes)+'</div>';
     if(chips)html+='<div class="aq-item-actions">Actions:<div class="aq-item-action-row">'+chips+'</div></div>';
     if(item.createdAt)html+='<div class="aq-item-created">Queued: '+escapeHtml(item.createdAt)+'</div>';
+    html+=statusHtml;
     html+='</div>';
   });
   listEl.innerHTML=html;
@@ -1999,7 +2079,9 @@ function fireActionQueueItem(id){
     'Sent from dashboard';
   createIssue('Fire Action Queue item #'+id+': '+item.ticket, body, function(e,d){
     if(e||!d||!d.number){showToast('Failed to fire item #'+id,'error');return}
+    setAQStatus(id,'firing',d.number);
     showToast('Item #'+id+' fired (Issue #'+d.number+')','success');
+    renderActionQueue();
   });
 }
 
