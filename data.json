@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-08T08:48:47.249Z",
+  "generatedAt": "2026-09-08T08:49:26.860Z",
   "totalTickets": 7,
   "tickets": [
     {
@@ -431,7 +431,7 @@
       }
     ],
     "pid": 15900,
-    "uptime": 8597,
+    "uptime": 8637,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -443,7 +443,7 @@
       {
         "pid": 1436,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 94953,
+        "ageSeconds": 94991,
         "status": "running",
         "isChild": false,
         "taskSummary": "edit the autologin script that open msedge every morning at 9 to open all these 5 tabs instead of...",
@@ -453,17 +453,17 @@
       {
         "pid": 916,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 92590,
+        "ageSeconds": 92628,
         "status": "running",
         "isChild": false,
-        "taskSummary": "we want full data from smi for following countries:AE, KW, BH, OM, QA, IL, SA, TR, IQ, PK, EG, MA...",
-        "lastExchange": "we want full data from smi for following countries:AE, KW, BH, OM, QA, IL, SA, TR, IQ, PK, EG, MA, ZA, JO . check how can we get all this data from this script in minimum runs as possible and without making it bulky: //NOTE ITGC_JIRA:PC-53750 (HGE-11949)\nimport de.hybris.platform.util.mail.MailUtils\n\nimport org.apache.commons.mail.*\n\nimport de.hybris.platform.servicelayer.search.FlexibleSearchQuery\n\nimport org.apache.poi.hssf.usermodel.HSSFSheet\n\nimport org.apache.poi.hssf.usermodel.HSSFWorkbook\n\nimport org.apache.poi.hssf.usermodel.HSSFRow\n\nimport de.hybris.platform.core.model.product.ProductModel;\n\nimport java.util.Locale;\n\nimport java.util.Date;\n\nimport de.hybris.platform.category.model.CategoryModel;\n\nimport java.time.LocalDate;\n\nimport java.util.*;\n\nimport de.hybris.platform.core.model.order.CartModel;\n\nimport de.hybris.platform.core.model.order.AbstractOrderEntryModel;\n\nimport java.text.SimpleDateFormat\n\nimport de.hybris.platform.payment.enums.PaymentTransactionType;\n\nimport com.samsung.toko.core.enums.PriceType;\n \nstore= 'ae';\n \nservice = spring.getBean('commonI18NService')\n\nfss = spring.getBean 'flexibleSearchService'\n \n// Build postal code to city/region map\n\nout.println(\"Building postal code mapping...\")\n\ndef postalCodeMap = [:]\n \ndef countryQuery = \"SELECT {pk} FROM {Country} WHERE {isocode}='AE'\"\n\ndef countryResult = fss.search(countryQuery).result\n \nif (countryResult && countryResult.size() > 0) {\n\n    def country = countryResult.get(0)\n\n    def regions = country.getRegions()\n\n    regions?.each { region ->\n\n        def cities = region.getCity()\n\n        cities?.each { city ->\n\n  \n                postalCodeMap[postalCode] = [\n\n                    city: city.getName(),\n\n                    region: region.getName()\n\n                ]\n\n            \n\n        }\n\n    }\n\n}\n \nout.println(\"Postal code map built with \" + postalCodeMap.size() + \" entries\")\n \nentries = fss.search(\"Select {pk} FROM {ZoneDeliveryMode as zd JOIN BaseStore2DeliveryModeRel as b on {zd.pk}={b.target} JOIN BaseStore as bs on {b.source}={bs.pk}} WHERE {bs.uid}='ae'\").result\n \n// Email\n\nemail = MailUtils.getPreConfiguredEmail()\n\nemail.setCharset(\"utf-8\");\n\nemail.setFrom(\"customerservice@shopmail.samsung.com\", \"Customer Services Team\")\n\nemail.addTo('aryan.v1@samsung.com')\n \nemail.subject =  ' Delivery Modes Details Report '\n \n// Message\n\nStringBuffer sb = new StringBuffer()\n\nsb.append(\"Hi All,\\n\\n\")\n\nsb.append(\"Please find attached 'Report'.\\n\\n\")\n\nsb.append(\"Regards,\\nSamsung Support\")\n \n// Excel\n\nDate currentDate = new Date(System.currentTimeMillis());\n\nSimpleDateFormat sdf = new SimpleDateFormat(\"yyyyMMddHHmmss\")\n\ncurrDate = sdf.format(currentDate)\n\nexcelFile = 'Delivery_Modes_Details_Report_'+currDate.toString()+'.xls'\n\ncounter = 0\n\nHSSFWorkbook workbook = new HSSFWorkbook()\n\nHSSFSheet sheet = workbook.createSheet(\"Sheet1\")\n\n\nHSSFRow header = sheet.createRow(counter);\n \nheader.createCell(0).setCellValue(\"Delivery Mode\")\n\nheader.createCell(1).setCellValue(\"Region\")\n\nheader.createCell(2).setCellValue(\"City\")\n\nheader.createCell(3).setCellValue(\"Postcode Range List - Start Range\")\n\nheader.createCell(4).setCellValue(\"Postcode Range List - End Range\")\n\nheader.createCell(5).setCellValue(\"Delivery Cost\")\n\nheader.createCell(6).setCellValue(\"Active\")\n \ndef writeRow = { String regionName,\n\n                String cityName,\n\n                String startRange,\n\n                String endRange ->\n \n    counter++\n\n    HSSFRow row = sheet.createRow(counter)\n \n    row.createCell(0).setCellValue(deliveryMode)\n\n    row.createCell(1).setCellValue(regionName)\n\n    row.createCell(2).setCellValue(cityName)\n\n    row.createCell(3).setCellValue(startRange)\n\n    row.createCell(4).setCellValue(endRange)\n\n    row.createCell(5).setCellValue(value)\n\n    row.createCell(6).setCellValue(active ? \"true\" : \"false\")\n \n    out.println(\" store=\" + site + \"  deliveryMode=\" + deliveryMode + \" region=\" + regionName + \" city=\" + cityName + \" startRange=\" + startRange + \" endRange=\" + endRange + \" deliveryCost=\" + value +\" active=\" + active )\n \n}\n \nfor(entry in entries) {\n\n    stores=entry.getStores()\n\n    for (store in stores) {\n\n        site=store.getUid()\n\n        deliveryMode= entry.getCode()\n\n        active = entry.getActive()\n\n        def deliveryCost=entry.getValues()\n\n        for (values in deliveryCost) {\n\n            value = values.getValue().toString()\n\n            def ranges= values.getPostCodeRangeList()\n\n            for (range in ranges) {\n\n                startRange=range.getStartRange()\n\n                endRange=range.getEndRange()\n\n                // Convert startRange to String and trim any whitespace\n\n                def postalCodeKey = startRange?.toString()?.trim()\n\n                // Map postal code to city and region\n\n                def mapping = postalCodeMap[postalCodeKey]\n\n                def cityName = mapping ? mapping.city : \"\"\n\n                def regionName = mapping ? mapping.region : \"\"\n\n                writeRow(regionName, cityName, startRange?.toString() ?: \"\", endRange?.toString()   ?: \"\")\n\n            }\n\n\t\t\tif (!ranges || ranges.isEmpty()) {\n\n                 // All location fields are empty\n\n                writeRow(\"\", \"\", \"\", \"\")\n\n\t\t\t}\n\n        }\n\n    }\n\n}\n \nfor (j = 0; j < workbook.getNumberOfSheets(); j++) {\n\n    sheet = workbook.getSheetAt(j)\n\n    for (i = 0; i < 10; i++) {\n\n        sheet.autoSizeColumn(i)\n\n    }\n\n}\n \nfileOut = new FileOutputStream(excelFile)\n\nworkbook.write(fileOut)\n\nfileOut.close()\n\nworkbook.close()\n \nif (counter > 0){\n\n    EmailAttachment attachment = new EmailAttachment()\n\n    attachment.setPath(excelFile)\n\n    attachment.setDisposition(EmailAttachment.ATTACHMENT)\n\n    attachment.setDescription(excelFile)\n\n    attachment.setName(excelFile)\n\n    email.attach(attachment)\n\n    email.msg = sb\n\n    email.send()\n\n    out.println(\"Email Sent!\")\n\n}\n . cehck in db the number of rows and let me know",
+        "taskSummary": "now always remember when creating a PC ticket to update a cronjob script, always put the cronjob ...",
+        "lastExchange": "now always remember when creating a PC ticket to update a cronjob script, always put the cronjob name and script name in description of the PC",
         "sessionId": "bin"
       },
       {
         "pid": 28640,
         "cwd": "c:\\windows",
-        "ageSeconds": 92397,
+        "ageSeconds": 92435,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -473,7 +473,7 @@
       {
         "pid": 25896,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 73006,
+        "ageSeconds": 73044,
         "status": "running",
         "isChild": false,
         "taskSummary": "edit the autologin script that open msedge every morning at 9 to open all these 5 tabs instead of...",
@@ -483,7 +483,7 @@
       {
         "pid": 6080,
         "cwd": "unknown",
-        "ageSeconds": 5480,
+        "ageSeconds": 5518,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -493,7 +493,7 @@
       {
         "pid": 36180,
         "cwd": "unknown",
-        "ageSeconds": 3417,
+        "ageSeconds": 3455,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
