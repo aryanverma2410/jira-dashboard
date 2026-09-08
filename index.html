@@ -130,6 +130,32 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .list-item-sub{font-size:12px;color:var(--text-dim);margin-bottom:4px;max-height:40px;overflow:hidden;cursor:pointer}
 .list-item-sub.expanded{max-height:none}
 .list-item-time{font-size:11px;color:var(--text-dim)}
+/* Expandable Activity Cards */
+.act-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;cursor:pointer;transition:border-color 0.2s}
+.act-card:hover{border-color:rgba(88,166,255,0.3)}
+.act-card.expanded{border-color:var(--accent)}
+.act-card-top{display:flex;align-items:flex-start;gap:8px}
+.act-card-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.act-card-body{flex:1;min-width:0}
+.act-card-title{font-size:13px;font-weight:600;line-height:1.4;word-break:break-word}
+.act-card-preview{font-size:12px;color:var(--text-dim);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.act-card-meta{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap}
+.act-card-badge{font-size:10px;padding:2px 8px;border-radius:6px;font-weight:600;white-space:nowrap}
+.act-card-badge.command{background:rgba(88,166,255,0.1);color:var(--accent)}
+.act-card-badge.jira-action{background:rgba(63,185,80,0.1);color:var(--success)}
+.act-card-badge.agent-response{background:rgba(88,166,255,0.1);color:var(--accent)}
+.act-card-badge.bridge-event{background:rgba(139,148,158,0.1);color:var(--text-dim)}
+.act-card-badge.pending{background:rgba(210,153,34,0.15);color:var(--warning)}
+.act-card-badge.success{background:rgba(63,185,80,0.1);color:var(--success)}
+.act-card-badge.failed{background:rgba(248,81,81,0.1);color:var(--danger)}
+.act-card-chevron{font-size:12px;color:var(--text-dim);flex-shrink:0;transition:transform 0.2s;margin-top:2px}
+.act-card.expanded .act-card-chevron{transform:rotate(180deg)}
+.act-card-detail{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.act-card.expanded .act-card-detail{display:block}
+.act-card-detail-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-dim);margin-bottom:4px}
+.act-card-detail-text{font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-word;color:var(--text);max-height:300px;overflow-y:auto;background:rgba(0,0,0,0.2);border-radius:6px;padding:10px}
+.act-card-copy{margin-top:6px;background:var(--card);border:1px solid var(--border);color:var(--text-dim);border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer}
+.act-card-copy:active{background:rgba(88,166,255,0.1)}
 .pending-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--warning);margin-left:6px;animation:pulse 1.5s infinite}
 
 /* Session Cards (Sessions view) */
@@ -1383,20 +1409,56 @@ function renderActivity(data){
   var log=a.activityLog||[];
   if(log.length===0){feed.innerHTML='<div class="stat-line">No activity yet</div>';return}
   var typeIcons={'command':'&#9998;','jira-action':'&#128203;','agent-response':'&#129302;','bridge-event':'&#9881;'};
-  var typeColors={'command':'var(--accent)','jira-action':'var(--success)','agent-response':'var(--accent)','bridge-event':'var(--text-dim)'};
-  var statusIcons={'success':'&#10003;','failed':'&#10007;','pending':''};
+  var typeLabels={'command':'Command','jira-action':'Jira Action','agent-response':'Agent Response','bridge-event':'Bridge Event'};
   var fh='';
   log.forEach(function(entry){
     var icon=typeIcons[entry.type]||'&#9679;';
-    var color=typeColors[entry.type]||'var(--text-dim)';
-    var stIcon=entry.status==='failed'?'<span style="color:var(--danger)">&#10007;</span>':entry.status==='success'?'<span style="color:var(--success)">&#10003;</span>':'<span class="pending-dot"></span>';
-    fh+='<div class="list-item">'+
-      '<div class="list-item-title"><span style="color:'+color+';margin-right:6px">'+icon+'</span>'+escapeHtml(entry.title||'')+'</div>'+
-      (entry.detail?'<div class="list-item-sub" onclick="this.classList.toggle(\'expanded\')">'+escapeHtml(entry.detail)+'</div>':'')+
-      '<div class="list-item-time">'+relTime(entry.timestamp)+' &middot; '+escapeHtml(entry.source||'')+ ' ' + stIcon + '</div>'+
-    '</div>'
+    var typeLabel=typeLabels[entry.type]||entry.type||'Event';
+    var preview=(entry.detail||'').split('\n')[0].substring(0,120);
+    var ts=new Date(entry.timestamp).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    fh+='<div class="act-card" onclick="this.classList.toggle(\'expanded\')">'+
+      '<div class="act-card-top">'+
+        '<span class="act-card-icon">'+icon+'</span>'+
+        '<div class="act-card-body">'+
+          '<div class="act-card-title">'+escapeHtml(entry.title||'')+'</div>'+
+          (preview?'<div class="act-card-preview">'+escapeHtml(preview)+'</div>':'')+
+          '<div class="act-card-meta">'+
+            '<span class="act-card-badge '+(entry.type||'')+'">'+escapeHtml(typeLabel)+'</span>'+
+            '<span class="act-card-badge '+(entry.status||'')+'">'+(entry.status==='success'?'&#10003; Success':entry.status==='failed'?'&#10007; Failed':entry.status==='pending'?'&#8987; Pending':escapeHtml(entry.status||''))+'</span>'+
+            '<span style="font-size:10px;color:var(--text-dim)">'+relTime(entry.timestamp)+'</span>'+
+          '</div>'+
+        '</div>'+
+        '<span class="act-card-chevron">&#9660;</span>'+
+      '</div>'+
+      '<div class="act-card-detail">'+
+        (entry.detail?'<div class="act-card-detail-label">Full Detail</div>'+
+          '<div class="act-card-detail-text">'+escapeHtml(entry.detail)+'</div>'+
+          '<button class="act-card-copy" onclick="event.stopPropagation();copyActCard(\''+escapeHtml(entry.id||'')+'\')">Copy</button>':'')+
+        '<div class="act-card-detail-label">Metadata</div>'+
+        '<div style="font-size:11px;color:var(--text-dim);line-height:1.6">'+
+          '<div><strong>Time:</strong> '+escapeHtml(ts)+'</div>'+
+          '<div><strong>Source:</strong> '+escapeHtml(entry.source||'N/A')+'</div>'+
+          '<div><strong>Type:</strong> '+escapeHtml(entry.type||'N/A')+'</div>'+
+          '<div><strong>Status:</strong> '+escapeHtml(entry.status||'N/A')+'</div>'+
+          (entry.id?'<div><strong>ID:</strong> <code>'+escapeHtml(entry.id)+'</code></div>':'')+
+        '</div>'+
+      '</div>'+
+    '</div>';
+    // Store detail for copy
+    if(entry.id)fh+='<script type="application/json" id="act-data-'+escapeHtml(entry.id)+'">'+escapeHtml(JSON.stringify({detail:entry.detail||''}))+'<\/script>';
   });
   feed.innerHTML=fh;
+}
+
+function copyActCard(id){
+  var el=document.getElementById('act-data-'+id);
+  if(!el)return;
+  var data=JSON.parse(el.textContent);
+  var ta=document.createElement('textarea');
+  ta.value=data.detail||'';
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');showToast('Copied!','success')}catch(e){showToast('Copy failed','error')}
+  document.body.removeChild(ta);
 }
 
 // ===== MCPS VIEW =====
