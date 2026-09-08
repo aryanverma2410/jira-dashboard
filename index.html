@@ -352,6 +352,10 @@ body.has-status-bar .scroll{padding-top:28px}
 .aq-item-ticket{font-family:monospace;font-size:13px;font-weight:700;color:var(--accent)}
 .aq-item-remove{background:none;border:1px solid var(--border);color:var(--text-dim);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;flex-shrink:0}
 .aq-item-remove:hover{color:var(--danger);border-color:var(--danger)}
+.aq-item-fire{background:rgba(63,185,80,0.15);border:1px solid rgba(63,185,80,0.4);color:var(--success);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0;transition:transform 0.2s}
+.aq-item-fire:active{transform:scale(0.95)}
+.aq-item-fire:disabled{opacity:0.5;cursor:wait}
+.aq-item-btns{display:flex;gap:6px;flex-shrink:0}
 .aq-item-notes{font-size:12px;color:var(--text);margin-top:6px;line-height:1.4}
 .aq-item-actions{margin-top:8px;font-size:11px;color:var(--text-dim)}
 .aq-item-action-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
@@ -1931,7 +1935,10 @@ function renderActionQueue(){
     html+='<div class="aq-item">';
     html+='<div class="aq-item-header">';
     html+='<span class="aq-item-ticket">'+escapeHtml(item.ticket||'N/A')+'</span>';
+    html+='<div class="aq-item-btns">';
+    html+='<button class="aq-item-fire" onclick="fireActionQueueItem('+item.id+')">&#9889; Fire</button>';
     html+='<button class="aq-item-remove" onclick="removeActionQueueItem('+item.id+')">&#10005; Remove</button>';
+    html+='</div>';
     html+='</div>';
     if(item.notes)html+='<div class="aq-item-notes">'+escapeHtml(item.notes)+'</div>';
     if(chips)html+='<div class="aq-item-actions">Actions:<div class="aq-item-action-row">'+chips+'</div></div>';
@@ -1967,6 +1974,32 @@ function fireActionQueue(){
     if(btn){btn.disabled=false;btn.innerHTML='&#9889; Fire Queue'}
     if(e||!d||!d.number){showToast('Failed to fire action queue','error');return}
     showToast('Action queue fired (Issue #'+d.number+'). Items will be processed sequentially.','success');
+  });
+}
+
+function fireActionQueueItem(id){
+  var aq=rawData&&rawData.actionQueue||[];
+  var item=aq.find(function(q){return q.id===id});
+  if(!item){showToast('Item #'+id+' not found','error');return}
+  showToast('Firing item #'+id+' ('+item.ticket+')...','');
+  var acts=item.actions||{};
+  var body='Execute /logQueue for a single item now.'+NL+
+    'File: C:\\Users\\aryan.v1\\.gemini\\tmp\\bin\\memory\\jira-action-queue.json'+NL+
+    'Process ONLY this item:'+NL+
+    NL+'--- Item #'+item.id+': '+item.ticket+' ---'+NL;
+  if(acts.comment)body+='Comment: '+acts.comment+NL;
+  if(acts.worklogHours)body+='Worklog: '+acts.worklogHours+'h'+NL;
+  if(acts.transition)body+='Transition: '+acts.transition+NL;
+  if(acts.fallbackTransition)body+='Fallback transition: '+acts.fallbackTransition+NL;
+  if(acts.assignee)body+='Assignee: '+acts.assignee+NL;
+  if(acts.labels)body+='Labels: '+acts.labels.join(', ')+NL;
+  if(item.notes)body+='Notes: '+item.notes+NL;
+  body+=NL+'After executing successfully, remove this item (id '+id+') from the file.'+NL+
+    'Do not process any other items.'+NL+
+    'Sent from dashboard';
+  createIssue('Fire Action Queue item #'+id+': '+item.ticket, body, function(e,d){
+    if(e||!d||!d.number){showToast('Failed to fire item #'+id,'error');return}
+    showToast('Item #'+id+' fired (Issue #'+d.number+')','success');
   });
 }
 
