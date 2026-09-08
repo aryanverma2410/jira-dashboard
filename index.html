@@ -1462,15 +1462,30 @@ function copyActCard(id){
 }
 
 // ===== MCPS VIEW =====
+function fmtDownDuration(ms){
+  if(!ms||ms<=0)return '';
+  var s=Math.floor(ms/1000);
+  var m=Math.floor(s/60);
+  var h=Math.floor(m/60);
+  if(h>0)return h+'h '+(m%60)+'m';
+  if(m>0)return m+'m '+(s%60)+'s';
+  return s+'s';
+}
 function renderMcps(data){
   var mcps=data.mcps||[];
   var view=document.getElementById('mcpsView');
   if(mcps.length===0){
     view.innerHTML='<div style="text-align:center;padding:40px 16px;color:var(--text-dim)">No MCP servers configured</div>';
+    hideMcpAlertBanner();
     return;
   }
   var upCount=mcps.filter(function(m){return m.status==='up'}).length;
   var downCount=mcps.length-upCount;
+  var alertMcps=mcps.filter(function(m){return m.alert});
+  
+  // Show/hide global alert banner
+  if(alertMcps.length>0){showMcpAlertBanner(alertMcps)}else{hideMcpAlertBanner()}
+  
   var statsHtml='<div class="stats-row" style="margin:16px 16px 12px">'+
     '<div class="stat-chip"><span>Online</span><span class="count" style="color:var(--success)">'+upCount+'</span></div>'+
     '<div class="stat-chip"><span>Offline</span><span class="count" style="color:var(--danger)">'+downCount+'</span></div>'+
@@ -1478,18 +1493,49 @@ function renderMcps(data){
   '</div>';
   var cardsHtml='';
   mcps.forEach(function(m){
-    var dot=m.status==='up'?'&#128994;':'&#128308;';
+    var dot=m.status==='up'?'🟢':'🔴';
     var statusColor=m.status==='up'?'var(--success)':'var(--danger)';
-    var statusText=m.status==='up'?'Connected':'Not Running';
-    cardsHtml+='<div class="mcp-card" data-mcp-name="'+escapeHtml(m.name)+'">'+
+    var statusText=m.status==='up'?'Connected · HTTP '+m.httpStatus:'Down · HTTP '+(m.httpStatus||0);
+    var downDur=fmtDownDuration(m.downDuration);
+    var alertBadge=m.alert?'<span class="mcp-alert-badge">⚠ DOWN '+downDur+'</span>':'';
+    var lastCheckTxt=m.lastCheck?'Last check: '+relTime(m.lastCheck):'';
+    cardsHtml+='<div class="mcp-card" data-mcp-name="'+escapeHtml(m.name)+'" style="'+(m.alert?'border-color:var(--danger);animation:mcp-pulse 2s infinite':'')+'">'+
       '<div class="mcp-top">'+
         '<div class="mcp-name">'+escapeHtml(m.name)+'</div>'+
         '<span class="mcp-status-dot">'+dot+'</span>'+
       '</div>'+
       '<div class="mcp-desc" style="color:'+statusColor+';font-weight:600">'+statusText+'</div>'+
+      (downDur?'<div class="mcp-downtime" style="color:var(--danger);font-size:11px;margin-top:4px">Down for '+downDur+'</div>':'')+
+      (alertBadge?'<div style="margin-top:4px">'+alertBadge+'</div>':'')+
+      (lastCheckTxt?'<div class="mcp-lastcheck" style="color:var(--text-dim);font-size:10px;margin-top:4px">'+lastCheckTxt+'</div>':'')+
     '</div>';
   });
   view.innerHTML=statsHtml+cardsHtml;
+}
+
+// ===== MCP ALERT BANNER (global, shows on any view) =====
+function showMcpAlertBanner(alertMcps){
+  var banner=document.getElementById('mcpAlertBanner');
+  if(!banner){
+    banner=document.createElement('div');
+    banner.id='mcpAlertBanner';
+    banner.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(135deg,#d32f2f,#b71c1c);color:#fff;padding:10px 16px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,.3);cursor:pointer';
+    document.body.appendChild(banner);
+    // Add pulse animation
+    var style=document.createElement('style');
+    style.id='mcpAlertStyle';
+    style.textContent='@keyframes mcp-pulse{0%,100%{box-shadow:0 0 0 0 rgba(211,47,47,.4)}50%{box-shadow:0 0 0 6px rgba(211,47,47,0)}}.mcp-alert-badge{display:inline-block;background:var(--danger);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;animation:mcp-pulse 2s infinite}.mcp-downtime{font-size:11px}';
+    document.head.appendChild(style);
+  }
+  var names=alertMcps.map(function(m){return m.name}).join(', ');
+  var durations=alertMcps.map(function(m){return m.name+' ('+fmtDownDuration(m.downDuration)+')'}).join(', ');
+  banner.textContent='⚠ MCP DOWN '+durations+' — tap to view';
+  banner.onclick=function(){switchView('view-mcps')};
+  banner.style.display='flex';
+}
+function hideMcpAlertBanner(){
+  var banner=document.getElementById('mcpAlertBanner');
+  if(banner)banner.style.display='none';
 }
 
 // ===== LIVE UPTIME =====
