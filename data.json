@@ -1,7 +1,66 @@
 {
-  "generatedAt": "2026-09-08T06:05:54.338Z",
+  "generatedAt": "2026-09-08T06:06:34.354Z",
   "totalTickets": 11,
   "tickets": [
+    {
+      "key": "AEME-6282",
+      "summary": "[For approval] Redeem rewards on impacted orders",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "UAE Maintenance & Enhancements",
+      "projectKey": "AEME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-09-08T15:06:27.000+0900",
+      "created": "2026-05-22T10:34:09.000+0900",
+      "description": "In line with our initiative to fix the rewards discrepancy between GCRM and Hybris, we have identified some old orders to be having this mismatch due to some intermittent issues where the redeemed points got cancelled and returned to customers.\n\nWe have identified most and fixed them already, howeve",
+      "commentsCount": 28,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-09-08T15:06:16.067+0900",
+          "snippet": "Hi ~@email ,\n\nThe customer seems to be having more than 18k points and still when we are trying to deduct 186, its returning \"Not enough points\".\n\nCould you please advice on this.\n\nRegards\n\nAryan"
+        },
+        {
+          "author": "Kajal Vishwakarma",
+          "date": "2026-09-07T20:54:13.508+0900",
+          "snippet": "Hi ~@email ,\n\n \n\nAccording to the API details, the requested amount exceeds the customer's current balance.\n\nThe customer's account currently maintains a balance of 18,593 points.\n\nPlease check the below screenshot.\n\n!image-2026-09-07-20-52-52-078.png!\n\n \n\nRegards\nKajal Vishwakarma\n~@email ~@email ~"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi ~@email ,\n\nThe customer seems to be having more than 18k points and still when we are trying to deduct 186, its returning \"Not enough points\".\n\nCould you please advice on this.\n\nRegards\n\nAryan",
+      "lastCommentDate": "2026-09-08T15:06:16.067+0900",
+      "url": "https://jira.secext.samsung.net/browse/AEME-6282",
+      "linkedTickets": [
+        {
+          "key": "PC-53503",
+          "summary": "Redeem rewards points (partial) for 4 AE orders - AEME-6282",
+          "status": "To do",
+          "statusCategory": "To Do",
+          "relation": "blocks",
+          "assignee": null
+        },
+        {
+          "key": "AEME-5680",
+          "summary": "[For approval] Redeem rewards on old orders",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "clones",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "# RCA: AEME-6282\nSummary: [For approval] Redeem rewards on impacted orders\nGenerated: 2026-09-03T19:14:59Z\n\nHi Tin ,\n\nTwenty-two UAE orders were identified with a discrepancy between Hybris and GCRM where Samsung Rewards points were incorrectly cancelled and returned to customers despite the orders remaining active. Eighteen of these orders were already remediated successfully via PC-48490. Four orders failed with \"Not enough point\" error because the customers' GCRM accounts have insufficient points for the full redemption amount. The team has approved partial deductions for the remaining four orders.\n\nThe intermittent issue occurs when customers exploit a multi-tab checkout flow to redeem rewards points and then cancel only the rewards payment transaction after the order is placed. This leaves the order active but the points are returned to the customer. The fix in HGE-10824 introduces a checkTransactionReviewStatus action in the order process that detects when a rewards payment transaction is in REVIEW status and attempts to re-authorize the redemption with GCRM. If re-authorization fails, the order moves to SUSPENDED instead of progressing.\n\nFor the four remaining orders (AE231010-55304250, AE241124-37771964, AE250515-43260061, AE260227-08123022), the GCRM API rejects the full redemption amount with \"Not enough point\" because the customers have lower balances than the original redeemed amounts. The available points and partial amounts to deduct are:\n\n1. AE231010-55304250 - available 51.17 AED (5,117 points), original 118.00 AED, deduct 51.17\n2. AE241124-37771964 - available 186.13 AED (18,613 points), original 655.00 AED, deduct 186.13\n3. AE250515-43260061 - available 58.96 AED (5,896 points), original 76.00 AED, deduct 58.96\n4. AE260227-08123022 - available 233.41 AED (23,341 points), original 474.00 AED, deduct 233.41\n\nThe PC-48490 W1-Positive script has two guard checks that prevent processing these four orders. First, the requestId equality check skips orders where the Hybris payment transaction entry requestId matches the transactionId from the discrepancy report. All four orders have matching requestIds. Second, the remainingAmount equality check skips orders where the remaining amount on the payment transaction does not equal the rewards refund amount being passed. Since we are now charging partial amounts instead of the full original amount, this check will always fail for these orders.\n\nA modified script (script-AEME-6282-rewards-partial-redemption.groovy) has been prepared under PC-53503. This script removes both guard checks and uses forceRedeem=true. The order list contains the four orders with their partial redemption amounts. The script flow is: find the AUTHORIZATION-type PaymentTransactionEntry for samsungRewardPoints provider, call tokorewardpaymentservicesFacade.updatePTEs to set the PT to REVIEW, call redeemCustomerRewardPoint with the partial amount, and if successful, update NOTIFICATION and CAPTURE entries with the new requestId from the AUTHORIZATION PTE. If the GCRM call fails, the PTEs are reverted to ACCEPTED status.\n\nThis is not a platform bug. The original points cancellation was an exploitation of the checkout flow before the HGE-10824 fix was deployed. The remediation is a business-approved data correction to align Hybris with GCRM records.\n\n## Remediation\n\nScript: script-AEME-6282-rewards-partial-redemption.groovy\nPC Ticket: PC-53503\n\nThe script is ready for execution under PC-53503. It will redeem the partial (available) amounts from the four remaining orders' GCRM accounts. After execution, the GCRM and Hybris records will be aligned for these orders.\n\nThanks,\n\nAryan",
+        "sections": {
+          "issue": "",
+          "rca": "# RCA: AEME-6282\nSummary: [For approval] Redeem rewards on impacted orders\nGenerated: 2026-09-03T19:14:59Z\n\nHi Tin ,\n\nTwenty-two UAE orders were identified with a discrepancy between Hybris and GCRM where Samsung Rewards points were incorrectly cancelled and returned to customers despite the orders remaining active. Eighteen of these orders were already remediated successfully via PC-48490. Four orders failed with \"Not enough point\" error because the customers' GCRM accounts have insufficient points for the full redemption amount. The team has approved partial deductions for the remaining four orders.\n\nThe intermittent issue occurs when customers exploit a multi-tab checkout flow to redeem rewards points and then cancel only the rewards payment transaction after the order is placed. This leaves the order active but the points are returned to the customer. The fix in HGE-10824 introduces a checkTransactionReviewStatus action in the order process that detects when a rewards payment transaction is in REVIEW status and attempts to re-authorize the redemption with GCRM. If re-authorization fails, the order moves to SUSPENDED instead of progressing.\n\nFor the four remaining orders (AE231010-55304250, AE241124-37771964, AE250515-43260061, AE260227-08123022), the GCRM API rejects the full redemption amount with \"Not enough point\" because the customers have lower balances than the original redeemed amounts. The available points and partial amounts to deduct are:\n\n1. AE231010-55304250 - available 51.17 AED (5,117 points), original 118.00 AED, deduct 51.17\n2. AE241124-37771964 - available 186.13 AED (18,613 points), original 655.00 AED, deduct 186.13\n3. AE250515-43260061 - available 58.96 AED (5,896 points), original 76.00 AED, deduct 58.96\n4. AE260227-08123022 - available 233.41 AED (23,341 points), original 474.00 AED, deduct 233.41\n\nThe PC-48490 W1-Positive script has two guard checks that prevent processing these four orders. First, the requestId equality check skips orders where the Hybris payment transaction entry requestId matches the transactionId from the discrepancy report. All four orders have matching requestIds. Second, the remainingAmount equality check skips orders where the remaining amount on the payment transaction does not equal the rewards refund amount being passed. Since we are now charging partial amounts instead of the full original amount, this check will always fail for these orders.\n\nA modified script (script-AEME-6282-rewards-partial-redemption.groovy) has been prepared under PC-53503. This script removes both guard checks and uses forceRedeem=true. The order list contains the four orders with their partial redemption amounts. The script flow is: find the AUTHORIZATION-type PaymentTransactionEntry for samsungRewardPoints provider, call tokorewardpaymentservicesFacade.updatePTEs to set the PT to REVIEW, call redeemCustomerRewardPoint with the partial amount, and if successful, update NOTIFICATION and CAPTURE entries with the new requestId from the AUTHORIZATION PTE. If the GCRM call fails, the PTEs are reverted to ACCEPTED status.\n\nThis is not a platform bug. The original points cancellation was an exploitation of the checkout flow before the HGE-10824 fix was deployed. The remediation is a business-approved data correction to align Hybris with GCRM records.\n\n## Remediation\n\nScript: script-AEME-6282-rewards-partial-redemption.groovy\nPC Ticket: PC-53503\n\nThe script is ready for execution under PC-53503. It will redeem the partial (available) amounts from the four remaining orders' GCRM accounts. After execution, the GCRM and Hybris records will be aligned for these orders.\n\nThanks,\n\nAryan",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-03T13:44:59.592Z"
+      }
+    },
     {
       "key": "GMT-20796",
       "summary": "SMI - ZA | Samsung care + Orders in error status",
@@ -13,7 +72,7 @@
       "issuetype": "Issue - Global Hybris",
       "updated": "2026-09-08T15:05:16.000+0900",
       "created": "2026-09-08T03:51:49.000+0900",
-      "description": "Hi Team,\n\nWe had noticed the SC+ status is in error state for the below mentioned order in ZA tenant in SMI cluster, Could you please check on this?\n\nError State : ERROR\n\nLink : [Internal Link]\n\n!image-2026-09-08-00-20-25-480.png|width=563,height=66!\n\n\n\nOrder ID : \n|ZA260903-74780134|",
+      "description": "Hi Team,\n\nWe had noticed the SC+ status is in error state for the below mentioned order in ZA tenant in SMI cluster, Could you please check on this?\n\nError State : ERROR\n\nLink : [Internal Link]\n\n!image-2026-09-08-00-20-25-480.png|width=563,height=66!\n\n\n\nOrder ID : \n|ZA260903-74780134|\n\n��",
       "commentsCount": 2,
       "recentComments": [
         {
@@ -228,65 +287,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-07T10:24:29.030Z"
-      }
-    },
-    {
-      "key": "AEME-6282",
-      "summary": "[For approval] Redeem rewards on impacted orders",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-07T20:54:24.000+0900",
-      "created": "2026-05-22T10:34:09.000+0900",
-      "description": "In line with our initiative to fix the rewards discrepancy between GCRM and Hybris, we have identified some old orders to be having this mismatch due to some intermittent issues where the redeemed points got cancelled and returned to customers.\n\nWe have identified most and fixed them already, howeve",
-      "commentsCount": 27,
-      "recentComments": [
-        {
-          "author": "Kajal Vishwakarma",
-          "date": "2026-09-07T20:54:13.508+0900",
-          "snippet": "Hi ~@email ,\n\n \n\nAccording to the API details, the requested amount exceeds the customer's current balance.\n\nThe customer's account currently maintains a balance of 18,593 points.\n\nPlease check the below screenshot.\n\n!image-2026-09-07-20-52-52-078.png!\n\n \n\nRegards\nKajal Vishwakarma\n~@email ~@email ~"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-07T20:33:05.493+0900",
-          "snippet": "Hi ~@email ,\n\nDeduct API details:\n\n \n\nRewards API Response from Reward api with status code : 201 : Response Body {\"d\":{\"__metadata\":{\"id\":\"[Internal Link] enough point.\",\"SAGuid\":\"h1eyv6okcg\",\"SalesOrder\":\"AE241124-37771964\",\"Timestamp\":\"\\/Date(1788776360000)\\/\",\"TransactionAmount\":\"186.13\",\"Transa"
-        }
-      ],
-      "lastCommentBy": "Kajal Vishwakarma",
-      "lastCommentSnippet": "Hi ~@email ,\n\n \n\nAccording to the API details, the requested amount exceeds the customer's current balance.\n\nThe customer's account currently maintains a balance of 18,593 points.\n\nPlease check the below screenshot.\n\n!image-2026-09-07-20-52-52-078.png!\n\n \n\nRegards\nKajal Vishwakarma\n~@email ~@email ~",
-      "lastCommentDate": "2026-09-07T20:54:13.508+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6282",
-      "linkedTickets": [
-        {
-          "key": "PC-53503",
-          "summary": "Redeem rewards points (partial) for 4 AE orders - AEME-6282",
-          "status": "To do",
-          "statusCategory": "To Do",
-          "relation": "blocks",
-          "assignee": null
-        },
-        {
-          "key": "AEME-5680",
-          "summary": "[For approval] Redeem rewards on old orders",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "clones",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: AEME-6282\nSummary: [For approval] Redeem rewards on impacted orders\nGenerated: 2026-09-03T19:14:59Z\n\nHi Tin ,\n\nTwenty-two UAE orders were identified with a discrepancy between Hybris and GCRM where Samsung Rewards points were incorrectly cancelled and returned to customers despite the orders remaining active. Eighteen of these orders were already remediated successfully via PC-48490. Four orders failed with \"Not enough point\" error because the customers' GCRM accounts have insufficient points for the full redemption amount. The team has approved partial deductions for the remaining four orders.\n\nThe intermittent issue occurs when customers exploit a multi-tab checkout flow to redeem rewards points and then cancel only the rewards payment transaction after the order is placed. This leaves the order active but the points are returned to the customer. The fix in HGE-10824 introduces a checkTransactionReviewStatus action in the order process that detects when a rewards payment transaction is in REVIEW status and attempts to re-authorize the redemption with GCRM. If re-authorization fails, the order moves to SUSPENDED instead of progressing.\n\nFor the four remaining orders (AE231010-55304250, AE241124-37771964, AE250515-43260061, AE260227-08123022), the GCRM API rejects the full redemption amount with \"Not enough point\" because the customers have lower balances than the original redeemed amounts. The available points and partial amounts to deduct are:\n\n1. AE231010-55304250 - available 51.17 AED (5,117 points), original 118.00 AED, deduct 51.17\n2. AE241124-37771964 - available 186.13 AED (18,613 points), original 655.00 AED, deduct 186.13\n3. AE250515-43260061 - available 58.96 AED (5,896 points), original 76.00 AED, deduct 58.96\n4. AE260227-08123022 - available 233.41 AED (23,341 points), original 474.00 AED, deduct 233.41\n\nThe PC-48490 W1-Positive script has two guard checks that prevent processing these four orders. First, the requestId equality check skips orders where the Hybris payment transaction entry requestId matches the transactionId from the discrepancy report. All four orders have matching requestIds. Second, the remainingAmount equality check skips orders where the remaining amount on the payment transaction does not equal the rewards refund amount being passed. Since we are now charging partial amounts instead of the full original amount, this check will always fail for these orders.\n\nA modified script (script-AEME-6282-rewards-partial-redemption.groovy) has been prepared under PC-53503. This script removes both guard checks and uses forceRedeem=true. The order list contains the four orders with their partial redemption amounts. The script flow is: find the AUTHORIZATION-type PaymentTransactionEntry for samsungRewardPoints provider, call tokorewardpaymentservicesFacade.updatePTEs to set the PT to REVIEW, call redeemCustomerRewardPoint with the partial amount, and if successful, update NOTIFICATION and CAPTURE entries with the new requestId from the AUTHORIZATION PTE. If the GCRM call fails, the PTEs are reverted to ACCEPTED status.\n\nThis is not a platform bug. The original points cancellation was an exploitation of the checkout flow before the HGE-10824 fix was deployed. The remediation is a business-approved data correction to align Hybris with GCRM records.\n\n## Remediation\n\nScript: script-AEME-6282-rewards-partial-redemption.groovy\nPC Ticket: PC-53503\n\nThe script is ready for execution under PC-53503. It will redeem the partial (available) amounts from the four remaining orders' GCRM accounts. After execution, the GCRM and Hybris records will be aligned for these orders.\n\nThanks,\n\nAryan",
-        "sections": {
-          "issue": "",
-          "rca": "# RCA: AEME-6282\nSummary: [For approval] Redeem rewards on impacted orders\nGenerated: 2026-09-03T19:14:59Z\n\nHi Tin ,\n\nTwenty-two UAE orders were identified with a discrepancy between Hybris and GCRM where Samsung Rewards points were incorrectly cancelled and returned to customers despite the orders remaining active. Eighteen of these orders were already remediated successfully via PC-48490. Four orders failed with \"Not enough point\" error because the customers' GCRM accounts have insufficient points for the full redemption amount. The team has approved partial deductions for the remaining four orders.\n\nThe intermittent issue occurs when customers exploit a multi-tab checkout flow to redeem rewards points and then cancel only the rewards payment transaction after the order is placed. This leaves the order active but the points are returned to the customer. The fix in HGE-10824 introduces a checkTransactionReviewStatus action in the order process that detects when a rewards payment transaction is in REVIEW status and attempts to re-authorize the redemption with GCRM. If re-authorization fails, the order moves to SUSPENDED instead of progressing.\n\nFor the four remaining orders (AE231010-55304250, AE241124-37771964, AE250515-43260061, AE260227-08123022), the GCRM API rejects the full redemption amount with \"Not enough point\" because the customers have lower balances than the original redeemed amounts. The available points and partial amounts to deduct are:\n\n1. AE231010-55304250 - available 51.17 AED (5,117 points), original 118.00 AED, deduct 51.17\n2. AE241124-37771964 - available 186.13 AED (18,613 points), original 655.00 AED, deduct 186.13\n3. AE250515-43260061 - available 58.96 AED (5,896 points), original 76.00 AED, deduct 58.96\n4. AE260227-08123022 - available 233.41 AED (23,341 points), original 474.00 AED, deduct 233.41\n\nThe PC-48490 W1-Positive script has two guard checks that prevent processing these four orders. First, the requestId equality check skips orders where the Hybris payment transaction entry requestId matches the transactionId from the discrepancy report. All four orders have matching requestIds. Second, the remainingAmount equality check skips orders where the remaining amount on the payment transaction does not equal the rewards refund amount being passed. Since we are now charging partial amounts instead of the full original amount, this check will always fail for these orders.\n\nA modified script (script-AEME-6282-rewards-partial-redemption.groovy) has been prepared under PC-53503. This script removes both guard checks and uses forceRedeem=true. The order list contains the four orders with their partial redemption amounts. The script flow is: find the AUTHORIZATION-type PaymentTransactionEntry for samsungRewardPoints provider, call tokorewardpaymentservicesFacade.updatePTEs to set the PT to REVIEW, call redeemCustomerRewardPoint with the partial amount, and if successful, update NOTIFICATION and CAPTURE entries with the new requestId from the AUTHORIZATION PTE. If the GCRM call fails, the PTEs are reverted to ACCEPTED status.\n\nThis is not a platform bug. The original points cancellation was an exploitation of the checkout flow before the HGE-10824 fix was deployed. The remediation is a business-approved data correction to align Hybris with GCRM records.\n\n## Remediation\n\nScript: script-AEME-6282-rewards-partial-redemption.groovy\nPC Ticket: PC-53503\n\nThe script is ready for execution under PC-53503. It will redeem the partial (available) amounts from the four remaining orders' GCRM accounts. After execution, the GCRM and Hybris records will be aligned for these orders.\n\nThanks,\n\nAryan",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-03T13:44:59.592Z"
       }
     },
     {
@@ -545,7 +545,7 @@
       }
     ],
     "pid": 21124,
-    "uptime": 5384,
+    "uptime": 5428,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -557,7 +557,7 @@
       {
         "pid": 1436,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 85178,
+        "ageSeconds": 85219,
         "status": "running",
         "isChild": false,
         "taskSummary": "i should be able to see the queue that is being used in /logQueue skill using the file to fire it...",
@@ -567,7 +567,7 @@
       {
         "pid": 916,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 82816,
+        "ageSeconds": 82857,
         "status": "running",
         "isChild": false,
         "taskSummary": "the smc is in UPDATED status because we ran the script. write it like we have reemdiated and then...",
@@ -577,7 +577,7 @@
       {
         "pid": 28640,
         "cwd": "c:\\windows",
-        "ageSeconds": 82623,
+        "ageSeconds": 82664,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -587,7 +587,7 @@
       {
         "pid": 35792,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 67151,
+        "ageSeconds": 67192,
         "status": "running",
         "isChild": false,
         "taskSummary": "i should be able to see the queue that is being used in /logQueue skill using the file to fire it...",
@@ -597,7 +597,7 @@
       {
         "pid": 25896,
         "cwd": "unknown",
-        "ageSeconds": 63231,
+        "ageSeconds": 63272,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
