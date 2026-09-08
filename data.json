@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-08T12:22:53.289Z",
+  "generatedAt": "2026-09-08T12:23:30.589Z",
   "totalTickets": 7,
   "tickets": [
     {
@@ -425,7 +425,7 @@
       }
     ],
     "pid": 38756,
-    "uptime": 3035,
+    "uptime": 3070,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -437,7 +437,7 @@
       {
         "pid": 1436,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 107797,
+        "ageSeconds": 107835,
         "status": "running",
         "isChild": false,
         "taskSummary": "tasks view in dashboard is empty",
@@ -447,7 +447,7 @@
       {
         "pid": 916,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 105435,
+        "ageSeconds": 105472,
         "status": "running",
         "isChild": false,
         "taskSummary": "make it concise. no need to explain anything just say theoder is not available in s2 and hence it...",
@@ -457,7 +457,7 @@
       {
         "pid": 28640,
         "cwd": "c:\\windows",
-        "ageSeconds": 105242,
+        "ageSeconds": 105279,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -467,7 +467,7 @@
       {
         "pid": 25896,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 85850,
+        "ageSeconds": 85887,
         "status": "running",
         "isChild": false,
         "taskSummary": "tasks view in dashboard is empty",
@@ -477,7 +477,7 @@
       {
         "pid": 6080,
         "cwd": "unknown",
-        "ageSeconds": 18325,
+        "ageSeconds": 18362,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -487,7 +487,7 @@
       {
         "pid": 36180,
         "cwd": "unknown",
-        "ageSeconds": 16262,
+        "ageSeconds": 16299,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -2020,5 +2020,37 @@
       "pending": []
     }
   },
-  "actionQueue": []
+  "actionQueue": [
+    {
+      "id": 1,
+      "ticket": "SAM-24720",
+      "actions": {
+        "comment": "Hi,\n\nAll DB cleanup cronjobs have been created and verified successfully on the SMI cluster. Below is the status from the last run:\n\n||CronJob Code||Status||Result||Start Time||End Time||\n|CleanupComposite|FINISHED|SUCCESS|2026-09-07 13:39:18|2026-09-07 13:43:23|\n|DeleteTasklogsCronJob|FINISHED|SUCCESS|2026-09-07 13:39:19|2026-09-07 13:39:34|\n|Deleteusers4snCronJob|FINISHED|SUCCESS|2026-09-07 13:39:34|2026-09-07 13:43:11|\n|DeletePaymentinfosCronJob|FINISHED|SUCCESS|2026-09-07 13:43:11|2026-09-07 13:43:12|\n|DeletePricerowsCronJob|FINISHED|SUCCESS|2026-09-07 13:43:12|2026-09-07 13:43:13|\n|DeleteAddressesCronJob|FINISHED|SUCCESS|2026-09-07 13:43:13|2026-09-07 13:43:13|\n|DeleteTokoEventLogCronJob|FINISHED|SUCCESS|2026-09-07 13:43:13|2026-09-07 13:43:23|\n\nTrigger: every 6 hours (0 0 */6 * * ?)\n\nThanks and Regards,\nAryan",
+        "worklogHours": 2.5,
+        "transition": "Launch Verification",
+        "fallbackTransition": "SRE Review",
+        "assignee": "arvind.p6"
+      },
+      "createdAt": "2026-09-07",
+      "notes": "PC-53529 DB cleanup cronjobs deployed and verified. Comment + 2.5h worklog + transition to LV."
+    },
+    {
+      "id": 2,
+      "ticket": "SAHME-3421",
+      "actions": {
+        "comment": "Hi Lerato,\n\nThe FOC accessory entries on all six orders had a totalPrice of 0.00, which prevented NERP from creating the Sales Order for the `_1` consignments. NERP cannot process line items with zero value.\n\nThe remediation has been completed. For each order, the FOC entry totalPrice was updated from 0.00 to 0.01, and 0.01 was deducted from the main product entry totalPrice. The `_1` consignment processes were then retriggered from `sendConsignmentToExternalERP`.\n\nAll six consignments have moved forward — NERP Sales Orders have been created:\n\nZA260722-36390638 — SO 1357434320\nZA260723-36791300 — SO 1357435610\nZA260728-43016800 — SO 1357436632\nZA260803-48618441 — SO 1357436530\nZA260805-51203560 — SO 1358011320\nZA260811-56764999 — SO 1359010123\n\nThe consignment processes are currently running. Kindly check and verify at your end as well.\n\nRegards\n\nAryan",
+        "worklogHours": 0.75,
+        "transition": "Launch Verification",
+        "fallbackTransition": null,
+        "assignee": "l.mbambisa@samsung.com",
+        "labels": [
+          "a=aryan.v1",
+          "i=orderremediation",
+          "sc=scripting"
+        ]
+      },
+      "createdAt": "2026-09-08",
+      "notes": "SAHME-3421 FOC price remediation complete. Comment + 45m worklog + transition to LV + assign back to reporter + add labels."
+    }
+  ]
 }
