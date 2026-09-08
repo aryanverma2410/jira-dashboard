@@ -338,6 +338,31 @@ body.has-status-bar .scroll{padding-top:28px}
 .task-form .checkbox-row label{margin:0;cursor:pointer}
 .task-form-actions{display:flex;gap:8px;margin-top:20px;justify-content:flex-end}
 .task-empty{text-align:center;padding:40px;color:var(--text-dim);font-size:14px}
+
+/* Action Queue (Jira Action Queue / logQueue) */
+.aq-container{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:16px}
+.aq-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.aq-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-dim)}
+.aq-fire-btn{background:var(--success);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:transform 0.2s}
+.aq-fire-btn:active{transform:scale(0.95)}
+.aq-fire-btn:disabled{opacity:0.5;cursor:wait}
+.aq-count{font-size:11px;color:var(--text-dim);margin-left:8px}
+.aq-item{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px}
+.aq-item-header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.aq-item-ticket{font-family:monospace;font-size:13px;font-weight:700;color:var(--accent)}
+.aq-item-remove{background:none;border:1px solid var(--border);color:var(--text-dim);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;flex-shrink:0}
+.aq-item-remove:hover{color:var(--danger);border-color:var(--danger)}
+.aq-item-notes{font-size:12px;color:var(--text);margin-top:6px;line-height:1.4}
+.aq-item-actions{margin-top:8px;font-size:11px;color:var(--text-dim)}
+.aq-item-action-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.aq-action-chip{background:rgba(88,166,255,0.1);border:1px solid rgba(88,166,255,0.2);color:var(--accent);border-radius:6px;padding:2px 8px;font-size:10px}
+.aq-action-chip.comment{background:rgba(46,160,67,0.1);border-color:rgba(46,160,67,0.2);color:#2ea043}
+.aq-action-chip.transition{background:rgba(210,153,34,0.1);border-color:rgba(210,153,34,0.2);color:#d29922}
+.aq-action-chip.worklog{background:rgba(188,140,255,0.1);border-color:rgba(188,140,255,0.2);color:#bc8cff}
+.aq-action-chip.assignee{background:rgba(255,166,87,0.1);border-color:rgba(255,166,87,0.2);color:#ffa657}
+.aq-action-chip.labels{background:rgba(126,231,135,0.1);border-color:rgba(126,231,135,0.2);color:#7ee787}
+.aq-empty{text-align:center;padding:24px;color:var(--text-dim);font-size:13px}
+.aq-item-created{font-size:10px;color:var(--text-dim);margin-top:6px}
 </style>
 </head>
 <body>
@@ -509,6 +534,13 @@ body.has-status-bar .scroll{padding-top:28px}
       <div class="tasks-queue" id="tasksQueue" style="display:none">
         <div class="tasks-queue-title">Queue</div>
         <div id="tasksQueueList"></div>
+      </div>
+      <div id="actionQueueContainer" class="aq-container" style="display:none">
+        <div class="aq-header">
+          <span class="aq-title">Action Queue <span class="aq-count" id="aqCount"></span></span>
+          <button class="aq-fire-btn" id="aqFireBtn" onclick="fireActionQueue()">&#9889; Fire Queue</button>
+        </div>
+        <div id="actionQueueList"></div>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <span style="font-size:14px;font-weight:600">Jobs</span>
@@ -1310,7 +1342,14 @@ function pollCmdResponses(data){
   if(!data.agent||!data.agent.recentActivity)return;
   var hist=JSON.parse(localStorage.getItem('cmdHistory')||'[]');
   var upd=false;
-  data.agent.recentActivity.forEach(function(act){hist.forEach(function(h){if(h.issueNum===act.issueNum&&!h.response){h.response=act.responseSnippet||'Processed';upd=true}})});
+  data.agent.recentActivity.forEach(function(act){
+    if(!act.responseSnippet)return;
+    hist.forEach(function(h){
+      if(h.issueNum===act.issueNum&&(!h.response||h.response==='Processed')){
+        h.response=act.responseSnippet;upd=true
+      }
+    })
+  });
   if(upd){localStorage.setItem('cmdHistory',JSON.stringify(hist));renderCmdHistory()}
 }
 
@@ -1467,7 +1506,7 @@ setInterval(checkStaleness,5000);
 setInterval(updateRelativeTimes,30000);
 setInterval(updateLiveUptimes,1000);
 setInterval(function(){
-  if(document.getElementById('view-tasks').style.display!=='none')loadTasks();
+  if(document.getElementById('view-tasks').style.display!=='none'){loadTasks();renderActionQueue();}
 },5000);
 
 // ===== PULL TO REFRESH =====
@@ -1864,12 +1903,93 @@ document.getElementById('taskFormFreq').addEventListener('change',function(){
 // Load tasks on view switch
 var tasksOrigSwitchView;
 
+// ===== ACTION QUEUE (Jira Action Queue / logQueue) =====
+function renderActionQueue(){
+  var aq=rawData&&rawData.actionQueue||[];
+  var container=document.getElementById('actionQueueContainer');
+  var listEl=document.getElementById('actionQueueList');
+  var countEl=document.getElementById('aqCount');
+  var fireBtn=document.getElementById('aqFireBtn');
+  if(!container||!listEl)return;
+  if(aq.length===0){
+    container.style.display='none';
+    return;
+  }
+  container.style.display='block';
+  if(countEl)countEl.textContent='('+aq.length+')';
+  if(fireBtn)fireBtn.disabled=false;
+  var html='';
+  aq.forEach(function(item){
+    var acts=item.actions||{};
+    var chips='';
+    if(acts.comment)chips+='<span class="aq-action-chip comment">comment</span>';
+    if(acts.worklogHours)chips+='<span class="aq-action-chip worklog">log '+acts.worklogHours+'h</span>';
+    if(acts.transition)chips+='<span class="aq-action-chip transition">'+escapeHtml(acts.transition)+'</span>';
+    if(acts.fallbackTransition)chips+='<span class="aq-action-chip transition">fallback: '+escapeHtml(acts.fallbackTransition)+'</span>';
+    if(acts.assignee)chips+='<span class="aq-action-chip assignee">assign '+escapeHtml(acts.assignee)+'</span>';
+    if(acts.labels&&acts.labels.length>0)chips+='<span class="aq-action-chip labels">'+escapeHtml(acts.labels.join(', '))+'</span>';
+    html+='<div class="aq-item">';
+    html+='<div class="aq-item-header">';
+    html+='<span class="aq-item-ticket">'+escapeHtml(item.ticket||'N/A')+'</span>';
+    html+='<button class="aq-item-remove" onclick="removeActionQueueItem('+item.id+')">&#10005; Remove</button>';
+    html+='</div>';
+    if(item.notes)html+='<div class="aq-item-notes">'+escapeHtml(item.notes)+'</div>';
+    if(chips)html+='<div class="aq-item-actions">Actions:<div class="aq-item-action-row">'+chips+'</div></div>';
+    if(item.createdAt)html+='<div class="aq-item-created">Queued: '+escapeHtml(item.createdAt)+'</div>';
+    html+='</div>';
+  });
+  listEl.innerHTML=html;
+}
+
+function fireActionQueue(){
+  var aq=rawData&&rawData.actionQueue||[];
+  if(aq.length===0){showToast('Action queue is empty','');return}
+  var btn=document.getElementById('aqFireBtn');
+  if(btn){btn.disabled=true;btn.innerHTML='&#8987; Firing...'}
+  var summary='Fire Action Queue ('+aq.length+' items)';
+  var body='Execute /logQueue now. Process all pending items from the jira-action-queue.json file one by one.'+NL+
+    'File: C:\\Users\\aryan.v1\\.gemini\\tmp\\bin\\memory\\jira-action-queue.json'+NL+
+    'After each item is executed successfully, remove it from the file so it does not get logged again.'+NL+
+    'Items to process:'+NL;
+  aq.forEach(function(item){
+    body+=NL+'--- Item #'+item.id+': '+item.ticket+' ---'+NL;
+    var acts=item.actions||{};
+    if(acts.comment)body+='Comment: '+acts.comment.substring(0,200)+(acts.comment.length>200?'...':'')+NL;
+    if(acts.worklogHours)body+='Worklog: '+acts.worklogHours+'h'+NL;
+    if(acts.transition)body+='Transition: '+acts.transition+NL;
+    if(acts.fallbackTransition)body+='Fallback transition: '+acts.fallbackTransition+NL;
+    if(acts.assignee)body+='Assignee: '+acts.assignee+NL;
+    if(acts.labels)body+='Labels: '+acts.labels.join(', ')+NL;
+    if(item.notes)body+='Notes: '+item.notes+NL;
+  });
+  body+=NL+'Sent from dashboard';
+  createIssue(summary,body,function(e,d){
+    if(btn){btn.disabled=false;btn.innerHTML='&#9889; Fire Queue'}
+    if(e||!d||!d.number){showToast('Failed to fire action queue','error');return}
+    showToast('Action queue fired (Issue #'+d.number+'). Items will be processed sequentially.','success');
+  });
+}
+
+function removeActionQueueItem(id){
+  if(!confirm('Remove item #'+id+' from the action queue?'))return;
+  showToast('Removing item #'+id+'...','');
+  createIssue('Remove action queue item #'+id,
+    'Edit the file C:\\Users\\aryan.v1\\.gemini\\tmp\\bin\\memory\\jira-action-queue.json'+NL+
+    'Remove the item with id '+id+' from the array. Save the file.'+NL+
+    'Do not change anything else.'+NL+
+    'Sent from dashboard',
+    function(e,d){
+      if(e||!d||!d.number){showToast('Failed to send removal','error');return}
+      showToast('Removal request sent (Issue #'+d.number+')','success');
+    });
+}
+
 // Load HAC report on view switch
 var hacOrigSwitchView=switchView;
 switchView=function(id){
   hacOrigSwitchView(id);
   if(id==='view-hac')loadHacReport();
-  if(id==='view-tasks')loadTasks();
+  if(id==='view-tasks'){loadTasks();renderActionQueue();}
 };
 </script>
 </body>
