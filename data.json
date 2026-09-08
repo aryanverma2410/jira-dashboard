@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-08T06:18:46.340Z",
+  "generatedAt": "2026-09-08T06:19:24.582Z",
   "totalTickets": 9,
   "tickets": [
     {
@@ -444,7 +444,7 @@
       }
     ],
     "pid": 21124,
-    "uptime": 6160,
+    "uptime": 6198,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -453,7 +453,7 @@
         "issueTitle": "Regenerate EOD Summaries",
         "snippet": "Read the RCA markdown files for the following tickets from C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\ticket-rca directory:\n",
         "pid": 37836,
-        "elapsed": 100
+        "elapsed": 138
       }
     ],
     "startTime": "2026-09-08T04:36:06.116Z",
@@ -464,7 +464,7 @@
       {
         "pid": 1436,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 85950,
+        "ageSeconds": 85989,
         "status": "running",
         "isChild": false,
         "taskSummary": "i should be able to see the queue that is being used in /logQueue skill using the file to fire it...",
@@ -474,17 +474,17 @@
       {
         "pid": 916,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 83588,
+        "ageSeconds": 83626,
         "status": "running",
         "isChild": false,
-        "taskSummary": "dont save it to memory. only the tickets I write with the jira-action-queue skill. else you have ...",
-        "lastExchange": "dont save it to memory. only the tickets I write with the jira-action-queue skill. else you have to post e=when I ask you to",
+        "taskSummary": "change this script to show the error int he output that comes from smc call //NOTE ITGC_JIRA:PC-5...",
+        "lastExchange": "change this script to show the error int he output that comes from smc call //NOTE ITGC_JIRA:PC-52678(GMT-20796)\n//Remediate SMC external service stuck in UPDATE_ERROR - reset to NEW, restart processExternalServices\n//Reusable PC-52678 script\n\nimport de.hybris.platform.processengine.enums.ProcessState\nimport com.samsung.toko.core.enums.ExternalServiceStatus\n\nfss = spring.getBean(\"flexibleSearchService\")\nmodelService = spring.getBean(\"modelService\")\nenumSvc = spring.getBean(\"enumerationService\")\nbps = spring.getBean(\"businessProcessService\")\n\ndef orders = \"\"\"\nZA260818-62782020\nZA260730-45028831\n\"\"\".readLines()*.trim().findAll { it } as Set\n\ndef NEW = enumSvc.getEnumerationValue(ExternalServiceStatus.class, 'NEW')\nint ok = 0, skip = 0, err = 0\n\nprintln \"Remediating \" + orders.size() + \" order(s)\"\nprintln \"\"\nfor (o in orders) {\n    def res = fss.search(\"SELECT {o.pk} FROM {Order AS o} WHERE {o.code}='$o' AND {o.originalVersion} IS NULL\").result\n    if (res.isEmpty()) { println \"$o [SKIP] not found\"; skip++; continue }\n\n    def reset = false\n    for (es in res[0].externalServiceEntries) {\n        def st = es.status?.code\n        println \"$o ES=$st provider=${es.provider} serviceProduct=${es.serviceProduct?.code}\"\n        if (st == 'ERROR' || st == 'UPDATE_ERROR') {\n            es.status = NEW; es.statusMessage = null; modelService.save(es)\n            println \"  -> ${st} to NEW\"; reset = true\n        }\n    }\n    if (!reset) { println \"$o [SKIP] no ExternalService in ERROR/UPDATE_ERROR\"; skip++; continue }\n\n    def cps = fss.search(\"SELECT {cp.pk} FROM {ConsignmentProcess AS cp JOIN Consignment AS c ON {cp.consignment}={c.pk} JOIN Order AS o ON {o.pk}={c.order}} WHERE {o.code}='$o' AND {o.originalVersion} IS NULL\").result\n    if (cps.isEmpty()) { println \"$o [ERR] no consignment process\"; err++; continue }\n\n    for (p in cps) {\n        if (!p.processDefinitionName.contains('consignment-process')) continue\n        try {\n            if (p.currentTasks) modelService.removeAll(p.currentTasks)\n            p.state = ProcessState.ERROR; modelService.save(p)\n            bps.restartProcess(p, \"processExternalServices\")\n            println \"$o [OK] restarted processExternalServices\"; ok++\n        } catch (e) {\n            println \"$o [ERR] \" + e.message; err++\n        }\n    }\n}\n\nprintln \"\"\nprintln \"Summary: ok=\" + ok + \" skip=\" + skip + \" err=\" + err",
         "sessionId": "bin"
       },
       {
         "pid": 28640,
         "cwd": "c:\\windows",
-        "ageSeconds": 83395,
+        "ageSeconds": 83433,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -494,7 +494,7 @@
       {
         "pid": 35792,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 67923,
+        "ageSeconds": 67962,
         "status": "running",
         "isChild": false,
         "taskSummary": "i should be able to see the queue that is being used in /logQueue skill using the file to fire it...",
@@ -504,7 +504,7 @@
       {
         "pid": 25896,
         "cwd": "unknown",
-        "ageSeconds": 64003,
+        "ageSeconds": 64041,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
