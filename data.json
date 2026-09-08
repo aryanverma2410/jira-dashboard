@@ -1,7 +1,49 @@
 {
-  "generatedAt": "2026-09-08T06:48:43.380Z",
-  "totalTickets": 9,
+  "generatedAt": "2026-09-08T06:49:25.257Z",
+  "totalTickets": 10,
   "tickets": [
+    {
+      "key": "AEME-6499",
+      "summary": "Stuck Order || 19-Aug",
+      "status": "QA Server Review",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "UAE Maintenance & Enhancements",
+      "projectKey": "AEME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-09-08T15:48:50.000+0900",
+      "created": "2026-08-19T21:29:14.000+0900",
+      "description": "HI Team\n\n \n\nThis order is being stuck in Hybris. Please fix it and share RCA.\n|AE260808-54166207|WAITING_FOR_SEND_FINANCIAL|Order is being stuck in Hybris|\n\n \n\nThese are all completed in NERP but the Hybris status is stuck.\n\nPlease fix it and share RCA.\n|Order |Status|NERP Billing No.|\n|AE260812-578",
+      "commentsCount": 17,
+      "recentComments": [
+        {
+          "author": "Jaffar Ali",
+          "date": "2026-09-08T15:48:40.855+0900",
+          "snippet": "hI ~@email \n\n \n\nAs I mentioned in the description, the partial cancellation did not happen. Ignore the partial cancellation. \nSwap was successfull and delivered. So Please update the order status.\n\n \n\nRegards\n\nJaffar"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-09-07T19:00:24.380+0900",
+          "snippet": "Hi ~@email ,\nCould you please confirm if all the SKUs were delivered to the customer or the partial cancellation one didnt deliver for AE260812-57849665.\nRegards\n\nAryan"
+        }
+      ],
+      "lastCommentBy": "Jaffar Ali",
+      "lastCommentSnippet": "hI ~@email \n\n \n\nAs I mentioned in the description, the partial cancellation did not happen. Ignore the partial cancellation. \nSwap was successfull and delivered. So Please update the order status.\n\n \n\nRegards\n\nJaffar",
+      "lastCommentDate": "2026-09-08T15:48:40.855+0900",
+      "url": "https://jira.secext.samsung.net/browse/AEME-6499",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "I'll investigate ticket AEME-6499. Let me activate the investigate workflow and fetch the ticket details.\nNow I need to fetch the ticket, check MCP availability, and prepare for investigation. Let me check for existing cache files, read MEMORY.md and Aryantone.md, and look at existing fetch scripts to understand the pattern.\nLock file already exists (likely from a previous interrupted attempt or auto-created by dashboard). No cache file exists - this is a fresh investigation. Let me fetch the ticket and find the Aryantone/MEMORY files.\nGood. Now let me fetch the ticket, read MEMORY.md, and look for Aryantone.md in the bin/memory path mentioned in the skill.\nThe `\\r\\n` line endings are breaking the JS string literals. Let me rewrite the file with proper `\\n` line endings.\nThe `\\r\\n` line ending corruption from write_file is breaking embedded `\\n` in string literals. Let me use a workaround.\nExcellent. I have the full ticket. Let me analyze:\n\n**AEME-6499 Summary:**\n- 5 orders originally reported stuck\n- 4 orders now COMPLETED per latest comment (Sep 4): AE260808-54166207, AE260812-57844500, AE260812-57844331, AE260807-52613234\n- 1 order remains stuck: AE260812-57849665 (SHIPPING_REQUESTED - color swap done, partial cancellation failed, delivery completed)\n\nNow launching Phase 1 parallel fan-out investigation. Let me check for the HAC scripts first.\nGood. Both scripts exist. Now launching parallel Phase 1 investigation. I'll fan out 5 sub-agents: Kibana logs, codebase trace, Jira cross-ref, FlexiQuery DB state, and reusable PC ticket search.",
+        "sections": {
+          "issue": "",
+          "rca": "I'll investigate ticket AEME-6499. Let me activate the investigate workflow and fetch the ticket details.\nNow I need to fetch the ticket, check MCP availability, and prepare for investigation. Let me check for existing cache files, read MEMORY.md and Aryantone.md, and look at existing fetch scripts to understand the pattern.\nLock file already exists (likely from a previous interrupted attempt or auto-created by dashboard). No cache file exists - this is a fresh investigation. Let me fetch the ticket and find the Aryantone/MEMORY files.\nGood. Now let me fetch the ticket, read MEMORY.md, and look for Aryantone.md in the bin/memory path mentioned in the skill.\nThe `\\r\\n` line endings are breaking the JS string literals. Let me rewrite the file with proper `\\n` line endings.\nThe `\\r\\n` line ending corruption from write_file is breaking embedded `\\n` in string literals. Let me use a workaround.\nExcellent. I have the full ticket. Let me analyze:\n\n**AEME-6499 Summary:**\n- 5 orders originally reported stuck\n- 4 orders now COMPLETED per latest comment (Sep 4): AE260808-54166207, AE260812-57844500, AE260812-57844331, AE260807-52613234\n- 1 order remains stuck: AE260812-57849665 (SHIPPING_REQUESTED - color swap done, partial cancellation failed, delivery completed)\n\nNow launching Phase 1 parallel fan-out investigation. Let me check for the HAC scripts first.\nGood. Both scripts exist. Now launching parallel Phase 1 investigation. I'll fan out 5 sub-agents: Kibana logs, codebase trace, Jira cross-ref, FlexiQuery DB state, and reusable PC ticket search.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-07T05:53:11.162Z"
+      }
+    },
     {
       "key": "SAHME-3357",
       "summary": "SMC Errors-ProcessExternalServices",
@@ -446,7 +488,7 @@
       }
     ],
     "pid": 15900,
-    "uptime": 1392,
+    "uptime": 1437,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -458,7 +500,7 @@
       {
         "pid": 1436,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 87748,
+        "ageSeconds": 87789,
         "status": "running",
         "isChild": false,
         "taskSummary": "i should be able to see the queue that is being used in /logQueue skill using the file to fire it...",
@@ -468,7 +510,7 @@
       {
         "pid": 916,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 85385,
+        "ageSeconds": 85427,
         "status": "running",
         "isChild": false,
         "taskSummary": "take inspo from: //NOTE ITGC_JIRA:PC-3698(SPHME-7890) import com.samsung.toko.util.SMCExternalSer...",
@@ -478,7 +520,7 @@
       {
         "pid": 28640,
         "cwd": "c:\\windows",
-        "ageSeconds": 85192,
+        "ageSeconds": 85234,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -488,7 +530,7 @@
       {
         "pid": 35792,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 69721,
+        "ageSeconds": 69762,
         "status": "running",
         "isChild": false,
         "taskSummary": "i should be able to see the queue that is being used in /logQueue skill using the file to fire it...",
@@ -498,7 +540,7 @@
       {
         "pid": 25896,
         "cwd": "unknown",
-        "ageSeconds": 65801,
+        "ageSeconds": 65842,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
