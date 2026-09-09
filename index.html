@@ -491,6 +491,74 @@ body.has-status-bar .scroll{padding-top:28px}
 .mcp-alert-badge{display:inline-block;background:var(--danger);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;animation:mcp-pulse 2s infinite}
 .mcp-downtime{font-size:11px}
 
+/* F_Y: Ticket Age Heatmap */
+.ticket-age-bar{position:absolute;top:0;left:0;height:3px;border-radius:12px 0 0 0;transition:width .3s}
+.age-fresh{background:var(--success)}.age-recent{background:var(--accent)}.age-aging{background:var(--warning)}.age-old{background:var(--danger)}
+
+/* F_V: Auto-Investigate Indicator */
+.investigating-badge{font-size:9px;font-weight:700;color:#bc8cff;background:rgba(188,140,255,0.1);border:1px solid rgba(188,140,255,0.3);border-radius:3px;padding:1px 5px;margin-left:4px;animation:inv-pulse 2s infinite}
+@keyframes inv-pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* F_T: Day Starter Widget */
+.day-starter{background:linear-gradient(135deg,rgba(88,166,255,0.08),rgba(188,140,255,0.05));border:1px solid rgba(88,166,255,0.2);border-radius:12px;padding:14px;margin-bottom:12px}
+.day-starter-title{font-size:14px;font-weight:700;margin-bottom:10px}
+.day-starter-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.day-starter-cell{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center}
+.day-starter-count{font-size:24px;font-weight:700}
+.day-starter-label{font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-top:4px}
+.day-starter-items{margin-top:8px;font-size:11px;color:var(--text-dim);line-height:1.6}
+.day-starter-item{cursor:pointer;color:var(--accent)}
+
+/* F_K: RCA Matrix View */
+.rca-matrix-grid{display:grid;gap:12px;padding:16px}
+.rca-section{border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.rca-section-header{padding:10px 14px;font-weight:700;font-size:13px}
+.rca-section.found .rca-section-header{background:rgba(63,185,80,0.1);color:var(--success)}
+.rca-section.investigating .rca-section-header{background:rgba(188,140,255,0.1);color:#bc8cff}
+.rca-section.none .rca-section-header{background:rgba(139,148,158,0.1);color:var(--text-dim)}
+.rca-ticket-row{padding:10px 14px;border-top:1px solid var(--border);cursor:pointer}
+.rca-ticket-row:active{background:var(--card)}
+.rca-ticket-key{font-family:monospace;font-size:12px;font-weight:700;color:var(--accent)}
+.rca-excerpt{font-size:11px;color:var(--text-dim);margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rca-actions{display:flex;gap:6px;margin-top:6px}
+.rca-action-btn{font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer}
+
+/* F_R: Manual Investigation Input */
+.watch-input-row{display:flex;gap:8px;padding:0 16px 12px}
+.watch-input{flex:1;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:13px}
+.watch-btn{background:rgba(188,140,255,0.15);border:1px solid rgba(188,140,255,0.3);color:#bc8cff;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.watch-btn:active{transform:scale(.95)}
+
+/* F_C: Action Result Feedback */
+.aq-result-success{color:var(--success);font-size:11px;margin-top:4px}
+.aq-result-fail{color:var(--danger);font-size:11px;margin-top:4px}
+
+/* F_X: Action Queue Conflict */
+.aq-conflict-flag{color:var(--warning);font-size:10px;font-weight:600;margin-left:6px}
+
+/* F_O: Offline Queue */
+.offline-indicator{background:rgba(210,153,34,0.15);border:1px solid rgba(210,153,34,0.4);color:#d29922;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600}
+.offline-indicator.hidden{display:none}
+
+/* F_P/AA: Session Output Modal */
+.output-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:400;display:none;flex-direction:column}
+.output-modal-overlay.show{display:flex}
+.output-modal-header{padding:12px 16px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.output-modal-search{flex:1;margin:0 12px;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 12px;font-size:13px}
+.output-modal-content{flex:1;overflow-y:auto;padding:16px;font-family:monospace;font-size:11px;white-space:pre-wrap;color:var(--text-dim);line-height:1.5;-webkit-overflow-scrolling:touch}
+.output-modal-line{padding:2px 0}
+.output-modal-line.highlight{background:rgba(88,166,255,0.15);color:var(--text)}
+.output-modal-close{background:none;border:none;color:var(--text-dim);font-size:24px;cursor:pointer;padding:4px}
+.output-modal-title{font-size:13px;font-weight:600;color:var(--text)}
+
+/* F_L: Template Comment */
+.tpl-dropdown{position:absolute;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:4px;z-index:300;max-height:200px;overflow-y:auto;display:none}
+.tpl-dropdown.show{display:block}
+.tpl-item{padding:6px 10px;border-radius:4px;cursor:pointer;font-size:12px}
+.tpl-item:active{background:var(--card)}
+.tpl-delete{float:right;color:var(--danger);font-size:10px}
+.tpl-btn{background:var(--card);border:1px solid var(--border);color:var(--text-dim);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;margin-bottom:6px}
+
 /* F8/F10/F11 Section wrappers */
 .qol-section{padding:12px 16px}
 .qol-section-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:6px}
@@ -519,6 +587,11 @@ body.has-status-bar .scroll{padding-top:28px}
     <button onclick="document.getElementById('updateBanner').classList.remove('show')">&times;</button>
   </div>
   <div class="scroll" id="ticketsScroll">
+    <div id="dayStarter"></div>
+    <div class="watch-input-row">
+      <input type="text" class="watch-input" id="watchInput" placeholder="Investigate ticket KEY (e.g. SAME-1234)">
+      <button class="watch-btn" onclick="triggerManualInvestigation()">&#128269; Investigate</button>
+    </div>
     <div class="controls">
       <input type="text" class="search-input" id="searchInput" placeholder="Search by key, summary, or project...">
       <div class="filter-row" id="filterRow"></div>
@@ -647,6 +720,20 @@ body.has-status-bar .scroll{padding-top:28px}
   </div>
 </div>
 
+<!-- VIEW: RCA MATRIX -->
+<div class="view" id="view-rca">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="pulse-dot" id="rcaPulseDot"></div>
+      <h1>RCA Matrix</h1>
+    </div>
+    <div class="refresh-time" id="rcaRefreshTime">...</div>
+  </div>
+  <div class="scroll" id="rcaScroll">
+    <div id="rcaMatrixContent"><div class="loading-state">Loading...</div></div>
+  </div>
+</div>
+
 <!-- VIEW: HAC REPORT -->
 <div class="view" id="view-hac">
   <div class="topbar">
@@ -732,6 +819,11 @@ body.has-status-bar .scroll{padding-top:28px}
     <span>MCPs</span>
     <div class="nav-badge" id="navBadgeMcps"></div>
   </div>
+  <div class="nav-item" data-nav="view-rca" onclick="switchView('view-rca')">
+    <div class="nav-icon">&#128269;</div>
+    <span>RCA</span>
+    <div class="nav-badge" id="navBadgeRca"></div>
+  </div>
   <div class="nav-item" data-nav="view-hac" onclick="switchView('view-hac')">
     <div class="nav-icon">&#128202;</div>
     <span>HAC</span>
@@ -740,6 +832,16 @@ body.has-status-bar .scroll{padding-top:28px}
     <span class="nav-icon">&#9201;</span>
     <span class="nav-label">Tasks</span>
   </a>
+</div>
+
+<!-- Session Output Modal (F_P/AA) -->
+<div class="output-modal-overlay" id="outputModal">
+  <div class="output-modal-header">
+    <span class="output-modal-title" id="outputModalTitle">Session Output</span>
+    <input type="text" class="output-modal-search" id="outputSearchInput" placeholder="Search output..." oninput="searchOutput()">
+    <button class="output-modal-close" onclick="closeOutputModal()">&times;</button>
+  </div>
+  <div class="output-modal-content" id="outputModalContent"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -977,6 +1079,7 @@ function onData(data){
   ticketState=newState;
   rawData=data;
   renderFilters(data);renderTickets(data,changedKeys);
+  renderRcaMatrix(data);renderDayStarter(data);
   renderSessions(data);renderActivity(data);renderMcps(data);renderCmdHistory();
   pollCmdResponses(data);updateNavBadges(data);
 }
@@ -1079,11 +1182,12 @@ function buildCard(t,exp,ch){
   var staleCls=isStaleTicket(t.updated)?' stale':'';
   var queuedCls=isQueuedTicket(t.key)?' queued':'';
   return '<div class="ticket-card'+ec+fc+pinCls+staleCls+queuedCls+'" data-ticket-key="'+escapeHtml(t.key)+'" data-updated="'+escapeHtml(t.updated)+'" data-comments="'+(t.commentsCount||0)+'">'+
+    '<div class="ticket-age-bar '+ticketAgeClass(t.updated)+'" style="width:'+Math.min(100,(Date.now()-new Date(t.updated).getTime())/604800000*100)+'%"></div>'+
     '<div class="updated-badge">UPDATED</div>'+
     '<button class="pin-star '+(isPinned(t.key)?'active':'')+'" onclick="event.stopPropagation();togglePin(\''+escapeHtml(t.key)+'\')">'+(isPinned(t.key)?'★':'☆')+'</button>'+
     '<div class="ticket-header"><span class="ticket-key" style="color:'+kc+'">'+escapeHtml(t.key)+'</span><span class="status-badge '+sc+'">'+escapeHtml(t.status)+'</span>'+statusAgeBadge(t.statusChangedAt)+'</div>'+
     '<div class="ticket-summary" data-field="summary">'+escapeHtml(t.summary)+'</div>'+
-    '<div class="ticket-meta"><span class="priority-dot" style="background:'+pc+'"></span><span data-field="project">'+escapeHtml(t.project)+'</span><span>&middot;</span><span>'+escapeHtml(t.issuetype)+'</span><span>&middot;</span><span data-field="updated-rel">updated '+relTime(t.updated)+'</span><span class="comment-badge">&#128172; '+(t.commentsCount||0)+'</span>'+(isStaleTicket(t.updated)?'<span class="stale-badge">STALE</span>':'')+(isQueuedTicket(t.key)?'<span class="queued-badge">QUEUED</span>':'')+'</div>'+
+    '<div class="ticket-meta"><span class="priority-dot" style="background:'+pc+'"></span><span data-field="project">'+escapeHtml(t.project)+'</span><span>&middot;</span><span>'+escapeHtml(t.issuetype)+'</span><span>&middot;</span><span data-field="updated-rel">updated '+relTime(t.updated)+'</span><span class="comment-badge">&#128172; '+(t.commentsCount||0)+'</span>'+(isInvestigating(t.key)?'<span class="investigating-badge">&#128269; INVESTIGATING</span>':'')+(isStaleTicket(t.updated)?'<span class="stale-badge">STALE</span>':'')+(isQueuedTicket(t.key)?'<span class="queued-badge">QUEUED</span>':'')+'</div>'+
     '<div class="last-comment-preview" data-field="last-comment">'+escapeHtml(lcp)+'</div>'+
     (t.linkedTickets&&t.linkedTickets.length>0?'<div class="linked-chips" data-field="linked-chips">'+t.linkedTickets.map(function(lt){var lsc=statusClass(lt.status,lt.statusCategory);return '<a class="linked-chip" href="https://jira.secext.samsung.net/browse/'+encodeURIComponent(lt.key)+'" target="_blank" onclick="event.stopPropagation()"><span class="lc-key">'+escapeHtml(lt.key)+'</span><span class="lc-status '+lsc+'">'+escapeHtml(lt.status)+'</span></a>'}).join('')+'</div>':'')+
     '<div class="expanded-content">'+
@@ -1117,6 +1221,15 @@ function updateCard(card,t,ch){
   var bg=card.querySelector('.status-badge');if(bg){var sc=statusClass(t.status,t.statusCategory);bg.className='status-badge '+sc;if(bg.textContent!==t.status)bg.textContent=t.status}
   // Toggle queued + stale classes for existing cards
   if(isQueuedTicket(t.key)){card.classList.add('queued')}else{card.classList.remove('queued')}
+  // F_V: Update investigating badge
+  var invBadge=card.querySelector('.investigating-badge');
+  if(isInvestigating(t.key)&&!invBadge){
+    var meta=card.querySelector('.ticket-meta');
+    if(meta){var span=document.createElement('span');span.className='investigating-badge';span.innerHTML='&#128269; INVESTIGATING';meta.appendChild(span)}
+  }else if(!isInvestigating(t.key)&&invBadge){invBadge.remove()}
+  // F_Y: Update age bar
+  var ageBar=card.querySelector('.ticket-age-bar');
+  if(ageBar){ageBar.className='ticket-age-bar '+ticketAgeClass(t.updated);ageBar.style.width=Math.min(100,(Date.now()-new Date(t.updated).getTime())/604800000*100)+'%'}
   if(isStaleTicket(t.updated)){card.classList.add('stale')}else{card.classList.remove('stale')}
   if(expandedTickets.has(t.key)&&t.recentComments){var cc=card.querySelector('[data-field="comments"]');if(cc){var hh='';t.recentComments.forEach(function(c){hh+='<div class="comment-item"><span class="comment-author">'+escapeHtml(c.author)+'</span><span class="comment-date">'+relTime(c.date)+'</span><div class="comment-snippet">'+escapeHtml(c.snippet)+'</div></div>'});cc.innerHTML=hh}var de=card.querySelector('[data-field="desc"]');if(de)de.textContent=t.description||''}
   // Update solution section
@@ -2313,7 +2426,10 @@ function renderActionQueue(){
     }
   });
 
-  var allItems=aq.slice();
+  var allItems=sortActionQueue(aq.slice());
+  // F_X: conflict detection — same ticket in multiple queue items
+  var conflictCounts={};
+  aq.forEach(function(i){if(i.ticket)conflictCounts[i.ticket]=(conflictCounts[i.ticket]||0)+1});
   doneItems.forEach(function(d){
     if(!allItems.find(function(a){return a.id===d.id}))allItems.push(d);
   });
@@ -2647,7 +2763,268 @@ switchView=function(id){
   hacOrigSwitchView(id);
   if(id==='view-hac')loadHacReport();
   if(id==='view-tasks'){loadTasks();renderActionQueue();}
+  if(id==='view-rca'&&rawData)renderRcaMatrix(rawData);
 };
+
+// ===== NEW FEATURE FUNCTIONS =====
+
+// F_Y: Ticket Age Heatmap
+function ticketAgeClass(updated){
+  if(!updated)return '';
+  var age=Date.now()-new Date(updated).getTime();
+  if(age<86400000)return 'age-fresh';
+  if(age<259200000)return 'age-recent';
+  if(age<604800000)return 'age-aging';
+  return 'age-old';
+}
+
+// F_V: Auto-Investigate Indicator
+function isInvestigating(key){
+  if(!rawData||!rawData.tickets)return false;
+  var t=rawData.tickets.find(function(x){return x.key===key});
+  return t&&t.solution&&t.solution.status==='investigating';
+}
+
+// F_K: RCA Matrix View
+function renderRcaMatrix(data){
+  var el=document.getElementById('rcaMatrixContent');
+  if(!el)return;
+  if(!data||!data.tickets){el.innerHTML='<div class="loading-state">Loading...</div>';return}
+  var found=[],investigating=[],none=[];
+  data.tickets.forEach(function(t){
+    if(t.solution&&t.solution.status==='found')found.push(t);
+    else if(t.solution&&t.solution.status==='investigating')investigating.push(t);
+    else none.push(t);
+  });
+  var html='<div class="rca-matrix-grid">';
+  html+=rcaSection('found','&#10003; RCA Complete ('+found.length+')',found);
+  html+=rcaSection('investigating','&#128269; Investigating ('+investigating.length+')',investigating);
+  html+=rcaSection('none','&#9679; No RCA ('+none.length+')',none);
+  html+='</div>';
+  el.innerHTML=html;
+  var badge=document.getElementById('navBadgeRca');
+  if(badge){badge.textContent=investigating.length>0?investigating.length:'';badge.classList.toggle('show',investigating.length>0)}
+  var rt=document.getElementById('rcaRefreshTime');
+  if(rt)rt.textContent=formatTime(new Date());
+  var pd=document.getElementById('rcaPulseDot');
+  if(pd){pd.classList.toggle('offline',!(data.agent&&data.agent.online))}
+}
+function rcaSection(cls,title,tickets){
+  if(tickets.length===0)return '<div class="rca-section '+cls+'"><div class="rca-section-header">'+title+'</div></div>';
+  var rows=tickets.map(function(t){
+    var exc=t.solution&&t.solution.excerpt?'<div class="rca-excerpt">'+escapeHtml(t.solution.excerpt.substring(0,200))+'</div>':'';
+    var actions='';
+    if(t.solution&&t.solution.status==='found'){
+      actions='<div class="rca-actions"><button class="rca-action-btn" onclick="event.stopPropagation();openTicketDetail(\''+t.key+'\')">Open</button><button class="rca-action-btn" onclick="event.stopPropagation();copyRca(\''+t.key+'\')">Copy RCA</button></div>';
+    }else if(t.solution&&t.solution.status==='investigating'){
+      actions='<div class="rca-actions"><button class="rca-action-btn" onclick="event.stopPropagation();openOutputModal(\''+t.key+'\')">View Output</button></div>';
+    }else{
+      actions='<div class="rca-actions"><button class="rca-action-btn" onclick="event.stopPropagation();investigateTicket(\''+t.key+'\')">Investigate</button></div>';
+    }
+    return '<div class="rca-ticket-row" onclick="openTicketDetail(\''+t.key+'\')"><span class="rca-ticket-key">'+t.key+'</span> <span style="font-size:11px;color:var(--text-dim)">'+escapeHtml(t.summary)+'</span>'+exc+actions+'</div>';
+  }).join('');
+  return '<div class="rca-section '+cls+'"><div class="rca-section-header">'+title+'</div>'+rows+'</div>';
+}
+function copyRca(key){
+  var t=rawData.tickets.find(function(x){return x.key===key});
+  if(!t||!t.solution)return;
+  var text='# '+key+NL+t.solution.excerpt;
+  var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');showToast('RCA copied','success')}catch(e){showToast('Copy failed','error')}
+  document.body.removeChild(ta);
+}
+
+// F_T: Day Starter Widget
+function renderDayStarter(data){
+  var el=document.getElementById('dayStarter');
+  if(!el||!data||!data.tickets)return;
+  var lastVisit=parseInt(localStorage.getItem('dayStartVisit')||'0');
+  var now=Date.now();
+  if(now-lastVisit<4*3600000){el.innerHTML='';return}
+  var newTickets=data.tickets.filter(function(t){return new Date(t.created).getTime()>lastVisit});
+  var rcaReady=data.tickets.filter(function(t){return t.solution&&t.solution.status==='found'});
+  var investigating=data.tickets.filter(function(t){return t.solution&&t.solution.status==='investigating'});
+  if(newTickets.length===0&&rcaReady.length===0&&investigating.length===0){el.innerHTML='';return}
+  var html='<div class="day-starter"><div class="day-starter-title">&#127775; Day Starter</div>';
+  html+='<div class="day-starter-grid">';
+  html+='<div class="day-starter-cell"><div class="day-starter-count" style="color:var(--accent)">'+newTickets.length+'</div><div class="day-starter-label">New</div></div>';
+  html+='<div class="day-starter-cell"><div class="day-starter-count" style="color:var(--success)">'+rcaReady.length+'</div><div class="day-starter-label">RCA Ready</div></div>';
+  html+='<div class="day-starter-cell"><div class="day-starter-count" style="color:#bc8cff">'+investigating.length+'</div><div class="day-starter-label">Investigating</div></div>';
+  html+='</div>';
+  if(rcaReady.length>0)html+='<div class="day-starter-items">RCA Ready: '+rcaReady.map(function(t){return '<span class="day-starter-item" onclick="openTicketDetail(\''+t.key+'\')">'+t.key+'</span>'}).join(', ')+'</div>';
+  if(newTickets.length>0)html+='<div class="day-starter-items">New: '+newTickets.map(function(t){return '<span class="day-starter-item" onclick="openTicketDetail(\''+t.key+'\')">'+t.key+'</span>'}).join(', ')+'</div>';
+  html+='</div>';
+  el.innerHTML=html;
+  localStorage.setItem('dayStartVisit',String(now));
+}
+
+// F_R: Manual Investigation Trigger
+function triggerManualInvestigation(){
+  var input=document.getElementById('watchInput');
+  if(!input)return;
+  var key=input.value.trim().toUpperCase();
+  if(!key||!key.match(/^[A-Z]+-\d+$/)){showToast('Enter valid ticket key (e.g. SAME-1234)','error');return}
+  input.value='';
+  showToast('Triggering investigation for '+key+'...','');
+  var body=[
+    'Manual investigation request from dashboard.',
+    '',
+    'Ticket: '+key,
+    '',
+    'Use the investigate workflow:',
+    '1. Fetch the ticket details using the workflow MCP (workflow_fetch_ticket)',
+    '2. Analyze the issue, check Kibana logs, trace the codebase',
+    '3. Produce a complete RCA with the following 3 sections:',
+    '   Issue:',
+    '   <brief description of the problem>',
+    '   RCA:',
+    '   <root cause analysis>',
+    '   Possible remediation:',
+    '   <recommended remediation steps>',
+    '4. Save the RCA using workflow_save_rca (writes to ticket-rca/'+key+'.md)',
+    '5. Do NOT ask the user if they need a script or PC ticket - just save the RCA directly',
+    '',
+    'Sent from dashboard manual trigger'
+  ].join(NL);
+  createIssue('Investigate ticket '+key,body,function(success,d){
+    if(success&&d&&d.number)showToast('Investigation triggered for '+key+' (Issue #'+d.number+')','success');
+    else showToast('Failed to trigger investigation','error');
+  });
+}
+
+// F_C: Action Result Feedback
+function getActionResult(item){
+  if(!rawData||!rawData.agent||!rawData.agent.recentActivity)return null;
+  var match=null;
+  rawData.agent.recentActivity.forEach(function(a){
+    if(a.issueNum&&item.issueLink&&('#'+a.issueNum===item.issueLink||(a.title&&a.title.indexOf(item.ticket)>=0))){
+      if(a.responseSnippet&&a.responseSnippet.indexOf('[ACTION-RESULT]')>=0)match=a;
+    }
+  });
+  if(!match&&rawData.agent.activityLog){
+    rawData.agent.activityLog.forEach(function(a){
+      if(a.title&&a.title.indexOf(item.ticket)>=0&&(a.type==='jira-action'||a.type==='action')){
+        match={responseSnippet:a.detail||'',responded:a.timestamp||''};
+      }
+    });
+  }
+  return match;
+}
+function renderActionResult(item){
+  var r=getActionResult(item);
+  if(!r)return '';
+  var snip=r.responseSnippet||'';
+  var isOk=snip.indexOf('success')>=0||snip.indexOf('OK')>=0||snip.indexOf('done')>=0;
+  var isFail=snip.indexOf('fail')>=0||snip.indexOf('error')>=0;
+  if(!isOk&&!isFail)return '';
+  var cls=isOk?'aq-result-success':'aq-result-fail';
+  var icon=isOk?'&#10003;':'&#10007;';
+  var detail=snip.replace(/^.*\[ACTION-RESULT\]/i,'').trim().split(NL)[0];
+  return '<div class="'+cls+'">'+icon+' '+escapeHtml(detail.substring(0,120))+'</div>';
+}
+
+// F_X: Action Queue Smart Ordering
+function sortActionQueue(items){
+  if(!rawData||!rawData.tickets)return items;
+  var pri={highest:0,high:1,critical:0,medium:2,low:3,lowest:4};
+  return items.slice().sort(function(a,b){
+    var ta=rawData.tickets.find(function(t){return t.key===a.ticket});
+    var tb=rawData.tickets.find(function(t){return t.key===b.ticket});
+    var pa=ta?pri[(ta.priority||'').toLowerCase()]||5:5;
+    var pb=tb?pri[(tb.priority||'').toLowerCase()]||5:5;
+    return pa-pb;
+  });
+}
+
+// F_O: Offline Action Drafting
+var offlineQueue=[];
+function isOnline(){return navigator.onLine}
+function saveOfflineAction(type,key,data){
+  offlineQueue.push({type:type,key:key,data:data,savedAt:Date.now()});
+  localStorage.setItem('offlineActions',JSON.stringify(offlineQueue));
+  showToast('Saved offline - will sync when online','');
+}
+function syncOfflineActions(){
+  var saved=localStorage.getItem('offlineActions');
+  if(!saved)return;
+  offlineQueue=JSON.parse(saved);
+  if(offlineQueue.length===0)return;
+  var item=offlineQueue.shift();
+  localStorage.setItem('offlineActions',JSON.stringify(offlineQueue));
+  if(item.type==='comment')submitComment(item.key);
+  else if(item.type==='status')submitStatus(item.key,item.data);
+  if(offlineQueue.length>0)setTimeout(syncOfflineActions,2000);
+  else showToast('All offline actions synced','success');
+}
+window.addEventListener('online',function(){syncOfflineActions();var el=document.getElementById('offlineIndicator');if(el)el.classList.add('hidden')});
+window.addEventListener('offline',function(){var el=document.getElementById('offlineIndicator');if(el)el.classList.remove('hidden')});
+
+// F_P/AA: Session Output Modal
+var outputModalData='';
+function openOutputModal(keyOrJobId){
+  var title=keyOrJobId;
+  var content='';
+  if(rawData&&rawData.agent&&rawData.agent.jobOutputs){
+    var job=rawData.agent.recentActivity&&rawData.agent.recentActivity.find(function(a){return a.title&&a.title.indexOf(keyOrJobId)>=0});
+    if(job&&rawData.agent.jobOutputs[job.issueNum]){
+      content=rawData.agent.jobOutputs[job.issueNum];
+      title='Output: '+keyOrJobId+' (#'+job.issueNum+')';
+    }
+  }
+  if(!content&&rawData&&rawData.agent){content=rawData.agent.bridgeLogTail||'No output available';title='Bridge Log'}
+  outputModalData=content;
+  document.getElementById('outputModalTitle').textContent=title;
+  document.getElementById('outputSearchInput').value='';
+  renderOutputContent(content);
+  document.getElementById('outputModal').classList.add('show');
+}
+function renderOutputContent(text){
+  var lines=text.split(NL);
+  document.getElementById('outputModalContent').innerHTML=lines.map(function(l,i){return '<div class="output-modal-line" data-line="'+i+'">'+escapeHtml(l)+'</div>'}).join('');
+}
+function closeOutputModal(){document.getElementById('outputModal').classList.remove('show')}
+function searchOutput(){
+  var q=document.getElementById('outputSearchInput').value.toLowerCase();
+  document.querySelectorAll('.output-modal-line').forEach(function(el){
+    if(!q){el.classList.remove('highlight');el.style.display='';return}
+    var match=el.textContent.toLowerCase().indexOf(q)>=0;
+    el.classList.toggle('highlight',match);
+    el.style.display=match?'':'none';
+  });
+  var firstMatch=document.querySelector('.output-modal-line.highlight');
+  if(firstMatch)firstMatch.scrollIntoView();
+}
+
+// F_L: Template Comment Library
+function getTemplates(){try{return JSON.parse(localStorage.getItem('commentTemplates')||'[]')}catch(e){return []}}
+function saveTemplates(t){localStorage.setItem('commentTemplates',JSON.stringify(t))}
+function applyTemplate(idx,key){
+  var tpls=getTemplates();
+  var tpl=tpls[idx];
+  if(!tpl)return;
+  var text=tpl.body.replace(/\{ticket\}/g,key).replace(/\{key\}/g,key);
+  var ta=document.getElementById('ct-'+key)||document.getElementById('commentInput');
+  if(ta){ta.value=text;ta.focus()}
+  var dd=document.getElementById('tplDropdown');
+  if(dd)dd.classList.remove('show');
+}
+function openTplEditor(){
+  var name=prompt('Template name:');
+  if(!name)return;
+  var body=prompt('Template body (use {ticket} for ticket key):');
+  if(body===null)return;
+  var tpls=getTemplates();
+  tpls.push({name:name,body:body});
+  saveTemplates(tpls);
+  showToast('Template saved','success');
+}
+function deleteTemplate(idx,e){
+  e.stopPropagation();
+  var tpls=getTemplates();
+  tpls.splice(idx,1);
+  saveTemplates(tpls);
+  showToast('Template deleted','');
+}
 </script>
 </body>
 </html>
