@@ -393,8 +393,16 @@ body.has-status-bar .scroll{padding-top:28px}
 .aq-action-chip.labels{background:rgba(126,231,135,0.1);border-color:rgba(126,231,135,0.2);color:#7ee787}
 .aq-empty{text-align:center;padding:24px;color:var(--text-dim);font-size:13px}
 .aq-item-created{font-size:10px;color:var(--text-dim);margin-top:6px}
-.aq-item-status{display:flex;align-items:center;gap:6px;margin-top:8px;padding:6px 10px;border-radius:6px;font-size:12px;font-weight:600}
-.aq-status-firing{background:rgba(88,166,255,0.1);border:1px solid rgba(88,166,255,0.2);color:var(--accent)}
+.aq-item.clickable{cursor:pointer}
+.aq-item-detail{display:none;margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)}
+.aq-item.expanded .aq-item-detail{display:block}
+.aq-detail-section{margin-bottom:10px}
+.aq-detail-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-dim);margin-bottom:4px}
+.aq-detail-text{font-family:monospace;font-size:11px;white-space:pre-wrap;color:var(--text);background:var(--card);border:1px solid var(--border);border-radius:6px;padding:8px;max-height:250px;overflow-y:auto}
+.aq-detail-inline{font-size:12px;color:var(--text);line-height:1.5}
+.aq-chevron{font-size:10px;color:var(--text-dim);transition:transform 0.2s;display:inline-block}
+.aq-item.expanded .aq-chevron{transform:rotate(180deg)}
+.aq-item-status{display:flex;align-items:center;gap:6px;margin-top:8px;padding:6px 10px;border-radius:6px;font-size:12px;font-weight:600}.aq-status-firing{background:rgba(88,166,255,0.1);border:1px solid rgba(88,166,255,0.2);color:var(--accent)}
 .aq-status-done{background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.2);color:var(--success)}
 .aq-status-failed{background:rgba(248,81,81,0.1);border:1px solid rgba(248,81,81,0.2);color:var(--danger)}
 .aq-status-spinner{display:inline-block;width:12px;height:12px;border:2px solid rgba(88,166,255,0.2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0}
@@ -2113,18 +2121,48 @@ function renderActionQueue(){
     if(acts.transition)chips+='<span class="aq-action-chip transition">'+escapeHtml(acts.transition)+'</span>';
     if(acts.fallbackTransition)chips+='<span class="aq-action-chip transition">fallback: '+escapeHtml(acts.fallbackTransition)+'</span>';
     if(acts.assignee)chips+='<span class="aq-action-chip assignee">assign '+escapeHtml(acts.assignee)+'</span>';
-    if(acts.labels&&acts.labels.length>0)chips+='<span class="aq-action-chip labels">'+escapeHtml(acts.labels.join(', '))+'</span>';
-    html+='<div class="aq-item">';
+    if(acts.labels){
+      var labelArr=Array.isArray(acts.labels)?acts.labels:(acts.labels.add||[]);
+      if(labelArr.length>0)chips+='<span class="aq-action-chip labels">'+escapeHtml(labelArr.join(', '))+'</span>';
+    }
+    html+='<div class="aq-item clickable" onclick="this.classList.toggle(\'expanded\')" id="aq-item-'+item.id+'">';
     html+='<div class="aq-item-header">';
-    html+='<span class="aq-item-ticket">'+escapeHtml(item.ticket||'N/A')+'</span>';
+    html+='<span class="aq-item-ticket">'+escapeHtml(item.ticket||'N/A')+' <span class="aq-chevron">&#9660;</span></span>';
     html+='<div class="aq-item-btns">';
     var fireDisabled=(st&&st.status==='firing')?'disabled':'';
-    html+='<button class="aq-item-fire" '+fireDisabled+' onclick="fireActionQueueItem('+item.id+')">'+(st&&st.status==='firing'?'&#8987; Firing...':'&#9889; Fire')+'</button>';
-    html+='<button class="aq-item-remove" onclick="removeActionQueueItem('+item.id+')">&#10005; Remove</button>';
+    html+='<button class="aq-item-fire" '+fireDisabled+' onclick="event.stopPropagation();fireActionQueueItem('+item.id+')">'+(st&&st.status==='firing'?'&#8987; Firing...':'&#9889; Fire')+'</button>';
+    html+='<button class="aq-item-remove" onclick="event.stopPropagation();removeActionQueueItem('+item.id+')">&#10005; Remove</button>';
     html+='</div>';
     html+='</div>';
     if(item.notes)html+='<div class="aq-item-notes">'+escapeHtml(item.notes)+'</div>';
     if(chips)html+='<div class="aq-item-actions">Actions:<div class="aq-item-action-row">'+chips+'</div></div>';
+    // Expandable detail section
+    html+='<div class="aq-item-detail">';
+    if(acts.comment){
+      html+='<div class="aq-detail-section"><div class="aq-detail-label">Comment</div><div class="aq-detail-text">'+escapeHtml(acts.comment)+'</div></div>';
+    }
+    if(acts.worklogHours){
+      html+='<div class="aq-detail-section"><div class="aq-detail-label">Worklog</div><div class="aq-detail-inline">'+escapeHtml(String(acts.worklogHours))+' hours</div></div>';
+    }
+    if(acts.transition){
+      html+='<div class="aq-detail-section"><div class="aq-detail-label">Transition</div><div class="aq-detail-inline">'+escapeHtml(acts.transition)+'</div></div>';
+    }
+    if(acts.fallbackTransition){
+      html+='<div class="aq-detail-section"><div class="aq-detail-label">Fallback Transition</div><div class="aq-detail-inline">'+escapeHtml(acts.fallbackTransition)+'</div></div>';
+    }
+    if(acts.assignee){
+      html+='<div class="aq-detail-section"><div class="aq-detail-label">Assignee</div><div class="aq-detail-inline">'+escapeHtml(acts.assignee)+'</div></div>';
+    }
+    if(acts.labels){
+      var labelArr=Array.isArray(acts.labels)?acts.labels:(acts.labels.add||[]);
+      if(labelArr.length>0){
+        html+='<div class="aq-detail-section"><div class="aq-detail-label">Labels</div><div class="aq-detail-inline">'+escapeHtml(labelArr.join(', '))+'</div></div>';
+      }
+    }
+    if(item.notes){
+      html+='<div class="aq-detail-section"><div class="aq-detail-label">Notes</div><div class="aq-detail-inline">'+escapeHtml(item.notes)+'</div></div>';
+    }
+    html+='</div>';
     if(item.createdAt)html+='<div class="aq-item-created">Queued: '+escapeHtml(item.createdAt)+'</div>';
     html+=statusHtml;
     html+='</div>';
