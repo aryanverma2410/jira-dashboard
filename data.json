@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-09T10:48:18.907Z",
+  "generatedAt": "2026-09-09T10:48:58.288Z",
   "totalTickets": 9,
   "tickets": [
     {
@@ -504,7 +504,7 @@
       }
     ],
     "pid": 33192,
-    "uptime": 372,
+    "uptime": 411,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -516,7 +516,7 @@
       {
         "pid": 28640,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 185968,
+        "ageSeconds": 186007,
         "status": "running",
         "isChild": false,
         "taskSummary": "remove the EOD summaries feature fully as its creating performance issues. remove any calls comin...",
@@ -526,7 +526,7 @@
       {
         "pid": 16388,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 9377,
+        "ageSeconds": 9416,
         "status": "running",
         "isChild": false,
         "taskSummary": "instead of \"A code fix should be raised to add a length check on jobInfoStatus before calling sub...",
@@ -536,7 +536,7 @@
       {
         "pid": 35248,
         "cwd": "c:\\windows",
-        "ageSeconds": 9373,
+        "ageSeconds": 9412,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -546,7 +546,7 @@
       {
         "pid": 34636,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 644,
+        "ageSeconds": 682,
         "status": "running",
         "isChild": false,
         "taskSummary": "remove the EOD summaries feature fully as its creating performance issues. remove any calls comin...",
@@ -2492,6 +2492,27 @@
       },
       "createdAt": "2026-09-07",
       "notes": "PC-53529 DB cleanup cronjobs deployed and verified. Comment + 2.5h worklog + transition to LV."
+    },
+    {
+      "id": 2,
+      "ticket": "SAME-3964",
+      "actions": {
+        "comment": "Hi [~arjenelle.a@samsung.com] ,\n\nKibana logs show the return creation for SA260906-77172120 failed on 8 Sep at 14:13 with StringIndexOutOfBoundsException: begin 3, end 0, length 0.\n\nThe order has an Expert Cleaning standalone service (GCIC_EXPERT_CLEANING_STANDALONE). When a return is initiated from Backoffice, the system checks the GCIC service order status before allowing it. The GCIC API returned an empty jobInfoStatus field, and the code at TokoExpertCleaningExternalServicesImpl.java line 149 calls jobInfoStatus.substring(3) without any length check, causing the crash.\n\nThis is a code defect. The substring(3) call has no null or length validation on the GCIC API response.\n\nThe return was subsequently created successfully on 9 Sep at 09:01 via the automated cancellation/return flow. Return request 09234005 completed, refund of 289 SAR processed via Apple Pay, external service cancelled, and the order is now RETURN_REFUNDED. No remediation is needed for this order.\n\nNo actions were taken from our end.\n\nThanks,\n\nAryan",
+        "worklogHours": 2,
+        "transition": "Launch Verification",
+        "fallbackTransition": "SRE Review",
+        "assignee": "arjenelle.a",
+        "labels": {
+          "add": [
+            "a=aryan.v1",
+            "i=orderremediation",
+            "sc=remediate",
+            "L=L2"
+          ]
+        }
+      },
+      "createdAt": "2026-09-09",
+      "notes": "SAME-3964 RCA comment + 2h worklog + LV transition + assign back to arjenelle.a + labels update"
     }
   ]
 }
