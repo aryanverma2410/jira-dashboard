@@ -1,56 +1,64 @@
 {
-  "generatedAt": "2026-09-09T11:27:54.086Z",
-  "totalTickets": 9,
+  "generatedAt": "2026-09-09T11:28:32.510Z",
+  "totalTickets": 8,
   "tickets": [
     {
-      "key": "SAME-3958",
-      "summary": "Sales Report - Additional Columns",
-      "status": "In Progress",
+      "key": "SAM-24720",
+      "summary": " Update or create Cronjob for autocleanup",
+      "status": "Code Review",
       "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Kingdom of Saudi Arabia Maintenance & Enhancements",
-      "projectKey": "SAME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-09T20:27:52.000+0900",
-      "created": "2026-09-03T19:28:09.000+0900",
-      "description": "Hi Team,\n\nWe are receiving attached report from Grafana ( ^Grafana MOH.xlsx) and would like to have additional columns on the daily sales report from Hybris.\n\n \n\nCronjob:\n\nreport-sa-tokoSalesReportJob-nonPII\n\n \n\nAdditional Columns:\n\naffiliate_name\n\nmultistore_verificationcode\n\n \n\nAttached approval f",
-      "commentsCount": 5,
+      "priority": "High",
+      "project": "Samsung Maintanance",
+      "projectKey": "SAM",
+      "issuetype": "Bug",
+      "updated": "2026-09-09T20:28:07.000+0900",
+      "created": "2026-08-28T00:37:31.000+0900",
+      "description": "Hello Ops Team,\n\nThere is frequent issue of high DB storage in SMI and we had to request to SAP for manual cleanup.\n\nPlease help to schedule or update existing jobs with below retention  period so that we do not have to request SAP for manual cleanup.\n\nDELETE top(200000) from tasklogs WHERE createdT",
+      "commentsCount": 3,
       "recentComments": [
         {
           "author": "Aryan Verma",
-          "date": "2026-09-09T20:26:11.294+0900",
-          "snippet": "Hi ~@email ,\n\nWe found that while pasting the new script on PROD, there was a gap in the imports that resulted in missing columns.\n\nIt has been fixed.\n\nKindly check and validate at your end as well.\n\nThanks and Regards\n\nAryan"
+          "date": "2026-09-09T20:28:07.956+0900",
+          "snippet": "Hi,\n\nAll DB cleanup cronjobs have been created and verified successfully on the SMI cluster. Below is the status from the last run:\n\n||CronJob Code||Status||Result||Start Time||End Time||\n|CleanupComposite|FINISHED|SUCCESS|2026-09-07 13:39:18|2026-09-07 13:43:23|\n|DeleteTasklogsCronJob|FINISHED|SUCC"
         },
         {
-          "author": "Arjenelle Acabado",
-          "date": "2026-09-09T19:27:55.790+0900",
-          "snippet": "Hi ~@email \n\n1 - Data report is confirmed. To fix the current issue in PROD of not displaying most of the order data, please proceed to deploy to PROD as per ^Daily_Sales_Report_SA.xlsx.\n\n2 - Since there is no data on STG2 to validate affiliate_name and multistore_verificationcode, we can validate t"
+          "author": "Arvind Panchal",
+          "date": "2026-09-01T23:16:19.187+0900",
+          "snippet": "Hi ~@email,\n   Please find below details : \nSAP incident : https://me.sap.com/cases/002075129500011086542026/overview\nSap asked us to execute these queries at our end from application for data cleanup\n\nUpdated 26.08.2026 at 17:27 by SAP Agent    \nInfo for Customer\nDear Customer,\nas the DBA does not "
         }
       ],
       "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi ~@email ,\n\nWe found that while pasting the new script on PROD, there was a gap in the imports that resulted in missing columns.\n\nIt has been fixed.\n\nKindly check and validate at your end as well.\n\nThanks and Regards\n\nAryan",
-      "lastCommentDate": "2026-09-09T20:26:11.294+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAME-3958",
+      "lastCommentSnippet": "Hi,\n\nAll DB cleanup cronjobs have been created and verified successfully on the SMI cluster. Below is the status from the last run:\n\n||CronJob Code||Status||Result||Start Time||End Time||\n|CleanupComposite|FINISHED|SUCCESS|2026-09-07 13:39:18|2026-09-07 13:43:23|\n|DeleteTasklogsCronJob|FINISHED|SUCC",
+      "lastCommentDate": "2026-09-09T20:28:07.956+0900",
+      "url": "https://jira.secext.samsung.net/browse/SAM-24720",
       "linkedTickets": [
         {
-          "key": "PC-53689",
-          "summary": "Add Affiliate_Name and Multistore_VerificationCode columns to SA Sales Report",
+          "key": "PC-53529",
+          "summary": "[SAM-24720] Create DB cleanup cronjobs for SMI cluster",
+          "status": "To do",
+          "statusCategory": "To Do",
+          "relation": "blocks",
+          "assignee": null
+        },
+        {
+          "key": "SAM-20914",
+          "summary": "Update or create Cronjob for autocleanup",
           "status": "Closed",
           "statusCategory": "Done",
-          "relation": "blocks",
+          "relation": "clones",
           "assignee": null
         }
       ],
       "solution": {
         "status": "found",
-        "excerpt": "Sales Report - Additional Columns\r\nGenerated: 2026-09-03T00:00:00Z\r\n\r\nIssue:\r\n\r\nThe SA eStore daily sales report (cronjob report-sa-tokoSalesReportJob-nonPII) is missing two columns that the business needs: affiliate_name and multistore_verificationcode. The requestor attached a Grafana MOH.xlsx showing the columns they currently receive from Grafana and wants the Hybris-generated daily report to include these additional multistore-related fields for parity. The cronjob generates the report via a Groovy script (SaSalesReport.groovy) that defines its column set and column population methods, but neither affiliate_name nor multistore_verificationcode are currently in the column list or implemented as @ColumnMethod handlers in the script.\r\n\r\n\r\nRCA:\r\n\r\nThe SA daily sales report is generated by a TokoGroovyBasedReportJob cronjob (code: report-sa-tokoSalesReportJob-Daily, configured in estore-mastersalesreport-sa.impex). The cronjob delegates to a Groovy script registered as a Script item (code: toko-sa-groovy-tokoSalesReportJob-Daily) pointing to SaSalesReport.groovy under the sapreporting extension's groovy/salesreport/ directory.\r\n\r\nThe Groovy script extends SalesReport and defines its output columns in the getColumns() method. Currently 43 columns are defined (Site, Sales_Application, Product_Code, Additional_Info_Type, Additional_Info_Value, Order_Code, Order_Status, Order_Creation_Date, Order_Entry_Total_Price, Total_RRP, Total_Discounts, Order_Entry_Cancelled_Price, Order_Entry_Returns_Price, Order_Entry_Sit_Returns_Price, Order_Entry_Quantity, Voucher_Code, Promotion_Name, Payment_Mode, Payment_Transaction_Code, Shipping_Method, Gerp_Shipping_Method, Gerp_Sprocid, Customer_Type, Ean, Sales_Order, First_GI, Second_GI, Sent_To_Gerp, Delivery_Order, Return_Order, Return_Sales_Order, Return_Delivery_Order, Invoice_Carrier_Type, Invoice_Carrier_Reference, Membership_Number, Insurance, Shipping_Date, PreorderFlag, Super_Category, Popup_Store_Id, Added_Services, Store_Name, Store_Id). Neither affiliate_name nor multistore_verificationcode appear in this list.\r\n\r\nThe affiliate_name concept already exists in the codebase. The non-Groovy TokoSalesReportServiceImpl.java (used by other regions' TokoSalesReportJob-based cronjobs) has a constant MULTISTORE_AFFILIATE_NAME = \"Multistore_Affiliate_Name\" and an updateAffiliateName() method that resolves the affiliate name by looking up the order's user, checking the ENABLE_AFFILIATE_FROM_EMAIL config property, finding the active UserToMultiStoreLink for the order's site's TokoMultiStore, extracting the companyEmail, and taking the domain portion (substring after @). This logic is not present in the Groovy script.\r\n\r\nThe multistore_verificationcode attribute exists on the TokoMultiStore type system. The TokoMultiStore model has a tokoVerificationcode relation (Set<TokoVerificationCodeModel>) accessible via getTokoVerificationcode(). The TokoMultiStoreUtility.getVerificationCodeByDates() method returns the active verification codes filtered by date validity. Additionally, UserToMultiStoreLink has a verificationCodeUsed attribute. Neither of these is referenced anywhere in SaSalesReport.groovy.\r\n\r\nThe root cause is simply that the SaSalesReport.groovy script was authored before these multistore fields were needed for the SA report, and no one has added them. This is a feature gap, not a bug or system error. The infrastructure to support both columns fully exists in the Hybris type system and service layer; the Groovy script just needs two new @ColumnMethod handlers and two new entries in getColumns().\r\n\r\n\r\nPossible remediation:\r\n\r\n1. Add 'Multistore_Affiliate_Name' and 'Multistore_VerificationCode' to the getColumns() Set in SaSalesReport.groovy.\r\n\r\n2. Implement a @ColumnMethod for Multistore_Affiliate_Name that mirrors the existing updateAffiliateName logic from TokoSalesReportServiceImpl.java:\r\n   - Get the order from the order entry\r\n   - Check if the site is a CMSSiteModel with a TokoMultiStore\r\n   - Look up the order user's active UserToMultiStoreLink models matching the site's TokoMultiStore\r\n   - Extract the companyEmail, take the domain portion (substring after @), lowercase it\r\n   - Fall back to empty string if no match or if the ENABLE_AFFILIATE_FROM_EMAIL config is false\r\n\r\n3. Implement a @ColumnMethod for Multistore_VerificationCode that:\r\n   - Gets the TokoMultiStore from the order's CMSSite\r\n   - Calls TokoMultiStoreUtility.getVerificationCodeByDates() to get active verification codes\r\n   - Joins them with comma separator\r\n   - Falls back to the UserToMultiStoreLink's verificationCodeUsed if no store-level codes are active\r\n   - Returns null/empty if the site is not a multistore\r\n\r\n4. Update the SaSalesReport.groovy in the sapreporting extension's resources/groovy/salesreport/ directory.\r\n\r\n5. No ImpEx changes are needed for the cronjob configuration itself -- the Groovy script is loaded dynamically and the cronjob already points to the script via the localizedTemplate field. However, the Script item content in the database needs to be updated with the new script content, either via an ImpEx UPDATE Script statement or by updating the script file and re-importing.\r\n\r\n6. Test by running the cronjob manually in HAC/backoffice and verifying the output report contains the two new columns populated with correct data for multistore orders and empty/null for non-multistore orders.\r\n\r\nNo PC ticket or HAC remediation script is needed for this change. This is a code modification that requires a normal build and deployment of the sapreporting extension.\r\n\r\n\r\nThanks,\r\n\r\nAryan",
+        "excerpt": "Ticket Summary: Update or create Cronjob for autocleanup\nGenerated: 2026-09-03T20:00:00Z\n\nHi Arvind ,\n\nThe SMI cluster database is experiencing recurring high storage issues because several Hybris snapshot tables and custom event log tables grow unboundedly without any automated retention cleanup. SAP has raised incident 002075129500011086542026 and advised running batched DELETE statements from HAC per KBA 3716653, but this is a manual workaround and needs to be automated as a scheduled cronjob.\n\nThe six target tables fall into two categories. First, snapshot tables generated by Hybris when snapshot persistence is enabled for standard types: users4sn (User, typecode 4), paymentinfos42sn (PaymentInfo, typecode 42), pricerows1055sn (PriceRow, typecode 1055), and addresses23sn (Address, typecode 23). These tables follow Hybris naming convention where the numeric suffix is the typecode and the sn suffix denotes snapshot. They accumulate every versioned snapshot for their respective types and have no built-in expiry mechanism. Second, the tasklogs table which is the standard Hybris process engine task log, accumulating process execution metadata. Third, the tokoeventlog table which is a custom type defined in tokocore-items.xml at line 38446 with deployment table TokoEventLog and typecode 11164. The TokoEventLog type stores event messages with a target item reference, a message string, and an infoMap, indexed by itemtype, target, and creationtime. Both tasklogs and tokoeventlog are write-heavy tables that grow continuously during normal operation.\n\nNo existing DB-level cleanup cronjob exists in the Toko codebase for these tables. The codebase has several domain-specific cleanup jobs (CachedServiceabilityCleanupJob, TokoOtpSessionCleanupJob, TokoSimContractDocumentCleanupJob, TokoBackofficeReportsCleanupJobPerformable, TokoTradeInDataCleanupJob, AltchaCleanupJob), but all operate through the Hybris model layer using FlexibleSearch and ModelService.remove, not through raw SQL DELETE statements. The SAP-requested queries use DELETE TOP(200000) with DATEADD-based retention filtering, which is a SQL Server batched-delete pattern that bypasses the model layer entirely. This is intentional for performance: deleting 200K rows at a time avoids lock escalation and transaction log bloat on large tables.\n\nA PC ticket PC-53529 has already been created for this work, titled \"[SAM-24720] Create DB cleanup cronjobs for SMI cluster\" and is currently in To Do status. A previous similar ticket SAM-20914 (\"Update or create Cronjob for autocleanup\") was resolved as Closed, and HGE-8069 (\"TokoEventLog Cleanup\") is in Launch Verification status, indicating prior work has been done on TokoEventLog cleanup specifically. The ticket SAM-18467 (\"Please check tasklog, tokoeventlog table size\") was also completed, confirming these table sizes have been monitored before.\n\nThe recommended approach is to create a new JobPerformable class, TokoDbCleanupJobPerformable, in the tokocore extension that executes the six batched DELETE statements using direct JDBC (not FlexibleSearch) to match the SQL Server-specific syntax. The job should be configurable via project.properties for retention periods and batch sizes, scheduled via a CronJob instance with a Trigger in tokodeployment ImpEx, and configured to run during low-traffic windows. The existing PC-53529 should cover this implementation. The job should be created on all SMI cluster environments where snapshot persistence is enabled. No Kibana log analysis or HAC FlexiQuery was performed for this ticket as it is a database maintenance request, not an order-level issue.\n\nThanks,\n\nAryan\n\n## Remediation\n\n1. PC-53529 already exists for this work. Implement the TokoDbCleanupJobPerformable in tokocore with the six DELETE statements as specified.\n2. Configure retention periods via project.properties: toko.db.cleanup.tasklogs.retention.months=2, toko.db.cleanup.users.retention.months=1, toko.db.cleanup.paymentinfo.retention.months=3, toko.db.cleanup.pricerows.retention.months=3, toko.db.cleanup.addresses.retention.months=3, toko.db.cleanup.tokoeventlog.retention.months=3\n3. Create CronJob instance and Trigger via ImpEx in tokodeployment, scheduled to run daily during off-peak hours.\n4. Deploy to SMI cluster environments. Verify table sizes decrease after first run.\n5. Refer to HGE-8069 for prior TokoEventLog cleanup work and SAM-20914 for the previous autocleanup implementation pattern.",
         "sections": {
-          "issue": "The SA eStore daily sales report (cronjob report-sa-tokoSalesReportJob-nonPII) is missing two columns that the business needs: affiliate_name and multistore_verificationcode. The requestor attached a Grafana MOH.xlsx showing the columns they currently receive from Grafana and wants the Hybris-generated daily report to include these additional multistore-related fields for parity. The cronjob generates the report via a Groovy script (SaSalesReport.groovy) that defines its column set and column population methods, but neither affiliate_name nor multistore_verificationcode are currently in the column list or implemented as @ColumnMethod handlers in the script.",
-          "rca": "",
+          "issue": "",
+          "rca": "Ticket Summary: Update or create Cronjob for autocleanup\nGenerated: 2026-09-03T20:00:00Z\n\nHi Arvind ,\n\nThe SMI cluster database is experiencing recurring high storage issues because several Hybris snapshot tables and custom event log tables grow unboundedly without any automated retention cleanup. SAP has raised incident 002075129500011086542026 and advised running batched DELETE statements from HAC per KBA 3716653, but this is a manual workaround and needs to be automated as a scheduled cronjob.\n\nThe six target tables fall into two categories. First, snapshot tables generated by Hybris when snapshot persistence is enabled for standard types: users4sn (User, typecode 4), paymentinfos42sn (PaymentInfo, typecode 42), pricerows1055sn (PriceRow, typecode 1055), and addresses23sn (Address, typecode 23). These tables follow Hybris naming convention where the numeric suffix is the typecode and the sn suffix denotes snapshot. They accumulate every versioned snapshot for their respective types and have no built-in expiry mechanism. Second, the tasklogs table which is the standard Hybris process engine task log, accumulating process execution metadata. Third, the tokoeventlog table which is a custom type defined in tokocore-items.xml at line 38446 with deployment table TokoEventLog and typecode 11164. The TokoEventLog type stores event messages with a target item reference, a message string, and an infoMap, indexed by itemtype, target, and creationtime. Both tasklogs and tokoeventlog are write-heavy tables that grow continuously during normal operation.\n\nNo existing DB-level cleanup cronjob exists in the Toko codebase for these tables. The codebase has several domain-specific cleanup jobs (CachedServiceabilityCleanupJob, TokoOtpSessionCleanupJob, TokoSimContractDocumentCleanupJob, TokoBackofficeReportsCleanupJobPerformable, TokoTradeInDataCleanupJob, AltchaCleanupJob), but all operate through the Hybris model layer using FlexibleSearch and ModelService.remove, not through raw SQL DELETE statements. The SAP-requested queries use DELETE TOP(200000) with DATEADD-based retention filtering, which is a SQL Server batched-delete pattern that bypasses the model layer entirely. This is intentional for performance: deleting 200K rows at a time avoids lock escalation and transaction log bloat on large tables.\n\nA PC ticket PC-53529 has already been created for this work, titled \"[SAM-24720] Create DB cleanup cronjobs for SMI cluster\" and is currently in To Do status. A previous similar ticket SAM-20914 (\"Update or create Cronjob for autocleanup\") was resolved as Closed, and HGE-8069 (\"TokoEventLog Cleanup\") is in Launch Verification status, indicating prior work has been done on TokoEventLog cleanup specifically. The ticket SAM-18467 (\"Please check tasklog, tokoeventlog table size\") was also completed, confirming these table sizes have been monitored before.\n\nThe recommended approach is to create a new JobPerformable class, TokoDbCleanupJobPerformable, in the tokocore extension that executes the six batched DELETE statements using direct JDBC (not FlexibleSearch) to match the SQL Server-specific syntax. The job should be configurable via project.properties for retention periods and batch sizes, scheduled via a CronJob instance with a Trigger in tokodeployment ImpEx, and configured to run during low-traffic windows. The existing PC-53529 should cover this implementation. The job should be created on all SMI cluster environments where snapshot persistence is enabled. No Kibana log analysis or HAC FlexiQuery was performed for this ticket as it is a database maintenance request, not an order-level issue.\n\nThanks,\n\nAryan\n\n## Remediation\n\n1. PC-53529 already exists for this work. Implement the TokoDbCleanupJobPerformable in tokocore with the six DELETE statements as specified.\n2. Configure retention periods via project.properties: toko.db.cleanup.tasklogs.retention.months=2, toko.db.cleanup.users.retention.months=1, toko.db.cleanup.paymentinfo.retention.months=3, toko.db.cleanup.pricerows.retention.months=3, toko.db.cleanup.addresses.retention.months=3, toko.db.cleanup.tokoeventlog.retention.months=3\n3. Create CronJob instance and Trigger via ImpEx in tokodeployment, scheduled to run daily during off-peak hours.\n4. Deploy to SMI cluster environments. Verify table sizes decrease after first run.\n5. Refer to HGE-8069 for prior TokoEventLog cleanup work and SAM-20914 for the previous autocleanup implementation pattern.",
           "remediation": ""
         },
         "source": "RCA MD",
-        "foundAt": "2026-09-03T14:00:14.129Z"
+        "foundAt": "2026-09-03T13:50:55.004Z"
       }
     },
     {
@@ -293,65 +301,6 @@
         "source": "RCA MD",
         "foundAt": "2026-09-03T13:43:05.289Z"
       }
-    },
-    {
-      "key": "SAM-24720",
-      "summary": " Update or create Cronjob for autocleanup",
-      "status": "Code Review",
-      "statusCategory": "In Progress",
-      "priority": "High",
-      "project": "Samsung Maintanance",
-      "projectKey": "SAM",
-      "issuetype": "Bug",
-      "updated": "2026-09-03T19:16:47.000+0900",
-      "created": "2026-08-28T00:37:31.000+0900",
-      "description": "Hello Ops Team,\n\nThere is frequent issue of high DB storage in SMI and we had to request to SAP for manual cleanup.\n\nPlease help to schedule or update existing jobs with below retention  period so that we do not have to request SAP for manual cleanup.\n\nDELETE top(200000) from tasklogs WHERE createdT",
-      "commentsCount": 2,
-      "recentComments": [
-        {
-          "author": "Arvind Panchal",
-          "date": "2026-09-01T23:16:19.187+0900",
-          "snippet": "Hi ~@email,\n   Please find below details : \nSAP incident : https://me.sap.com/cases/002075129500011086542026/overview\nSap asked us to execute these queries at our end from application for data cleanup\n\nUpdated 26.08.2026 at 17:27 by SAP Agent    \nInfo for Customer\nDear Customer,\nas the DBA does not "
-        },
-        {
-          "author": "Vaibhav Jain",
-          "date": "2026-09-01T17:04:46.712+0900",
-          "snippet": "~@email : Please share background to it.. \n\nIncase of any communication from SAP or Suwon on it,"
-        }
-      ],
-      "lastCommentBy": "Arvind Panchal",
-      "lastCommentSnippet": "Hi ~@email,\n   Please find below details : \nSAP incident : https://me.sap.com/cases/002075129500011086542026/overview\nSap asked us to execute these queries at our end from application for data cleanup\n\nUpdated 26.08.2026 at 17:27 by SAP Agent    \nInfo for Customer\nDear Customer,\nas the DBA does not ",
-      "lastCommentDate": "2026-09-01T23:16:19.187+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAM-24720",
-      "linkedTickets": [
-        {
-          "key": "PC-53529",
-          "summary": "[SAM-24720] Create DB cleanup cronjobs for SMI cluster",
-          "status": "To do",
-          "statusCategory": "To Do",
-          "relation": "blocks",
-          "assignee": null
-        },
-        {
-          "key": "SAM-20914",
-          "summary": "Update or create Cronjob for autocleanup",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "clones",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "Ticket Summary: Update or create Cronjob for autocleanup\nGenerated: 2026-09-03T20:00:00Z\n\nHi Arvind ,\n\nThe SMI cluster database is experiencing recurring high storage issues because several Hybris snapshot tables and custom event log tables grow unboundedly without any automated retention cleanup. SAP has raised incident 002075129500011086542026 and advised running batched DELETE statements from HAC per KBA 3716653, but this is a manual workaround and needs to be automated as a scheduled cronjob.\n\nThe six target tables fall into two categories. First, snapshot tables generated by Hybris when snapshot persistence is enabled for standard types: users4sn (User, typecode 4), paymentinfos42sn (PaymentInfo, typecode 42), pricerows1055sn (PriceRow, typecode 1055), and addresses23sn (Address, typecode 23). These tables follow Hybris naming convention where the numeric suffix is the typecode and the sn suffix denotes snapshot. They accumulate every versioned snapshot for their respective types and have no built-in expiry mechanism. Second, the tasklogs table which is the standard Hybris process engine task log, accumulating process execution metadata. Third, the tokoeventlog table which is a custom type defined in tokocore-items.xml at line 38446 with deployment table TokoEventLog and typecode 11164. The TokoEventLog type stores event messages with a target item reference, a message string, and an infoMap, indexed by itemtype, target, and creationtime. Both tasklogs and tokoeventlog are write-heavy tables that grow continuously during normal operation.\n\nNo existing DB-level cleanup cronjob exists in the Toko codebase for these tables. The codebase has several domain-specific cleanup jobs (CachedServiceabilityCleanupJob, TokoOtpSessionCleanupJob, TokoSimContractDocumentCleanupJob, TokoBackofficeReportsCleanupJobPerformable, TokoTradeInDataCleanupJob, AltchaCleanupJob), but all operate through the Hybris model layer using FlexibleSearch and ModelService.remove, not through raw SQL DELETE statements. The SAP-requested queries use DELETE TOP(200000) with DATEADD-based retention filtering, which is a SQL Server batched-delete pattern that bypasses the model layer entirely. This is intentional for performance: deleting 200K rows at a time avoids lock escalation and transaction log bloat on large tables.\n\nA PC ticket PC-53529 has already been created for this work, titled \"[SAM-24720] Create DB cleanup cronjobs for SMI cluster\" and is currently in To Do status. A previous similar ticket SAM-20914 (\"Update or create Cronjob for autocleanup\") was resolved as Closed, and HGE-8069 (\"TokoEventLog Cleanup\") is in Launch Verification status, indicating prior work has been done on TokoEventLog cleanup specifically. The ticket SAM-18467 (\"Please check tasklog, tokoeventlog table size\") was also completed, confirming these table sizes have been monitored before.\n\nThe recommended approach is to create a new JobPerformable class, TokoDbCleanupJobPerformable, in the tokocore extension that executes the six batched DELETE statements using direct JDBC (not FlexibleSearch) to match the SQL Server-specific syntax. The job should be configurable via project.properties for retention periods and batch sizes, scheduled via a CronJob instance with a Trigger in tokodeployment ImpEx, and configured to run during low-traffic windows. The existing PC-53529 should cover this implementation. The job should be created on all SMI cluster environments where snapshot persistence is enabled. No Kibana log analysis or HAC FlexiQuery was performed for this ticket as it is a database maintenance request, not an order-level issue.\n\nThanks,\n\nAryan\n\n## Remediation\n\n1. PC-53529 already exists for this work. Implement the TokoDbCleanupJobPerformable in tokocore with the six DELETE statements as specified.\n2. Configure retention periods via project.properties: toko.db.cleanup.tasklogs.retention.months=2, toko.db.cleanup.users.retention.months=1, toko.db.cleanup.paymentinfo.retention.months=3, toko.db.cleanup.pricerows.retention.months=3, toko.db.cleanup.addresses.retention.months=3, toko.db.cleanup.tokoeventlog.retention.months=3\n3. Create CronJob instance and Trigger via ImpEx in tokodeployment, scheduled to run daily during off-peak hours.\n4. Deploy to SMI cluster environments. Verify table sizes decrease after first run.\n5. Refer to HGE-8069 for prior TokoEventLog cleanup work and SAM-20914 for the previous autocleanup implementation pattern.",
-        "sections": {
-          "issue": "",
-          "rca": "Ticket Summary: Update or create Cronjob for autocleanup\nGenerated: 2026-09-03T20:00:00Z\n\nHi Arvind ,\n\nThe SMI cluster database is experiencing recurring high storage issues because several Hybris snapshot tables and custom event log tables grow unboundedly without any automated retention cleanup. SAP has raised incident 002075129500011086542026 and advised running batched DELETE statements from HAC per KBA 3716653, but this is a manual workaround and needs to be automated as a scheduled cronjob.\n\nThe six target tables fall into two categories. First, snapshot tables generated by Hybris when snapshot persistence is enabled for standard types: users4sn (User, typecode 4), paymentinfos42sn (PaymentInfo, typecode 42), pricerows1055sn (PriceRow, typecode 1055), and addresses23sn (Address, typecode 23). These tables follow Hybris naming convention where the numeric suffix is the typecode and the sn suffix denotes snapshot. They accumulate every versioned snapshot for their respective types and have no built-in expiry mechanism. Second, the tasklogs table which is the standard Hybris process engine task log, accumulating process execution metadata. Third, the tokoeventlog table which is a custom type defined in tokocore-items.xml at line 38446 with deployment table TokoEventLog and typecode 11164. The TokoEventLog type stores event messages with a target item reference, a message string, and an infoMap, indexed by itemtype, target, and creationtime. Both tasklogs and tokoeventlog are write-heavy tables that grow continuously during normal operation.\n\nNo existing DB-level cleanup cronjob exists in the Toko codebase for these tables. The codebase has several domain-specific cleanup jobs (CachedServiceabilityCleanupJob, TokoOtpSessionCleanupJob, TokoSimContractDocumentCleanupJob, TokoBackofficeReportsCleanupJobPerformable, TokoTradeInDataCleanupJob, AltchaCleanupJob), but all operate through the Hybris model layer using FlexibleSearch and ModelService.remove, not through raw SQL DELETE statements. The SAP-requested queries use DELETE TOP(200000) with DATEADD-based retention filtering, which is a SQL Server batched-delete pattern that bypasses the model layer entirely. This is intentional for performance: deleting 200K rows at a time avoids lock escalation and transaction log bloat on large tables.\n\nA PC ticket PC-53529 has already been created for this work, titled \"[SAM-24720] Create DB cleanup cronjobs for SMI cluster\" and is currently in To Do status. A previous similar ticket SAM-20914 (\"Update or create Cronjob for autocleanup\") was resolved as Closed, and HGE-8069 (\"TokoEventLog Cleanup\") is in Launch Verification status, indicating prior work has been done on TokoEventLog cleanup specifically. The ticket SAM-18467 (\"Please check tasklog, tokoeventlog table size\") was also completed, confirming these table sizes have been monitored before.\n\nThe recommended approach is to create a new JobPerformable class, TokoDbCleanupJobPerformable, in the tokocore extension that executes the six batched DELETE statements using direct JDBC (not FlexibleSearch) to match the SQL Server-specific syntax. The job should be configurable via project.properties for retention periods and batch sizes, scheduled via a CronJob instance with a Trigger in tokodeployment ImpEx, and configured to run during low-traffic windows. The existing PC-53529 should cover this implementation. The job should be created on all SMI cluster environments where snapshot persistence is enabled. No Kibana log analysis or HAC FlexiQuery was performed for this ticket as it is a database maintenance request, not an order-level issue.\n\nThanks,\n\nAryan\n\n## Remediation\n\n1. PC-53529 already exists for this work. Implement the TokoDbCleanupJobPerformable in tokocore with the six DELETE statements as specified.\n2. Configure retention periods via project.properties: toko.db.cleanup.tasklogs.retention.months=2, toko.db.cleanup.users.retention.months=1, toko.db.cleanup.paymentinfo.retention.months=3, toko.db.cleanup.pricerows.retention.months=3, toko.db.cleanup.addresses.retention.months=3, toko.db.cleanup.tokoeventlog.retention.months=3\n3. Create CronJob instance and Trigger via ImpEx in tokodeployment, scheduled to run daily during off-peak hours.\n4. Deploy to SMI cluster environments. Verify table sizes decrease after first run.\n5. Refer to HGE-8069 for prior TokoEventLog cleanup work and SAM-20914 for the previous autocleanup implementation pattern.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-03T13:50:55.004Z"
-      }
     }
   ],
   "user": "aryan.v1",
@@ -504,7 +453,7 @@
       }
     ],
     "pid": 33192,
-    "uptime": 2748,
+    "uptime": 2785,
     "failures": 0,
     "activeJobCount": 2,
     "jobs": [
@@ -513,14 +462,14 @@
         "issueTitle": "Investigate ticket AEME-6548",
         "snippet": "Auto-triggered investigation for new ticket AEME-6548.\n\nTicket: AEME-6548\nSummary: Stuck Order || 09-Sep\n\nUse the invest",
         "pid": 25512,
-        "elapsed": 763
+        "elapsed": 800
       },
       {
         "issueNum": 161,
         "issueTitle": "Fire Action Queue item #1: SAM-24720",
         "snippet": "Execute /logQueue for a single item now.\nFile: C:\\Users\\aryan.v1\\.gemini\\tmp\\bin\\memory\\jira-action-queue.json\nProcess O",
         "pid": 30092,
-        "elapsed": 636
+        "elapsed": 673
       }
     ],
     "startTime": "2026-09-09T10:42:05.716Z",
@@ -531,7 +480,7 @@
       {
         "pid": 28640,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 188343,
+        "ageSeconds": 188382,
         "status": "running",
         "isChild": false,
         "taskSummary": "it should show the comment to be updated be the queue action when I click on the queued task",
@@ -541,7 +490,7 @@
       {
         "pid": 16388,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 11751,
+        "ageSeconds": 11790,
         "status": "running",
         "isChild": false,
         "taskSummary": "SAHME-3423 log 35m, assign back, update labels and put to LV",
@@ -551,7 +500,7 @@
       {
         "pid": 35248,
         "cwd": "c:\\windows",
-        "ageSeconds": 11747,
+        "ageSeconds": 11786,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -561,7 +510,7 @@
       {
         "pid": 34636,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 3018,
+        "ageSeconds": 3057,
         "status": "running",
         "isChild": false,
         "taskSummary": "it should show the comment to be updated be the queue action when I click on the queued task",
@@ -2422,7 +2371,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-09T11:27:07.386Z",
+      "lastCheck": "2026-09-09T11:28:07.083Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -2431,7 +2380,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-09T11:27:07.387Z",
+      "lastCheck": "2026-09-09T11:28:07.083Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -2440,9 +2389,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-09T11:27:07.387Z",
+      "lastCheck": "2026-09-09T11:28:07.083Z",
       "downSince": "2026-09-09T10:47:01.634Z",
-      "downDuration": 2405753,
+      "downDuration": 2465449,
       "alert": true
     }
   ],
