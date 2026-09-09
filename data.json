@@ -1,7 +1,38 @@
 {
-  "generatedAt": "2026-09-09T12:33:39.576Z",
+  "generatedAt": "2026-09-09T12:34:20.465Z",
   "totalTickets": 8,
   "tickets": [
+    {
+      "key": "AEME-6548",
+      "summary": "Stuck Order || 09-Sep",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "UAE Maintenance & Enhancements",
+      "projectKey": "AEME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-09-09T21:33:47.000+0900",
+      "created": "2026-09-09T17:03:11.000+0900",
+      "description": "Hi Team\n\n \n\nPlease fix the order below as it is stuck with Hybris. Kindly share the RCA as well\n\nAE260903-74755067 -CHECKED_INVALID\n\n \n\nThe payment authorization has been completed for the order below. Please capture and create the order with the below payment details.\n\n \n|Date|Request ID|Reference|",
+      "commentsCount": 0,
+      "recentComments": [],
+      "lastCommentBy": "",
+      "lastCommentSnippet": "",
+      "lastCommentDate": "",
+      "url": "https://jira.secext.samsung.net/browse/AEME-6548",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "# RCA: AEME-6548\nStuck Order || 09-Sep\nGenerated: 2026-09-09T11:35:00.000Z\n\nHi Jaffar ,\n\nOrder AE260903-74755067 is stuck at CHECKED_INVALID status with both order process instances (order-process-v25-69) in FAILED state. The order was placed on 07 September 2026 at 10:42:13 UTC via Checkout.com flow on the AE store for a total of 2,564.10 AED. The payment was successfully authorised twice — two AUTHORIZATION PaymentTransactionEntry records both show ACCEPTED status for 2,564.10 AED at 10:43:15 and 14:43:15 respectively. The paymentInfo (CreditCardPaymentInfo PK 9448882667562) is present and correctly linked to the order and PaymentTransaction. The payment side is healthy.\n\nThe root cause is a NULL deliveryMode on the order header. The order entry (entry 0) has the delivery mode set to ae-mx-calendar-delivery (PK 8797993762856), but this was not propagated to the order header during checkout conversion. DefaultCheckOrderService.check() validates that order.getDeliveryMode() is non-null as one of its mandatory conditions. When this check fails, the order status is set to CHECKED_INVALID and the method returns false. The CheckOrderAction in order-process-v25-69 then returns NOK, but the process appears to loop at the checkOrder action 50+ times before eventually reaching FAILED state, likely due to additional custom Toko pre-validation logic that throws an unhandled exception when deliveryMode is null rather than cleanly returning NOK on each attempt.\n\nAdditionally, order.getPaymentStatus() is NULL and there is a malformed ExternalService entry linked to the order with all fields NULL (provider, status, serviceProduct, serviceID are all empty). This partially initialised external service record is a secondary anomaly that would cause further issues downstream at checkExternalEnabled if the process were to progress past checkOrder.\n\nNo consignments were ever created because the process never reached the splitOrder step. The order is stuck at CHECKED_INVALID with no fulfilment path.\n\nThis is the same pattern observed in SAME-3952 (September 2026, order SA260831-72577904) where a Checkout.com ApplePay order on the SA store had a NULL deliveryMode on the order header despite the order entry having the delivery mode set. That ticket was resolved by setting the order header deliveryMode from the order entry and restarting the order process. The same remediation approach applies here.\n\nThe remediation is to set the order header deliveryMode from the order entry (ae-mx-calendar-delivery), set the paymentStatus to PAID (since both AUTHORIZATION entries are ACCEPTED), clean up the malformed ExternalService entry, and restart the order process from checkOrder. This requires a Groovy script run via HAC.\n\nThis is the same remediation approach confirmed and successfully applied in SAME-3952.\n\nThanks,\n\nAryan.\n\n## Remediation\n\n1. Set order.deliveryMode from order entry (ae-mx-calendar-delivery, PK 8797993762856)\n2. Set order.paymentStatus to PAID\n3. Clean up the malformed ExternalService entry (all fields NULL)\n4. Set order.status back to CREATED\n5. Restart the order process (order-process-v25-69) from the beginning or from checkOrder action\n6. Reuse approach from SAME-3952 remediation\n\nNo reusable PC ticket was found for this specific remediation type. A new PC ticket may be needed if script execution is required.",
+        "sections": {
+          "issue": "",
+          "rca": "# RCA: AEME-6548\nStuck Order || 09-Sep\nGenerated: 2026-09-09T11:35:00.000Z\n\nHi Jaffar ,\n\nOrder AE260903-74755067 is stuck at CHECKED_INVALID status with both order process instances (order-process-v25-69) in FAILED state. The order was placed on 07 September 2026 at 10:42:13 UTC via Checkout.com flow on the AE store for a total of 2,564.10 AED. The payment was successfully authorised twice — two AUTHORIZATION PaymentTransactionEntry records both show ACCEPTED status for 2,564.10 AED at 10:43:15 and 14:43:15 respectively. The paymentInfo (CreditCardPaymentInfo PK 9448882667562) is present and correctly linked to the order and PaymentTransaction. The payment side is healthy.\n\nThe root cause is a NULL deliveryMode on the order header. The order entry (entry 0) has the delivery mode set to ae-mx-calendar-delivery (PK 8797993762856), but this was not propagated to the order header during checkout conversion. DefaultCheckOrderService.check() validates that order.getDeliveryMode() is non-null as one of its mandatory conditions. When this check fails, the order status is set to CHECKED_INVALID and the method returns false. The CheckOrderAction in order-process-v25-69 then returns NOK, but the process appears to loop at the checkOrder action 50+ times before eventually reaching FAILED state, likely due to additional custom Toko pre-validation logic that throws an unhandled exception when deliveryMode is null rather than cleanly returning NOK on each attempt.\n\nAdditionally, order.getPaymentStatus() is NULL and there is a malformed ExternalService entry linked to the order with all fields NULL (provider, status, serviceProduct, serviceID are all empty). This partially initialised external service record is a secondary anomaly that would cause further issues downstream at checkExternalEnabled if the process were to progress past checkOrder.\n\nNo consignments were ever created because the process never reached the splitOrder step. The order is stuck at CHECKED_INVALID with no fulfilment path.\n\nThis is the same pattern observed in SAME-3952 (September 2026, order SA260831-72577904) where a Checkout.com ApplePay order on the SA store had a NULL deliveryMode on the order header despite the order entry having the delivery mode set. That ticket was resolved by setting the order header deliveryMode from the order entry and restarting the order process. The same remediation approach applies here.\n\nThe remediation is to set the order header deliveryMode from the order entry (ae-mx-calendar-delivery), set the paymentStatus to PAID (since both AUTHORIZATION entries are ACCEPTED), clean up the malformed ExternalService entry, and restart the order process from checkOrder. This requires a Groovy script run via HAC.\n\nThis is the same remediation approach confirmed and successfully applied in SAME-3952.\n\nThanks,\n\nAryan.\n\n## Remediation\n\n1. Set order.deliveryMode from order entry (ae-mx-calendar-delivery, PK 8797993762856)\n2. Set order.paymentStatus to PAID\n3. Clean up the malformed ExternalService entry (all fields NULL)\n4. Set order.status back to CREATED\n5. Restart the order process (order-process-v25-69) from the beginning or from checkOrder action\n6. Reuse approach from SAME-3952 remediation\n\nNo reusable PC ticket was found for this specific remediation type. A new PC ticket may be needed if script execution is required.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-09T11:40:12.173Z"
+      }
+    },
     {
       "key": "PC-53768",
       "summary": "Script to copy paymentInfo to clawback PaymentTransaction and retrigger ClawbackProcess",
@@ -195,37 +226,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-09T10:44:20.823Z"
-      }
-    },
-    {
-      "key": "AEME-6548",
-      "summary": "Stuck Order || 09-Sep",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-09T20:14:27.000+0900",
-      "created": "2026-09-09T17:03:11.000+0900",
-      "description": "Hi Team\n\n \n\nPlease fix the order below as it is stuck with Hybris. Kindly share the RCA as well\n\nAE260903-74755067 -CHECKED_INVALID\n\n \n\nRegards\n\nJaffar",
-      "commentsCount": 0,
-      "recentComments": [],
-      "lastCommentBy": "",
-      "lastCommentSnippet": "",
-      "lastCommentDate": "",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6548",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: AEME-6548\nStuck Order || 09-Sep\nGenerated: 2026-09-09T11:35:00.000Z\n\nHi Jaffar ,\n\nOrder AE260903-74755067 is stuck at CHECKED_INVALID status with both order process instances (order-process-v25-69) in FAILED state. The order was placed on 07 September 2026 at 10:42:13 UTC via Checkout.com flow on the AE store for a total of 2,564.10 AED. The payment was successfully authorised twice — two AUTHORIZATION PaymentTransactionEntry records both show ACCEPTED status for 2,564.10 AED at 10:43:15 and 14:43:15 respectively. The paymentInfo (CreditCardPaymentInfo PK 9448882667562) is present and correctly linked to the order and PaymentTransaction. The payment side is healthy.\n\nThe root cause is a NULL deliveryMode on the order header. The order entry (entry 0) has the delivery mode set to ae-mx-calendar-delivery (PK 8797993762856), but this was not propagated to the order header during checkout conversion. DefaultCheckOrderService.check() validates that order.getDeliveryMode() is non-null as one of its mandatory conditions. When this check fails, the order status is set to CHECKED_INVALID and the method returns false. The CheckOrderAction in order-process-v25-69 then returns NOK, but the process appears to loop at the checkOrder action 50+ times before eventually reaching FAILED state, likely due to additional custom Toko pre-validation logic that throws an unhandled exception when deliveryMode is null rather than cleanly returning NOK on each attempt.\n\nAdditionally, order.getPaymentStatus() is NULL and there is a malformed ExternalService entry linked to the order with all fields NULL (provider, status, serviceProduct, serviceID are all empty). This partially initialised external service record is a secondary anomaly that would cause further issues downstream at checkExternalEnabled if the process were to progress past checkOrder.\n\nNo consignments were ever created because the process never reached the splitOrder step. The order is stuck at CHECKED_INVALID with no fulfilment path.\n\nThis is the same pattern observed in SAME-3952 (September 2026, order SA260831-72577904) where a Checkout.com ApplePay order on the SA store had a NULL deliveryMode on the order header despite the order entry having the delivery mode set. That ticket was resolved by setting the order header deliveryMode from the order entry and restarting the order process. The same remediation approach applies here.\n\nThe remediation is to set the order header deliveryMode from the order entry (ae-mx-calendar-delivery), set the paymentStatus to PAID (since both AUTHORIZATION entries are ACCEPTED), clean up the malformed ExternalService entry, and restart the order process from checkOrder. This requires a Groovy script run via HAC.\n\nThis is the same remediation approach confirmed and successfully applied in SAME-3952.\n\nThanks,\n\nAryan.\n\n## Remediation\n\n1. Set order.deliveryMode from order entry (ae-mx-calendar-delivery, PK 8797993762856)\n2. Set order.paymentStatus to PAID\n3. Clean up the malformed ExternalService entry (all fields NULL)\n4. Set order.status back to CREATED\n5. Restart the order process (order-process-v25-69) from the beginning or from checkOrder action\n6. Reuse approach from SAME-3952 remediation\n\nNo reusable PC ticket was found for this specific remediation type. A new PC ticket may be needed if script execution is required.",
-        "sections": {
-          "issue": "",
-          "rca": "# RCA: AEME-6548\nStuck Order || 09-Sep\nGenerated: 2026-09-09T11:35:00.000Z\n\nHi Jaffar ,\n\nOrder AE260903-74755067 is stuck at CHECKED_INVALID status with both order process instances (order-process-v25-69) in FAILED state. The order was placed on 07 September 2026 at 10:42:13 UTC via Checkout.com flow on the AE store for a total of 2,564.10 AED. The payment was successfully authorised twice — two AUTHORIZATION PaymentTransactionEntry records both show ACCEPTED status for 2,564.10 AED at 10:43:15 and 14:43:15 respectively. The paymentInfo (CreditCardPaymentInfo PK 9448882667562) is present and correctly linked to the order and PaymentTransaction. The payment side is healthy.\n\nThe root cause is a NULL deliveryMode on the order header. The order entry (entry 0) has the delivery mode set to ae-mx-calendar-delivery (PK 8797993762856), but this was not propagated to the order header during checkout conversion. DefaultCheckOrderService.check() validates that order.getDeliveryMode() is non-null as one of its mandatory conditions. When this check fails, the order status is set to CHECKED_INVALID and the method returns false. The CheckOrderAction in order-process-v25-69 then returns NOK, but the process appears to loop at the checkOrder action 50+ times before eventually reaching FAILED state, likely due to additional custom Toko pre-validation logic that throws an unhandled exception when deliveryMode is null rather than cleanly returning NOK on each attempt.\n\nAdditionally, order.getPaymentStatus() is NULL and there is a malformed ExternalService entry linked to the order with all fields NULL (provider, status, serviceProduct, serviceID are all empty). This partially initialised external service record is a secondary anomaly that would cause further issues downstream at checkExternalEnabled if the process were to progress past checkOrder.\n\nNo consignments were ever created because the process never reached the splitOrder step. The order is stuck at CHECKED_INVALID with no fulfilment path.\n\nThis is the same pattern observed in SAME-3952 (September 2026, order SA260831-72577904) where a Checkout.com ApplePay order on the SA store had a NULL deliveryMode on the order header despite the order entry having the delivery mode set. That ticket was resolved by setting the order header deliveryMode from the order entry and restarting the order process. The same remediation approach applies here.\n\nThe remediation is to set the order header deliveryMode from the order entry (ae-mx-calendar-delivery), set the paymentStatus to PAID (since both AUTHORIZATION entries are ACCEPTED), clean up the malformed ExternalService entry, and restart the order process from checkOrder. This requires a Groovy script run via HAC.\n\nThis is the same remediation approach confirmed and successfully applied in SAME-3952.\n\nThanks,\n\nAryan.\n\n## Remediation\n\n1. Set order.deliveryMode from order entry (ae-mx-calendar-delivery, PK 8797993762856)\n2. Set order.paymentStatus to PAID\n3. Clean up the malformed ExternalService entry (all fields NULL)\n4. Set order.status back to CREATED\n5. Restart the order process (order-process-v25-69) from the beginning or from checkOrder action\n6. Reuse approach from SAME-3952 remediation\n\nNo reusable PC ticket was found for this specific remediation type. A new PC ticket may be needed if script execution is required.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-09T11:40:12.173Z"
       }
     },
     {
@@ -486,7 +486,7 @@
       }
     ],
     "pid": 33192,
-    "uptime": 6693,
+    "uptime": 6733,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -498,7 +498,7 @@
       {
         "pid": 28640,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 192289,
+        "ageSeconds": 192331,
         "status": "running",
         "isChild": false,
         "taskSummary": "it should show the comment to be updated be the queue action when I click on the queued task",
@@ -508,7 +508,7 @@
       {
         "pid": 16388,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 15698,
+        "ageSeconds": 15740,
         "status": "running",
         "isChild": false,
         "taskSummary": "no need for them to have null payment info, we can always delete payment info to check our script",
@@ -518,7 +518,7 @@
       {
         "pid": 35248,
         "cwd": "c:\\windows",
-        "ageSeconds": 15694,
+        "ageSeconds": 15736,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -528,7 +528,7 @@
       {
         "pid": 34636,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 6964,
+        "ageSeconds": 7006,
         "status": "running",
         "isChild": false,
         "taskSummary": "it should show the comment to be updated be the queue action when I click on the queued task",
@@ -2393,7 +2393,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-09T12:33:11.604Z",
+      "lastCheck": "2026-09-09T12:34:12.106Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -2402,7 +2402,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-09T12:33:11.604Z",
+      "lastCheck": "2026-09-09T12:34:12.106Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -2411,9 +2411,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-09T12:33:11.604Z",
+      "lastCheck": "2026-09-09T12:34:12.106Z",
       "downSince": "2026-09-09T10:47:01.634Z",
-      "downDuration": 6369970,
+      "downDuration": 6430472,
       "alert": true
     }
   ],
