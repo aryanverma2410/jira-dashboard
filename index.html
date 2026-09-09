@@ -406,8 +406,87 @@ body.has-status-bar .scroll{padding-top:28px}
 .aq-status-done{background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.2);color:var(--success)}
 .aq-status-failed{background:rgba(248,81,81,0.1);border:1px solid rgba(248,81,81,0.2);color:var(--danger)}
 .aq-status-spinner{display:inline-block;width:12px;height:12px;border:2px solid rgba(88,166,255,0.2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0}
-</style>
-</head>
+
+/* === QOL FEATURE STYLES === */
+/* F1: Quick-Add from Ticket Card */
+.qa-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:350;display:none;align-items:center;justify-content:center}
+.qa-modal-overlay.show{display:flex}
+.qa-modal{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:20px;max-width:500px;width:90vw;max-height:85vh;overflow-y:auto}
+.qa-modal h3{font-size:16px;margin-bottom:16px}
+.qa-modal label{font-size:12px;font-weight:600;color:var(--text-dim);display:block;margin-bottom:4px;margin-top:12px}
+.qa-modal input[type=text],.qa-modal textarea,.qa-modal select{width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:13px;box-sizing:border-box}
+.qa-modal textarea{min-height:80px;resize:vertical;font-family:monospace;font-size:12px}
+.qa-modal-actions{display:flex;gap:8px;margin-top:20px;justify-content:flex-end}
+.qa-queue-btn{background:rgba(88,166,255,0.15);border:1px solid rgba(88,166,255,0.3);color:var(--accent);border-radius:6px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap}
+.qa-queue-btn:active{transform:scale(0.95)}
+
+/* F2: Retry Failed button */
+.aq-item-retry{background:rgba(210,153,34,0.15);border:1px solid rgba(210,153,34,0.4);color:#d29922;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0;transition:transform 0.2s}
+.aq-item-retry:active{transform:scale(0.95)}
+
+/* F3: Fire-All Confirmation Modal */
+.faq-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:350;display:none;align-items:center:justify-content:center}
+.faq-modal-overlay.show{display:flex;align-items:center;justify-content:center}
+.faq-modal{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:20px;max-width:480px;width:90vw;max-height:80vh;overflow-y:auto}
+.faq-modal h3{font-size:16px;margin-bottom:12px}
+.faq-item-check{display:flex;align-items:flex-start;gap:10px;padding:8px;border-radius:6px;margin-bottom:6px;background:var(--card)}
+.faq-item-check input[type=checkbox]{margin-top:2px;flex-shrink:0;accent-color:var(--accent)}
+.faq-item-info{flex:1;min-width:0}
+.faq-item-key{font-family:monospace;font-size:12px;font-weight:700;color:var(--accent)}
+.faq-item-detail{font-size:11px;color:var(--text-dim);margin-top:2px}
+.faq-modal-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end}
+.faq-btn-confirm{background:var(--success);color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:13px;font-weight:600;cursor:pointer}
+.faq-btn-cancel{background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 20px;font-size:13px;cursor:pointer}
+
+/* F4: Worklog Total in Queue Header */
+.aq-worklog-total{font-size:11px;color:#bc8cff;background:rgba(188,140,255,0.1);border:1px solid rgba(188,140,255,0.2);border-radius:6px;padding:2px 8px;margin-left:8px}
+
+/* F6: Status Age Badge */
+.status-age-badge{font-size:10px;color:var(--text-dim);background:var(--card);border:1px solid var(--border);border-radius:4px;padding:1px 6px;margin-left:6px;white-space:nowrap}
+.status-age-badge.fresh{color:var(--success);border-color:rgba(63,185,80,0.3)}
+.status-age-badge.stale{color:#d29922;border-color:rgba(210,153,34,0.3)}
+
+/* F7: Pinned Tickets */
+.pin-star{position:absolute;top:8px;right:8px;font-size:16px;cursor:pointer;color:var(--text-dim);background:none;border:none;padding:2px;z-index:5;line-height:1}
+.pin-star.active{color:#ffd700}
+.ticket-card.pinned{order:-1!important;border-left:3px solid #ffd700}
+.ticket-card{position:relative}
+
+/* F8: Recent Comments Timeline (Activity Tab) */
+.comments-timeline-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.comments-timeline-item:last-child{border-bottom:none}
+.comments-timeline-ticket{font-family:monospace;font-size:11px;font-weight:700;color:var(--accent);white-space:nowrap}
+.comments-timeline-author{font-size:11px;color:var(--text-dim)}
+.comments-timeline-snippet{font-size:12px;color:var(--text);margin-top:2px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.comments-timeline-time{font-size:10px;color:var(--text-dim);white-space:nowrap}
+
+/* F9: Session Kill Button */
+.session-kill-btn{background:rgba(248,81,81,0.1);border:1px solid rgba(248,81,81,0.3);color:var(--danger);border-radius:6px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer;margin-top:8px}
+.session-kill-btn:active{transform:scale(0.95)}
+
+/* F10: Bridge Log Snippet (Activity Tab) */
+.log-snippet-section{margin-top:12px}
+.log-snippet-toggle{font-size:12px;font-weight:600;color:var(--accent);cursor:pointer;display:flex;align-items:center;gap:6px}
+.log-snippet-toggle:active{opacity:0.7}
+.log-snippet-content{display:none;margin-top:8px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;max-height:250px;overflow-y:auto;font-family:monospace;font-size:10px;white-space:pre-wrap;color:var(--text-dim);line-height:1.4}
+.log-snippet-content.show{display:block}
+.log-snippet-line{margin-bottom:2px}
+
+/* F11: Watchdog Health Badge */
+.watchdog-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px}
+.watchdog-badge.alive{background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);color:var(--success)}
+.watchdog-badge.dead{background:rgba(248,81,81,0.1);border:1px solid rgba(248,81,81,0.3);color:var(--danger)}
+.watchdog-log-content{display:none;margin-top:8px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;max-height:200px;overflow-y:auto;font-family:monospace;font-size:10px;white-space:pre-wrap;color:var(--text-dim);line-height:1.4}
+.watchdog-log-content.show{display:block}
+
+/* F13: Stale Ticket Highlight */
+.ticket-card.stale{border-color:rgba(210,153,34,0.5);box-shadow:0 0 0 1px rgba(210,153,34,0.2)}
+.stale-badge{font-size:9px;font-weight:700;color:#d29922;background:rgba(210,153,34,0.1);border:1px solid rgba(210,153,34,0.3);border-radius:3px;padding:1px 5px;margin-left:4px;text-transform:uppercase;letter-spacing:0.5px}
+
+/* F8/F10/F11 Section wrappers */
+.qol-section{padding:12px 16px}
+.qol-section-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+</style></head>
 <body>
 
 <!-- LIVE/STALE STATUS BAR -->
@@ -482,6 +561,7 @@ body.has-status-bar .scroll{padding-top:28px}
           <span id="bridgePid"></span>
           <span id="bridgeUptime"></span>
           <span id="bridgeFailures"></span>
+          <span id="watchdogBadge"></span>
         </div>
       </div>
     </div>
@@ -494,6 +574,27 @@ body.has-status-bar .scroll{padding-top:28px}
     <div class="section" style="padding-top:0">
       <div class="section-title">Activity Feed</div>
       <div id="activityFeed"><div class="stat-line">No activity yet</div></div>
+    </div>
+    <!-- Recent Comments Timeline -->
+    <div class="section" style="padding-top:0">
+      <div class="section-title">Recent Comments Across All Tickets</div>
+      <div id="commentsTimeline"><div class="stat-line">No comments yet</div></div>
+    </div>
+    <!-- Bridge Log Snippet -->
+    <div class="section" style="padding-top:0">
+      <div class="section-title">Bridge Log</div>
+      <div class="log-snippet-section">
+        <div class="log-snippet-toggle" onclick="document.getElementById('bridgeLogContent').classList.toggle('show')">📋 Show last 20 lines</div>
+        <div class="log-snippet-content" id="bridgeLogContent"></div>
+      </div>
+    </div>
+    <!-- Watchdog Log -->
+    <div class="section" style="padding-top:0">
+      <div class="section-title">Watchdog Log</div>
+      <div class="log-snippet-section">
+        <div class="log-snippet-toggle" onclick="document.getElementById('watchdogLogContent').classList.toggle('show')">📋 Show last 10 lines</div>
+        <div class="watchdog-log-content" id="watchdogLogContent"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -581,7 +682,7 @@ body.has-status-bar .scroll{padding-top:28px}
       <div id="actionQueueContainer" class="aq-container" style="display:none">
         <div class="aq-header">
           <span class="aq-title">Action Queue <span class="aq-count" id="aqCount"></span></span>
-          <button class="aq-fire-btn" id="aqFireBtn" onclick="fireActionQueue()">&#9889; Fire Queue</button>
+          <button class="aq-fire-btn" id="aqFireBtn" onclick="showFaqModal()">&#9889; Fire Queue</button>
         </div>
         <div id="actionQueueList"></div>
       </div>
@@ -681,6 +782,45 @@ body.has-status-bar .scroll{padding-top:28px}
     <div class="task-form-actions">
       <button class="task-btn" onclick="closeTaskForm()">Cancel</button>
       <button class="task-btn primary" onclick="saveTaskForm()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Quick-Add modal (F1) -->
+<div class="qa-modal-overlay" id="qaModalOverlay" onclick="if(event.target===this)closeQaModal()">
+  <div class="qa-modal">
+    <h3>Queue Action</h3>
+    <input type="hidden" id="qaTicketKey">
+    <label>Ticket</label>
+    <input type="text" id="qaTicketDisplay" readonly style="font-family:monospace;font-weight:600">
+    <label>Comment</label>
+    <textarea id="qaComment" placeholder="Comment text..."></textarea>
+    <label>Worklog Hours (optional)</label>
+    <input type="text" id="qaWorklogHours" placeholder="e.g. 2">
+    <label>Transition (optional)</label>
+    <input type="text" id="qaTransition" placeholder="e.g. In Progress">
+    <label>Assignee (optional)</label>
+    <input type="text" id="qaAssignee" placeholder="e.g. aryan.v1">
+    <label>Labels (comma-separated, optional)</label>
+    <input type="text" id="qaLabels" placeholder="e.g. MENAL1, c=platform_issue">
+    <label>Notes (optional)</label>
+    <input type="text" id="qaNotes" placeholder="Brief description of this action">
+    <div class="qa-modal-actions">
+      <button class="task-btn" onclick="closeQaModal()">Cancel</button>
+      <button class="task-btn primary" onclick="submitQuickAdd()">Add to Queue</button>
+    </div>
+  </div>
+</div>
+
+<!-- Fire-All confirmation modal (F3) -->
+<div class="faq-modal-overlay" id="faqModalOverlay">
+  <div class="faq-modal">
+    <h3>Fire All Queue Items?</h3>
+    <p style="font-size:12px;color:var(--text-dim);margin-bottom:12px">Select items to fire. Unchecked items will be skipped.</p>
+    <div id="faqItemsList"></div>
+    <div class="faq-modal-actions">
+      <button class="faq-btn-cancel" onclick="closeFaqModal()">Cancel</button>
+      <button class="faq-btn-confirm" onclick="confirmFireAll()">Fire Selected</button>
     </div>
   </div>
 </div>
@@ -918,11 +1058,14 @@ function buildCard(t,exp,ch){
   if(t.lastCommentBy&&t.lastCommentSnippet)lcp='@'+escapeHtml(t.lastCommentBy)+': '+escapeHtml(t.lastCommentSnippet);
   var ec=exp?' expanded':'';
   var fc=ch?' flash':'';
-  return '<div class="ticket-card'+ec+fc+'" data-ticket-key="'+escapeHtml(t.key)+'" data-updated="'+escapeHtml(t.updated)+'" data-comments="'+(t.commentsCount||0)+'">'+
+  var pinCls=isPinned(t.key)?' pinned':'';
+  var staleCls=isStaleTicket(t.updated)?' stale':'';
+  return '<div class="ticket-card'+ec+fc+pinCls+staleCls+'" data-ticket-key="'+escapeHtml(t.key)+'" data-updated="'+escapeHtml(t.updated)+'" data-comments="'+(t.commentsCount||0)+'">'+
     '<div class="updated-badge">UPDATED</div>'+
-    '<div class="ticket-header"><span class="ticket-key" style="color:'+kc+'">'+escapeHtml(t.key)+'</span><span class="status-badge '+sc+'">'+escapeHtml(t.status)+'</span></div>'+
+    '<button class="pin-star '+(isPinned(t.key)?'active':'')+'" onclick="event.stopPropagation();togglePin(\''+escapeHtml(t.key)+'\')">'+(isPinned(t.key)?'★':'☆')+'</button>'+
+    '<div class="ticket-header"><span class="ticket-key" style="color:'+kc+'">'+escapeHtml(t.key)+'</span><span class="status-badge '+sc+'">'+escapeHtml(t.status)+'</span>'+statusAgeBadge(t.statusChangedAt)+'</div>'+
     '<div class="ticket-summary" data-field="summary">'+escapeHtml(t.summary)+'</div>'+
-    '<div class="ticket-meta"><span class="priority-dot" style="background:'+pc+'"></span><span data-field="project">'+escapeHtml(t.project)+'</span><span>&middot;</span><span>'+escapeHtml(t.issuetype)+'</span><span>&middot;</span><span data-field="updated-rel">updated '+relTime(t.updated)+'</span><span class="comment-badge">&#128172; '+(t.commentsCount||0)+'</span></div>'+
+    '<div class="ticket-meta"><span class="priority-dot" style="background:'+pc+'"></span><span data-field="project">'+escapeHtml(t.project)+'</span><span>&middot;</span><span>'+escapeHtml(t.issuetype)+'</span><span>&middot;</span><span data-field="updated-rel">updated '+relTime(t.updated)+'</span><span class="comment-badge">&#128172; '+(t.commentsCount||0)+'</span>'+(isStaleTicket(t.updated)?'<span class="stale-badge">STALE</span>':'')+'</div>'+
     '<div class="last-comment-preview" data-field="last-comment">'+escapeHtml(lcp)+'</div>'+
     (t.linkedTickets&&t.linkedTickets.length>0?'<div class="linked-chips" data-field="linked-chips">'+t.linkedTickets.map(function(lt){var lsc=statusClass(lt.status,lt.statusCategory);return '<a class="linked-chip" href="https://jira.secext.samsung.net/browse/'+encodeURIComponent(lt.key)+'" target="_blank" onclick="event.stopPropagation()"><span class="lc-key">'+escapeHtml(lt.key)+'</span><span class="lc-status '+lsc+'">'+escapeHtml(lt.status)+'</span></a>'}).join('')+'</div>':'')+
     '<div class="expanded-content">'+
@@ -936,6 +1079,7 @@ function buildCard(t,exp,ch){
         '<button class="action-btn" data-action="link" data-key="'+escapeHtml(t.key)+'">Link Issue</button>'+
         '<button class="action-btn quick" data-action="investigate" data-key="'+escapeHtml(t.key)+'">Investigate</button>'+
         '<button class="action-btn quick" data-action="script" data-key="'+escapeHtml(t.key)+'">Write Script</button>'+
+        '<button class="action-btn quick" data-action="queue-action" data-key="'+escapeHtml(t.key)+'">Queue Action</button>'+
       '</div>'+
       '<div class="inline-action-area" id="ca-'+escapeHtml(t.key)+'"><textarea class="inline-textarea" id="ct-'+escapeHtml(t.key)+'" placeholder="Type your comment..."></textarea><button class="inline-submit" data-action="submit-comment" data-key="'+escapeHtml(t.key)+'">Submit Comment</button></div>'+
       '<div class="status-dropdown" id="sd-'+escapeHtml(t.key)+'"><div class="status-option" data-status="In Progress" data-key="'+escapeHtml(t.key)+'">In Progress</div><div class="status-option" data-status="Done" data-key="'+escapeHtml(t.key)+'">Done</div><div class="status-option" data-status="Open" data-key="'+escapeHtml(t.key)+'">Open</div><div class="status-option" data-status="Reopened" data-key="'+escapeHtml(t.key)+'">Reopened</div><div class="status-option" data-status="Closed" data-key="'+escapeHtml(t.key)+'">Closed</div></div>'+
@@ -1128,6 +1272,7 @@ function buildSessionCard(s,exp){
         '<input type="text" class="ide-msg-input" id="imi-'+pidStr+'" placeholder="Type a message for this session...">'+
         '<button class="ide-msg-send" data-action="send-ide-msg" data-pid="'+pidStr+'">Send Message</button>'+
       '</div>'+
+      '<button class="session-kill-btn" data-action="kill-session" data-pid="'+pidStr+'">&#9724; Kill Session</button>'+
     '</div></div>'
 }
 
@@ -1411,7 +1556,8 @@ function renderActivity(data){
   // Activity feed
   var feed=document.getElementById('activityFeed');
   var log=a.activityLog||[];
-  if(log.length===0){feed.innerHTML='<div class="stat-line">No activity yet</div>';return}
+  if(log.length===0){feed.innerHTML='<div class="stat-line">No activity yet</div>'}
+  else{
   var typeIcons={'command':'&#9998;','jira-action':'&#128203;','agent-response':'&#129302;','bridge-event':'&#9881;'};
   var typeLabels={'command':'Command','jira-action':'Jira Action','agent-response':'Agent Response','bridge-event':'Bridge Event'};
   var fh='';
@@ -1452,6 +1598,100 @@ function renderActivity(data){
     if(entry.id)fh+='<script type="application/json" id="act-data-'+escapeHtml(entry.id)+'">'+escapeHtml(JSON.stringify({detail:entry.detail||''}))+'<\/script>';
   });
   feed.innerHTML=fh;
+  // F8: Comments timeline
+  var ctEl=document.getElementById('commentsTimeline');
+  if(ctEl){
+    var allComments=[];
+    (data.tickets||[]).forEach(function(t){
+      if(t.recentComments){
+        t.recentComments.forEach(function(c){
+          allComments.push({ticket:t.key,author:c.author,date:c.date,snippet:c.snippet})
+        })
+      }
+    });
+    allComments.sort(function(a,b){return new Date(b.date).getTime()-new Date(a.date).getTime()});
+    allComments=allComments.slice(0,15);
+    if(allComments.length===0){ctEl.innerHTML='<div class="stat-line">No comments yet</div>'}
+    else{
+      var cth='';
+      allComments.forEach(function(c){
+        cth+='<div class="comments-timeline-item">'+
+          '<div style="flex:1;min-width:0">'+
+            '<div style="display:flex;gap:6px;align-items:baseline">'+
+              '<span class="comments-timeline-ticket">'+escapeHtml(c.ticket)+'</span>'+
+              '<span class="comments-timeline-author">'+escapeHtml(c.author)+'</span>'+
+              '<span class="comments-timeline-time">'+relTime(c.date)+'</span>'+
+            '</div>'+
+            '<div class="comments-timeline-snippet">'+escapeHtml(c.snippet)+'</div>'+
+          '</div>'+
+        '</div>'
+      });
+      ctEl.innerHTML=cth
+    }
+  }
+  // F10: Bridge log content
+  var blEl=document.getElementById('bridgeLogContent');
+  if(blEl){blEl.textContent=a.bridgeLogTail||'(no bridge log available)'}
+  // F11: Watchdog badge + log
+  var wdEl=document.getElementById('watchdogBadge');
+  if(wdEl){
+    var wd=a.watchdog||{};
+    if(wd.alive){
+      wdEl.innerHTML='<span class="watchdog-badge alive">&#128994; Watchdog OK</span>'
+    } else {
+      wdEl.innerHTML='<span class="watchdog-badge dead">&#128308; Watchdog Down</span>'
+    }
+  }
+  var wdlEl=document.getElementById('watchdogLogContent');
+  if(wdlEl){wdlEl.textContent=a.watchdogLogTail||'(no watchdog log available)'}
+  // Close the else block for activity feed
+  }
+  // F8: Comments timeline — always run, even if no activity log
+  var ctEl2=document.getElementById('commentsTimeline');
+  if(ctEl2){
+    var allComments2=[];
+    (data.tickets||[]).forEach(function(t){
+      if(t.recentComments){
+        t.recentComments.forEach(function(c){
+          allComments2.push({ticket:t.key,author:c.author,date:c.date,snippet:c.snippet})
+        })
+      }
+    });
+    allComments2.sort(function(a,b){return new Date(b.date).getTime()-new Date(a.date).getTime()});
+    allComments2=allComments2.slice(0,15);
+    if(allComments2.length===0){ctEl2.innerHTML='<div class="stat-line">No comments yet</div>'}
+    else{
+      var cth2='';
+      allComments2.forEach(function(c){
+        cth2+='<div class="comments-timeline-item">'+
+          '<div style="flex:1;min-width:0">'+
+            '<div style="display:flex;gap:6px;align-items:baseline">'+
+              '<span class="comments-timeline-ticket">'+escapeHtml(c.ticket)+'</span>'+
+              '<span class="comments-timeline-author">'+escapeHtml(c.author)+'</span>'+
+              '<span class="comments-timeline-time">'+relTime(c.date)+'</span>'+
+            '</div>'+
+            '<div class="comments-timeline-snippet">'+escapeHtml(c.snippet)+'</div>'+
+          '</div>'+
+        '</div>'
+      });
+      ctEl2.innerHTML=cth2
+    }
+  }
+  // F10: Bridge log content — always run
+  var blEl2=document.getElementById('bridgeLogContent');
+  if(blEl2){blEl2.textContent=a.bridgeLogTail||'(no bridge log available)'}
+  // F11: Watchdog badge + log — always run
+  var wdEl2=document.getElementById('watchdogBadge');
+  if(wdEl2){
+    var wd2=a.watchdog||{};
+    if(wd2.alive){
+      wdEl2.innerHTML='<span class="watchdog-badge alive">&#128994; Watchdog OK</span>'
+    } else {
+      wdEl2.innerHTML='<span class="watchdog-badge dead">&#128308; Watchdog Down</span>'
+    }
+  }
+  var wdlEl2=document.getElementById('watchdogLogContent');
+  if(wdlEl2){wdlEl2.textContent=a.watchdogLogTail||'(no watchdog log available)'}
 }
 
 function copyActCard(id){
@@ -1581,6 +1821,7 @@ document.getElementById('ticketsList').addEventListener('click',function(e){
     else if(ak==='assign')assignToMe(ky);
     else if(ak==='investigate')investigateTicket(ky);
     else if(ak==='script')writeScript(ky);
+    else if(ak==='queue-action')openQaModal(ky);
     else if(ak==='submit-comment')submitComment(ky);
     else if(ak==='submit-label')submitLabel(ky);
     else if(ak==='submit-link')submitLink(ky);
@@ -1602,6 +1843,7 @@ document.getElementById('sessionsList').addEventListener('click',function(e){
     var pid=act.getAttribute('data-pid');
     if(ak==='ide-msg')toggleIdeMsg(pid);
     else if(ak==='send-ide-msg')sendIdeMsg(pid);
+    else if(ak==='kill-session')killSession(pid);
     return
   }
   // Don't toggle if click is inside expanded-content or input
@@ -2092,6 +2334,12 @@ function renderActionQueue(){
   container.style.display='block';
   if(countEl)countEl.textContent='('+(aq.length)+' pending)';
   if(fireBtn)fireBtn.disabled=false;
+  // F4: Worklog total
+  var totalWorklog=0;
+  aq.forEach(function(item){if(item.actions&&item.actions.worklogHours)totalWorklog+=parseFloat(item.actions.worklogHours)||0});
+  var wtEl=document.getElementById('aqWorklogTotal');
+  if(!wtEl){wtEl=document.createElement('span');wtEl.id='aqWorklogTotal';wtEl.className='aq-worklog-total';if(countEl&&countEl.parentNode)countEl.parentNode.appendChild(wtEl)}
+  if(wtEl){wtEl.textContent=totalWorklog>0?'⚡ '+totalWorklog+'h pending':''}
 
   var html='';
   allItems.forEach(function(item){
@@ -2107,9 +2355,12 @@ function renderActionQueue(){
     }
 
     if(item._status==='done'||item._status==='failed'){
-      // Minimal card for done/failed — just status + ticket
       html+='<div class="aq-item" style="opacity:'+(item._status==='done'?'0.6':'1')+'">';
-      html+='<div class="aq-item-header"><span class="aq-item-ticket">'+escapeHtml(item._status==='done'?'Item #'+item.id:item._status==='failed'?'Item #'+item.id:'')+'</span></div>';
+      if(item._status==='failed'){
+        html+='<div class="aq-item-header"><span class="aq-item-ticket">Item #'+item.id+' — Failed</span><button class="aq-item-retry" onclick="retryFailedItem('+item.id+')">&#8635; Retry</button></div>';
+      } else {
+        html+='<div class="aq-item-header"><span class="aq-item-ticket">Item #'+item.id+' — Done</span></div>';
+      }
       html+=statusHtml;
       html+='</div>';
       return;
@@ -2239,6 +2490,161 @@ function removeActionQueueItem(id){
       if(e||!d||!d.number){showToast('Failed to send removal','error');return}
       showToast('Removal request sent (Issue #'+d.number+')','success');
     });
+}
+
+// ===== QOL FEATURE FUNCTIONS =====
+
+// F7: Pinned Tickets
+function getPinnedTickets(){return JSON.parse(localStorage.getItem('pinnedTickets')||'[]')}
+function isPinned(key){return getPinnedTickets().indexOf(key)>=0}
+function togglePin(key){var p=getPinnedTickets();var idx=p.indexOf(key);if(idx>=0)p.splice(idx,1);else p.push(key);localStorage.setItem('pinnedTickets',JSON.stringify(p));renderTickets(rawData||{tickets:[]},[])}
+
+// F13: Stale Ticket detection (2+ days no update)
+function isStaleTicket(updated){if(!updated)return false;var ms=Date.now()-new Date(updated).getTime();return ms>2*24*60*60*1000}
+
+// F6: Status Age Badge
+function statusAgeBadge(sca){
+  if(!sca)return '';
+  var ms=Date.now()-new Date(sca).getTime();
+  if(ms<0)return '';
+  var d=Math.floor(ms/86400000);
+  var h=Math.floor((ms%86400000)/3600000);
+  var label='';var cls='';
+  if(d>0){label=d+'d '+(h>0?h+'h':'');cls=d>7?'stale':'fresh'}
+  else if(h>0){label=h+'h';cls='fresh'}
+  else{var m=Math.floor(ms/60000);label=m+'m';cls='fresh'}
+  return '<span class="status-age-badge '+cls+'">&#9201; '+label+'</span>'
+}
+
+// F1: Quick-Add from Ticket Card
+function openQaModal(key){
+  document.getElementById('qaTicketKey').value=key;
+  document.getElementById('qaTicketDisplay').value=key;
+  document.getElementById('qaComment').value='';
+  document.getElementById('qaWorklogHours').value='';
+  document.getElementById('qaTransition').value='';
+  document.getElementById('qaAssignee').value='';
+  document.getElementById('qaLabels').value='';
+  document.getElementById('qaNotes').value='';
+  document.getElementById('qaModalOverlay').classList.add('show');
+}
+function closeQaModal(){document.getElementById('qaModalOverlay').classList.remove('show')}
+function submitQuickAdd(){
+  var key=document.getElementById('qaTicketKey').value;
+  var comment=document.getElementById('qaComment').value.trim();
+  var worklogHours=document.getElementById('qaWorklogHours').value.trim();
+  var transition=document.getElementById('qaTransition').value.trim();
+  var assignee=document.getElementById('qaAssignee').value.trim();
+  var labels=document.getElementById('qaLabels').value.trim();
+  var notes=document.getElementById('qaNotes').value.trim();
+  if(!comment&&!worklogHours&&!transition&&!assignee&&!labels){showToast('At least one action is required','error');return}
+  var actions={};
+  if(comment)actions.comment=comment;
+  if(worklogHours)actions.worklogHours=parseFloat(worklogHours)||0;
+  if(transition)actions.transition=transition;
+  if(assignee)actions.assignee=assignee;
+  if(labels)actions.labels=labels.split(',').map(function(l){return l.trim()}).filter(Boolean);
+  var today=new Date().toISOString().split('T')[0];
+  var body='Append a new item to the file C:\\Users\\aryan.v1\\.gemini\\tmp\\bin\\memory\\jira-action-queue.json'+NL+
+    'New item structure:'+NL+
+    '{'+NL+
+    '  "id": <next available id (increment from max existing id)>, '+NL+
+    '  "ticket": "'+key+'", '+NL+
+    '  "actions": '+JSON.stringify(actions)+','+NL+
+    '  "createdAt": "'+today+'",'+NL+
+    '  "notes": "'+(notes||'Queued from dashboard')+'"'+NL+
+    '}'+NL+
+    'Add this to the existing JSON array. Do not change existing items.'+NL+
+    'Sent from dashboard';
+  showToast('Queuing action for '+key+'...','');
+  createIssue('Queue action for '+key,body,function(e,d){
+    if(e||!d||!d.number){showToast('Failed to queue','error');return}
+    showToast('Action queued (Issue #'+d.number+')','success');
+    closeQaModal();
+  });
+}
+
+// F3: Fire-All Confirmation Modal
+function showFaqModal(){
+  var aq=rawData&&rawData.actionQueue||[];
+  if(aq.length===0){showToast('Action queue is empty','');return}
+  var listEl=document.getElementById('faqItemsList');
+  var html='';
+  aq.forEach(function(item){
+    var acts=item.actions||{};
+    var detail=[];
+    if(acts.comment)detail.push('comment');
+    if(acts.worklogHours)detail.push(acts.worklogHours+'h worklog');
+    if(acts.transition)detail.push(acts.transition);
+    if(acts.assignee)detail.push('assign '+acts.assignee);
+    if(acts.labels&&acts.labels.length>0)detail.push('labels: '+acts.labels.join(','));
+    html+='<div class="faq-item-check">'+
+      '<input type="checkbox" checked data-aq-id="'+item.id+'">'+
+      '<div class="faq-item-info">'+
+        '<div class="faq-item-key">'+escapeHtml(item.ticket)+'</div>'+
+        '<div class="faq-item-detail">'+escapeHtml(detail.join(' · '))+'</div>'+
+      '</div>'+
+    '</div>'
+  });
+  listEl.innerHTML=html;
+  document.getElementById('faqModalOverlay').classList.add('show');
+}
+function closeFaqModal(){document.getElementById('faqModalOverlay').classList.remove('show')}
+function confirmFireAll(){
+  var aq=rawData&&rawData.actionQueue||[];
+  var checkedIds=[];
+  document.querySelectorAll('#faqItemsList input[type=checkbox]').forEach(function(cb){
+    if(cb.checked)checkedIds.push(parseInt(cb.getAttribute('data-aq-id')));
+  });
+  if(checkedIds.length===0){showToast('No items selected','');return}
+  var items=aq.filter(function(i){return checkedIds.indexOf(i.id)>=0});
+  closeFaqModal();
+  var btn=document.getElementById('aqFireBtn');
+  if(btn){btn.disabled=true;btn.innerHTML='&#8987; Firing...'}
+  var summary='Fire Action Queue ('+items.length+' items)';
+  var body='Execute /logQueue now. Process all pending items from the jira-action-queue.json file one by one.'+NL+
+    'File: C:\\Users\\aryan.v1\\.gemini\\tmp\\bin\\memory\\jira-action-queue.json'+NL+
+    'After each item is executed successfully, remove it from the file so it does not get logged again.'+NL+
+    'Items to process:'+NL;
+  items.forEach(function(item){
+    body+=NL+'--- Item #'+item.id+': '+item.ticket+' ---'+NL;
+    var acts=item.actions||{};
+    if(acts.comment)body+='Comment: '+acts.comment.substring(0,200)+(acts.comment.length>200?'...':'')+NL;
+    if(acts.worklogHours)body+='Worklog: '+acts.worklogHours+'h'+NL;
+    if(acts.transition)body+='Transition: '+acts.transition+NL;
+    if(acts.fallbackTransition)body+='Fallback transition: '+acts.fallbackTransition+NL;
+    if(acts.assignee)body+='Assignee: '+acts.assignee+NL;
+    if(acts.labels)body+='Labels: '+acts.labels.join(', ')+NL;
+    if(item.notes)body+='Notes: '+item.notes+NL;
+  });
+  body+=NL+'Sent from dashboard';
+  createIssue(summary,body,function(e,d){
+    if(btn){btn.disabled=false;btn.innerHTML='&#9889; Fire Queue'}
+    if(e||!d||!d.number){showToast('Failed to fire action queue','error');return}
+    showToast('Action queue fired (Issue #'+d.number+'). '+items.length+' items will be processed sequentially.','success');
+  });
+}
+
+// F2: Retry Failed Queue Items
+function retryFailedItem(id){
+  var statuses=getAQStatuses();
+  delete statuses[id];
+  localStorage.setItem('aqStatuses',JSON.stringify(statuses));
+  fireActionQueueItem(id);
+}
+
+// F9: Session Kill Button
+function killSession(pid){
+  if(!confirm('Kill process PID '+pid+'? This will terminate the aipro session.'))return;
+  showToast('Sending kill command for PID '+pid+'...','');
+  createIssue('Kill aipro session PID '+pid,
+    'Kill the aipro process with PID '+pid+'. Run: Stop-Process -Id '+pid+' -Force\n'+
+    'This is a hung/stuck session that needs to be terminated.\n'+
+    'Sent from dashboard',
+    function(e,d){
+      if(e||!d||!d.number){showToast('Failed to send kill command','error');return}
+      showToast('Kill command sent (Issue #'+d.number+')','success')
+    })
 }
 
 // Load HAC report on view switch
