@@ -1,53 +1,7 @@
 {
-  "generatedAt": "2026-09-09T05:50:34.854Z",
-  "totalTickets": 5,
+  "generatedAt": "2026-09-09T05:51:11.402Z",
+  "totalTickets": 4,
   "tickets": [
-    {
-      "key": "MHME-1430",
-      "summary": "[PROD - SMI - MA] Missing Extended Warranty on BC for IM product",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Morocco Maintenance & Enhancements",
-      "projectKey": "MHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-09T13:38:11.000+0900",
-      "created": "2026-09-09T13:27:48.000+0900",
-      "description": "Preconditions / Test Data\n * Guest User / Registered User\n\n * Product eligible for Extended Warranty\n\nTest Steps\n\n1. Go to Samsung store\n2. Hover to GNB -> Choose IM Product\n3. Click \"Buy Now\" on PF page\n4. On BC page, add Extended Warranty/SMC\n5. Add product to cart\n6. Process product until payment",
-      "commentsCount": 1,
-      "recentComments": [
-        {
-          "author": "march madova",
-          "date": "2026-09-09T13:38:11.930+0900",
-          "snippet": "Hi Team\n\nI checked Back Office and found that the warranty is also available under the External Service Type and Category System.\nCould you confirm if EW section is available in N_Africa IM BC page ?\n\n!image (5).png|width=467,height=229!\n\n!image (6).png|width=480,height=239!\n\nThanks,\n\nDova"
-        }
-      ],
-      "lastCommentBy": "march madova",
-      "lastCommentSnippet": "Hi Team\n\nI checked Back Office and found that the warranty is also available under the External Service Type and Category System.\nCould you confirm if EW section is available in N_Africa IM BC page ?\n\n!image (5).png|width=467,height=229!\n\n!image (6).png|width=480,height=239!\n\nThanks,\n\nDova",
-      "lastCommentDate": "2026-09-09T13:38:11.930+0900",
-      "url": "https://jira.secext.samsung.net/browse/MHME-1430",
-      "linkedTickets": [
-        {
-          "key": "RT-713633",
-          "summary": "[MA_PROD] [MA_AEM_1] Able to navigate to Payment page from BC for IM division",
-          "status": "Failed",
-          "statusCategory": "In Progress",
-          "relation": "is a test for",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "[PROD - SMI - MA] Missing Extended Warranty on BC for IM product\r\nGenerated: 2026-09-09T10:10:00Z\r\n\r\nHi [~madova.jovanovic@wisewires.com] ,\r\n\r\nThe Extended Warranty service is not appearing on the BC (Bundle Configurator) page for IM products on the Samsung Maroc (MA) store. The warranty product and its External Service Type configuration exist in Back Office, but the storefront does not render the service component on the BC page.\r\n\r\nThe BC page service display is controlled by TokoAvailableServicesPopulator, which populates the list of available services for a given product. This populator applies three layers of filtering before a service appears on the storefront:\r\n\r\n1. Product-level: The product variant must have the ExternalServiceType (e.g., WARRANTY) listed in its externalServiceTypes collection. If this attribute is empty or does not include WARRANTY, no warranty services will be resolved for the product regardless of Back Office configuration.\r\n\r\n2. Site-level exclusion: The CMSSite (ma / Samsung Maroc) has an excludedExternalServiceTypes collection. If WARRANTY is in this exclusion list, the service type is filtered out by TokoExternalServiceImpl.excludedExternalServices() and isServiceCategoryExcludedInCurrentSite() before reaching the storefront.\r\n\r\n3. AddedServiceConfig: The AddedServiceConfig for the WARRANTY service type must exist and must have showOnCheckout=false for the service to appear on the BC page (as opposed to checkout-only). The populator explicitly filters out service groups where showOnCheckout=true. If no AddedServiceConfig is configured for the MA site for the WARRANTY service type and provider, the service group will not be returned.\r\n\r\nAdditionally, the product must have AVAILABLE_SERVICE product references linking the IM product to the warranty service variants. Without these references, TokoExternalServiceImpl.getAllAvailableExternalServices() returns an empty list because it resolves services via commerceProductReferenceService.getProductReferencesForCode().\r\n\r\nThis is the same issue pattern as JHME-1751 ([PROD - SMI - JO] Extended Warranty Missing on BC Page, Jordan, closed as Fixed). That ticket was resolved as a configuration issue: the SC+ / Extended Warranty setup in PIM was incomplete, and the display options for the AddedServiceConfig were not configured for the Jordan site. Once PIM setup and AddedServiceConfig display options were corrected, Extended Warranty appeared on the storefront.\r\n\r\nThe root cause is a configuration gap, not a platform code defect. The platform code in TokoAvailableServicesPopulator and TokoExternalServiceImpl is working as designed. The MA (Morocco) site is missing one or more of the following: (a) AVAILABLE_SERVICE product references between IM products and warranty service variants, (b) an AddedServiceConfig for WARRANTY with showOnCheckout=false for the MA store, or (c) the externalServiceTypes attribute on the IM product variants does not include WARRANTY.\r\n\r\nKibana logs were unavailable during this investigation, so server-side log confirmation could not be performed. The Back Office confirmation from the commenter (warranty exists under External Service Type and Category System) confirms the catalog-level setup is present, but the storefront display configuration is incomplete.\r\n\r\nPossible remediation:\r\n\r\n1. Verify the IM product variant has WARRANTY in its externalServiceTypes collection. Query in HAC: SELECT {externalServiceTypes} FROM {TokoVariantProduct} WHERE {code}='<product-code>'. If empty or missing WARRANTY, update the product's externalServiceTypes in PIM or via ImpEx.\r\n\r\n2. Verify the MA CMSSite does not have WARRANTY in its excludedExternalServiceTypes. If it does, remove WARRANTY from the exclusion list via HAC or ImpEx.\r\n\r\n3. Verify an AddedServiceConfig exists for the WARRANTY ExternalServiceType and the relevant provider for the MA store, with showOnCheckout=false. If missing, create it via ImpEx.\r\n\r\n4. Verify AVAILABLE_SERVICE product references exist between the IM product and the warranty service variants. If missing, create them via ImpEx or PIM.\r\n\r\n5. Once configuration is verified, clear the platform cache and re-test on the BC page.\r\n\r\nThis is a configuration issue that needs to be raised with the PIM/catalog team to complete the Extended Warranty setup for the MA (Morocco) store. No platform code change or HAC script is needed.\r\n\r\nThanks,\r\n\r\nAryan.",
-        "sections": {
-          "issue": "",
-          "rca": "[PROD - SMI - MA] Missing Extended Warranty on BC for IM product\r\nGenerated: 2026-09-09T10:10:00Z\r\n\r\nHi [~madova.jovanovic@wisewires.com] ,\r\n\r\nThe Extended Warranty service is not appearing on the BC (Bundle Configurator) page for IM products on the Samsung Maroc (MA) store. The warranty product and its External Service Type configuration exist in Back Office, but the storefront does not render the service component on the BC page.\r\n\r\nThe BC page service display is controlled by TokoAvailableServicesPopulator, which populates the list of available services for a given product. This populator applies three layers of filtering before a service appears on the storefront:\r\n\r\n1. Product-level: The product variant must have the ExternalServiceType (e.g., WARRANTY) listed in its externalServiceTypes collection. If this attribute is empty or does not include WARRANTY, no warranty services will be resolved for the product regardless of Back Office configuration.\r\n\r\n2. Site-level exclusion: The CMSSite (ma / Samsung Maroc) has an excludedExternalServiceTypes collection. If WARRANTY is in this exclusion list, the service type is filtered out by TokoExternalServiceImpl.excludedExternalServices() and isServiceCategoryExcludedInCurrentSite() before reaching the storefront.\r\n\r\n3. AddedServiceConfig: The AddedServiceConfig for the WARRANTY service type must exist and must have showOnCheckout=false for the service to appear on the BC page (as opposed to checkout-only). The populator explicitly filters out service groups where showOnCheckout=true. If no AddedServiceConfig is configured for the MA site for the WARRANTY service type and provider, the service group will not be returned.\r\n\r\nAdditionally, the product must have AVAILABLE_SERVICE product references linking the IM product to the warranty service variants. Without these references, TokoExternalServiceImpl.getAllAvailableExternalServices() returns an empty list because it resolves services via commerceProductReferenceService.getProductReferencesForCode().\r\n\r\nThis is the same issue pattern as JHME-1751 ([PROD - SMI - JO] Extended Warranty Missing on BC Page, Jordan, closed as Fixed). That ticket was resolved as a configuration issue: the SC+ / Extended Warranty setup in PIM was incomplete, and the display options for the AddedServiceConfig were not configured for the Jordan site. Once PIM setup and AddedServiceConfig display options were corrected, Extended Warranty appeared on the storefront.\r\n\r\nThe root cause is a configuration gap, not a platform code defect. The platform code in TokoAvailableServicesPopulator and TokoExternalServiceImpl is working as designed. The MA (Morocco) site is missing one or more of the following: (a) AVAILABLE_SERVICE product references between IM products and warranty service variants, (b) an AddedServiceConfig for WARRANTY with showOnCheckout=false for the MA store, or (c) the externalServiceTypes attribute on the IM product variants does not include WARRANTY.\r\n\r\nKibana logs were unavailable during this investigation, so server-side log confirmation could not be performed. The Back Office confirmation from the commenter (warranty exists under External Service Type and Category System) confirms the catalog-level setup is present, but the storefront display configuration is incomplete.\r\n\r\nPossible remediation:\r\n\r\n1. Verify the IM product variant has WARRANTY in its externalServiceTypes collection. Query in HAC: SELECT {externalServiceTypes} FROM {TokoVariantProduct} WHERE {code}='<product-code>'. If empty or missing WARRANTY, update the product's externalServiceTypes in PIM or via ImpEx.\r\n\r\n2. Verify the MA CMSSite does not have WARRANTY in its excludedExternalServiceTypes. If it does, remove WARRANTY from the exclusion list via HAC or ImpEx.\r\n\r\n3. Verify an AddedServiceConfig exists for the WARRANTY ExternalServiceType and the relevant provider for the MA store, with showOnCheckout=false. If missing, create it via ImpEx.\r\n\r\n4. Verify AVAILABLE_SERVICE product references exist between the IM product and the warranty service variants. If missing, create them via ImpEx or PIM.\r\n\r\n5. Once configuration is verified, clear the platform cache and re-test on the BC page.\r\n\r\nThis is a configuration issue that needs to be raised with the PIM/catalog team to complete the Extended Warranty setup for the MA (Morocco) store. No platform code change or HAC script is needed.\r\n\r\nThanks,\r\n\r\nAryan.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-09T05:37:49.947Z"
-      }
-    },
     {
       "key": "PC-53768",
       "summary": "Script to copy paymentInfo to clawback PaymentTransaction and retrigger ClawbackProcess",
@@ -378,7 +332,7 @@
       }
     ],
     "pid": 38756,
-    "uptime": 65895,
+    "uptime": 65933,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -390,7 +344,7 @@
       {
         "pid": 1436,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 170659,
+        "ageSeconds": 170695,
         "status": "running",
         "isChild": false,
         "taskSummary": "only jira, kibana. confluence are important. it should poll every minute to check if they are ok....",
@@ -400,7 +354,7 @@
       {
         "pid": 916,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 168296,
+        "ageSeconds": 168333,
         "status": "running",
         "isChild": false,
         "taskSummary": "did you change logic from the original script?",
@@ -410,7 +364,7 @@
       {
         "pid": 28640,
         "cwd": "c:\\windows",
-        "ageSeconds": 168103,
+        "ageSeconds": 168140,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -420,7 +374,7 @@
       {
         "pid": 25896,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 148712,
+        "ageSeconds": 148748,
         "status": "running",
         "isChild": false,
         "taskSummary": "only jira, kibana. confluence are important. it should poll every minute to check if they are ok....",
@@ -430,7 +384,7 @@
       {
         "pid": 6080,
         "cwd": "unknown",
-        "ageSeconds": 81186,
+        "ageSeconds": 81223,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -440,7 +394,7 @@
       {
         "pid": 36180,
         "cwd": "unknown",
-        "ageSeconds": 79123,
+        "ageSeconds": 79160,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -2127,7 +2081,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-09T05:49:58.947Z",
+      "lastCheck": "2026-09-09T05:50:59.197Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -2136,7 +2090,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 401,
-      "lastCheck": "2026-09-09T05:49:58.947Z",
+      "lastCheck": "2026-09-09T05:50:59.197Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -2145,7 +2099,7 @@
       "name": "Confluence",
       "status": "up",
       "httpStatus": 401,
-      "lastCheck": "2026-09-09T05:49:58.947Z",
+      "lastCheck": "2026-09-09T05:50:59.197Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
