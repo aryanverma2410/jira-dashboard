@@ -844,6 +844,8 @@ body.has-status-bar .scroll{padding-top:28px}
   <div class="output-modal-content" id="outputModalContent"></div>
 </div>
 
+<div class="offline-indicator hidden" id="offlineIndicator" style="position:fixed;bottom:calc(var(--nav-h) + 70px);left:50%;transform:translateX(-50%);z-index:380">&#9888; You are offline. Actions will be saved and synced when connection returns.</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- TICKET DETAIL OVERLAY -->
@@ -2930,8 +2932,8 @@ function sortActionQueue(items){
   return items.slice().sort(function(a,b){
     var ta=rawData.tickets.find(function(t){return t.key===a.ticket});
     var tb=rawData.tickets.find(function(t){return t.key===b.ticket});
-    var pa=ta?pri[(ta.priority||'').toLowerCase()]||5:5;
-    var pb=tb?pri[(tb.priority||'').toLowerCase()]||5:5;
+    var pa=ta?(pri.hasOwnProperty((ta.priority||'').toLowerCase())?pri[(ta.priority||'').toLowerCase()]:5):5;
+    var pb=tb?(pri.hasOwnProperty((tb.priority||'').toLowerCase())?pri[(tb.priority||'').toLowerCase()]:5):5;
     return pa-pb;
   });
 }
