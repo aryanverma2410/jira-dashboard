@@ -425,8 +425,7 @@ body.has-status-bar .scroll{padding-top:28px}
 .aq-item-retry:active{transform:scale(0.95)}
 
 /* F3: Fire-All Confirmation Modal */
-.faq-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:350;display:none;align-items:center:justify-content:center}
-.faq-modal-overlay.show{display:flex;align-items:center;justify-content:center}
+.faq-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:350;display:none;align-items:center;justify-content:center}.faq-modal-overlay.show{display:flex;align-items:center;justify-content:center}
 .faq-modal{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:20px;max-width:480px;width:90vw;max-height:80vh;overflow-y:auto}
 .faq-modal h3{font-size:16px;margin-bottom:12px}
 .faq-item-check{display:flex;align-items:flex-start;gap:10px;padding:8px;border-radius:6px;margin-bottom:6px;background:var(--card)}
@@ -482,6 +481,15 @@ body.has-status-bar .scroll{padding-top:28px}
 /* F13: Stale Ticket Highlight */
 .ticket-card.stale{border-color:rgba(210,153,34,0.5);box-shadow:0 0 0 1px rgba(210,153,34,0.2)}
 .stale-badge{font-size:9px;font-weight:700;color:#d29922;background:rgba(210,153,34,0.1);border:1px solid rgba(210,153,34,0.3);border-radius:3px;padding:1px 5px;margin-left:4px;text-transform:uppercase;letter-spacing:0.5px}
+
+/* Queued Ticket Highlight */
+.ticket-card.queued{border-left:3px solid #58a6ff;box-shadow:0 0 0 1px rgba(88,166,255,0.15)}
+.queued-badge{font-size:9px;font-weight:700;color:var(--accent);background:rgba(88,166,255,0.1);border:1px solid rgba(88,166,255,0.3);border-radius:3px;padding:1px 5px;margin-left:4px;text-transform:uppercase;letter-spacing:0.5px}
+
+/* MCP Alert styles (moved from dynamic injection to static CSS) */
+@keyframes mcp-pulse{0%,100%{box-shadow:0 0 0 0 rgba(211,47,47,.4)}50%{box-shadow:0 0 0 6px rgba(211,47,47,0)}}
+.mcp-alert-badge{display:inline-block;background:var(--danger);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;animation:mcp-pulse 2s infinite}
+.mcp-downtime{font-size:11px}
 
 /* F8/F10/F11 Section wrappers */
 .qol-section{padding:12px 16px}
@@ -984,9 +992,6 @@ function updateNavBadges(data){
   var hist=JSON.parse(localStorage.getItem('cmdHistory')||'[]');
   var pending=hist.filter(function(h){return !h.response}).length;
   if(pending>0)document.getElementById('navBadgeCmd').classList.add('show');
-  var mcps=data.mcps||[];
-  var downCount=mcps.filter(function(m){return m.status!=='up'}).length;
-  if(downCount>0)document.getElementById('navBadgeMcps').classList.add('show');
 }
 
 // ===== FILTERS =====
@@ -1060,12 +1065,13 @@ function buildCard(t,exp,ch){
   var fc=ch?' flash':'';
   var pinCls=isPinned(t.key)?' pinned':'';
   var staleCls=isStaleTicket(t.updated)?' stale':'';
-  return '<div class="ticket-card'+ec+fc+pinCls+staleCls+'" data-ticket-key="'+escapeHtml(t.key)+'" data-updated="'+escapeHtml(t.updated)+'" data-comments="'+(t.commentsCount||0)+'">'+
+  var queuedCls=isQueuedTicket(t.key)?' queued':'';
+  return '<div class="ticket-card'+ec+fc+pinCls+staleCls+queuedCls+'" data-ticket-key="'+escapeHtml(t.key)+'" data-updated="'+escapeHtml(t.updated)+'" data-comments="'+(t.commentsCount||0)+'">'+
     '<div class="updated-badge">UPDATED</div>'+
     '<button class="pin-star '+(isPinned(t.key)?'active':'')+'" onclick="event.stopPropagation();togglePin(\''+escapeHtml(t.key)+'\')">'+(isPinned(t.key)?'★':'☆')+'</button>'+
     '<div class="ticket-header"><span class="ticket-key" style="color:'+kc+'">'+escapeHtml(t.key)+'</span><span class="status-badge '+sc+'">'+escapeHtml(t.status)+'</span>'+statusAgeBadge(t.statusChangedAt)+'</div>'+
     '<div class="ticket-summary" data-field="summary">'+escapeHtml(t.summary)+'</div>'+
-    '<div class="ticket-meta"><span class="priority-dot" style="background:'+pc+'"></span><span data-field="project">'+escapeHtml(t.project)+'</span><span>&middot;</span><span>'+escapeHtml(t.issuetype)+'</span><span>&middot;</span><span data-field="updated-rel">updated '+relTime(t.updated)+'</span><span class="comment-badge">&#128172; '+(t.commentsCount||0)+'</span>'+(isStaleTicket(t.updated)?'<span class="stale-badge">STALE</span>':'')+'</div>'+
+    '<div class="ticket-meta"><span class="priority-dot" style="background:'+pc+'"></span><span data-field="project">'+escapeHtml(t.project)+'</span><span>&middot;</span><span>'+escapeHtml(t.issuetype)+'</span><span>&middot;</span><span data-field="updated-rel">updated '+relTime(t.updated)+'</span><span class="comment-badge">&#128172; '+(t.commentsCount||0)+'</span>'+(isStaleTicket(t.updated)?'<span class="stale-badge">STALE</span>':'')+(isQueuedTicket(t.key)?'<span class="queued-badge">QUEUED</span>':'')+'</div>'+
     '<div class="last-comment-preview" data-field="last-comment">'+escapeHtml(lcp)+'</div>'+
     (t.linkedTickets&&t.linkedTickets.length>0?'<div class="linked-chips" data-field="linked-chips">'+t.linkedTickets.map(function(lt){var lsc=statusClass(lt.status,lt.statusCategory);return '<a class="linked-chip" href="https://jira.secext.samsung.net/browse/'+encodeURIComponent(lt.key)+'" target="_blank" onclick="event.stopPropagation()"><span class="lc-key">'+escapeHtml(lt.key)+'</span><span class="lc-status '+lsc+'">'+escapeHtml(lt.status)+'</span></a>'}).join('')+'</div>':'')+
     '<div class="expanded-content">'+
@@ -1097,6 +1103,9 @@ function updateCard(card,t,ch){
   var se=card.querySelector('[data-field="summary"]');if(se&&se.textContent!==t.summary)se.textContent=t.summary;
   var le=card.querySelector('[data-field="last-comment"]');var pv='';if(t.lastCommentBy&&t.lastCommentSnippet)pv='@'+t.lastCommentBy+': '+t.lastCommentSnippet;if(le&&le.textContent!==pv)le.textContent=pv;
   var bg=card.querySelector('.status-badge');if(bg){var sc=statusClass(t.status,t.statusCategory);bg.className='status-badge '+sc;if(bg.textContent!==t.status)bg.textContent=t.status}
+  // Toggle queued + stale classes for existing cards
+  if(isQueuedTicket(t.key)){card.classList.add('queued')}else{card.classList.remove('queued')}
+  if(isStaleTicket(t.updated)){card.classList.add('stale')}else{card.classList.remove('stale')}
   if(expandedTickets.has(t.key)&&t.recentComments){var cc=card.querySelector('[data-field="comments"]');if(cc){var hh='';t.recentComments.forEach(function(c){hh+='<div class="comment-item"><span class="comment-author">'+escapeHtml(c.author)+'</span><span class="comment-date">'+relTime(c.date)+'</span><div class="comment-snippet">'+escapeHtml(c.snippet)+'</div></div>'});cc.innerHTML=hh}var de=card.querySelector('[data-field="desc"]');if(de)de.textContent=t.description||''}
   // Update solution section
   var solEl=card.querySelector('[data-field="solution"]');if(solEl)solEl.innerHTML=buildSolutionHtml(t.solution);
@@ -1720,15 +1729,10 @@ function renderMcps(data){
   var view=document.getElementById('mcpsView');
   if(mcps.length===0){
     view.innerHTML='<div style="text-align:center;padding:40px 16px;color:var(--text-dim)">No MCP servers configured</div>';
-    hideMcpAlertBanner();
     return;
   }
   var upCount=mcps.filter(function(m){return m.status==='up'}).length;
   var downCount=mcps.length-upCount;
-  var alertMcps=mcps.filter(function(m){return m.alert});
-  
-  // Show/hide global alert banner
-  if(alertMcps.length>0){showMcpAlertBanner(alertMcps)}else{hideMcpAlertBanner()}
   
   var statsHtml='<div class="stats-row" style="margin:16px 16px 12px">'+
     '<div class="stat-chip"><span>Online</span><span class="count" style="color:var(--success)">'+upCount+'</span></div>'+
@@ -1755,31 +1759,6 @@ function renderMcps(data){
     '</div>';
   });
   view.innerHTML=statsHtml+cardsHtml;
-}
-
-// ===== MCP ALERT BANNER (global, shows on any view) =====
-function showMcpAlertBanner(alertMcps){
-  var banner=document.getElementById('mcpAlertBanner');
-  if(!banner){
-    banner=document.createElement('div');
-    banner.id='mcpAlertBanner';
-    banner.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(135deg,#d32f2f,#b71c1c);color:#fff;padding:10px 16px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,.3);cursor:pointer';
-    document.body.appendChild(banner);
-    // Add pulse animation
-    var style=document.createElement('style');
-    style.id='mcpAlertStyle';
-    style.textContent='@keyframes mcp-pulse{0%,100%{box-shadow:0 0 0 0 rgba(211,47,47,.4)}50%{box-shadow:0 0 0 6px rgba(211,47,47,0)}}.mcp-alert-badge{display:inline-block;background:var(--danger);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;animation:mcp-pulse 2s infinite}.mcp-downtime{font-size:11px}';
-    document.head.appendChild(style);
-  }
-  var names=alertMcps.map(function(m){return m.name}).join(', ');
-  var durations=alertMcps.map(function(m){return m.name+' ('+fmtDownDuration(m.downDuration)+')'}).join(', ');
-  banner.textContent='⚠ MCP DOWN '+durations+' — tap to view';
-  banner.onclick=function(){switchView('view-mcps')};
-  banner.style.display='flex';
-}
-function hideMcpAlertBanner(){
-  var banner=document.getElementById('mcpAlertBanner');
-  if(banner)banner.style.display='none';
 }
 
 // ===== LIVE UPTIME =====
@@ -2501,6 +2480,9 @@ function togglePin(key){var p=getPinnedTickets();var idx=p.indexOf(key);if(idx>=
 
 // F13: Stale Ticket detection (2+ days no update)
 function isStaleTicket(updated){if(!updated)return false;var ms=Date.now()-new Date(updated).getTime();return ms>2*24*60*60*1000}
+
+// Queued Ticket detection — ticket has a pending action queue item
+function isQueuedTicket(key){if(!rawData||!rawData.actionQueue)return false;return rawData.actionQueue.some(function(i){return i.ticket===key})}
 
 // F6: Status Age Badge
 function statusAgeBadge(sca){
