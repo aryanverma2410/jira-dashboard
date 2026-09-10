@@ -1,7 +1,51 @@
 {
-  "generatedAt": "2026-09-10T06:33:52.966Z",
+  "generatedAt": "2026-09-10T06:34:32.149Z",
   "totalTickets": 10,
   "tickets": [
+    {
+      "key": "SAME-3964",
+      "summary": "Order Refund Issue - SA260906-77172120 (Expert Cleaning)",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Kingdom of Saudi Arabia Maintenance & Enhancements",
+      "projectKey": "SAME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-09-10T15:34:16.000+0900",
+      "created": "2026-09-09T15:09:47.000+0900",
+      "statusChangedAt": "2026-09-09T15:18:22.186+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nPlease check why we cannot create return for order SA260906-77172120.\n\nBelow error is showing.\n\n!image-2026-09-09-10-09-14-053.png!\n\n!image-2026-09-09-10-10-17-946.png!\n\n \n\nThanks,\n\nArj\n\n~@email",
+      "commentsCount": 2,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-09-10T15:34:16.186+0900",
+          "snippet": "Hi ~@email ,\\n\\nKibana logs show the return creation for SA260906-77172120 failed on 8 Sep at 14:13 with StringIndexOutOfBoundsException: begin 3, end 0, length 0.\\n\\nThe order has an Expert Cleaning standalone service (GCIC_EXPERT_CLEANING_STANDALONE). When a return is initiated from Backoffice, th"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-09-09T20:33:26.782+0900",
+          "snippet": "Hi ~@email ,\n\nWe can see a few Errors in kibana relating to return creation.\n\nWe are working on it. will provide an update soon. \n\nRegards\n\nAryan"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi ~@email ,\\n\\nKibana logs show the return creation for SA260906-77172120 failed on 8 Sep at 14:13 with StringIndexOutOfBoundsException: begin 3, end 0, length 0.\\n\\nThe order has an Expert Cleaning standalone service (GCIC_EXPERT_CLEANING_STANDALONE). When a return is initiated from Backoffice, th",
+      "lastCommentDate": "2026-09-10T15:34:16.186+0900",
+      "url": "https://jira.secext.samsung.net/browse/SAME-3964",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "Order Refund Issue - SA260906-77172120 (Expert Cleaning)\nGenerated: 2026-09-09T15:30:00+09:00\n\nHi [~arjenelle.a@samsung.com] ,\n\nWe checked the logs for order SA260906-77172120 and found the error that prevented return creation in Backoffice on 8 Sep at 14:13.\n\nThe order has an Expert Cleaning standalone service (GCIC_EXPERT_CLEANING_STANDALONE). When a return is initiated from Backoffice, the system calls 'TokoCreateReturnRequestController.executeReturn()' which invokes 'blockExpertCleaningServiceAndExpertCareServiceReturn()' to verify the GCIC service order status before allowing the return. This method calls 'TokoExpertCleaningExternalServicesImpl.checkCancelOrderStatusForExpertCleaningService()' which queries the GCIC API for the current job status.\n\nThe GCIC API returned a response where the 'jobInfoStatus' field was an empty string. The code at line 149 of 'TokoExpertCleaningExternalServicesImpl.java' attempts 'Integer.parseInt(jobInfoStatus.substring(3))' without checking if the string length is at least 3 characters. This threw 'StringIndexOutOfBoundsException: begin 3, end 0, length 0', which propagated up and was caught by the generic exception handler in 'executeReturn()', preventing the return from being created.\n\nThis is a code defect -- the 'substring(3)' call has no null or length check on the 'jobInfoStatus' value returned by the GCIC API. When the GCIC API returns an empty or unexpectedly short status string, the method crashes instead of handling it gracefully.\n\nThe return was subsequently created successfully on 9 Sep at 09:01 via the automated cancellation/return flow. Return request 09234005 completed, the refund of 289 SAR was processed via checkoutDotComApplePay, the external service was cancelled, and the order is now in RETURN_REFUNDED status. No manual remediation is needed for this order.\n\nA code fix should be raised to add a length check on 'jobInfoStatus' before calling 'substring(3)' in 'TokoExpertCleaningExternalServicesImpl.checkCancelOrderStatusForExpertCleaningService()' to handle cases where the GCIC API returns an empty or short status response.\n\nThanks,\n\nAryan\n\n## Remediation\n\nNo remediation needed. The return was successfully created via automated flow on Sep 9. Order is RETURN_REFUNDED.\nA code defect ticket should be raised to fix the missing length check in TokoExpertCleaningExternalServicesImpl.java line 149.",
+        "sections": {
+          "issue": "",
+          "rca": "Order Refund Issue - SA260906-77172120 (Expert Cleaning)\nGenerated: 2026-09-09T15:30:00+09:00\n\nHi [~arjenelle.a@samsung.com] ,\n\nWe checked the logs for order SA260906-77172120 and found the error that prevented return creation in Backoffice on 8 Sep at 14:13.\n\nThe order has an Expert Cleaning standalone service (GCIC_EXPERT_CLEANING_STANDALONE). When a return is initiated from Backoffice, the system calls 'TokoCreateReturnRequestController.executeReturn()' which invokes 'blockExpertCleaningServiceAndExpertCareServiceReturn()' to verify the GCIC service order status before allowing the return. This method calls 'TokoExpertCleaningExternalServicesImpl.checkCancelOrderStatusForExpertCleaningService()' which queries the GCIC API for the current job status.\n\nThe GCIC API returned a response where the 'jobInfoStatus' field was an empty string. The code at line 149 of 'TokoExpertCleaningExternalServicesImpl.java' attempts 'Integer.parseInt(jobInfoStatus.substring(3))' without checking if the string length is at least 3 characters. This threw 'StringIndexOutOfBoundsException: begin 3, end 0, length 0', which propagated up and was caught by the generic exception handler in 'executeReturn()', preventing the return from being created.\n\nThis is a code defect -- the 'substring(3)' call has no null or length check on the 'jobInfoStatus' value returned by the GCIC API. When the GCIC API returns an empty or unexpectedly short status string, the method crashes instead of handling it gracefully.\n\nThe return was subsequently created successfully on 9 Sep at 09:01 via the automated cancellation/return flow. Return request 09234005 completed, the refund of 289 SAR was processed via checkoutDotComApplePay, the external service was cancelled, and the order is now in RETURN_REFUNDED status. No manual remediation is needed for this order.\n\nA code fix should be raised to add a length check on 'jobInfoStatus' before calling 'substring(3)' in 'TokoExpertCleaningExternalServicesImpl.checkCancelOrderStatusForExpertCleaningService()' to handle cases where the GCIC API returns an empty or short status response.\n\nThanks,\n\nAryan\n\n## Remediation\n\nNo remediation needed. The return was successfully created via automated flow on Sep 9. Order is RETURN_REFUNDED.\nA code defect ticket should be raised to fix the missing length check in TokoExpertCleaningExternalServicesImpl.java line 149.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-09T10:44:20.823Z"
+      }
+    },
     {
       "key": "SAHME-3403",
       "summary": "Request to allocate 0.01 value on accessory SKUs",
@@ -336,45 +380,6 @@
       }
     },
     {
-      "key": "SAME-3964",
-      "summary": "Order Refund Issue - SA260906-77172120 (Expert Cleaning)",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Kingdom of Saudi Arabia Maintenance & Enhancements",
-      "projectKey": "SAME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-09T20:33:38.000+0900",
-      "created": "2026-09-09T15:09:47.000+0900",
-      "statusChangedAt": "2026-09-09T15:18:22.186+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nPlease check why we cannot create return for order SA260906-77172120.\n\nBelow error is showing.\n\n!image-2026-09-09-10-09-14-053.png!\n\n!image-2026-09-09-10-10-17-946.png!\n\n \n\nThanks,\n\nArj\n\n~@email",
-      "commentsCount": 1,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-09T20:33:26.782+0900",
-          "snippet": "Hi ~@email ,\n\nWe can see a few Errors in kibana relating to return creation.\n\nWe are working on it. will provide an update soon. \n\nRegards\n\nAryan"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi ~@email ,\n\nWe can see a few Errors in kibana relating to return creation.\n\nWe are working on it. will provide an update soon. \n\nRegards\n\nAryan",
-      "lastCommentDate": "2026-09-09T20:33:26.782+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAME-3964",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Order Refund Issue - SA260906-77172120 (Expert Cleaning)\nGenerated: 2026-09-09T15:30:00+09:00\n\nHi [~arjenelle.a@samsung.com] ,\n\nWe checked the logs for order SA260906-77172120 and found the error that prevented return creation in Backoffice on 8 Sep at 14:13.\n\nThe order has an Expert Cleaning standalone service (GCIC_EXPERT_CLEANING_STANDALONE). When a return is initiated from Backoffice, the system calls 'TokoCreateReturnRequestController.executeReturn()' which invokes 'blockExpertCleaningServiceAndExpertCareServiceReturn()' to verify the GCIC service order status before allowing the return. This method calls 'TokoExpertCleaningExternalServicesImpl.checkCancelOrderStatusForExpertCleaningService()' which queries the GCIC API for the current job status.\n\nThe GCIC API returned a response where the 'jobInfoStatus' field was an empty string. The code at line 149 of 'TokoExpertCleaningExternalServicesImpl.java' attempts 'Integer.parseInt(jobInfoStatus.substring(3))' without checking if the string length is at least 3 characters. This threw 'StringIndexOutOfBoundsException: begin 3, end 0, length 0', which propagated up and was caught by the generic exception handler in 'executeReturn()', preventing the return from being created.\n\nThis is a code defect -- the 'substring(3)' call has no null or length check on the 'jobInfoStatus' value returned by the GCIC API. When the GCIC API returns an empty or unexpectedly short status string, the method crashes instead of handling it gracefully.\n\nThe return was subsequently created successfully on 9 Sep at 09:01 via the automated cancellation/return flow. Return request 09234005 completed, the refund of 289 SAR was processed via checkoutDotComApplePay, the external service was cancelled, and the order is now in RETURN_REFUNDED status. No manual remediation is needed for this order.\n\nA code fix should be raised to add a length check on 'jobInfoStatus' before calling 'substring(3)' in 'TokoExpertCleaningExternalServicesImpl.checkCancelOrderStatusForExpertCleaningService()' to handle cases where the GCIC API returns an empty or short status response.\n\nThanks,\n\nAryan\n\n## Remediation\n\nNo remediation needed. The return was successfully created via automated flow on Sep 9. Order is RETURN_REFUNDED.\nA code defect ticket should be raised to fix the missing length check in TokoExpertCleaningExternalServicesImpl.java line 149.",
-        "sections": {
-          "issue": "",
-          "rca": "Order Refund Issue - SA260906-77172120 (Expert Cleaning)\nGenerated: 2026-09-09T15:30:00+09:00\n\nHi [~arjenelle.a@samsung.com] ,\n\nWe checked the logs for order SA260906-77172120 and found the error that prevented return creation in Backoffice on 8 Sep at 14:13.\n\nThe order has an Expert Cleaning standalone service (GCIC_EXPERT_CLEANING_STANDALONE). When a return is initiated from Backoffice, the system calls 'TokoCreateReturnRequestController.executeReturn()' which invokes 'blockExpertCleaningServiceAndExpertCareServiceReturn()' to verify the GCIC service order status before allowing the return. This method calls 'TokoExpertCleaningExternalServicesImpl.checkCancelOrderStatusForExpertCleaningService()' which queries the GCIC API for the current job status.\n\nThe GCIC API returned a response where the 'jobInfoStatus' field was an empty string. The code at line 149 of 'TokoExpertCleaningExternalServicesImpl.java' attempts 'Integer.parseInt(jobInfoStatus.substring(3))' without checking if the string length is at least 3 characters. This threw 'StringIndexOutOfBoundsException: begin 3, end 0, length 0', which propagated up and was caught by the generic exception handler in 'executeReturn()', preventing the return from being created.\n\nThis is a code defect -- the 'substring(3)' call has no null or length check on the 'jobInfoStatus' value returned by the GCIC API. When the GCIC API returns an empty or unexpectedly short status string, the method crashes instead of handling it gracefully.\n\nThe return was subsequently created successfully on 9 Sep at 09:01 via the automated cancellation/return flow. Return request 09234005 completed, the refund of 289 SAR was processed via checkoutDotComApplePay, the external service was cancelled, and the order is now in RETURN_REFUNDED status. No manual remediation is needed for this order.\n\nA code fix should be raised to add a length check on 'jobInfoStatus' before calling 'substring(3)' in 'TokoExpertCleaningExternalServicesImpl.checkCancelOrderStatusForExpertCleaningService()' to handle cases where the GCIC API returns an empty or short status response.\n\nThanks,\n\nAryan\n\n## Remediation\n\nNo remediation needed. The return was successfully created via automated flow on Sep 9. Order is RETURN_REFUNDED.\nA code defect ticket should be raised to fix the missing length check in TokoExpertCleaningExternalServicesImpl.java line 149.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-09T10:44:20.823Z"
-      }
-    },
-    {
       "key": "SAHME-3424",
       "summary": "SC+ Policy Creation 09.09.2026",
       "status": "In Progress",
@@ -609,7 +614,7 @@
       }
     ],
     "pid": 15232,
-    "uptime": 6981,
+    "uptime": 7019,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -621,7 +626,7 @@
       {
         "pid": 28640,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 257102,
+        "ageSeconds": 257141,
         "status": "running",
         "isChild": false,
         "taskSummary": "the queue fire query isnt working. check if it worked",
@@ -631,7 +636,7 @@
       {
         "pid": 16388,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 80510,
+        "ageSeconds": 80550,
         "status": "running",
         "isChild": false,
         "taskSummary": "only 1",
@@ -641,7 +646,7 @@
       {
         "pid": 35248,
         "cwd": "c:\\windows",
-        "ageSeconds": 80506,
+        "ageSeconds": 80546,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -651,7 +656,7 @@
       {
         "pid": 34636,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 71777,
+        "ageSeconds": 71816,
         "status": "running",
         "isChild": false,
         "taskSummary": "the queue fire query isnt working. check if it worked",
@@ -2559,7 +2564,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-10T06:17:42.058Z",
-      "ageMs": 975092
+      "ageMs": 1014416
     },
     "watchdogLogTail": "[2026-09-10T04:37:31.797Z] Dashboard script: C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\jira-dashboard-server.js\n[2026-09-10T04:37:31.799Z] Bridge not running. Starting fresh.\n[2026-09-10T04:37:31.800Z] Starting bridge.js...\n[2026-09-10T04:37:31.981Z] Bridge started with PID 15232 (restart #1, 1 in last hour)\n[2026-09-10T04:37:31.988Z] Dashboard already running (PID 43784). Adopting.\n[2026-09-10T05:07:46.489Z] DUPLICATE watchdog detected: PID 33308 — killing\n[2026-09-10T06:02:41.288Z] DUPLICATE watchdog detected: PID 29880 — killing\n[2026-09-10T06:07:41.439Z] DUPLICATE watchdog detected: PID 15608 — killing\n[2026-09-10T06:12:41.227Z] DUPLICATE watchdog detected: PID 43604 — killing\n[2026-09-10T06:17:42.056Z] DUPLICATE watchdog detected: PID 43908 — killing"
   },
