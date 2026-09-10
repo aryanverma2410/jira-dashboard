@@ -1,51 +1,7 @@
 {
-  "generatedAt": "2026-09-10T08:58:40.792Z",
-  "totalTickets": 13,
+  "generatedAt": "2026-09-10T08:59:20.408Z",
+  "totalTickets": 12,
   "tickets": [
-    {
-      "key": "MHME-1431",
-      "summary": "Order Stuck - SHIPPED - MA260801-47652001 | MA260714-28260833",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Morocco Maintenance & Enhancements",
-      "projectKey": "MHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-10T17:57:44.000+0900",
-      "created": "2026-09-09T15:19:31.000+0900",
-      "statusChangedAt": "2026-09-09T15:23:10.562+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nPlease check why below orders are stuck in SHIPPED status.\n\nAs per NERP, SIT return has been completed.\n\n \n\nThanks,\n\nArj\n\n~@email",
-      "commentsCount": 2,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-10T17:57:44.887+0900",
-          "snippet": "Hi Arjenelle,\n\nBoth MA260801-47652001 and MA260714-28260833 are stuck in SHIPPED with additionalConsignmentStatus SIT_RETURN_PENDING_BILLING because the NERP billing callback (INVOIC01) and SIT return goods-issue callback (DELVRY03 PGI ZRLA) were never sent to Hybris. The code at TokoGerpWarehouseAd"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-09T23:07:36.878+0900",
-          "snippet": "Hi ~@email ,\n\nThe orders seem stuck without any error logs. \n\nWe are checking further on it.\n\nRegards\n\nAryan"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Arjenelle,\n\nBoth MA260801-47652001 and MA260714-28260833 are stuck in SHIPPED with additionalConsignmentStatus SIT_RETURN_PENDING_BILLING because the NERP billing callback (INVOIC01) and SIT return goods-issue callback (DELVRY03 PGI ZRLA) were never sent to Hybris. The code at TokoGerpWarehouseAd",
-      "lastCommentDate": "2026-09-10T17:57:44.887+0900",
-      "url": "https://jira.secext.samsung.net/browse/MHME-1431",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: MHME-1431\n\n**Ticket**: Order Stuck - SHIPPED - MA260801-47652001 | MA260714-28260833\n**Generated**: 2026-09-09T15:30:00Z\n\nHi [~arjenelle.a@samsung.com] ,\n\nBoth orders are stuck in SHIPPED because the NERP post-goods-receipt billing callback has not been received by Hybris. This is expected system behaviour based on the SIT return handling logic.\n\nMA260801-47652001:\nThe consignment has additionalConsignmentStatus set to SIT_RETURN_PENDING_BILLING. The GERP billing doc (3242151848) was received on Aug 17, and secondGI is populated (20260817000000). However, the consignment is not moving to COMPLETED because the config `toko.gerp.check.sit.billing.ma` is set to true, which requires all SIT entries to have a billing number AND the process parameters BILLING-CALLBACK-RECEIVED and SIT-RETURN-1ST-GI-CALLBACK-RECEIVED to be set. Neither of these process parameters exists on the consignment process, meaning the NERP post-goods-receipt callback was never received by Hybris.\n\nMA260714-28260833:\nSame situation. The consignment has additionalConsignmentStatus set to SIT_RETURN_PENDING_BILLING. GERP billing doc (3238774650) was received on Jul 24, and secondGI is populated (20260723000000). The same config checks apply and the same process parameters are missing.\n\nThe code path is in TokoGerpWarehouseAdapterImpl.updateConsignmentForDO(). When the system detects a SIT return on the consignment, it logs \"contains SIT Return. Marking it as COMPLETED\" and then checks two conditions before actually updating the status:\n1. Whether all SIT entries have a gerpBillingNr (the billing check, enabled for MA via `toko.gerp.check.sit.billing.ma=true`)\n2. Whether the process parameters BILLING-CALLBACK-RECEIVED and SIT-RETURN-1ST-GI-CALLBACK-RECEIVED are both true (the 1st GI wait check, enabled for MA via `toko.sit.wait.for.1st.gi.enabled.ma=true`)\n\nSince the NERP post-goods-receipt callback never arrived, these process parameters were never set, so the inner condition fails. The consignment status stays SHIPPED and additionalConsignmentStatus is set to SIT_RETURN_PENDING_BILLING. The consignment process loops every 30 minutes, re-evaluating and getting the same result each time.\n\nThis is the same design documented in SED-208963 — SIT return orders should remain in SHIPPED status until the post-goods-receipt is confirmed from NERP. The consignments are behaving as designed.\n\nKindly check with the NERP team whether the post-goods-receipt callback was sent for these two orders. If NERP confirms the callback was sent but Hybris did not process it, we can investigate further. If the callback was never sent, these orders will remain in SHIPPED until it is.\n\nThanks,\nAryan.\n\n## Remediation\n\nNo Hybris-side remediation is applicable at this time. The orders are behaving as designed per the SIT return handling logic. The NERP team needs to confirm whether the post-goods-receipt callback was sent. If NERP confirms it was sent but not processed by Hybris, a deeper investigation is needed. If NERP needs to resend the callback, the orders will automatically progress to COMPLETED once the process parameters are set.\n\nIf manual intervention is required (NERP confirms callback was sent but lost), a Groovy script can be written to set the missing process parameters (BILLING-CALLBACK-RECEIVED and SIT-RETURN-1ST-GI-CALLBACK-RECEIVED) on the consignment processes and trigger the isShippedComplete transition. This would follow the same pattern as PC-52596 (push order from SHIPPED).",
-        "sections": {
-          "issue": "",
-          "rca": "# RCA: MHME-1431\n\n**Ticket**: Order Stuck - SHIPPED - MA260801-47652001 | MA260714-28260833\n**Generated**: 2026-09-09T15:30:00Z\n\nHi [~arjenelle.a@samsung.com] ,\n\nBoth orders are stuck in SHIPPED because the NERP post-goods-receipt billing callback has not been received by Hybris. This is expected system behaviour based on the SIT return handling logic.\n\nMA260801-47652001:\nThe consignment has additionalConsignmentStatus set to SIT_RETURN_PENDING_BILLING. The GERP billing doc (3242151848) was received on Aug 17, and secondGI is populated (20260817000000). However, the consignment is not moving to COMPLETED because the config `toko.gerp.check.sit.billing.ma` is set to true, which requires all SIT entries to have a billing number AND the process parameters BILLING-CALLBACK-RECEIVED and SIT-RETURN-1ST-GI-CALLBACK-RECEIVED to be set. Neither of these process parameters exists on the consignment process, meaning the NERP post-goods-receipt callback was never received by Hybris.\n\nMA260714-28260833:\nSame situation. The consignment has additionalConsignmentStatus set to SIT_RETURN_PENDING_BILLING. GERP billing doc (3238774650) was received on Jul 24, and secondGI is populated (20260723000000). The same config checks apply and the same process parameters are missing.\n\nThe code path is in TokoGerpWarehouseAdapterImpl.updateConsignmentForDO(). When the system detects a SIT return on the consignment, it logs \"contains SIT Return. Marking it as COMPLETED\" and then checks two conditions before actually updating the status:\n1. Whether all SIT entries have a gerpBillingNr (the billing check, enabled for MA via `toko.gerp.check.sit.billing.ma=true`)\n2. Whether the process parameters BILLING-CALLBACK-RECEIVED and SIT-RETURN-1ST-GI-CALLBACK-RECEIVED are both true (the 1st GI wait check, enabled for MA via `toko.sit.wait.for.1st.gi.enabled.ma=true`)\n\nSince the NERP post-goods-receipt callback never arrived, these process parameters were never set, so the inner condition fails. The consignment status stays SHIPPED and additionalConsignmentStatus is set to SIT_RETURN_PENDING_BILLING. The consignment process loops every 30 minutes, re-evaluating and getting the same result each time.\n\nThis is the same design documented in SED-208963 — SIT return orders should remain in SHIPPED status until the post-goods-receipt is confirmed from NERP. The consignments are behaving as designed.\n\nKindly check with the NERP team whether the post-goods-receipt callback was sent for these two orders. If NERP confirms the callback was sent but Hybris did not process it, we can investigate further. If the callback was never sent, these orders will remain in SHIPPED until it is.\n\nThanks,\nAryan.\n\n## Remediation\n\nNo Hybris-side remediation is applicable at this time. The orders are behaving as designed per the SIT return handling logic. The NERP team needs to confirm whether the post-goods-receipt callback was sent. If NERP confirms it was sent but not processed by Hybris, a deeper investigation is needed. If NERP needs to resend the callback, the orders will automatically progress to COMPLETED once the process parameters are set.\n\nIf manual intervention is required (NERP confirms callback was sent but lost), a Groovy script can be written to set the missing process parameters (BILLING-CALLBACK-RECEIVED and SIT-RETURN-1ST-GI-CALLBACK-RECEIVED) on the consignment processes and trigger the isShippedComplete transition. This would follow the same pattern as PC-52596 (push order from SHIPPED).",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-09T10:55:14.901Z"
-      }
-    },
     {
       "key": "SAHME-3425",
       "summary": "Request to process orders to Completed status",
@@ -726,7 +682,7 @@
       }
     ],
     "pid": 15232,
-    "uptime": 15669,
+    "uptime": 15704,
     "failures": 0,
     "activeJobCount": 2,
     "jobs": [
@@ -735,14 +691,14 @@
         "issueTitle": "Investigate ticket SAHME-3429",
         "snippet": "Auto-triggered investigation for new ticket SAHME-3429.\n\nTicket: SAHME-3429\nSummary: Request to allocate 0.01 value on a",
         "pid": 28976,
-        "elapsed": 1061
+        "elapsed": 1096
       },
       {
         "issueNum": 179,
         "issueTitle": "Investigate ticket SAHME-3425",
         "snippet": "Auto-triggered investigation for new ticket SAHME-3425.\n\nTicket: SAHME-3425\nSummary: Request to process orders to Comple",
         "pid": 36556,
-        "elapsed": 1014
+        "elapsed": 1049
       }
     ],
     "startTime": "2026-09-10T04:37:32.308Z",
@@ -753,7 +709,7 @@
       {
         "pid": 16388,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 89198,
+        "ageSeconds": 89239,
         "status": "running",
         "isChild": false,
         "taskSummary": "caveman ultra",
@@ -763,7 +719,7 @@
       {
         "pid": 43488,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 1442,
+        "ageSeconds": 1483,
         "status": "running",
         "isChild": false,
         "taskSummary": "how do we remediate it now?",
@@ -773,7 +729,7 @@
       {
         "pid": 25588,
         "cwd": "c:\\windows",
-        "ageSeconds": 1218,
+        "ageSeconds": 1258,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -783,7 +739,7 @@
       {
         "pid": 16556,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 1122,
+        "ageSeconds": 1163,
         "status": "running",
         "isChild": false,
         "taskSummary": "caveman ultra",
@@ -2717,7 +2673,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-10T07:37:43.733Z",
-      "ageMs": 4861037
+      "ageMs": 4901690
     },
     "watchdogLogTail": "[2026-09-10T04:37:31.800Z] Starting bridge.js...\n[2026-09-10T04:37:31.981Z] Bridge started with PID 15232 (restart #1, 1 in last hour)\n[2026-09-10T04:37:31.988Z] Dashboard already running (PID 43784). Adopting.\n[2026-09-10T05:07:46.489Z] DUPLICATE watchdog detected: PID 33308 — killing\n[2026-09-10T06:02:41.288Z] DUPLICATE watchdog detected: PID 29880 — killing\n[2026-09-10T06:07:41.439Z] DUPLICATE watchdog detected: PID 15608 — killing\n[2026-09-10T06:12:41.227Z] DUPLICATE watchdog detected: PID 43604 — killing\n[2026-09-10T06:17:42.056Z] DUPLICATE watchdog detected: PID 43908 — killing\n[2026-09-10T06:57:42.501Z] DUPLICATE watchdog detected: PID 33128 — killing\n[2026-09-10T07:37:43.730Z] DUPLICATE watchdog detected: PID 23828 — killing",
     "jobOutputs": {}
@@ -2727,7 +2683,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-10T08:58:07.465Z",
+      "lastCheck": "2026-09-10T08:59:07.676Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -2736,7 +2692,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-10T08:58:07.465Z",
+      "lastCheck": "2026-09-10T08:59:07.676Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -2745,9 +2701,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-10T08:58:07.465Z",
+      "lastCheck": "2026-09-10T08:59:07.676Z",
       "downSince": "2026-09-10T01:02:52.771Z",
-      "downDuration": 28514694,
+      "downDuration": 28574905,
       "alert": true
     }
   ],
