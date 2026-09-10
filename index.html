@@ -1221,6 +1221,9 @@ function updateCard(card,t,ch){
   var se=card.querySelector('[data-field="summary"]');if(se&&se.textContent!==t.summary)se.textContent=t.summary;
   var le=card.querySelector('[data-field="last-comment"]');var pv='';if(t.lastCommentBy&&t.lastCommentSnippet)pv='@'+t.lastCommentBy+': '+t.lastCommentSnippet;if(le&&le.textContent!==pv)le.textContent=pv;
   var bg=card.querySelector('.status-badge');if(bg){var sc=statusClass(t.status,t.statusCategory);bg.className='status-badge '+sc;if(bg.textContent!==t.status)bg.textContent=t.status}
+  // Toggle pinned class + star button
+  if(isPinned(t.key)){card.classList.add('pinned')}else{card.classList.remove('pinned')}
+  var pinBtn=card.querySelector('.pin-star');if(pinBtn){pinBtn.classList.toggle('active',isPinned(t.key));pinBtn.textContent=isPinned(t.key)?'\u2605':'\u2606'}
   // Toggle queued + stale classes for existing cards
   if(isQueuedTicket(t.key)){card.classList.add('queued')}else{card.classList.remove('queued')}
   // F_V: Update investigating badge
