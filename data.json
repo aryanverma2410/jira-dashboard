@@ -1,7 +1,51 @@
 {
-  "generatedAt": "2026-09-10T11:12:28.597Z",
+  "generatedAt": "2026-09-10T11:13:07.065Z",
   "totalTickets": 10,
   "tickets": [
+    {
+      "key": "PC-53902",
+      "summary": "Script to retrigger clawback authorization for declined Checkout.com unscheduled payments",
+      "status": "To do",
+      "statusCategory": "To Do",
+      "priority": "Low",
+      "project": "PROD Change",
+      "projectKey": "PC",
+      "issuetype": "Hybris Platform",
+      "updated": "2026-09-10T20:12:32.000+0900",
+      "created": "2026-09-10T18:09:54.000+0900",
+      "statusChangedAt": "",
+      "assignedToMeAt": "",
+      "description": "For orders mentioned in ticket : AEME-6540. Orders AE260725-39348428 (2195 AED) and AE260808-54285973 (2230 AED) have clawback authorization entries in ERROR state with PROCESSOR_DECLINE from Checkout.com.. Script restarts the clawback business process at reAuthorizeIfNeeded node to retry the unsche",
+      "commentsCount": 1,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-09-10T20:12:32.787+0900",
+          "snippet": "Hi Team,\n\nS2 staging test completed for the clawback retrigger script. The script was tested on 4 orders with clawback processes in ERROR state. Below is the before and after summary.\n\nBefore Script Execution\n||Order Code||Clawback Amount||Process State||Last Auth PTE Status||PTE Time||\n|AE250730-96"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Team,\n\nS2 staging test completed for the clawback retrigger script. The script was tested on 4 orders with clawback processes in ERROR state. Below is the before and after summary.\n\nBefore Script Execution\n||Order Code||Clawback Amount||Process State||Last Auth PTE Status||PTE Time||\n|AE250730-96",
+      "lastCommentDate": "2026-09-10T20:12:32.787+0900",
+      "url": "https://jira.secext.samsung.net/browse/PC-53902",
+      "linkedTickets": [
+        {
+          "key": "AEME-6540",
+          "summary": "[PROD] | Manual Chargeback || 07-Sep",
+          "status": "QA Server Review",
+          "statusCategory": "In Progress",
+          "relation": "is blocked by",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "none",
+        "excerpt": "",
+        "source": "",
+        "foundAt": "",
+        "issueNumber": null
+      }
+    },
     {
       "key": "AEME-6535",
       "summary": "[PROD] | Update SC+ Automated Report",
@@ -53,50 +97,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-03T13:39:50.839Z"
-      }
-    },
-    {
-      "key": "PC-53902",
-      "summary": "Script to retrigger clawback authorization for declined Checkout.com unscheduled payments",
-      "status": "To do",
-      "statusCategory": "To Do",
-      "priority": "Low",
-      "project": "PROD Change",
-      "projectKey": "PC",
-      "issuetype": "Hybris Platform",
-      "updated": "2026-09-10T20:10:37.000+0900",
-      "created": "2026-09-10T18:09:54.000+0900",
-      "statusChangedAt": "",
-      "assignedToMeAt": "",
-      "description": "For orders mentioned in ticket : AEME-6540. Orders AE260725-39348428 (2195 AED) and AE260808-54285973 (2230 AED) have clawback authorization entries in ERROR state with PROCESSOR_DECLINE from Checkout.com.. Script restarts the clawback business process at reAuthorizeIfNeeded node to retry the unsche",
-      "commentsCount": 1,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-10T20:10:37.218+0900",
-          "snippet": "Hi Team,\n\nS2 staging test completed for the clawback retrigger script. The script was tested on 4 orders with clawback processes in ERROR state. Below is the before and after summary.\n\nBefore Script Execution\n\n||Order Code||Clawback Amount||Process State||Last Auth PTE Status||PTE Time||\n|AE250730-9"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Team,\n\nS2 staging test completed for the clawback retrigger script. The script was tested on 4 orders with clawback processes in ERROR state. Below is the before and after summary.\n\nBefore Script Execution\n\n||Order Code||Clawback Amount||Process State||Last Auth PTE Status||PTE Time||\n|AE250730-9",
-      "lastCommentDate": "2026-09-10T20:10:37.218+0900",
-      "url": "https://jira.secext.samsung.net/browse/PC-53902",
-      "linkedTickets": [
-        {
-          "key": "AEME-6540",
-          "summary": "[PROD] | Manual Chargeback || 07-Sep",
-          "status": "QA Server Review",
-          "statusCategory": "In Progress",
-          "relation": "is blocked by",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "none",
-        "excerpt": "",
-        "source": "",
-        "foundAt": "",
-        "issueNumber": null
       }
     },
     {
@@ -654,7 +654,7 @@
       }
     ],
     "pid": 49844,
-    "uptime": 2646,
+    "uptime": 2686,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -666,7 +666,7 @@
       {
         "pid": 16388,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 97226,
+        "ageSeconds": 97264,
         "status": "running",
         "isChild": false,
         "taskSummary": "caveman ultra",
@@ -676,7 +676,7 @@
       {
         "pid": 43488,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 9470,
+        "ageSeconds": 9508,
         "status": "running",
         "isChild": false,
         "taskSummary": "remove observation, add salutation and regards with \"Hi Team,\" and post it on PC ticket",
@@ -686,7 +686,7 @@
       {
         "pid": 25588,
         "cwd": "c:\\windows",
-        "ageSeconds": 9245,
+        "ageSeconds": 9284,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -696,7 +696,7 @@
       {
         "pid": 16556,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 9150,
+        "ageSeconds": 9188,
         "status": "running",
         "isChild": false,
         "taskSummary": "caveman ultra",
@@ -2634,7 +2634,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-10T10:28:19.988Z",
-      "ageMs": 2651628
+      "ageMs": 2690864
     },
     "watchdogLogTail": "[2026-09-10T06:07:41.439Z] DUPLICATE watchdog detected: PID 15608 — killing\n[2026-09-10T06:12:41.227Z] DUPLICATE watchdog detected: PID 43604 — killing\n[2026-09-10T06:17:42.056Z] DUPLICATE watchdog detected: PID 43908 — killing\n[2026-09-10T06:57:42.501Z] DUPLICATE watchdog detected: PID 33128 — killing\n[2026-09-10T07:37:43.730Z] DUPLICATE watchdog detected: PID 23828 — killing\n[2026-09-10T10:02:41.706Z] DUPLICATE watchdog detected: PID 19016 — killing\n[2026-09-10T10:28:08.768Z] RESTART NEEDED: No heartbeat file found\n[2026-09-10T10:28:12.101Z] Killed bridge PID 15232\n[2026-09-10T10:28:19.801Z] Starting bridge.js...\n[2026-09-10T10:28:19.986Z] Bridge started with PID 49844 (restart #2, 1 in last hour)"
   },
