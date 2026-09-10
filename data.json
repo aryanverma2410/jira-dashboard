@@ -1,51 +1,7 @@
 {
-  "generatedAt": "2026-09-10T09:43:49.784Z",
-  "totalTickets": 10,
+  "generatedAt": "2026-09-10T09:44:30.015Z",
+  "totalTickets": 9,
   "tickets": [
-    {
-      "key": "SAHME-3399",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "South Africa Maintenance & Enhancements",
-      "projectKey": "SAHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-10T18:43:42.000+0900",
-      "created": "2026-08-26T21:54:33.000+0900",
-      "statusChangedAt": "2026-08-26T21:54:34.833+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|ZA260825-68383788|2026/08/25|WAITING_FOR_SEND_FINANCIAL|\n|ZA260822-65638688|2026/08/22|WAITING_FOR_SEND_FINANCIAL|\n|ZA260822-65856992|2026/08/22|WAITING_FOR_SEND_FINANCIA",
-      "commentsCount": 3,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-10T18:43:42.851+0900",
-          "snippet": "Hi ~@email ,\n\nCould you please update the stock level for ZA260822-65638688\n\nWe can retrigger the order process then to push the order forward\n\nRegards\n\nAryan"
-        },
-        {
-          "author": "Lerato Mbambisa",
-          "date": "2026-09-10T00:00:30.275+0900",
-          "snippet": "Good day ~@email ,\n\nZA260825-68383788 -  Completed status\n\nZA260822-65638688 - Waiting for send financials - awaiting stock transfer\n\nZA260822-65856992 - Cancelled.\n\nKind regards,\n\nLerato"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi ~@email ,\n\nCould you please update the stock level for ZA260822-65638688\n\nWe can retrigger the order process then to push the order forward\n\nRegards\n\nAryan",
-      "lastCommentDate": "2026-09-10T18:43:42.851+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAHME-3399",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Ticket Summary: Stuck order on Hybris (3 ZA-region orders at WAITING_FOR_SEND_FINANCIAL)\r\nGenerated: 2026-09-10T10:15:00+09:00\r\n\r\nIssue:\r\nThree South Africa region orders were flagged as stuck at WAITING_FOR_SEND_FINANCIAL status on 2026-08-26. DB verification on 2026-09-10 confirmed that two of the three orders have already self-resolved. ZA260825-68383788 progressed to COMPLETED with its consignment delivered and GERP billing completed on 2026-09-07. ZA260822-65856992 was cancelled and refunded (REFUND_FOLLOW_ON accepted on 2026-09-09). Only ZA260822-65638688 remains genuinely stuck.\r\n\r\nRCA:\r\nThe order ZA260822-65638688 was placed on 2026-08-22 with payment mode za-PJNPaymentMode, total 5399.10 ZAR. Payment was authorised and captured successfully (AUTHORIZATION and CAPTURE both ACCEPTED). The order process (order-process-v25-69) advanced through checkout, fraud check, payment, and financial update stages without error. The process reached the splitOrder action, which calls OrderSplittingService.splitOrderForConsignment to allocate order entries to warehouse consignments based on stock availability and warehouse configuration for the za store.\r\n\r\nZero consignments were created. The DB confirms no consignment records, no consignment entries, and no consignment processes exist for this order. The order has product entries (the splitOrder code iterates entries that have no consignment allocations and are not DEAD or digital delivery), but the OOTB Hybris OrderSplittingService could not assign them to any warehouse because the product is out of stock across all configured warehouses for the za site.\r\n\r\nAfter splitOrder returned an empty consignment list, the process moved to the waitForWarehouseSubprocessEnd wait node. This node waits for a ConsignmentSubprocessEnd event. Since no consignment subprocesses were started (zero consignments), this event will never fire. The process then cycles between waitForWarehouseSubprocessEnd and isProcessCompleted, which keeps returning NOK because no subprocess has completed. The task logs show 50+ splitOrder entries, indicating the process engine has retried this node multiple times. The order status remains WAITING_FOR_SEND_FINANCIAL because splitOrderAction never reached its final line (setOrderStatus ORDER_SPLIT) on the first execution, or the status was set before splitOrder and never updated.\r\n\r\nLerato Mbambisa confirmed in her comment on 2026-09-10 that this order is \"awaiting stock transfer\", which aligns with the DB evidence of zero consignments due to stock unavailability.\r\n\r\nPossible remediation:\r\nThis is a stock allocation issue, not a Hybris platform bug. Two options exist:\r\n\r\nOption A (preferred): The regional team arranges stock transfer to a ZA warehouse for the product on this order. Once stock is available, restart the order process from the splitOrder action so that OrderSplittingService can create consignments and the order proceeds to fulfillment.\r\n\r\nOption B: If stock cannot be transferred, cancel the order and process a full refund to the customer. The payment was captured (5399.10 ZAR), so a REFUND_FOLLOW_ON transaction would be needed, similar to what was done for ZA260822-65856992.\r\n\r\nNo HAC script is required for either option. The process restart in Option A can be done via HAC Groovy script if needed, but the prerequisite (stock availability) must be confirmed first by the regional team. This order should not be remediated from the Hybris side until the stock situation is clarified.",
-        "sections": {
-          "issue": "Three South Africa region orders were flagged as stuck at WAITING_FOR_SEND_FINANCIAL status on 2026-08-26. DB verification on 2026-09-10 confirmed that two of the three orders have already self-resolved. ZA260825-68383788 progressed to COMPLETED with its consignment delivered and GERP billing completed on 2026-09-07. ZA260822-65856992 was cancelled and refunded (REFUND_FOLLOW_ON accepted on 2026-09-09). Only ZA260822-65638688 remains genuinely stuck.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-10T05:22:51.881Z"
-      }
-    },
     {
       "key": "AEME-6540",
       "summary": "[PROD] | Manual Chargeback || 07-Sep",
@@ -167,9 +123,15 @@
       "url": "https://jira.secext.samsung.net/browse/SAHME-3429",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-09-10T08:40:49.824Z"
+        "status": "found",
+        "excerpt": "Request to allocate 0.01 value on accessory SKU\r\nGenerated: 2026-09-10T18:30:00.000Z\r\n\r\nIssue:\r\nOrder ZA260810-56240515 contains a Free-of-Charge (FOC) accessory SKU EF-EF776CWEGWW added via a promotional rule. The accessory entry has a basePrice of 995.00 but a totalPrice of 0.00 (zero) due to the promotion discount. NERP (the SAP-based order management system) rejects line items with zero total value and cannot create a Sales Order for the accessory consignment. This blocks the _1 consignment from progressing to NERP.\r\n\r\nRCA:\r\nThis is a recurring issue on the South Africa (ZA) store. When ZA creates promotion rules with FOC SKUs, the promotion engine sets the accessory entry totalPrice to 0.00. NERP cannot process zero-value line items and returns a rejection, leaving the _1 consignment stuck at the sendConsignmentToExternalERP step.\r\n\r\nDB verification confirms:\r\n- Entry 0 (main product): SM-F776BZWOAFA, qty 1, basePrice 26999.00, totalPrice 24509.04\r\n- Entry 1 (FOC accessory): EF-EF776CWEGWW, qty 1, basePrice 995.00, totalPrice 0.01\r\n\r\nThe accessory totalPrice already shows 0.01 in the database, which indicates the price adjustment may have been partially applied. However, the _1 consignment process has not been retriggered, so NERP has not received the updated order data.\r\n\r\nThis is the same pattern resolved in SAHME-3421, SAHME-3403, SAHME-3392, and SAHME-3386. SAHME-3422 is an open ticket requesting a permanent fix for the ZA promotion FOC issue.\r\n\r\nPossible remediation:\r\n1. Verify that the FOC accessory entry (EF-EF776CWEGWW) totalPrice is set to 0.01. If still 0.00, update it to 0.01.\r\n2. Deduct 0.01 from the main product entry (SM-F776BZWOAFA) totalPrice to keep the order total unchanged. Current main entry totalPrice is 24509.04; after deduction it should be 24509.03.\r\n3. Retrigger the _1 consignment process from the sendConsignmentToExternalERP action so NERP receives the updated order with the non-zero accessory value.\r\n4. This follows the same remediation approach confirmed in SAHME-3421 (Fixed) under the approved PC ticket.\r\n\r\n## Remediation\r\nRemediation approach: Update FOC accessory entry totalPrice to 0.01, deduct 0.01 from main product entry totalPrice, retrigger _1 consignment process from sendConsignmentToExternalERP. This is the same approach used in SAHME-3421 (Fixed). A reusable PC ticket should be identified or the existing one from SAHME-3421 reused.",
+        "sections": {
+          "issue": "Order ZA260810-56240515 contains a Free-of-Charge (FOC) accessory SKU EF-EF776CWEGWW added via a promotional rule. The accessory entry has a basePrice of 995.00 but a totalPrice of 0.00 (zero) due to the promotion discount. NERP (the SAP-based order management system) rejects line items with zero total value and cannot create a Sales Order for the accessory consignment. This blocks the _1 consignment from progressing to NERP.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-10T09:43:51.819Z"
       }
     },
     {
@@ -617,7 +579,7 @@
       }
     ],
     "pid": 15232,
-    "uptime": 18373,
+    "uptime": 18415,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -626,7 +588,7 @@
         "issueTitle": "Investigate ticket SAHME-3429",
         "snippet": "Auto-triggered investigation for new ticket SAHME-3429.\n\nTicket: SAHME-3429\nSummary: Request to allocate 0.01 value on a",
         "pid": 28976,
-        "elapsed": 3766
+        "elapsed": 3807
       }
     ],
     "startTime": "2026-09-10T04:37:32.308Z",
@@ -637,7 +599,7 @@
       {
         "pid": 16388,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 91907,
+        "ageSeconds": 91948,
         "status": "running",
         "isChild": false,
         "taskSummary": "caveman ultra",
@@ -647,7 +609,7 @@
       {
         "pid": 43488,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 4151,
+        "ageSeconds": 4192,
         "status": "running",
         "isChild": false,
         "taskSummary": "any other ways to optimise it further?",
@@ -657,7 +619,7 @@
       {
         "pid": 25588,
         "cwd": "c:\\windows",
-        "ageSeconds": 3927,
+        "ageSeconds": 3967,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -667,7 +629,7 @@
       {
         "pid": 16556,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 3831,
+        "ageSeconds": 3872,
         "status": "running",
         "isChild": false,
         "taskSummary": "caveman ultra",
@@ -2603,7 +2565,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-10T07:37:43.733Z",
-      "ageMs": 7570199
+      "ageMs": 7610743
     },
     "watchdogLogTail": "[2026-09-10T04:37:31.800Z] Starting bridge.js...\n[2026-09-10T04:37:31.981Z] Bridge started with PID 15232 (restart #1, 1 in last hour)\n[2026-09-10T04:37:31.988Z] Dashboard already running (PID 43784). Adopting.\n[2026-09-10T05:07:46.489Z] DUPLICATE watchdog detected: PID 33308 — killing\n[2026-09-10T06:02:41.288Z] DUPLICATE watchdog detected: PID 29880 — killing\n[2026-09-10T06:07:41.439Z] DUPLICATE watchdog detected: PID 15608 — killing\n[2026-09-10T06:12:41.227Z] DUPLICATE watchdog detected: PID 43604 — killing\n[2026-09-10T06:17:42.056Z] DUPLICATE watchdog detected: PID 43908 — killing\n[2026-09-10T06:57:42.501Z] DUPLICATE watchdog detected: PID 33128 — killing\n[2026-09-10T07:37:43.730Z] DUPLICATE watchdog detected: PID 23828 — killing",
     "jobOutputs": {}
@@ -2613,7 +2575,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-10T09:43:10.096Z",
+      "lastCheck": "2026-09-10T09:44:10.137Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -2622,7 +2584,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-10T09:43:10.096Z",
+      "lastCheck": "2026-09-10T09:44:10.137Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -2631,9 +2593,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-10T09:43:10.096Z",
+      "lastCheck": "2026-09-10T09:44:10.137Z",
       "downSince": "2026-09-10T01:02:52.771Z",
-      "downDuration": 31217325,
+      "downDuration": 31277366,
       "alert": true
     }
   ],
