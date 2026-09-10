@@ -1,7 +1,106 @@
 {
-  "generatedAt": "2026-09-10T09:09:43.496Z",
-  "totalTickets": 12,
+  "generatedAt": "2026-09-10T09:10:21.830Z",
+  "totalTickets": 13,
   "tickets": [
+    {
+      "key": "PC-53902",
+      "summary": "Script to retrigger clawback authorization for declined Checkout.com unscheduled payments",
+      "status": "To do",
+      "statusCategory": "To Do",
+      "priority": "Low",
+      "project": "PROD Change",
+      "projectKey": "PC",
+      "issuetype": "Hybris Platform",
+      "updated": "2026-09-10T18:09:58.000+0900",
+      "created": "2026-09-10T18:09:54.000+0900",
+      "statusChangedAt": "",
+      "assignedToMeAt": "",
+      "description": "For orders mentioned in ticket : AEME-6540. Orders AE260725-39348428 (2195 AED) and AE260808-54285973 (2230 AED) have clawback authorization entries in ERROR state with PROCESSOR_DECLINE from Checkout.com. Investigation confirmed paymentInfo is valid and not the root cause. Script restarts the clawb",
+      "commentsCount": 0,
+      "recentComments": [],
+      "lastCommentBy": "",
+      "lastCommentSnippet": "",
+      "lastCommentDate": "",
+      "url": "https://jira.secext.samsung.net/browse/PC-53902",
+      "linkedTickets": [
+        {
+          "key": "AEME-6540",
+          "summary": "[PROD] | Manual Chargeback || 07-Sep",
+          "status": "QA Server Review",
+          "statusCategory": "In Progress",
+          "relation": "is blocked by",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "none",
+        "excerpt": "",
+        "source": "",
+        "foundAt": "",
+        "issueNumber": null
+      }
+    },
+    {
+      "key": "AEME-6540",
+      "summary": "[PROD] | Manual Chargeback || 07-Sep",
+      "status": "QA Server Review",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "UAE Maintenance & Enhancements",
+      "projectKey": "AEME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-09-10T18:09:58.000+0900",
+      "created": "2026-09-07T14:47:06.000+0900",
+      "statusChangedAt": "2026-09-08T19:58:17.387+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\n \n\nPlease manual trigger the trade in chargeback amount for the below order\n|AE260808-54285973|SM-F971BZKIMEA|AE-080826-719312|REJECTED|2230|\n|AE260725-39348428|SM-F971BZGOMEA|AE-280726-713980|REJECTED|2195|\n\n \n\nRegards\n\nJaffar",
+      "commentsCount": 2,
+      "recentComments": [
+        {
+          "author": "Jaffar Ali",
+          "date": "2026-09-09T21:12:31.933+0900",
+          "snippet": "Hi ~@email \n\n \n\nPlease proceed with manual chargeback and confirm once done.\n\n \n|AE260808-54285973|SM-F971BZKIMEA|AE-080826-719312|REJECTED|2230|\n|AE260725-39348428|SM-F971BZGOMEA|AE-280726-713980|REJECTED|2195|\n\n \n\nRegards\n\nJaffar"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-09-09T22:02:36.079+0900",
+          "snippet": "Hi ~@email ,\n\nInvestigated both orders and found the root cause for the clawback failure.\n\nWhen the Northladder trade-in was received (status RECEIVED), the system initiated ClawbackProcess for the clawback amounts (2230 AED for AE260808-54285973, 2195 AED for AE260725-39348428). The ClawbackProcess"
+        }
+      ],
+      "lastCommentBy": "Jaffar Ali",
+      "lastCommentSnippet": "Hi ~@email \n\n \n\nPlease proceed with manual chargeback and confirm once done.\n\n \n|AE260808-54285973|SM-F971BZKIMEA|AE-080826-719312|REJECTED|2230|\n|AE260725-39348428|SM-F971BZGOMEA|AE-280726-713980|REJECTED|2195|\n\n \n\nRegards\n\nJaffar",
+      "lastCommentDate": "2026-09-09T21:12:31.933+0900",
+      "url": "https://jira.secext.samsung.net/browse/AEME-6540",
+      "linkedTickets": [
+        {
+          "key": "PC-53768",
+          "summary": "Script to copy paymentInfo to clawback PaymentTransaction and retrigger ClawbackProcess",
+          "status": "To do",
+          "statusCategory": "To Do",
+          "relation": "blocks",
+          "assignee": null
+        },
+        {
+          "key": "PC-53902",
+          "summary": "Script to retrigger clawback authorization for declined Checkout.com unscheduled payments",
+          "status": "To do",
+          "statusCategory": "To Do",
+          "relation": "blocks",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "# RCA: AEME-6540\n\n[PROD] | Manual Chargeback || 07-Sep\nGenerated: 2026-09-08T09:20:00Z\n\nHi Jaffar ,\n\nBoth orders AE260808-54285973 and AE260725-39348428 are in COMPLETED status with all order and consignment processes succeeded. The trade-in external service (NORTHLADDER) is in CANCELLED status, which confirms the trade-in devices were rejected by NorthLadder.\n\nThe clawback (chargeback) process was already auto-triggered by the NorthLadder status check cronjob (TokoNorthLadderStatusCheckJob) when it detected the REJECTED appraisal status. Both orders have a ClawbackProcess running with process definition clawback-process-v23, and both are currently stuck in RUNNING state with no end message.\n\nThe clawback payment authorization was attempted via Checkout.com but was declined. For order AE260808-54285973, the authorization attempt failed with ERROR status at 2026-09-01 02:01. For order AE260725-39348428, the authorization attempt failed with ERROR status at 2026-08-23 02:01. The error indicates the card used for the original purchase was declined when Checkout.com attempted to authorize the clawback debit.\n\nA similar issue was previously reported in SED-74835 (AEME-3427) where the clawback process failed at the reAuthorizeIfNeeded action because paymentInfo was null and Checkout.com could not re-authorize the card for the clawback amount. The resolution there was to use a different credit card.\n\nThe ClawbackProcess is stuck in RUNNING state because the payment authorization failed but the process never transitioned to ERROR or a retry state. The process is effectively waiting for a successful payment authorization that will not come without manual intervention.\n\nTo remediate this, a Groovy script can be written to re-trigger the clawback process from the takeClawBackPaymentAction step, which will attempt a fresh payment authorization via Checkout.com for the clawback amounts (2230 AED for AE260808-54285973 and 2195 AED for AE260725-39348428). If the card is still declined, the customer would need to provide an alternative payment method.\n\nNo reusable PC ticket exists for clawback remediation. Would you like me to write a remediation script for this?\n\nThanks,\nAryan.\n\n## Remediation\n\n- **Remediation type**: Clawback process re-trigger (new type — no reusable PC ticket exists)\n- **PC ticket**: None yet (pending user confirmation)\n- **Script**: Not yet created (pending user confirmation)\n- **Similar past ticket**: SED-74835 (AEME-3427) — clawback failed at reAuthorizeIfNeeded due to paymentInfo null\n- **Orders**: AE260808-54285973 (clawback amount 2230 AED), AE260725-39348428 (clawback amount 2195 AED)",
+        "sections": {
+          "issue": "",
+          "rca": "# RCA: AEME-6540\n\n[PROD] | Manual Chargeback || 07-Sep\nGenerated: 2026-09-08T09:20:00Z\n\nHi Jaffar ,\n\nBoth orders AE260808-54285973 and AE260725-39348428 are in COMPLETED status with all order and consignment processes succeeded. The trade-in external service (NORTHLADDER) is in CANCELLED status, which confirms the trade-in devices were rejected by NorthLadder.\n\nThe clawback (chargeback) process was already auto-triggered by the NorthLadder status check cronjob (TokoNorthLadderStatusCheckJob) when it detected the REJECTED appraisal status. Both orders have a ClawbackProcess running with process definition clawback-process-v23, and both are currently stuck in RUNNING state with no end message.\n\nThe clawback payment authorization was attempted via Checkout.com but was declined. For order AE260808-54285973, the authorization attempt failed with ERROR status at 2026-09-01 02:01. For order AE260725-39348428, the authorization attempt failed with ERROR status at 2026-08-23 02:01. The error indicates the card used for the original purchase was declined when Checkout.com attempted to authorize the clawback debit.\n\nA similar issue was previously reported in SED-74835 (AEME-3427) where the clawback process failed at the reAuthorizeIfNeeded action because paymentInfo was null and Checkout.com could not re-authorize the card for the clawback amount. The resolution there was to use a different credit card.\n\nThe ClawbackProcess is stuck in RUNNING state because the payment authorization failed but the process never transitioned to ERROR or a retry state. The process is effectively waiting for a successful payment authorization that will not come without manual intervention.\n\nTo remediate this, a Groovy script can be written to re-trigger the clawback process from the takeClawBackPaymentAction step, which will attempt a fresh payment authorization via Checkout.com for the clawback amounts (2230 AED for AE260808-54285973 and 2195 AED for AE260725-39348428). If the card is still declined, the customer would need to provide an alternative payment method.\n\nNo reusable PC ticket exists for clawback remediation. Would you like me to write a remediation script for this?\n\nThanks,\nAryan.\n\n## Remediation\n\n- **Remediation type**: Clawback process re-trigger (new type — no reusable PC ticket exists)\n- **PC ticket**: None yet (pending user confirmation)\n- **Script**: Not yet created (pending user confirmation)\n- **Similar past ticket**: SED-74835 (AEME-3427) — clawback failed at reAuthorizeIfNeeded due to paymentInfo null\n- **Orders**: AE260808-54285973 (clawback amount 2230 AED), AE260725-39348428 (clawback amount 2195 AED)",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-08T09:30:11.034Z"
+      }
+    },
     {
       "key": "SAHME-3425",
       "summary": "Request to process orders to Completed status",
@@ -248,59 +347,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-10T05:22:51.881Z"
-      }
-    },
-    {
-      "key": "AEME-6540",
-      "summary": "[PROD] | Manual Chargeback || 07-Sep",
-      "status": "QA Server Review",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-09T22:02:36.000+0900",
-      "created": "2026-09-07T14:47:06.000+0900",
-      "statusChangedAt": "2026-09-08T19:58:17.387+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\n \n\nPlease manual trigger the trade in chargeback amount for the below order\n|AE260808-54285973|SM-F971BZKIMEA|AE-080826-719312|REJECTED|2230|\n|AE260725-39348428|SM-F971BZGOMEA|AE-280726-713980|REJECTED|2195|\n\n \n\nRegards\n\nJaffar",
-      "commentsCount": 2,
-      "recentComments": [
-        {
-          "author": "Jaffar Ali",
-          "date": "2026-09-09T21:12:31.933+0900",
-          "snippet": "Hi ~@email \n\n \n\nPlease proceed with manual chargeback and confirm once done.\n\n \n|AE260808-54285973|SM-F971BZKIMEA|AE-080826-719312|REJECTED|2230|\n|AE260725-39348428|SM-F971BZGOMEA|AE-280726-713980|REJECTED|2195|\n\n \n\nRegards\n\nJaffar"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-09T22:02:36.079+0900",
-          "snippet": "Hi ~@email ,\n\nInvestigated both orders and found the root cause for the clawback failure.\n\nWhen the Northladder trade-in was received (status RECEIVED), the system initiated ClawbackProcess for the clawback amounts (2230 AED for AE260808-54285973, 2195 AED for AE260725-39348428). The ClawbackProcess"
-        }
-      ],
-      "lastCommentBy": "Jaffar Ali",
-      "lastCommentSnippet": "Hi ~@email \n\n \n\nPlease proceed with manual chargeback and confirm once done.\n\n \n|AE260808-54285973|SM-F971BZKIMEA|AE-080826-719312|REJECTED|2230|\n|AE260725-39348428|SM-F971BZGOMEA|AE-280726-713980|REJECTED|2195|\n\n \n\nRegards\n\nJaffar",
-      "lastCommentDate": "2026-09-09T21:12:31.933+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6540",
-      "linkedTickets": [
-        {
-          "key": "PC-53768",
-          "summary": "Script to copy paymentInfo to clawback PaymentTransaction and retrigger ClawbackProcess",
-          "status": "To do",
-          "statusCategory": "To Do",
-          "relation": "blocks",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: AEME-6540\n\n[PROD] | Manual Chargeback || 07-Sep\nGenerated: 2026-09-08T09:20:00Z\n\nHi Jaffar ,\n\nBoth orders AE260808-54285973 and AE260725-39348428 are in COMPLETED status with all order and consignment processes succeeded. The trade-in external service (NORTHLADDER) is in CANCELLED status, which confirms the trade-in devices were rejected by NorthLadder.\n\nThe clawback (chargeback) process was already auto-triggered by the NorthLadder status check cronjob (TokoNorthLadderStatusCheckJob) when it detected the REJECTED appraisal status. Both orders have a ClawbackProcess running with process definition clawback-process-v23, and both are currently stuck in RUNNING state with no end message.\n\nThe clawback payment authorization was attempted via Checkout.com but was declined. For order AE260808-54285973, the authorization attempt failed with ERROR status at 2026-09-01 02:01. For order AE260725-39348428, the authorization attempt failed with ERROR status at 2026-08-23 02:01. The error indicates the card used for the original purchase was declined when Checkout.com attempted to authorize the clawback debit.\n\nA similar issue was previously reported in SED-74835 (AEME-3427) where the clawback process failed at the reAuthorizeIfNeeded action because paymentInfo was null and Checkout.com could not re-authorize the card for the clawback amount. The resolution there was to use a different credit card.\n\nThe ClawbackProcess is stuck in RUNNING state because the payment authorization failed but the process never transitioned to ERROR or a retry state. The process is effectively waiting for a successful payment authorization that will not come without manual intervention.\n\nTo remediate this, a Groovy script can be written to re-trigger the clawback process from the takeClawBackPaymentAction step, which will attempt a fresh payment authorization via Checkout.com for the clawback amounts (2230 AED for AE260808-54285973 and 2195 AED for AE260725-39348428). If the card is still declined, the customer would need to provide an alternative payment method.\n\nNo reusable PC ticket exists for clawback remediation. Would you like me to write a remediation script for this?\n\nThanks,\nAryan.\n\n## Remediation\n\n- **Remediation type**: Clawback process re-trigger (new type — no reusable PC ticket exists)\n- **PC ticket**: None yet (pending user confirmation)\n- **Script**: Not yet created (pending user confirmation)\n- **Similar past ticket**: SED-74835 (AEME-3427) — clawback failed at reAuthorizeIfNeeded due to paymentInfo null\n- **Orders**: AE260808-54285973 (clawback amount 2230 AED), AE260725-39348428 (clawback amount 2195 AED)",
-        "sections": {
-          "issue": "",
-          "rca": "# RCA: AEME-6540\n\n[PROD] | Manual Chargeback || 07-Sep\nGenerated: 2026-09-08T09:20:00Z\n\nHi Jaffar ,\n\nBoth orders AE260808-54285973 and AE260725-39348428 are in COMPLETED status with all order and consignment processes succeeded. The trade-in external service (NORTHLADDER) is in CANCELLED status, which confirms the trade-in devices were rejected by NorthLadder.\n\nThe clawback (chargeback) process was already auto-triggered by the NorthLadder status check cronjob (TokoNorthLadderStatusCheckJob) when it detected the REJECTED appraisal status. Both orders have a ClawbackProcess running with process definition clawback-process-v23, and both are currently stuck in RUNNING state with no end message.\n\nThe clawback payment authorization was attempted via Checkout.com but was declined. For order AE260808-54285973, the authorization attempt failed with ERROR status at 2026-09-01 02:01. For order AE260725-39348428, the authorization attempt failed with ERROR status at 2026-08-23 02:01. The error indicates the card used for the original purchase was declined when Checkout.com attempted to authorize the clawback debit.\n\nA similar issue was previously reported in SED-74835 (AEME-3427) where the clawback process failed at the reAuthorizeIfNeeded action because paymentInfo was null and Checkout.com could not re-authorize the card for the clawback amount. The resolution there was to use a different credit card.\n\nThe ClawbackProcess is stuck in RUNNING state because the payment authorization failed but the process never transitioned to ERROR or a retry state. The process is effectively waiting for a successful payment authorization that will not come without manual intervention.\n\nTo remediate this, a Groovy script can be written to re-trigger the clawback process from the takeClawBackPaymentAction step, which will attempt a fresh payment authorization via Checkout.com for the clawback amounts (2230 AED for AE260808-54285973 and 2195 AED for AE260725-39348428). If the card is still declined, the customer would need to provide an alternative payment method.\n\nNo reusable PC ticket exists for clawback remediation. Would you like me to write a remediation script for this?\n\nThanks,\nAryan.\n\n## Remediation\n\n- **Remediation type**: Clawback process re-trigger (new type — no reusable PC ticket exists)\n- **PC ticket**: None yet (pending user confirmation)\n- **Script**: Not yet created (pending user confirmation)\n- **Similar past ticket**: SED-74835 (AEME-3427) — clawback failed at reAuthorizeIfNeeded due to paymentInfo null\n- **Orders**: AE260808-54285973 (clawback amount 2230 AED), AE260725-39348428 (clawback amount 2195 AED)",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-08T09:30:11.034Z"
       }
     },
     {
@@ -682,7 +728,7 @@
       }
     ],
     "pid": 15232,
-    "uptime": 16330,
+    "uptime": 16365,
     "failures": 0,
     "activeJobCount": 2,
     "jobs": [
@@ -691,14 +737,14 @@
         "issueTitle": "Investigate ticket SAHME-3429",
         "snippet": "Auto-triggered investigation for new ticket SAHME-3429.\n\nTicket: SAHME-3429\nSummary: Request to allocate 0.01 value on a",
         "pid": 28976,
-        "elapsed": 1722
+        "elapsed": 1758
       },
       {
         "issueNum": 179,
         "issueTitle": "Investigate ticket SAHME-3425",
         "snippet": "Auto-triggered investigation for new ticket SAHME-3425.\n\nTicket: SAHME-3425\nSummary: Request to process orders to Comple",
         "pid": 36556,
-        "elapsed": 1676
+        "elapsed": 1711
       }
     ],
     "startTime": "2026-09-10T04:37:32.308Z",
@@ -709,7 +755,7 @@
       {
         "pid": 16388,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 89861,
+        "ageSeconds": 89899,
         "status": "running",
         "isChild": false,
         "taskSummary": "caveman ultra",
@@ -719,7 +765,7 @@
       {
         "pid": 43488,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 2105,
+        "ageSeconds": 2143,
         "status": "running",
         "isChild": false,
         "taskSummary": "how do we remediate it now?",
@@ -729,7 +775,7 @@
       {
         "pid": 25588,
         "cwd": "c:\\windows",
-        "ageSeconds": 1880,
+        "ageSeconds": 1919,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -739,7 +785,7 @@
       {
         "pid": 16556,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 1785,
+        "ageSeconds": 1823,
         "status": "running",
         "isChild": false,
         "taskSummary": "caveman ultra",
@@ -2669,11 +2715,11 @@
         ]
       }
     },
-    "bridgeLogTail": "      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n      at async GeminiChat.processStreamResponse (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-FEKZ6XM4.js:298143:22)\n      at async GeminiChat.streamWithRetries (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-FEKZ6XM4.js:297807:30)\n      at async _LocalAgentExecutor.callModel (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-FEKZ6XM4.js:313831:22)\n      at async _LocalAgentExecutor.executeTurn (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-FEKZ6XM4.js:313414:43),\n  repairError: JSONRepairError: Unexpected character \"{\" at position 25\n      at throwUnexpectedCharacter (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-IB742TUD.js:7552:11)\n      at jsonrepair (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-IB742TUD.js:7053:3)\n      at safeJsonParse (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-IB742TUD.js:7581:28)\n      at StreamingToolCallParser.getCompletedToolCalls (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-IB742TUD.js:7761:20)\n      at OpenAIContentConverter.convertOpenAIChunkToGemini (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-IB742TUD.js:8294:65)\n      at ContentGenerationPipeline.processStreamWithLogging (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-IB742TUD.js:8596:41)\n      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n      at async GeminiChat.processStreamResponse (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-FEKZ6XM4.js:298143:22)\n      at async GeminiChat.streamWithRetries (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-FEKZ6XM4.js:297807:30)\n      at async _LocalAgentExecutor.callModel (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-FEKZ6XM4.js:313831:22) {\n    position: 25\n  },\n  jsonString: ' (Array.isArray(parsed)) {\\\\n            cookieStr = parsed.map(c => `${c.name}=${c.value}`).join(\\'; \\');\\\\n          } else if (parsed.cookies && Array.isArray(parsed.cookies)) {\\\\n            cookieStr = parsed.cookies.map(c => `${c.name}=${c.value}`).join(\\'; \\');\\\\n          } else if (typeof parsed === \\'string\\') {\\\\n            cookieStr = parsed;\\\\n          } else {\\\\n            cookieStr = data;\\\\n          }\\\\n          resolve(cookieStr);\\\\n        } catch (e) {\\\\n          resolve(data.trim());\\\\n        }\\\\n      });\\\\n    }).on(\\'error\\', reject);\\\\n  });\\\\n}\\\\n\\\\nfunction jiraSearch(jql, maxResults) {\\\\n  return new Promise((resolve, reject) => {\\\\n    getCookies().then(cookies => {\\\\n      const encodedJql = encodeURIComponent(jql);\\\\n      const path{\"command\": \"$env:NO_PROXY=\\' = `/rest/api/2/search?jql=${encodedJql}&maxResults=${maxResults}`;\\\\n\\\\n      const options = {\\\\n        hostname: \\'jira.secext.samsung.net*\\'; $env:NODE_TLS_REJECT_UNAUTHORIZED=\\'0\\'; node \\\\\"C:\\\\\\\\toko\\\\\\\\toko6\\\\\\\\toko6\\\\\\\\core-customize\\\\\\\\hybris\\',\\\\n        port\\\\\\\\bin\\\\\\\\flexi-order-full.c: 443js\\\\\" \\\\\"ZA,\\\\n        path:260810- path,\\\\n        method562405: \\'GET\\',\\\\n15\\\\\"        headers: {\\\\n\", \"description\": \"Run          \\'Cookie flexi-order-full\\': cookies,\\\\n          \\'Content.cjs for order ZA2608-Type\\': \\'application10-562/json\\',\\\\n          \\'40515 withAccept\\': \\'application TLS and proxy disabled/json\\'\\\\n        },\\\\n        reject\", \"timeout\": Unauthorized: false\\\\n\"120000\"}'\n}",
+    "bridgeLogTail": "      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n      at async GeminiChat.processStreamResponse (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-FEKZ6XM4.js:298143:22)\n      at async GeminiChat.streamWithRetries (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-FEKZ6XM4.js:297807:30)\n      at async _LocalAgentExecutor.callModel (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-FEKZ6XM4.js:313831:22)\n      at async _LocalAgentExecutor.executeTurn (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-FEKZ6XM4.js:313414:43),\n  repairError: JSONRepairError: Unexpected character \"{\" at position 10\n      at throwUnexpectedCharacter (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-IB742TUD.js:7552:11)\n      at jsonrepair (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-IB742TUD.js:7053:3)\n      at safeJsonParse (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-IB742TUD.js:7581:28)\n      at StreamingToolCallParser.getCompletedToolCalls (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-IB742TUD.js:7761:20)\n      at OpenAIContentConverter.convertOpenAIChunkToGemini (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-IB742TUD.js:8294:65)\n      at ContentGenerationPipeline.processStreamWithLogging (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-IB742TUD.js:8596:41)\n      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n      at async GeminiChat.processStreamResponse (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-FEKZ6XM4.js:298143:22)\n      at async GeminiChat.streamWithRetries (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-FEKZ6XM4.js:297807:30)\n      at async _LocalAgentExecutor.callModel (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-FEKZ6XM4.js:313831:22) {\n    position: 10\n  },\n  jsonString: ' (res) => {\\\\n        let body = \\'\\';\\\\n        res.on(\\'data\\', (chunk) => { body += chunk; });\\\\n        res.on(\\'end\\', () => {\\\\n          if (res.statusCode !== 200) {\\\\n            console.error(`  [HTTP ${res.statusCode}] Search failed`);\\\\n            console.error(`  Response: ${body.substring(0, 500)}`);\\\\n            resolve({ issues: [], total: 0, error: `HTTP ${res.statusCode}` });\\\\n            return;\\\\n          }\\\\n          try {\\\\n            const result = JSON.parse(body);\\\\n            resolve(result);\\\\n          } catch (e) {\\\\n            console.error(`  Parse error: ${e.message}`);\\\\n            resolve({ issues: [], total: 0, error: e.message });\\\\n          }\\\\n        });\\\\n      });\\\\n\\\\n      req.on(\\'error\\', (e) => {\\\\n        console.error(`  Request error: ${e.message}`);\\\\n        resolve({ issues: [], total: 0, error: e.message });\\\\n      });\\\\n\\\\n      req.end();\\\\n    }).catch(reject);\\\\n  });\\\\n}\\\\n\\\\nfunction printTickets(label, result) {\\\\n  console.log(\\'\\\\\\\\n\\' + \\'=\\'.repeat(80));\\\\n  console.log(`SEARCH: ${label}`);\\\\n  console.log(\\'=\\'.repeat(80));\\\\n\\\\n  if (!result || !result.issues || result.issues.length === 0) {\\\\n    console.log(\\'  No tickets found.\\');\\\\n    if (result && result.error) {\\\\n      console.log(`  Error: ${result.error}`);\\\\n    }\\\\n    return;\\\\n  }\\\\n\\\\n  console.log(`  Total results: ${result.total || result.issues.length}`);\\\\n  console.log(`  Showing: ${result.issues.length}\\\\\\\\n`);\\\\n\\\\n  result.issues.forEach((issue, idx) => {\\\\n    const f = issue{\"command\": \"$env:NO_PROXY=\\'*\\'; $env:NODE_TLS_REJECT.fields || {};\\\\n    const desc_UNAUTHORIZED=\\'0 = (f.description\\'; node \\\\\"C || \\'\\').substring:\\\\\\\\toko\\\\\\\\toko6\\\\\\\\toko(0, 200).replace(/\\\\\\\\6\\\\\\\\core-customizen/g, \\'\\\\\\\\hybris\\\\\\\\ \\');\\\\n    consolebin\\\\\\\\flexi-order-full.cjs.log(`  --- Ticket ${idx +\\\\\" ZA260 1} ---810-56`);\\\\n    console.log240515(`  Key:         ${issue.key\", \"description\": \"Run flexi}`);\\\\n    console.log(`  Summary:-order-full.cjs for order ZA     ${f.summary260810- || \\'56240515 with TLSN/A\\'}`);\\\\n    console.log(` and proxy disabled  Status:      ${f.status ?\", \"dir_path\": \"C:\\\\\\\\t f.status.name :oko\\\\\\\\toko6 \\'N/A\\'\\\\\\\\toko6\\\\\\\\core}`);\\\\n    console.log-customize\\\\\\\\hy(`  Resolution:bris\\\\\\\\bin  ${f.resolution\"} ? f.resolution.name'\n}",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-10T07:37:43.733Z",
-      "ageMs": 5523143
+      "ageMs": 5560983
     },
     "watchdogLogTail": "[2026-09-10T04:37:31.800Z] Starting bridge.js...\n[2026-09-10T04:37:31.981Z] Bridge started with PID 15232 (restart #1, 1 in last hour)\n[2026-09-10T04:37:31.988Z] Dashboard already running (PID 43784). Adopting.\n[2026-09-10T05:07:46.489Z] DUPLICATE watchdog detected: PID 33308 — killing\n[2026-09-10T06:02:41.288Z] DUPLICATE watchdog detected: PID 29880 — killing\n[2026-09-10T06:07:41.439Z] DUPLICATE watchdog detected: PID 15608 — killing\n[2026-09-10T06:12:41.227Z] DUPLICATE watchdog detected: PID 43604 — killing\n[2026-09-10T06:17:42.056Z] DUPLICATE watchdog detected: PID 43908 — killing\n[2026-09-10T06:57:42.501Z] DUPLICATE watchdog detected: PID 33128 — killing\n[2026-09-10T07:37:43.730Z] DUPLICATE watchdog detected: PID 23828 — killing",
     "jobOutputs": {}
@@ -2683,7 +2729,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-10T09:09:10.108Z",
+      "lastCheck": "2026-09-10T09:10:10.313Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -2692,7 +2738,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-10T09:09:10.108Z",
+      "lastCheck": "2026-09-10T09:10:10.313Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -2701,9 +2747,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-10T09:09:10.108Z",
+      "lastCheck": "2026-09-10T09:10:10.313Z",
       "downSince": "2026-09-10T01:02:52.771Z",
-      "downDuration": 29177337,
+      "downDuration": 29237542,
       "alert": true
     }
   ],
