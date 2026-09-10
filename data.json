@@ -1,7 +1,51 @@
 {
-  "generatedAt": "2026-09-10T09:43:11.403Z",
+  "generatedAt": "2026-09-10T09:43:49.784Z",
   "totalTickets": 10,
   "tickets": [
+    {
+      "key": "SAHME-3399",
+      "summary": "Stuck order on Hybris",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "South Africa Maintenance & Enhancements",
+      "projectKey": "SAHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-09-10T18:43:42.000+0900",
+      "created": "2026-08-26T21:54:33.000+0900",
+      "statusChangedAt": "2026-08-26T21:54:34.833+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|ZA260825-68383788|2026/08/25|WAITING_FOR_SEND_FINANCIAL|\n|ZA260822-65638688|2026/08/22|WAITING_FOR_SEND_FINANCIAL|\n|ZA260822-65856992|2026/08/22|WAITING_FOR_SEND_FINANCIA",
+      "commentsCount": 3,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-09-10T18:43:42.851+0900",
+          "snippet": "Hi ~@email ,\n\nCould you please update the stock level for ZA260822-65638688\n\nWe can retrigger the order process then to push the order forward\n\nRegards\n\nAryan"
+        },
+        {
+          "author": "Lerato Mbambisa",
+          "date": "2026-09-10T00:00:30.275+0900",
+          "snippet": "Good day ~@email ,\n\nZA260825-68383788 -  Completed status\n\nZA260822-65638688 - Waiting for send financials - awaiting stock transfer\n\nZA260822-65856992 - Cancelled.\n\nKind regards,\n\nLerato"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi ~@email ,\n\nCould you please update the stock level for ZA260822-65638688\n\nWe can retrigger the order process then to push the order forward\n\nRegards\n\nAryan",
+      "lastCommentDate": "2026-09-10T18:43:42.851+0900",
+      "url": "https://jira.secext.samsung.net/browse/SAHME-3399",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "Ticket Summary: Stuck order on Hybris (3 ZA-region orders at WAITING_FOR_SEND_FINANCIAL)\r\nGenerated: 2026-09-10T10:15:00+09:00\r\n\r\nIssue:\r\nThree South Africa region orders were flagged as stuck at WAITING_FOR_SEND_FINANCIAL status on 2026-08-26. DB verification on 2026-09-10 confirmed that two of the three orders have already self-resolved. ZA260825-68383788 progressed to COMPLETED with its consignment delivered and GERP billing completed on 2026-09-07. ZA260822-65856992 was cancelled and refunded (REFUND_FOLLOW_ON accepted on 2026-09-09). Only ZA260822-65638688 remains genuinely stuck.\r\n\r\nRCA:\r\nThe order ZA260822-65638688 was placed on 2026-08-22 with payment mode za-PJNPaymentMode, total 5399.10 ZAR. Payment was authorised and captured successfully (AUTHORIZATION and CAPTURE both ACCEPTED). The order process (order-process-v25-69) advanced through checkout, fraud check, payment, and financial update stages without error. The process reached the splitOrder action, which calls OrderSplittingService.splitOrderForConsignment to allocate order entries to warehouse consignments based on stock availability and warehouse configuration for the za store.\r\n\r\nZero consignments were created. The DB confirms no consignment records, no consignment entries, and no consignment processes exist for this order. The order has product entries (the splitOrder code iterates entries that have no consignment allocations and are not DEAD or digital delivery), but the OOTB Hybris OrderSplittingService could not assign them to any warehouse because the product is out of stock across all configured warehouses for the za site.\r\n\r\nAfter splitOrder returned an empty consignment list, the process moved to the waitForWarehouseSubprocessEnd wait node. This node waits for a ConsignmentSubprocessEnd event. Since no consignment subprocesses were started (zero consignments), this event will never fire. The process then cycles between waitForWarehouseSubprocessEnd and isProcessCompleted, which keeps returning NOK because no subprocess has completed. The task logs show 50+ splitOrder entries, indicating the process engine has retried this node multiple times. The order status remains WAITING_FOR_SEND_FINANCIAL because splitOrderAction never reached its final line (setOrderStatus ORDER_SPLIT) on the first execution, or the status was set before splitOrder and never updated.\r\n\r\nLerato Mbambisa confirmed in her comment on 2026-09-10 that this order is \"awaiting stock transfer\", which aligns with the DB evidence of zero consignments due to stock unavailability.\r\n\r\nPossible remediation:\r\nThis is a stock allocation issue, not a Hybris platform bug. Two options exist:\r\n\r\nOption A (preferred): The regional team arranges stock transfer to a ZA warehouse for the product on this order. Once stock is available, restart the order process from the splitOrder action so that OrderSplittingService can create consignments and the order proceeds to fulfillment.\r\n\r\nOption B: If stock cannot be transferred, cancel the order and process a full refund to the customer. The payment was captured (5399.10 ZAR), so a REFUND_FOLLOW_ON transaction would be needed, similar to what was done for ZA260822-65856992.\r\n\r\nNo HAC script is required for either option. The process restart in Option A can be done via HAC Groovy script if needed, but the prerequisite (stock availability) must be confirmed first by the regional team. This order should not be remediated from the Hybris side until the stock situation is clarified.",
+        "sections": {
+          "issue": "Three South Africa region orders were flagged as stuck at WAITING_FOR_SEND_FINANCIAL status on 2026-08-26. DB verification on 2026-09-10 confirmed that two of the three orders have already self-resolved. ZA260825-68383788 progressed to COMPLETED with its consignment delivered and GERP billing completed on 2026-09-07. ZA260822-65856992 was cancelled and refunded (REFUND_FOLLOW_ON accepted on 2026-09-09). Only ZA260822-65638688 remains genuinely stuck.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-10T05:22:51.881Z"
+      }
+    },
     {
       "key": "AEME-6540",
       "summary": "[PROD] | Manual Chargeback || 07-Sep",
@@ -276,50 +320,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-01T11:54:42.289Z"
-      }
-    },
-    {
-      "key": "SAHME-3399",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "South Africa Maintenance & Enhancements",
-      "projectKey": "SAHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-10T00:00:48.000+0900",
-      "created": "2026-08-26T21:54:33.000+0900",
-      "statusChangedAt": "2026-08-26T21:54:34.833+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|ZA260825-68383788|2026/08/25|WAITING_FOR_SEND_FINANCIAL|\n|ZA260822-65638688|2026/08/22|WAITING_FOR_SEND_FINANCIAL|\n|ZA260822-65856992|2026/08/22|WAITING_FOR_SEND_FINANCIA",
-      "commentsCount": 2,
-      "recentComments": [
-        {
-          "author": "Lerato Mbambisa",
-          "date": "2026-09-10T00:00:30.275+0900",
-          "snippet": "Good day ~@email ,\n\nZA260825-68383788 -  Completed status\n\nZA260822-65638688 - Waiting for send financials - awaiting stock transfer\n\nZA260822-65856992 - Cancelled.\n\nKind regards,\n\nLerato"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-08-26T23:04:00.397+0900",
-          "snippet": "Hi Team,\n\nKindly check if remediation is required for these orders"
-        }
-      ],
-      "lastCommentBy": "Lerato Mbambisa",
-      "lastCommentSnippet": "Good day ~@email ,\n\nZA260825-68383788 -  Completed status\n\nZA260822-65638688 - Waiting for send financials - awaiting stock transfer\n\nZA260822-65856992 - Cancelled.\n\nKind regards,\n\nLerato",
-      "lastCommentDate": "2026-09-10T00:00:30.275+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAHME-3399",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Ticket Summary: Stuck order on Hybris (3 ZA-region orders at WAITING_FOR_SEND_FINANCIAL)\r\nGenerated: 2026-09-10T10:15:00+09:00\r\n\r\nIssue:\r\nThree South Africa region orders were flagged as stuck at WAITING_FOR_SEND_FINANCIAL status on 2026-08-26. DB verification on 2026-09-10 confirmed that two of the three orders have already self-resolved. ZA260825-68383788 progressed to COMPLETED with its consignment delivered and GERP billing completed on 2026-09-07. ZA260822-65856992 was cancelled and refunded (REFUND_FOLLOW_ON accepted on 2026-09-09). Only ZA260822-65638688 remains genuinely stuck.\r\n\r\nRCA:\r\nThe order ZA260822-65638688 was placed on 2026-08-22 with payment mode za-PJNPaymentMode, total 5399.10 ZAR. Payment was authorised and captured successfully (AUTHORIZATION and CAPTURE both ACCEPTED). The order process (order-process-v25-69) advanced through checkout, fraud check, payment, and financial update stages without error. The process reached the splitOrder action, which calls OrderSplittingService.splitOrderForConsignment to allocate order entries to warehouse consignments based on stock availability and warehouse configuration for the za store.\r\n\r\nZero consignments were created. The DB confirms no consignment records, no consignment entries, and no consignment processes exist for this order. The order has product entries (the splitOrder code iterates entries that have no consignment allocations and are not DEAD or digital delivery), but the OOTB Hybris OrderSplittingService could not assign them to any warehouse because the product is out of stock across all configured warehouses for the za site.\r\n\r\nAfter splitOrder returned an empty consignment list, the process moved to the waitForWarehouseSubprocessEnd wait node. This node waits for a ConsignmentSubprocessEnd event. Since no consignment subprocesses were started (zero consignments), this event will never fire. The process then cycles between waitForWarehouseSubprocessEnd and isProcessCompleted, which keeps returning NOK because no subprocess has completed. The task logs show 50+ splitOrder entries, indicating the process engine has retried this node multiple times. The order status remains WAITING_FOR_SEND_FINANCIAL because splitOrderAction never reached its final line (setOrderStatus ORDER_SPLIT) on the first execution, or the status was set before splitOrder and never updated.\r\n\r\nLerato Mbambisa confirmed in her comment on 2026-09-10 that this order is \"awaiting stock transfer\", which aligns with the DB evidence of zero consignments due to stock unavailability.\r\n\r\nPossible remediation:\r\nThis is a stock allocation issue, not a Hybris platform bug. Two options exist:\r\n\r\nOption A (preferred): The regional team arranges stock transfer to a ZA warehouse for the product on this order. Once stock is available, restart the order process from the splitOrder action so that OrderSplittingService can create consignments and the order proceeds to fulfillment.\r\n\r\nOption B: If stock cannot be transferred, cancel the order and process a full refund to the customer. The payment was captured (5399.10 ZAR), so a REFUND_FOLLOW_ON transaction would be needed, similar to what was done for ZA260822-65856992.\r\n\r\nNo HAC script is required for either option. The process restart in Option A can be done via HAC Groovy script if needed, but the prerequisite (stock availability) must be confirmed first by the regional team. This order should not be remediated from the Hybris side until the stock situation is clarified.",
-        "sections": {
-          "issue": "Three South Africa region orders were flagged as stuck at WAITING_FOR_SEND_FINANCIAL status on 2026-08-26. DB verification on 2026-09-10 confirmed that two of the three orders have already self-resolved. ZA260825-68383788 progressed to COMPLETED with its consignment delivered and GERP billing completed on 2026-09-07. ZA260822-65856992 was cancelled and refunded (REFUND_FOLLOW_ON accepted on 2026-09-09). Only ZA260822-65638688 remains genuinely stuck.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-10T05:22:51.881Z"
       }
     },
     {
@@ -617,7 +617,7 @@
       }
     ],
     "pid": 15232,
-    "uptime": 18338,
+    "uptime": 18373,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -626,7 +626,7 @@
         "issueTitle": "Investigate ticket SAHME-3429",
         "snippet": "Auto-triggered investigation for new ticket SAHME-3429.\n\nTicket: SAHME-3429\nSummary: Request to allocate 0.01 value on a",
         "pid": 28976,
-        "elapsed": 3731
+        "elapsed": 3766
       }
     ],
     "startTime": "2026-09-10T04:37:32.308Z",
@@ -637,7 +637,7 @@
       {
         "pid": 16388,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 91869,
+        "ageSeconds": 91907,
         "status": "running",
         "isChild": false,
         "taskSummary": "caveman ultra",
@@ -647,7 +647,7 @@
       {
         "pid": 43488,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 4113,
+        "ageSeconds": 4151,
         "status": "running",
         "isChild": false,
         "taskSummary": "any other ways to optimise it further?",
@@ -657,7 +657,7 @@
       {
         "pid": 25588,
         "cwd": "c:\\windows",
-        "ageSeconds": 3888,
+        "ageSeconds": 3927,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -667,7 +667,7 @@
       {
         "pid": 16556,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 3793,
+        "ageSeconds": 3831,
         "status": "running",
         "isChild": false,
         "taskSummary": "caveman ultra",
@@ -2603,7 +2603,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-10T07:37:43.733Z",
-      "ageMs": 7531150
+      "ageMs": 7570199
     },
     "watchdogLogTail": "[2026-09-10T04:37:31.800Z] Starting bridge.js...\n[2026-09-10T04:37:31.981Z] Bridge started with PID 15232 (restart #1, 1 in last hour)\n[2026-09-10T04:37:31.988Z] Dashboard already running (PID 43784). Adopting.\n[2026-09-10T05:07:46.489Z] DUPLICATE watchdog detected: PID 33308 — killing\n[2026-09-10T06:02:41.288Z] DUPLICATE watchdog detected: PID 29880 — killing\n[2026-09-10T06:07:41.439Z] DUPLICATE watchdog detected: PID 15608 — killing\n[2026-09-10T06:12:41.227Z] DUPLICATE watchdog detected: PID 43604 — killing\n[2026-09-10T06:17:42.056Z] DUPLICATE watchdog detected: PID 43908 — killing\n[2026-09-10T06:57:42.501Z] DUPLICATE watchdog detected: PID 33128 — killing\n[2026-09-10T07:37:43.730Z] DUPLICATE watchdog detected: PID 23828 — killing",
     "jobOutputs": {}
