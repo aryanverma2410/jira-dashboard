@@ -1224,8 +1224,15 @@ function updateCard(card,t,ch){
   // Toggle pinned class + star button
   if(isPinned(t.key)){card.classList.add('pinned')}else{card.classList.remove('pinned')}
   var pinBtn=card.querySelector('.pin-star');if(pinBtn){pinBtn.classList.toggle('active',isPinned(t.key));pinBtn.textContent=isPinned(t.key)?'\u2605':'\u2606'}
-  // Toggle queued + stale classes for existing cards
-  if(isQueuedTicket(t.key)){card.classList.add('queued')}else{card.classList.remove('queued')}
+  // Toggle queued class + badge text
+  var queBadge=card.querySelector('.queued-badge');
+  if(isQueuedTicket(t.key)){
+    card.classList.add('queued');
+    if(!queBadge){var meta0=card.querySelector('.ticket-meta');if(meta0){var qs=document.createElement('span');qs.className='queued-badge';qs.innerHTML='QUEUED';meta0.appendChild(qs)}}
+  }else{
+    card.classList.remove('queued');
+    if(queBadge)queBadge.remove()
+  }
   // F_V: Update investigating badge
   var invBadge=card.querySelector('.investigating-badge');
   if(isInvestigating(t.key)&&!invBadge){
@@ -1235,7 +1242,25 @@ function updateCard(card,t,ch){
   // F_Y: Update age bar
   var ageBar=card.querySelector('.ticket-age-bar');
   if(ageBar){ageBar.className='ticket-age-bar '+ticketAgeClass(t.updated);ageBar.style.width=Math.min(100,(Date.now()-new Date(t.updated).getTime())/604800000*100)+'%'}
-  if(isStaleTicket(t.updated)){card.classList.add('stale')}else{card.classList.remove('stale')}
+  // Toggle stale class + badge text
+  var staBadge=card.querySelector('.stale-badge');
+  if(isStaleTicket(t.updated)){
+    card.classList.add('stale');
+    if(!staBadge){var meta1=card.querySelector('.ticket-meta');if(meta1){var ss=document.createElement('span');ss.className='stale-badge';ss.innerHTML='STALE';meta1.appendChild(ss)}}
+  }else{
+    card.classList.remove('stale');
+    if(staBadge)staBadge.remove()
+  }
+  // F6: Update status-age badge (recompute each refresh — time drifts continuously)
+  var saBadge=card.querySelector('.status-age-badge');
+  var newSaHtml=statusAgeBadge(t.statusChangedAt);
+  if(newSaHtml){
+    if(saBadge){saBadge.outerHTML=newSaHtml}else{
+      var hdr=card.querySelector('.ticket-header');if(hdr)hdr.insertAdjacentHTML('beforeend',newSaHtml)
+    }
+  }else if(saBadge){saBadge.remove()}
+  // F_X: Update priority dot color
+  var pd=card.querySelector('.priority-dot');if(pd){pd.style.background=priorityColor(t.priority)}
   if(expandedTickets.has(t.key)&&t.recentComments){var cc=card.querySelector('[data-field="comments"]');if(cc){var hh='';t.recentComments.forEach(function(c){hh+='<div class="comment-item"><span class="comment-author">'+escapeHtml(c.author)+'</span><span class="comment-date">'+relTime(c.date)+'</span><div class="comment-snippet">'+escapeHtml(c.snippet)+'</div></div>'});cc.innerHTML=hh}var de=card.querySelector('[data-field="desc"]');if(de)de.textContent=t.description||''}
   // Update solution section
   var solEl=card.querySelector('[data-field="solution"]');if(solEl)solEl.innerHTML=buildSolutionHtml(t.solution);
@@ -1914,7 +1939,13 @@ function updateLiveUptimes(){
 
 function updateRelativeTimes(){
   if(!rawData)return;
-  document.querySelectorAll('[data-ticket-key]').forEach(function(c){var u=c.getAttribute('data-updated');var e=c.querySelector('[data-field="updated-rel"]');if(e&&u)e.textContent='updated '+relTime(u)});
+  document.querySelectorAll('[data-ticket-key]').forEach(function(c){
+    var u=c.getAttribute('data-updated');var e=c.querySelector('[data-field="updated-rel"]');if(e&&u)e.textContent='updated '+relTime(u);
+    // F6: Refresh status-age badge (time drifts continuously)
+    var key=c.getAttribute('data-ticket-key');
+    var t=rawData.tickets?rawData.tickets.find(function(x){return x.key===key}):null;
+    if(t){var sa=c.querySelector('.status-age-badge');var newSa=statusAgeBadge(t.statusChangedAt);if(sa&&newSa)sa.outerHTML=newSa}
+  });
   renderCmdHistory();updateRefreshTime()
 }
 
