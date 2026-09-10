@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-10T05:22:32.847Z",
+  "generatedAt": "2026-09-10T05:23:11.118Z",
   "totalTickets": 10,
   "tickets": [
     {
@@ -88,9 +88,15 @@
       "url": "https://jira.secext.samsung.net/browse/SAHME-3399",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-09-10T10:09:00+09:00"
+        "status": "found",
+        "excerpt": "Ticket Summary: Stuck order on Hybris (3 ZA-region orders at WAITING_FOR_SEND_FINANCIAL)\r\nGenerated: 2026-09-10T10:15:00+09:00\r\n\r\nIssue:\r\nThree South Africa region orders were flagged as stuck at WAITING_FOR_SEND_FINANCIAL status on 2026-08-26. DB verification on 2026-09-10 confirmed that two of the three orders have already self-resolved. ZA260825-68383788 progressed to COMPLETED with its consignment delivered and GERP billing completed on 2026-09-07. ZA260822-65856992 was cancelled and refunded (REFUND_FOLLOW_ON accepted on 2026-09-09). Only ZA260822-65638688 remains genuinely stuck.\r\n\r\nRCA:\r\nThe order ZA260822-65638688 was placed on 2026-08-22 with payment mode za-PJNPaymentMode, total 5399.10 ZAR. Payment was authorised and captured successfully (AUTHORIZATION and CAPTURE both ACCEPTED). The order process (order-process-v25-69) advanced through checkout, fraud check, payment, and financial update stages without error. The process reached the splitOrder action, which calls OrderSplittingService.splitOrderForConsignment to allocate order entries to warehouse consignments based on stock availability and warehouse configuration for the za store.\r\n\r\nZero consignments were created. The DB confirms no consignment records, no consignment entries, and no consignment processes exist for this order. The order has product entries (the splitOrder code iterates entries that have no consignment allocations and are not DEAD or digital delivery), but the OOTB Hybris OrderSplittingService could not assign them to any warehouse because the product is out of stock across all configured warehouses for the za site.\r\n\r\nAfter splitOrder returned an empty consignment list, the process moved to the waitForWarehouseSubprocessEnd wait node. This node waits for a ConsignmentSubprocessEnd event. Since no consignment subprocesses were started (zero consignments), this event will never fire. The process then cycles between waitForWarehouseSubprocessEnd and isProcessCompleted, which keeps returning NOK because no subprocess has completed. The task logs show 50+ splitOrder entries, indicating the process engine has retried this node multiple times. The order status remains WAITING_FOR_SEND_FINANCIAL because splitOrderAction never reached its final line (setOrderStatus ORDER_SPLIT) on the first execution, or the status was set before splitOrder and never updated.\r\n\r\nLerato Mbambisa confirmed in her comment on 2026-09-10 that this order is \"awaiting stock transfer\", which aligns with the DB evidence of zero consignments due to stock unavailability.\r\n\r\nPossible remediation:\r\nThis is a stock allocation issue, not a Hybris platform bug. Two options exist:\r\n\r\nOption A (preferred): The regional team arranges stock transfer to a ZA warehouse for the product on this order. Once stock is available, restart the order process from the splitOrder action so that OrderSplittingService can create consignments and the order proceeds to fulfillment.\r\n\r\nOption B: If stock cannot be transferred, cancel the order and process a full refund to the customer. The payment was captured (5399.10 ZAR), so a REFUND_FOLLOW_ON transaction would be needed, similar to what was done for ZA260822-65856992.\r\n\r\nNo HAC script is required for either option. The process restart in Option A can be done via HAC Groovy script if needed, but the prerequisite (stock availability) must be confirmed first by the regional team. This order should not be remediated from the Hybris side until the stock situation is clarified.",
+        "sections": {
+          "issue": "Three South Africa region orders were flagged as stuck at WAITING_FOR_SEND_FINANCIAL status on 2026-08-26. DB verification on 2026-09-10 confirmed that two of the three orders have already self-resolved. ZA260825-68383788 progressed to COMPLETED with its consignment delivered and GERP billing completed on 2026-09-07. ZA260822-65856992 was cancelled and refunded (REFUND_FOLLOW_ON accepted on 2026-09-09). Only ZA260822-65638688 remains genuinely stuck.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-10T05:22:51.881Z"
       }
     },
     {
@@ -603,7 +609,7 @@
       }
     ],
     "pid": 15232,
-    "uptime": 2699,
+    "uptime": 2734,
     "failures": 0,
     "activeJobCount": 2,
     "jobs": [
@@ -612,14 +618,14 @@
         "issueTitle": "Investigate ticket SAHME-3399",
         "snippet": "Auto-triggered investigation for new ticket SAHME-3399.\n\nTicket: SAHME-3399\nSummary: Stuck order on Hybris\n\nUse the inve",
         "pid": 27316,
-        "elapsed": 2694
+        "elapsed": 2729
       },
       {
         "issueNum": 176,
         "issueTitle": "Investigate ticket SAHME-3399",
         "snippet": "Please investigate Jira ticket SAHME-3399. Fetch the ticket details, check Kibana logs, trace the codebase, and produce ",
         "pid": 32936,
-        "elapsed": 2696
+        "elapsed": 2731
       }
     ],
     "startTime": "2026-09-10T04:37:32.308Z",
@@ -630,7 +636,7 @@
       {
         "pid": 28640,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 252822,
+        "ageSeconds": 252861,
         "status": "running",
         "isChild": false,
         "taskSummary": "test each feature but dont post anything on jira/prod. Extensively test each and every capability...",
@@ -640,7 +646,7 @@
       {
         "pid": 16388,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 76231,
+        "ageSeconds": 76269,
         "status": "running",
         "isChild": false,
         "taskSummary": "AEME-6540 verify if we retrigger clawback, then the exact amount mentioned ,only that will be ded...",
@@ -650,7 +656,7 @@
       {
         "pid": 35248,
         "cwd": "c:\\windows",
-        "ageSeconds": 76227,
+        "ageSeconds": 76265,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -660,7 +666,7 @@
       {
         "pid": 34636,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 67497,
+        "ageSeconds": 67536,
         "status": "running",
         "isChild": false,
         "taskSummary": "test each feature but dont post anything on jira/prod. Extensively test each and every capability...",
@@ -2560,11 +2566,11 @@
         ]
       }
     },
-    "bridgeLogTail": "    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-09-10T05:22:08.518Z] aipro stderr for #176: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
+    "bridgeLogTail": "    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-09-10T05:23:11.612Z] aipro stderr for #164: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-10T05:07:46.511Z",
-      "ageMs": 889869
+      "ageMs": 929590
     },
     "watchdogLogTail": "[2026-09-10T04:37:31.793Z] Check interval: 15000ms\n[2026-09-10T04:37:31.794Z] Stale threshold: 30000ms\n[2026-09-10T04:37:31.795Z] Max restarts: 50/hour\n[2026-09-10T04:37:31.796Z] Bridge script: C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\bridge.js\n[2026-09-10T04:37:31.797Z] Dashboard script: C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\jira-dashboard-server.js\n[2026-09-10T04:37:31.799Z] Bridge not running. Starting fresh.\n[2026-09-10T04:37:31.800Z] Starting bridge.js...\n[2026-09-10T04:37:31.981Z] Bridge started with PID 15232 (restart #1, 1 in last hour)\n[2026-09-10T04:37:31.988Z] Dashboard already running (PID 43784). Adopting.\n[2026-09-10T05:07:46.489Z] DUPLICATE watchdog detected: PID 33308 — killing",
     "jobOutputs": {}
