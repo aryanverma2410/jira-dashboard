@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-10T10:56:37.533Z",
+  "generatedAt": "2026-09-10T10:57:18.240Z",
   "totalTickets": 9,
   "tickets": [
     {
@@ -11,7 +11,7 @@
       "project": "PROD Change",
       "projectKey": "PC",
       "issuetype": "Hybris Platform",
-      "updated": "2026-09-10T19:56:14.000+0900",
+      "updated": "2026-09-10T19:56:54.000+0900",
       "created": "2026-09-10T19:56:11.000+0900",
       "statusChangedAt": "",
       "assignedToMeAt": "",
@@ -22,7 +22,16 @@
       "lastCommentSnippet": "",
       "lastCommentDate": "",
       "url": "https://jira.secext.samsung.net/browse/PC-53917",
-      "linkedTickets": [],
+      "linkedTickets": [
+        {
+          "key": "AEME-6548",
+          "summary": "Stuck Order || 09-Sep",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "relation": "blocks",
+          "assignee": null
+        }
+      ],
       "solution": {
         "status": "none",
         "excerpt": "",
@@ -586,7 +595,7 @@
       }
     ],
     "pid": 49844,
-    "uptime": 1697,
+    "uptime": 1735,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -598,7 +607,7 @@
       {
         "pid": 16388,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 96275,
+        "ageSeconds": 96316,
         "status": "running",
         "isChild": false,
         "taskSummary": "caveman ultra",
@@ -608,7 +617,7 @@
       {
         "pid": 43488,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 8519,
+        "ageSeconds": 8560,
         "status": "running",
         "isChild": false,
         "taskSummary": "make a table of this order's before and after in the comment",
@@ -618,7 +627,7 @@
       {
         "pid": 25588,
         "cwd": "c:\\windows",
-        "ageSeconds": 8294,
+        "ageSeconds": 8335,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -628,7 +637,7 @@
       {
         "pid": 16556,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 8199,
+        "ageSeconds": 8240,
         "status": "running",
         "isChild": false,
         "taskSummary": "caveman ultra",
@@ -2566,7 +2575,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-10T10:28:19.988Z",
-      "ageMs": 1701954
+      "ageMs": 1742546
     },
     "watchdogLogTail": "[2026-09-10T06:07:41.439Z] DUPLICATE watchdog detected: PID 15608 — killing\n[2026-09-10T06:12:41.227Z] DUPLICATE watchdog detected: PID 43604 — killing\n[2026-09-10T06:17:42.056Z] DUPLICATE watchdog detected: PID 43908 — killing\n[2026-09-10T06:57:42.501Z] DUPLICATE watchdog detected: PID 33128 — killing\n[2026-09-10T07:37:43.730Z] DUPLICATE watchdog detected: PID 23828 — killing\n[2026-09-10T10:02:41.706Z] DUPLICATE watchdog detected: PID 19016 — killing\n[2026-09-10T10:28:08.768Z] RESTART NEEDED: No heartbeat file found\n[2026-09-10T10:28:12.101Z] Killed bridge PID 15232\n[2026-09-10T10:28:19.801Z] Starting bridge.js...\n[2026-09-10T10:28:19.986Z] Bridge started with PID 49844 (restart #2, 1 in last hour)"
   },
@@ -2673,48 +2682,5 @@
       "pending": []
     }
   },
-  "actionQueue": [
-    {
-      "id": 4,
-      "ticket": "AEME-6548",
-      "actions": {
-        "comment": "Hi Team,\n\nThis ticket has two affected orders:\n\n1. AE260903-74755067 - stuck at CHECKED_INVALID\n\nThe order has valid payment (Checkout.com, 2x AUTHORIZATION ACCEPTED, 2564.10 AED), paymentInfo exists, calculated=true, deliveryMode on entry, deliveryAddress present, and auth amount matches order total. The order has two order-process-v25-69 processes, both FAILED at the checkOrder action with return code NOK. The checkOrder action sets CHECKED_INVALID when any validation fails, but all validations pass on inspection - the likely cause is that checkOrderForMultipleOrderProcesses detected two order-process instances and returned NOK for the older one. Could you confirm if we may proceed with retriggering this order?\n\n2. AE260906-76717980_1 - stuck at TEMPORARY_EXPIRED\n\nThe gateway (Checkout.com GooglePay) has the authorization on their end (request ID kv53evabuhhirfo3774wmglnk4, amount 143.10 AED, capture pending). The order expired at TEMPORARY_EXPIRED before the gateway response was processed by Hybris. The PaymentTransaction exists but was never populated - no payment provider, no request ID, no entries. PaymentInfo is null.\n\nKindly confirm if we may convert the order to normal order with the provided requestID.\n\nThanks,\nAryan.",
-        "worklogHours": 0.58,
-        "transition": null,
-        "assignee": "jaffar.a",
-        "labels": {
-          "add": [
-            "a=aryan.v1",
-            "i=orderremediation",
-            "sc=remediate",
-            "L=L2"
-          ]
-        }
-      },
-      "createdAt": "2026-09-09",
-      "notes": "AEME-6548 RCA comment + 35m worklog + assign back to jaffar.a + labels update"
-    },
-    {
-      "id": 6,
-      "ticket": "PC-NEW",
-      "actions": {
-        "createPcTicket": true,
-        "parentTicket": "AEME-6548",
-        "summary": "AEME-6548 | Convert TEMPORARY_EXPIRED order AE260906-76717980_1 to normal order - GooglePay",
-        "description": "Order AE260906-76717980_1 is stuck at TEMPORARY_EXPIRED. The gateway (Checkout.com GooglePay) has the authorization on their end (request ID kv53evabuhhirfo3774wmglnk4, amount 143.10 AED, capture pending). The order expired before the gateway response was processed by Hybris.\n\nGroovy Required: YES\nScript: script-AEME-6548-order2-temp-expired-remediation.groovy\n\nSimilar PC: PC-50238 (AEME-6345, Tabby temp order conversion, same AE region pattern)\n\nNo PII Data",
-        "labels": [
-          "L=L2",
-          "a=aryan.v1",
-          "i=orderremediation",
-          "REUSABLE",
-          "sc=scripting"
-        ],
-        "scriptFile": "script-AEME-6548-order2-temp-expired-remediation.groovy",
-        "linkType": "blocks",
-        "linkTicket": "AEME-6548"
-      },
-      "createdAt": "2026-09-09",
-      "notes": "Raise PC ticket for order 2 temp-to-real conversion. Script adapted from approved PC-50238. Link as blocks AEME-6548."
-    }
-  ]
+  "actionQueue": []
 }
