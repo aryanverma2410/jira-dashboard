@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-12T08:32:00.568Z",
+  "generatedAt": "2026-09-12T08:32:39.519Z",
   "totalTickets": 13,
   "tickets": [
     {
@@ -30,9 +30,15 @@
       "url": "https://jira.secext.samsung.net/browse/GMT-21026",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-09-12T08:19:21.093Z"
+        "status": "found",
+        "excerpt": "[SMI MENA] | CONSIGNMENT_PROCESS_ERROR - TR Tenant\r\nGenerated: 2026-09-12T08:45:00.000Z\r\n\r\n## Issue\r\n\r\nTwo TR (Turkey) tenant orders (TR260911-80724904 and TR260912-81652251) are stuck in the consignment process at the commitStock action. Both orders were placed on September 10-11, 2026, and the consignment business process (consignment-process-v11-36) entered ERROR state. The order-level process (order-process-v25-69) is still RUNNING, waiting for the consignment to complete. The error surfaced as CONSIGNMENT_PROCESS_ERROR in the NERP Order Create flow, with orders reported as \"Stuck in commitStock.\"\r\n\r\n## RCA\r\n\r\nBoth orders are in SHIPPING_PREPARATION status with their consignment processes in ERROR state at the commitStock action node. The consignment process definition for the TR tenant is consignment-process-v11-36 (confirmed via DB query). The process flow is: sendReplacementConsignmentToWarehouse (OK) -> commitStock -> sendShippingRequestedNotification. The commitStock action is handled by CommitStockAction.java in the tokofulfilmentprocess extension.\r\n\r\nCommitStockAction.executeAction() performs the following:\r\n1. Checks if stock is externally managed or if interceptors are enabled (would skip commit)\r\n2. Calls tokoStockServiceImpl.lockAllAffectedStockLevels() to lock stock levels for the consignment's warehouse (WC17-S751)\r\n3. Iterates through consignment entries, skipping pre-order, 3PA, and warranty/service products\r\n4. For each physical product, calls tokoStockServiceImpl.commit() which internally calls checkAndGetStockLevelConsideringFutureStock() then tokoStockLevelDao.commit()\r\n5. If any exception occurs, it is caught, logged as \"Error while commit stock\", and re-thrown, causing the process engine to set the consignment process to ERROR state\r\n\r\nDB verification of stock levels at warehouse WC17-S751 shows sufficient stock for all affected products:\r\n- SM-A376BZWGTUR: available=56, reserved=30\r\n- SM-A376BLVGTUR: available=12, reserved=8\r\n- EP-T2510NWEGWW: available=202, reserved=182\r\n- EP-T2510NBEGWW: available=841, reserved=71\r\n\r\nSince stock is available and the process still errored, the failure is likely in the checkAndGetStockLevelConsideringFutureStock() method or in the stock level locking mechanism (lockAllAffectedStockLevels). This method acquires pessimistic locks on stock level rows by PK ordering, and a deadlock or lock timeout during concurrent order processing could cause the commit to fail with an exception.\r\n\r\nPayment status confirms both orders have ACCEPTED authorization and ACCEPTED capture, ruling out payment-related causes. External services show SMC in NEW status with 2 blank entries, which is expected for orders that haven't completed the consignment flow.\r\n\r\nThis is a recurring pattern: Jira cross-reference found 212 resolved commitStock tickets across multiple regions (NFME, NGME, UAME, CNME, URME, CAME) and 84 tickets matching NERP + commitStock. The root cause in prior resolved tickets has been consistently attributed to stock-level locking issues during concurrent processing or transient stock state inconsistencies, with remediation via consignment process restart from the commitStock action.\r\n\r\n## Possible Remediation\r\n\r\nRestart the errored consignment processes from the commitStock action node. Since stock is confirmed available at the warehouse, the process should succeed on retry. The remediation involves:\r\n\r\n1. For each errored consignment process (order-process-v25-69-TR260911-80724904-1789078729072_1 and order-process-v25-69-TR260912-81652251-1789172269631_1):\r\n   a. Reset the process state from ERROR to WAITING\r\n   b. Restart the process from the commitStock action node\r\n   c. Monitor to ensure the process transitions to sendShippingRequestedNotification and beyond\r\n\r\n2. If the process errors again after restart, investigate the specific exception in Kibana logs (search for \"Error while commit stock\" + order code) to determine if there is a deeper stock-level data inconsistency or a locking issue that needs to be resolved before the process can proceed.\r\n\r\n3. For a permanent fix, review the stock level locking strategy and consider adding retry logic or a transient error handling mechanism in CommitStockAction to prevent single-stock-commit failures from permanently erroring the consignment process.\r\n\r\nReferences:\r\n- CommitStockAction.java: tokofulfilmentprocess/src/com/samsung/toko/fulfilmentprocess/actions/consignment/CommitStockAction.java\r\n- Process definition: consignment-process-v11-36.xml (TR tenant)\r\n- Similar resolved tickets: NFME-4248, NGME-15201, NGME-14757, UAME-1813, URME-1995, PC-34849",
+        "sections": {
+          "issue": "Two TR (Turkey) tenant orders (TR260911-80724904 and TR260912-81652251) are stuck in the consignment process at the commitStock action. Both orders were placed on September 10-11, 2026, and the consignment business process (consignment-process-v11-36) entered ERROR state. The order-level process (order-process-v25-69) is still RUNNING, waiting for the consignment to complete. The error surfaced as CONSIGNMENT_PROCESS_ERROR in the NERP Order Create flow, with orders reported as \"Stuck in commitStock.\"",
+          "rca": "Both orders are in SHIPPING_PREPARATION status with their consignment processes in ERROR state at the commitStock action node. The consignment process definition for the TR tenant is consignment-process-v11-36 (confirmed via DB query). The process flow is: sendReplacementConsignmentToWarehouse (OK) -> commitStock -> sendShippingRequestedNotification. The commitStock action is handled by CommitStockAction.java in the tokofulfilmentprocess extension.\r\n\r\nCommitStockAction.executeAction() performs the following:\r\n1. Checks if stock is externally managed or if interceptors are enabled (would skip commit)\r\n2. Calls tokoStockServiceImpl.lockAllAffectedStockLevels() to lock stock levels for the consignment's warehouse (WC17-S751)\r\n3. Iterates through consignment entries, skipping pre-order, 3PA, and warranty/service products\r\n4. For each physical product, calls tokoStockServiceImpl.commit() which internally calls checkAndGetStockLevelConsideringFutureStock() then tokoStockLevelDao.commit()\r\n5. If any exception occurs, it is caught, logged as \"Error while commit stock\", and re-thrown, causing the process engine to set the consignment process to ERROR state\r\n\r\nDB verification of stock levels at warehouse WC17-S751 shows sufficient stock for all affected products:\r\n- SM-A376BZWGTUR: available=56, reserved=30\r\n- SM-A376BLVGTUR: available=12, reserved=8\r\n- EP-T2510NWEGWW: available=202, reserved=182\r\n- EP-T2510NBEGWW: available=841, reserved=71\r\n\r\nSince stock is available and the process still errored, the failure is likely in the checkAndGetStockLevelConsideringFutureStock() method or in the stock level locking mechanism (lockAllAffectedStockLevels). This method acquires pessimistic locks on stock level rows by PK ordering, and a deadlock or lock timeout during concurrent order processing could cause the commit to fail with an exception.\r\n\r\nPayment status confirms both orders have ACCEPTED authorization and ACCEPTED capture, ruling out payment-related causes. External services show SMC in NEW status with 2 blank entries, which is expected for orders that haven't completed the consignment flow.\r\n\r\nThis is a recurring pattern: Jira cross-reference found 212 resolved commitStock tickets across multiple regions (NFME, NGME, UAME, CNME, URME, CAME) and 84 tickets matching NERP + commitStock. The root cause in prior resolved tickets has been consistently attributed to stock-level locking issues during concurrent processing or transient stock state inconsistencies, with remediation via consignment process restart from the commitStock action.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-12T08:32:08.024Z"
       }
     },
     {
@@ -820,7 +826,7 @@
       }
     ],
     "pid": 25304,
-    "uptime": 4164,
+    "uptime": 4204,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -829,7 +835,7 @@
         "issueTitle": "Investigate ticket GMT-21026",
         "snippet": "Auto-triggered investigation for new ticket GMT-21026.\n\nTicket: GMT-21026\nSummary: [SMI MENA] | CONSIGNMENT_PROCESS_ERRO",
         "pid": 29980,
-        "elapsed": 739
+        "elapsed": 779
       }
     ],
     "startTime": "2026-09-12T07:22:33.594Z",
@@ -840,7 +846,7 @@
       {
         "pid": 20824,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 4037,
+        "ageSeconds": 4076,
         "status": "running",
         "isChild": false,
         "taskSummary": "recheck all features, the star thing i am unable to star or unstar any ticket",
@@ -2787,11 +2793,11 @@
         ]
       }
     },
-    "bridgeLogTail": "    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-09-12T08:31:58.085Z] aipro stderr for #193: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
+    "bridgeLogTail": "    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-09-12T08:32:42.354Z] aipro stderr for #193: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-12T07:22:36.221Z",
-      "ageMs": 4167490
+      "ageMs": 4207964
     },
     "watchdogLogTail": "[2026-09-12T07:22:33.040Z] Dashboard script: C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\jira-dashboard-server.js\n[2026-09-12T07:22:33.045Z] Bridge not running. Starting fresh.\n[2026-09-12T07:22:33.047Z] Starting bridge.js...\n[2026-09-12T07:22:33.231Z] Bridge started with PID 25304 (restart #1, 1 in last hour)\n[2026-09-12T07:22:33.233Z] Dashboard not running. Starting fresh.\n[2026-09-12T07:22:33.234Z] Starting jira-dashboard-server.js...\n[2026-09-12T07:22:33.239Z] Killed bridge PID 16664\n[2026-09-12T07:22:33.435Z] Dashboard started with PID 25012 (restart #1, 1 in last hour)\n[2026-09-12T07:22:36.051Z] DUPLICATE watchdog detected: PID 15932 — killing\n[2026-09-12T07:22:36.220Z] DUPLICATE watchdog detected: PID 24920 — killing",
     "jobOutputs": {}
