@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-14T18:35:07.216Z",
+  "generatedAt": "2026-09-14T18:35:45.814Z",
   "totalTickets": 12,
   "tickets": [
     {
@@ -11,7 +11,7 @@
       "project": "Morocco Maintenance & Enhancements",
       "projectKey": "MHME",
       "issuetype": "Maintenance Request",
-      "updated": "2026-09-15T03:37:23.000+0900",
+      "updated": "2026-09-15T03:37:38.000+0900",
       "created": "2026-09-09T15:19:31.000+0900",
       "statusChangedAt": "2026-09-09T15:23:10.562+0900",
       "assignedToMeAt": "",
@@ -830,7 +830,7 @@
       }
     ],
     "pid": 14028,
-    "uptime": 26823,
+    "uptime": 26864,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -842,7 +842,7 @@
       {
         "pid": 12004,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 26428,
+        "ageSeconds": 26466,
         "status": "running",
         "isChild": false,
         "taskSummary": "recheck all features, the star thing i am unable to star or unstar any ticket",
@@ -852,7 +852,7 @@
       {
         "pid": 19100,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 21089,
+        "ageSeconds": 21128,
         "status": "running",
         "isChild": false,
         "taskSummary": "assign back and put to LV",
@@ -862,7 +862,7 @@
       {
         "pid": 14820,
         "cwd": "c:\\windows",
-        "ageSeconds": 17613,
+        "ageSeconds": 17651,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -872,7 +872,7 @@
       {
         "pid": 27260,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 10737,
+        "ageSeconds": 10775,
         "status": "running",
         "isChild": false,
         "taskSummary": "recheck all features, the star thing i am unable to star or unstar any ticket",
@@ -2870,7 +2870,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-14T15:41:42.953Z",
-      "ageMs": 10407245
+      "ageMs": 10446492
     },
     "watchdogLogTail": "[2026-09-14T11:07:51.593Z] RESTART NEEDED: Bridge process (PID 18320) not found\n[2026-09-14T11:07:53.099Z] Could not kill PID 18320: Command failed: taskkill /PID 18320 /F /T\n[2026-09-14T11:07:58.106Z] Starting bridge.js...\n[2026-09-14T11:07:58.274Z] Bridge started with PID 14028 (restart #1, 1 in last hour)\n[2026-09-14T14:42:41.142Z] DUPLICATE watchdog detected: PID 5908 — killing\n[2026-09-14T15:41:31.840Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 18580) not found\n[2026-09-14T15:41:34.058Z] Could not kill dashboard PID 18580: Command failed: taskkill /PID 18580 /F /T\n[2026-09-14T15:41:39.117Z] Starting jira-dashboard-server.js...\n[2026-09-14T15:41:39.349Z] Dashboard started with PID 18556 (restart #2, 1 in last hour)\n[2026-09-14T15:41:42.951Z] DUPLICATE jira-dashboard-server detected: PID 26704 — killing"
   },
@@ -2977,29 +2977,5 @@
       "pending": []
     }
   },
-  "actionQueue": [
-    {
-      "id": 1,
-      "ticket": "MHME-1431",
-      "actions": {
-        "comment": "Hi [~arjenelle.a@samsung.com] ,\n\nThe root cause for these 6 orders is that NERP did not send the SIT return billing callback (INVOIC01) and goods issue callback (DELVRY03) to Hybris. Without these callbacks, the consignment process cannot detect that the SIT return is complete, so the orders remain stuck in SHIPPED with SIT_RETURN_PENDING_BILLING indefinitely. The process loops every 30 minutes checking for these callbacks but never finds them.\n\nInvestigation confirms the consignment entries already have the billing number and goods issue date populated from NERP, and the shipping quantity has already been reset to 0. What is missing is the two business process parameters (BILLING_CALLBACK_RECEIVED and SIT_RETURN_1ST_GI_CALLBACK_RECEIVED) that the code checks before marking the consignment as COMPLETED. The SIT return request was also never created on the consignment.\n\nIn a normal scenario, when NERP sends both callbacks, the Hybris platform handles everything automatically. It creates the SIT refund entry on the consignment entry, creates the SIT return request with refund entries, sets the consignment to COMPLETED, and triggers the refund through the standard return request process. The ideal resolution would be for the NERP team to resend the INVOIC01 and DELVRY03 callbacks for these consignments, which would let the platform complete the flow without any manual intervention.\n\nHowever, given the urgency, we will proceed with a Hybris-side remediation script that completes the missing steps for each order individually. The script will create the SIT refund entry on the consignment entry with the refund amount set to the product total price, create the SIT return request which starts the return request process to initiate the refund, create the two business process parameters on the consignment process, and update the consignment status to COMPLETED with the additional consignment status set to SIT_RETURN_COMPLETED. Each order will be handled one at a time to avoid the duplicate refund issue observed in NUKME-12158. For the 5 COD orders, the refund will follow the COD return flow. For the 1 CMI credit card order (MA260806-51703927), the refund will follow the CMI credit card return flow.\n\nKindly confirm so we can proceed with the remediation.\n\nThanks,\nAryan.",
-        "worklogHours": 1,
-        "transition": null,
-        "fallbackTransition": null,
-        "assignee": "arjenelle.a@samsung.com",
-        "labels": {
-          "add": [
-            "a=aryan.v1",
-            "fa=sit_return",
-            "sc=remediate"
-          ],
-          "remove": []
-        },
-        "linkType": null,
-        "linkTicket": null
-      },
-      "createdAt": "2026-09-14",
-      "notes": "MHME-1431: RCA comment proposing 3-step SIT return remediation + 1h worklog + labels. Awaiting Arjenelle confirmation."
-    }
-  ]
+  "actionQueue": []
 }
