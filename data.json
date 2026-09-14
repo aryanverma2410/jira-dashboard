@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-14T11:24:03.401Z",
-  "totalTickets": 15,
+  "generatedAt": "2026-09-14T11:24:41.495Z",
+  "totalTickets": 14,
   "tickets": [
     {
       "key": "TKME-2324",
@@ -252,50 +252,6 @@
         "source": "",
         "foundAt": "",
         "issueNumber": null
-      }
-    },
-    {
-      "key": "GMT-21016",
-      "summary": "SMI | Nerp order  for Multiple Tenant",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Global Monitoring",
-      "projectKey": "GMT",
-      "issuetype": "Issue - Global Hybris",
-      "updated": "2026-09-14T06:03:21.000+0900",
-      "created": "2026-09-12T07:58:07.000+0900",
-      "statusChangedAt": "2026-09-14T06:03:21.306+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nWe could see the below list of orders in NERP order create in failed state and could see the orders is in waiting for transfer state with below exception so can you please check on this issue\n\nError message : This order type is not accepted.(YS03),TR260727-42008804 / 001 66982 Item 000010 ",
-      "commentsCount": 5,
-      "recentComments": [
-        {
-          "author": "Mohamed Imran A",
-          "date": "2026-09-14T06:02:50.773+0900",
-          "snippet": "Hi Aryan,\n\nPlease check with your team regarding the 0.01 price fix remediation for the 17 AE orders. We cannot confirm on the price fix remediation from our end.\n\nRegards, \nImran"
-        },
-        {
-          "author": "Ruban X",
-          "date": "2026-09-13T23:40:54.612+0900",
-          "snippet": "Please change the status to “SRE Review” when assigning it back to us (the SRE Team) for better follow-up."
-        }
-      ],
-      "lastCommentBy": "Mohamed Imran A",
-      "lastCommentSnippet": "Hi Aryan,\n\nPlease check with your team regarding the 0.01 price fix remediation for the 17 AE orders. We cannot confirm on the price fix remediation from our end.\n\nRegards, \nImran",
-      "lastCommentDate": "2026-09-14T06:02:50.773+0900",
-      "url": "https://jira.secext.samsung.net/browse/GMT-21016",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: GMT-21016\r\nSMI | Nerp order for Multiple Tenant\r\nGenerated: 2026-09-12T13:00:00+05:30\r\n\r\nHi [~imran.a@partner.samsung.com] ,\r\n\r\nThe orders listed in this ticket are stuck in ORDER_SPLIT status with their consignments failing at the GERP/NERP sales order creation step. All three error types are SAP-side rejections, not Hybris platform bugs. The consignments enter a retry loop (approximately every 30 minutes) and remain in WAITING_FOR_TRANSFER until the SAP master data or configuration is corrected.\r\n\r\nAE Orders (17 orders -- This order type is not accepted.(YS03)):\r\nHybris sends FOC (Free-of-Charge) orders using document type YS03, which is defined in TokogerpfulfilmentservicesConstants.SD_CREATE_FOC.FOC_ORDER_DOC_TYPE. The code path in GerpSdOrderCreateMessageTransformation.getPiheader() sets the PIHEADER.DOCTYPE to YS03 when the order contains FOC non-promotion entries (detected by TokoOrderService.doesConsignmentContainFOCNonPromotion()). SAP is rejecting YS03 with error type E in the PTMESSAGE response, indicating that the YS03 document type is either not configured or not accepted for the AE sales area in SAP. Kibana logs confirm all 17 AE consignments failed at 2026-09-12 07:20:31 UTC with the same IntegrationException. This needs to be checked on the SAP side -- the YS03 doc type must be configured for the AE sales area, or if these orders should not be classified as FOC, the promotion/product configuration on the Hybris side needs to be reviewed.\r\n\r\nTR260727-42008804 (Cond.type-one of( 1202 ) is mandatory):\r\nSAP is rejecting the sales order because pricing condition type 1202 is mandatory but not provided in the PTCONDITION segment of the SOAP request. Kibana logs show the consignment has been retrying every 30 minutes since at least 2026-09-12 02:59 UTC (13 consecutive attempts observed). The error originates from SAP's pricing configuration -- condition type 1202 is set as mandatory in the SAP pricing procedure for the TR sales area, but Hybris is not sending this condition type in the PTCONDITION block. This is a SAP pricing configuration issue that needs the NERP/SAP team to either make condition type 1202 optional for this sales area or provide the condition record in SAP.\r\n\r\nSA260905-76255022 (Ship-to party 3145746 not defined for sales area 7111 30 ZR):\r\nSAP is rejecting the sales order because ship-to party number 3145746 is not configured for sales area 7111 / distribution channel 30 / division ZR. Hybris populates the ship-to partner (PIPARTNER role WE) using the gerpSdPartnerShipToId config, which correctly sends the customer's ship-to ID. SAP does not have this ship-to party defined in the customer master for the specified sales area. Kibana logs show 238 SOAP response traces at approximately 30-minute retry intervals. This is a SAP customer master data issue -- the ship-to party needs to be created or extended for sales area 7111/30/ZR in SAP. There is also a separate ticket SAME-3967 tracking SA260905-76255022 for an incorrect division issue.\r\n\r\nNone of these are Hybris platform bugs. The TokoGerpWarehouseAdapterImpl.sendConsignmentToWarehouseInternal() method correctly parses the SAP PTMESSAGE response, detects the TYPE=E errors, and throws IntegrationException. The consignment process (SendConsignmentToWarehouseActionV2) correctly retries per the configured retry count and delay. The fix for all three error categories lies on the SAP/NERP side.\r\n\r\nAs Shubham noted, these orders affect AE, SA, and TR, not IN countries. Kindly route this to the respective regional SAP/NERP teams for configuration fixes.\r\n\r\nThanks,\r\nAryan.",
-        "sections": {
-          "issue": "",
-          "rca": "# RCA: GMT-21016\r\nSMI | Nerp order for Multiple Tenant\r\nGenerated: 2026-09-12T13:00:00+05:30\r\n\r\nHi [~imran.a@partner.samsung.com] ,\r\n\r\nThe orders listed in this ticket are stuck in ORDER_SPLIT status with their consignments failing at the GERP/NERP sales order creation step. All three error types are SAP-side rejections, not Hybris platform bugs. The consignments enter a retry loop (approximately every 30 minutes) and remain in WAITING_FOR_TRANSFER until the SAP master data or configuration is corrected.\r\n\r\nAE Orders (17 orders -- This order type is not accepted.(YS03)):\r\nHybris sends FOC (Free-of-Charge) orders using document type YS03, which is defined in TokogerpfulfilmentservicesConstants.SD_CREATE_FOC.FOC_ORDER_DOC_TYPE. The code path in GerpSdOrderCreateMessageTransformation.getPiheader() sets the PIHEADER.DOCTYPE to YS03 when the order contains FOC non-promotion entries (detected by TokoOrderService.doesConsignmentContainFOCNonPromotion()). SAP is rejecting YS03 with error type E in the PTMESSAGE response, indicating that the YS03 document type is either not configured or not accepted for the AE sales area in SAP. Kibana logs confirm all 17 AE consignments failed at 2026-09-12 07:20:31 UTC with the same IntegrationException. This needs to be checked on the SAP side -- the YS03 doc type must be configured for the AE sales area, or if these orders should not be classified as FOC, the promotion/product configuration on the Hybris side needs to be reviewed.\r\n\r\nTR260727-42008804 (Cond.type-one of( 1202 ) is mandatory):\r\nSAP is rejecting the sales order because pricing condition type 1202 is mandatory but not provided in the PTCONDITION segment of the SOAP request. Kibana logs show the consignment has been retrying every 30 minutes since at least 2026-09-12 02:59 UTC (13 consecutive attempts observed). The error originates from SAP's pricing configuration -- condition type 1202 is set as mandatory in the SAP pricing procedure for the TR sales area, but Hybris is not sending this condition type in the PTCONDITION block. This is a SAP pricing configuration issue that needs the NERP/SAP team to either make condition type 1202 optional for this sales area or provide the condition record in SAP.\r\n\r\nSA260905-76255022 (Ship-to party 3145746 not defined for sales area 7111 30 ZR):\r\nSAP is rejecting the sales order because ship-to party number 3145746 is not configured for sales area 7111 / distribution channel 30 / division ZR. Hybris populates the ship-to partner (PIPARTNER role WE) using the gerpSdPartnerShipToId config, which correctly sends the customer's ship-to ID. SAP does not have this ship-to party defined in the customer master for the specified sales area. Kibana logs show 238 SOAP response traces at approximately 30-minute retry intervals. This is a SAP customer master data issue -- the ship-to party needs to be created or extended for sales area 7111/30/ZR in SAP. There is also a separate ticket SAME-3967 tracking SA260905-76255022 for an incorrect division issue.\r\n\r\nNone of these are Hybris platform bugs. The TokoGerpWarehouseAdapterImpl.sendConsignmentToWarehouseInternal() method correctly parses the SAP PTMESSAGE response, detects the TYPE=E errors, and throws IntegrationException. The consignment process (SendConsignmentToWarehouseActionV2) correctly retries per the configured retry count and delay. The fix for all three error categories lies on the SAP/NERP side.\r\n\r\nAs Shubham noted, these orders affect AE, SA, and TR, not IN countries. Kindly route this to the respective regional SAP/NERP teams for configuration fixes.\r\n\r\nThanks,\r\nAryan.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-12T07:39:15.491Z"
       }
     },
     {
@@ -1030,7 +986,7 @@
       }
     ],
     "pid": 14028,
-    "uptime": 963,
+    "uptime": 998,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1042,7 +998,7 @@
       {
         "pid": 12004,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 564,
+        "ageSeconds": 602,
         "status": "running",
         "isChild": false,
         "taskSummary": "recheck all features, the star thing i am unable to star or unstar any ticket",
@@ -1052,7 +1008,7 @@
       {
         "pid": 21208,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 524,
+        "ageSeconds": 562,
         "status": "running",
         "isChild": false,
         "taskSummary": "log 1 hr on the parent ticket as well",
@@ -3005,7 +2961,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-14T11:07:58.318Z",
-      "ageMs": 967555
+      "ageMs": 1005393
     },
     "watchdogLogTail": "[2026-09-14T11:07:32.178Z] Dashboard script: C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\jira-dashboard-server.js\n[2026-09-14T11:07:32.184Z] Bridge already running (PID 18320). Adopting.\n[2026-09-14T11:07:32.186Z] Dashboard not running. Starting fresh.\n[2026-09-14T11:07:32.187Z] Starting jira-dashboard-server.js...\n[2026-09-14T11:07:32.356Z] Dashboard started with PID 18580 (restart #1, 1 in last hour)\n[2026-09-14T11:07:34.817Z] DUPLICATE watchdog detected: PID 16460 — killing\n[2026-09-14T11:07:51.593Z] RESTART NEEDED: Bridge process (PID 18320) not found\n[2026-09-14T11:07:53.099Z] Could not kill PID 18320: Command failed: taskkill /PID 18320 /F /T\n[2026-09-14T11:07:58.106Z] Starting bridge.js...\n[2026-09-14T11:07:58.274Z] Bridge started with PID 14028 (restart #1, 1 in last hour)"
   },
@@ -3014,7 +2970,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-14T11:23:37.002Z",
+      "lastCheck": "2026-09-14T11:24:36.665Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3023,18 +2979,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-14T11:23:37.002Z",
+      "lastCheck": "2026-09-14T11:24:36.665Z",
       "downSince": "2026-09-14T11:07:34.126Z",
-      "downDuration": 962876,
+      "downDuration": 1022539,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-14T11:23:37.002Z",
+      "lastCheck": "2026-09-14T11:24:36.665Z",
       "downSince": "2026-09-14T11:07:34.126Z",
-      "downDuration": 962876,
+      "downDuration": 1022539,
       "alert": true
     }
   ],
