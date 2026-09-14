@@ -1,60 +1,7 @@
 {
-  "generatedAt": "2026-09-14T11:53:13.952Z",
-  "totalTickets": 14,
+  "generatedAt": "2026-09-14T11:53:52.082Z",
+  "totalTickets": 13,
   "tickets": [
-    {
-      "key": "SAHME-3424",
-      "summary": "SC+ Policy Creation 09.09.2026",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "South Africa Maintenance & Enhancements",
-      "projectKey": "SAHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-14T20:55:17.000+0900",
-      "created": "2026-09-09T18:00:27.000+0900",
-      "statusChangedAt": "2026-09-09T18:44:31.714+0900",
-      "assignedToMeAt": "",
-      "description": "Hi All\n\n \n\nPlease retrigger the attached Samsung Care Plus orders with provided IMEI number and serial numbers provided. Share the error response log.\n\n \n|Order Number|IMEI|\n|ZA260730-44938330|350557093608334|\n|ZA260701-19072768|355645121485547|\n|ZA260712-26897085|355645121218054|\n|ZA260729-44585698",
-      "commentsCount": 4,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-14T20:55:17.765+0900",
-          "snippet": "Hi ~@email ,\n\nSC+ Updated for all 5 orders.\n\nKindly check and validate at your end as well.\n\nThanks and Regards\n\nAryan"
-        },
-        {
-          "author": "Nosipho Mkhungo",
-          "date": "2026-09-14T15:28:55.905+0900",
-          "snippet": "~@email Good Morning,\n\nPlease provide feedback.\n\nKind Regards\nNosipho"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi ~@email ,\n\nSC+ Updated for all 5 orders.\n\nKindly check and validate at your end as well.\n\nThanks and Regards\n\nAryan",
-      "lastCommentDate": "2026-09-14T20:55:17.765+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAHME-3424",
-      "linkedTickets": [
-        {
-          "key": "SAHME-3361",
-          "summary": "SC+ Policy Creation 06.08.2026",
-          "status": "Launch Verification",
-          "statusCategory": "Done",
-          "relation": "clones",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "SC+ Policy Creation 09.09.2026 - 5 ZA-region orders needing SC+ retrigger\r\nGenerated: 2026-09-10T04:41:36.015Z\r\n\r\nHi [~n.mkhungo@samsung.com] ,\r\n\r\nWe investigated the 5 SC+ orders listed in the ticket. The consignment process for each order failed at the processExternalServices action when attempting to register the Samsung Care+ policy with the SMC API.\r\n\r\nZA260701-19072768, ZA260712-26897085, ZA260729-44585698, ZA260806-52510202:\r\nAll four orders have consignment status COMPLETED and order status SHIPPED, meaning the goods were physically delivered. However, the SMC ExternalService entry on each order is in ERROR status and the consignment process (consignment-process-v11-36) is in ERROR state. The order process (order-process-v25-69) is stuck in RUNNING because it is waiting for the consignment process to complete. Payment authorisation and capture were successful on all orders.\r\n\r\nZA260730-44938330:\r\nThis order has status COMPLETED with both consignments SUCCEEDED. The SMC ExternalService entry is in NEW status, meaning it was never processed. The consignment process already completed successfully, so the ES was never picked up during the processExternalServices action. This is likely a remnant from the previous remediation attempt under SAHME-3361 where the ES was reset to NEW but the process was not restarted.\r\n\r\nFrom the parent ticket SAHME-3361, the SMC API rejected the registration requests with two error types: NOT_EXISTS_PRODUCT_ID (code USR-A1002, \"the product id is not valid\") and INVALID_REQUEST_PARAMETERS (code USR-A0002, \"South Africa Identity Book is invalid\"). These are SMC-side validation rejections, not Hybris platform defects. The consignment process correctly transitioned to ERROR when the SMC API returned the error response.\r\n\r\nThe remediation approach is to reset the ExternalService status from ERROR to NEW, then restart the consignment process at the processExternalServices action. This is the same approach confirmed in SAHME-3361 and reusing the approved script from PC-52678. For ZA260730-44938330, the ES is already in NEW but the process needs to be re-triggered since it already completed.\r\n\r\nWe can proceed with the remediation script under the reusable PC ticket PC-52678. Kindly confirm if we should go ahead.\r\n\r\nThanks,\r\n\r\nAryan\r\n\r\n## Remediation\r\nReuse PC-52678 (Closed, REUSABLE). Script: script-AEME-6495-scplus-remediation.groovy.\r\nCopy script, update order list to 5 ZA orders, update ITGC header to PC-52678(SAHME-3424).\r\nReset ES from ERROR to NEW for 4 orders. For ZA260730-44938330 (ES already NEW, process SUCCEEDED), set process to ERROR and restart at processExternalServices.\r\nOrders:\r\n1. ZA260730-44938330 (IMEI: 350557093608334) - ES NEW, process SUCCEEDED\r\n2. ZA260701-19072768 (IMEI: 355645121485547) - ES ERROR, process ERROR\r\n3. ZA260712-26897085 (IMEI: 355645121218054) - ES ERROR, process ERROR\r\n4. ZA260729-44585698 (IMEI: 352089363317956) - ES ERROR, process ERROR\r\n5. ZA260806-52510202 (IMEI: 352089363328953) - ES ERROR, process ERROR",
-        "sections": {
-          "issue": "",
-          "rca": "SC+ Policy Creation 09.09.2026 - 5 ZA-region orders needing SC+ retrigger\r\nGenerated: 2026-09-10T04:41:36.015Z\r\n\r\nHi [~n.mkhungo@samsung.com] ,\r\n\r\nWe investigated the 5 SC+ orders listed in the ticket. The consignment process for each order failed at the processExternalServices action when attempting to register the Samsung Care+ policy with the SMC API.\r\n\r\nZA260701-19072768, ZA260712-26897085, ZA260729-44585698, ZA260806-52510202:\r\nAll four orders have consignment status COMPLETED and order status SHIPPED, meaning the goods were physically delivered. However, the SMC ExternalService entry on each order is in ERROR status and the consignment process (consignment-process-v11-36) is in ERROR state. The order process (order-process-v25-69) is stuck in RUNNING because it is waiting for the consignment process to complete. Payment authorisation and capture were successful on all orders.\r\n\r\nZA260730-44938330:\r\nThis order has status COMPLETED with both consignments SUCCEEDED. The SMC ExternalService entry is in NEW status, meaning it was never processed. The consignment process already completed successfully, so the ES was never picked up during the processExternalServices action. This is likely a remnant from the previous remediation attempt under SAHME-3361 where the ES was reset to NEW but the process was not restarted.\r\n\r\nFrom the parent ticket SAHME-3361, the SMC API rejected the registration requests with two error types: NOT_EXISTS_PRODUCT_ID (code USR-A1002, \"the product id is not valid\") and INVALID_REQUEST_PARAMETERS (code USR-A0002, \"South Africa Identity Book is invalid\"). These are SMC-side validation rejections, not Hybris platform defects. The consignment process correctly transitioned to ERROR when the SMC API returned the error response.\r\n\r\nThe remediation approach is to reset the ExternalService status from ERROR to NEW, then restart the consignment process at the processExternalServices action. This is the same approach confirmed in SAHME-3361 and reusing the approved script from PC-52678. For ZA260730-44938330, the ES is already in NEW but the process needs to be re-triggered since it already completed.\r\n\r\nWe can proceed with the remediation script under the reusable PC ticket PC-52678. Kindly confirm if we should go ahead.\r\n\r\nThanks,\r\n\r\nAryan\r\n\r\n## Remediation\r\nReuse PC-52678 (Closed, REUSABLE). Script: script-AEME-6495-scplus-remediation.groovy.\r\nCopy script, update order list to 5 ZA orders, update ITGC header to PC-52678(SAHME-3424).\r\nReset ES from ERROR to NEW for 4 orders. For ZA260730-44938330 (ES already NEW, process SUCCEEDED), set process to ERROR and restart at processExternalServices.\r\nOrders:\r\n1. ZA260730-44938330 (IMEI: 350557093608334) - ES NEW, process SUCCEEDED\r\n2. ZA260701-19072768 (IMEI: 355645121485547) - ES ERROR, process ERROR\r\n3. ZA260712-26897085 (IMEI: 355645121218054) - ES ERROR, process ERROR\r\n4. ZA260729-44585698 (IMEI: 352089363317956) - ES ERROR, process ERROR\r\n5. ZA260806-52510202 (IMEI: 352089363328953) - ES ERROR, process ERROR",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-10T05:07:14.446Z"
-      }
-    },
     {
       "key": "TKME-2324",
       "summary": "O2O Dealers PII Data Request for SETK Hybris Enhancement",
@@ -986,7 +933,7 @@
       }
     ],
     "pid": 14028,
-    "uptime": 2711,
+    "uptime": 2751,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -998,7 +945,7 @@
       {
         "pid": 12004,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 2315,
+        "ageSeconds": 2352,
         "status": "running",
         "isChild": false,
         "taskSummary": "recheck all features, the star thing i am unable to star or unstar any ticket",
@@ -1008,7 +955,7 @@
       {
         "pid": 21208,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 2276,
+        "ageSeconds": 2313,
         "status": "running",
         "isChild": false,
         "taskSummary": "log 1 hr on the parent ticket as well",
@@ -2961,7 +2908,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-14T11:07:58.318Z",
-      "ageMs": 2718633
+      "ageMs": 2755980
     },
     "watchdogLogTail": "[2026-09-14T11:07:32.178Z] Dashboard script: C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\jira-dashboard-server.js\n[2026-09-14T11:07:32.184Z] Bridge already running (PID 18320). Adopting.\n[2026-09-14T11:07:32.186Z] Dashboard not running. Starting fresh.\n[2026-09-14T11:07:32.187Z] Starting jira-dashboard-server.js...\n[2026-09-14T11:07:32.356Z] Dashboard started with PID 18580 (restart #1, 1 in last hour)\n[2026-09-14T11:07:34.817Z] DUPLICATE watchdog detected: PID 16460 — killing\n[2026-09-14T11:07:51.593Z] RESTART NEEDED: Bridge process (PID 18320) not found\n[2026-09-14T11:07:53.099Z] Could not kill PID 18320: Command failed: taskkill /PID 18320 /F /T\n[2026-09-14T11:07:58.106Z] Starting bridge.js...\n[2026-09-14T11:07:58.274Z] Bridge started with PID 14028 (restart #1, 1 in last hour)"
   },
@@ -2970,7 +2917,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-14T11:52:39.325Z",
+      "lastCheck": "2026-09-14T11:53:39.212Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -2979,18 +2926,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-14T11:52:39.325Z",
+      "lastCheck": "2026-09-14T11:53:39.212Z",
       "downSince": "2026-09-14T11:07:34.126Z",
-      "downDuration": 2705199,
+      "downDuration": 2765086,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-14T11:52:39.325Z",
+      "lastCheck": "2026-09-14T11:53:39.212Z",
       "downSince": "2026-09-14T11:29:38.110Z",
-      "downDuration": 1381215,
+      "downDuration": 1441102,
       "alert": true
     }
   ],
