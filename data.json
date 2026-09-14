@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-14T12:58:22.334Z",
+  "generatedAt": "2026-09-14T12:59:01.328Z",
   "totalTickets": 15,
   "tickets": [
     {
@@ -188,14 +188,14 @@
       "linkedTickets": [],
       "solution": {
         "status": "found",
-        "excerpt": "Let me start by reading past learnings, checking for existing cache/lock files, and looking at how previous tickets were handled.\nA lock file already exists (likely from the dashboard trigger), but no cache or RCA yet. Let me check the lock content, look at a previous SAHME fetch script for reference, and check MCP availability.\nNow let me fetch the ticket details and check MCP availability in parallel. I'll create a fetch script for SAHME-3425 and check MCP status.\nBridge is UP. Let me create the fetch script using write_file and then run it.\nNow I have the ticket details. 8 unique order codes are stuck at \"Shipped\" status. Let me launch parallel investigations: DB state queries, Kibana logs, Jira cross-reference, and reusable PC ticket search.\nDB scripts exist and Kibana MENA is UP. Let me now launch all 4 investigation sub-agents in parallel: DB state queries (8 orders), Kibana logs, Jira cross-reference, and reusable PC ticket search.\nSub-agents timed out. Let me run the DB queries directly. I'll start with the first 4 orders.\nNow let me search for reusable PC tickets and check Memory for known patterns. Let me also check for similar SAHME tickets that were resolved with this same pattern.\nThe `\\n` in the template literals is causing issues. Let me simplify the script.",
+        "excerpt": "# RCA: SAHME-3425\nRequest to process orders to Completed status\nGenerated: 2026-09-14T18:28:26\n\nHi [~l.mbambisa@samsung.com] ,\n\nAll 8 orders are confirmed at SHIPPED status in Hybris. DB verification shows that 7 of the 8 orders were split into two consignments during fulfilment. The _1 consignment (main product) shipped and completed normally with tracking ID, completion date, and GERP billing date. The parent consignment (accessories and service items) remained at SHIPPED with a GERP billing number but no tracking ID, no completion date, and no GERP billing date.\n\nThe order process for each order is RUNNING and stuck looping at the 'isProcessCompleted' action node. This action checks whether all consignment processes are done before transitioning the order to COMPLETED. Since the parent consignment never reached COMPLETED, the consignment process never set done=true, and the order process keeps returning NOK and looping back to 'waitForWarehouseSubprocessEnd'.\n\nZA260811-57133256 has a single consignment that is already COMPLETED, but the consignment process is in ERROR state with the SMC external service also in ERROR. The order process cannot proceed because the consignment process never signalled completion.\n\nAs confirmed, all orders have been physically delivered to customers. The remediation is to set the stuck consignments to COMPLETED and restart the consignment business process at the 'isShippedComplete' node. This will allow the order process to detect completion and transition the orders to COMPLETED. Email notifications for order completed and order shipped will be suppressed to prevent sending delayed emails to customers.\n\nThis is the same remediation approach used in SAHME-3423 and approved under reusable PC ticket PC-52596.\n\n## Remediation\n\n- Reuse PC-52596 (REUSABLE, Closed) - script: script-SAME-3931-push-from-shipped.groovy\n- Script sets all consignments to COMPLETED, restarts consignment process at isShippedComplete node\n- Suppresses ORDER_COMPLETED and ORDER_SHIPPED email notifications\n- 8 orders to update: ZA260708-23722486, ZA260805-51606233, ZA260724-38477057, ZA260802-48565264, ZA260811-57133256, ZA260812-57659972, ZA260813-59084342, ZA260811-56785907",
         "sections": {
           "issue": "",
-          "rca": "Let me start by reading past learnings, checking for existing cache/lock files, and looking at how previous tickets were handled.\nA lock file already exists (likely from the dashboard trigger), but no cache or RCA yet. Let me check the lock content, look at a previous SAHME fetch script for reference, and check MCP availability.\nNow let me fetch the ticket details and check MCP availability in parallel. I'll create a fetch script for SAHME-3425 and check MCP status.\nBridge is UP. Let me create the fetch script using write_file and then run it.\nNow I have the ticket details. 8 unique order codes are stuck at \"Shipped\" status. Let me launch parallel investigations: DB state queries, Kibana logs, Jira cross-reference, and reusable PC ticket search.\nDB scripts exist and Kibana MENA is UP. Let me now launch all 4 investigation sub-agents in parallel: DB state queries (8 orders), Kibana logs, Jira cross-reference, and reusable PC ticket search.\nSub-agents timed out. Let me run the DB queries directly. I'll start with the first 4 orders.\nNow let me search for reusable PC tickets and check Memory for known patterns. Let me also check for similar SAHME tickets that were resolved with this same pattern.\nThe `\\n` in the template literals is causing issues. Let me simplify the script.",
+          "rca": "# RCA: SAHME-3425\nRequest to process orders to Completed status\nGenerated: 2026-09-14T18:28:26\n\nHi [~l.mbambisa@samsung.com] ,\n\nAll 8 orders are confirmed at SHIPPED status in Hybris. DB verification shows that 7 of the 8 orders were split into two consignments during fulfilment. The _1 consignment (main product) shipped and completed normally with tracking ID, completion date, and GERP billing date. The parent consignment (accessories and service items) remained at SHIPPED with a GERP billing number but no tracking ID, no completion date, and no GERP billing date.\n\nThe order process for each order is RUNNING and stuck looping at the 'isProcessCompleted' action node. This action checks whether all consignment processes are done before transitioning the order to COMPLETED. Since the parent consignment never reached COMPLETED, the consignment process never set done=true, and the order process keeps returning NOK and looping back to 'waitForWarehouseSubprocessEnd'.\n\nZA260811-57133256 has a single consignment that is already COMPLETED, but the consignment process is in ERROR state with the SMC external service also in ERROR. The order process cannot proceed because the consignment process never signalled completion.\n\nAs confirmed, all orders have been physically delivered to customers. The remediation is to set the stuck consignments to COMPLETED and restart the consignment business process at the 'isShippedComplete' node. This will allow the order process to detect completion and transition the orders to COMPLETED. Email notifications for order completed and order shipped will be suppressed to prevent sending delayed emails to customers.\n\nThis is the same remediation approach used in SAHME-3423 and approved under reusable PC ticket PC-52596.\n\n## Remediation\n\n- Reuse PC-52596 (REUSABLE, Closed) - script: script-SAME-3931-push-from-shipped.groovy\n- Script sets all consignments to COMPLETED, restarts consignment process at isShippedComplete node\n- Suppresses ORDER_COMPLETED and ORDER_SHIPPED email notifications\n- 8 orders to update: ZA260708-23722486, ZA260805-51606233, ZA260724-38477057, ZA260802-48565264, ZA260811-57133256, ZA260812-57659972, ZA260813-59084342, ZA260811-56785907",
           "remediation": ""
         },
         "source": "RCA MD",
-        "foundAt": "2026-09-10T09:32:39.268Z"
+        "foundAt": "2026-09-14T12:58:26.421Z"
       }
     },
     {
@@ -1010,7 +1010,7 @@
       }
     ],
     "pid": 14028,
-    "uptime": 6623,
+    "uptime": 6658,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1022,7 +1022,7 @@
       {
         "pid": 12004,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 6223,
+        "ageSeconds": 6261,
         "status": "running",
         "isChild": false,
         "taskSummary": "recheck all features, the star thing i am unable to star or unstar any ticket",
@@ -1032,11 +1032,11 @@
       {
         "pid": 19100,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 885,
+        "ageSeconds": 923,
         "status": "running",
         "isChild": false,
-        "taskSummary": "verify every field and request from ticket in @\"\\\\sdsigdccifs.ind1.sdsi.com\\GDCMIS20GB\\Downloads\\...",
-        "lastExchange": "verify every field and request from ticket in @\"\\\\sdsigdccifs.ind1.sdsi.com\\GDCMIS20GB\\Downloads\\UAE PROD Daily SC+ Report14-Sep-2026.xlsx\"",
+        "taskSummary": "no assumptions verify each line in RCA",
+        "lastExchange": "no assumptions verify each line in RCA",
         "sessionId": "bin"
       }
     ],
@@ -3015,7 +3015,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-14T11:07:58.318Z",
-      "ageMs": 6627802
+      "ageMs": 6665779
     },
     "watchdogLogTail": "[2026-09-14T11:07:32.178Z] Dashboard script: C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\jira-dashboard-server.js\n[2026-09-14T11:07:32.184Z] Bridge already running (PID 18320). Adopting.\n[2026-09-14T11:07:32.186Z] Dashboard not running. Starting fresh.\n[2026-09-14T11:07:32.187Z] Starting jira-dashboard-server.js...\n[2026-09-14T11:07:32.356Z] Dashboard started with PID 18580 (restart #1, 1 in last hour)\n[2026-09-14T11:07:34.817Z] DUPLICATE watchdog detected: PID 16460 — killing\n[2026-09-14T11:07:51.593Z] RESTART NEEDED: Bridge process (PID 18320) not found\n[2026-09-14T11:07:53.099Z] Could not kill PID 18320: Command failed: taskkill /PID 18320 /F /T\n[2026-09-14T11:07:58.106Z] Starting bridge.js...\n[2026-09-14T11:07:58.274Z] Bridge started with PID 14028 (restart #1, 1 in last hour)"
   },
@@ -3024,7 +3024,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-14T12:57:58.134Z",
+      "lastCheck": "2026-09-14T12:58:57.702Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3033,18 +3033,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-14T12:57:58.134Z",
+      "lastCheck": "2026-09-14T12:58:57.702Z",
       "downSince": "2026-09-14T11:07:34.126Z",
-      "downDuration": 6624008,
+      "downDuration": 6683576,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-14T12:57:58.134Z",
+      "lastCheck": "2026-09-14T12:58:57.702Z",
       "downSince": "2026-09-14T12:02:40.522Z",
-      "downDuration": 3317612,
+      "downDuration": 3377180,
       "alert": true
     }
   ],
