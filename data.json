@@ -1,7 +1,303 @@
 {
-  "generatedAt": "2026-09-13T03:29:42.641Z",
-  "totalTickets": 13,
+  "generatedAt": "2026-09-14T11:07:35.951Z",
+  "totalTickets": 15,
   "tickets": [
+    {
+      "key": "TKME-2324",
+      "summary": "O2O Dealers PII Data Request for SETK Hybris Enhancement",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Turkey Maintenance & Enhancements",
+      "projectKey": "TKME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-09-14T17:35:07.000+0900",
+      "created": "2026-09-14T17:21:22.000+0900",
+      "statusChangedAt": "2026-09-14T17:33:44.725+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\n \n\nRequesting for your support to provide/extract the following data. Attached is the approval for your reference.\n\n \n\nWe need below details for each created account for EA Dealer Multistore:\n\nDealer Code\nBranch\nIP Address\nUser ID\nEmail ID\nUser Name\nActivation Status\nAuthority Group (Store",
+      "commentsCount": 0,
+      "recentComments": [],
+      "lastCommentBy": "",
+      "lastCommentSnippet": "",
+      "lastCommentDate": "",
+      "url": "https://jira.secext.samsung.net/browse/TKME-2324",
+      "linkedTickets": [
+        {
+          "key": "PC-44430",
+          "summary": "TKME-1976|O2O Dealers PII Data Request for SETK Hybris Enhancement",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        },
+        {
+          "key": "TKME-1976",
+          "summary": "O2O Dealers PII Data Request for SETK Hybris Enhancement",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "clones",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "none",
+        "excerpt": "",
+        "source": "",
+        "foundAt": "",
+        "issueNumber": null
+      }
+    },
+    {
+      "key": "SAHME-3424",
+      "summary": "SC+ Policy Creation 09.09.2026",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "South Africa Maintenance & Enhancements",
+      "projectKey": "SAHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-09-14T15:28:55.000+0900",
+      "created": "2026-09-09T18:00:27.000+0900",
+      "statusChangedAt": "2026-09-09T18:44:31.714+0900",
+      "assignedToMeAt": "",
+      "description": "Hi All\n\n \n\nPlease retrigger the attached Samsung Care Plus orders with provided IMEI number and serial numbers provided. Share the error response log.\n\n \n|Order Number|IMEI|\n|ZA260730-44938330|350557093608334|\n|ZA260701-19072768|355645121485547|\n|ZA260712-26897085|355645121218054|\n|ZA260729-44585698",
+      "commentsCount": 3,
+      "recentComments": [
+        {
+          "author": "Nosipho Mkhungo",
+          "date": "2026-09-14T15:28:55.905+0900",
+          "snippet": "~@email Good Morning,\n\nPlease provide feedback.\n\nKind Regards\nNosipho"
+        },
+        {
+          "author": "Nosipho Mkhungo",
+          "date": "2026-09-10T19:33:39.724+0900",
+          "snippet": "~@email[ please proceed with"
+        }
+      ],
+      "lastCommentBy": "Nosipho Mkhungo",
+      "lastCommentSnippet": "~@email Good Morning,\n\nPlease provide feedback.\n\nKind Regards\nNosipho",
+      "lastCommentDate": "2026-09-14T15:28:55.905+0900",
+      "url": "https://jira.secext.samsung.net/browse/SAHME-3424",
+      "linkedTickets": [
+        {
+          "key": "SAHME-3361",
+          "summary": "SC+ Policy Creation 06.08.2026",
+          "status": "Launch Verification",
+          "statusCategory": "Done",
+          "relation": "clones",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "SC+ Policy Creation 09.09.2026 - 5 ZA-region orders needing SC+ retrigger\r\nGenerated: 2026-09-10T04:41:36.015Z\r\n\r\nHi [~n.mkhungo@samsung.com] ,\r\n\r\nWe investigated the 5 SC+ orders listed in the ticket. The consignment process for each order failed at the processExternalServices action when attempting to register the Samsung Care+ policy with the SMC API.\r\n\r\nZA260701-19072768, ZA260712-26897085, ZA260729-44585698, ZA260806-52510202:\r\nAll four orders have consignment status COMPLETED and order status SHIPPED, meaning the goods were physically delivered. However, the SMC ExternalService entry on each order is in ERROR status and the consignment process (consignment-process-v11-36) is in ERROR state. The order process (order-process-v25-69) is stuck in RUNNING because it is waiting for the consignment process to complete. Payment authorisation and capture were successful on all orders.\r\n\r\nZA260730-44938330:\r\nThis order has status COMPLETED with both consignments SUCCEEDED. The SMC ExternalService entry is in NEW status, meaning it was never processed. The consignment process already completed successfully, so the ES was never picked up during the processExternalServices action. This is likely a remnant from the previous remediation attempt under SAHME-3361 where the ES was reset to NEW but the process was not restarted.\r\n\r\nFrom the parent ticket SAHME-3361, the SMC API rejected the registration requests with two error types: NOT_EXISTS_PRODUCT_ID (code USR-A1002, \"the product id is not valid\") and INVALID_REQUEST_PARAMETERS (code USR-A0002, \"South Africa Identity Book is invalid\"). These are SMC-side validation rejections, not Hybris platform defects. The consignment process correctly transitioned to ERROR when the SMC API returned the error response.\r\n\r\nThe remediation approach is to reset the ExternalService status from ERROR to NEW, then restart the consignment process at the processExternalServices action. This is the same approach confirmed in SAHME-3361 and reusing the approved script from PC-52678. For ZA260730-44938330, the ES is already in NEW but the process needs to be re-triggered since it already completed.\r\n\r\nWe can proceed with the remediation script under the reusable PC ticket PC-52678. Kindly confirm if we should go ahead.\r\n\r\nThanks,\r\n\r\nAryan\r\n\r\n## Remediation\r\nReuse PC-52678 (Closed, REUSABLE). Script: script-AEME-6495-scplus-remediation.groovy.\r\nCopy script, update order list to 5 ZA orders, update ITGC header to PC-52678(SAHME-3424).\r\nReset ES from ERROR to NEW for 4 orders. For ZA260730-44938330 (ES already NEW, process SUCCEEDED), set process to ERROR and restart at processExternalServices.\r\nOrders:\r\n1. ZA260730-44938330 (IMEI: 350557093608334) - ES NEW, process SUCCEEDED\r\n2. ZA260701-19072768 (IMEI: 355645121485547) - ES ERROR, process ERROR\r\n3. ZA260712-26897085 (IMEI: 355645121218054) - ES ERROR, process ERROR\r\n4. ZA260729-44585698 (IMEI: 352089363317956) - ES ERROR, process ERROR\r\n5. ZA260806-52510202 (IMEI: 352089363328953) - ES ERROR, process ERROR",
+        "sections": {
+          "issue": "",
+          "rca": "SC+ Policy Creation 09.09.2026 - 5 ZA-region orders needing SC+ retrigger\r\nGenerated: 2026-09-10T04:41:36.015Z\r\n\r\nHi [~n.mkhungo@samsung.com] ,\r\n\r\nWe investigated the 5 SC+ orders listed in the ticket. The consignment process for each order failed at the processExternalServices action when attempting to register the Samsung Care+ policy with the SMC API.\r\n\r\nZA260701-19072768, ZA260712-26897085, ZA260729-44585698, ZA260806-52510202:\r\nAll four orders have consignment status COMPLETED and order status SHIPPED, meaning the goods were physically delivered. However, the SMC ExternalService entry on each order is in ERROR status and the consignment process (consignment-process-v11-36) is in ERROR state. The order process (order-process-v25-69) is stuck in RUNNING because it is waiting for the consignment process to complete. Payment authorisation and capture were successful on all orders.\r\n\r\nZA260730-44938330:\r\nThis order has status COMPLETED with both consignments SUCCEEDED. The SMC ExternalService entry is in NEW status, meaning it was never processed. The consignment process already completed successfully, so the ES was never picked up during the processExternalServices action. This is likely a remnant from the previous remediation attempt under SAHME-3361 where the ES was reset to NEW but the process was not restarted.\r\n\r\nFrom the parent ticket SAHME-3361, the SMC API rejected the registration requests with two error types: NOT_EXISTS_PRODUCT_ID (code USR-A1002, \"the product id is not valid\") and INVALID_REQUEST_PARAMETERS (code USR-A0002, \"South Africa Identity Book is invalid\"). These are SMC-side validation rejections, not Hybris platform defects. The consignment process correctly transitioned to ERROR when the SMC API returned the error response.\r\n\r\nThe remediation approach is to reset the ExternalService status from ERROR to NEW, then restart the consignment process at the processExternalServices action. This is the same approach confirmed in SAHME-3361 and reusing the approved script from PC-52678. For ZA260730-44938330, the ES is already in NEW but the process needs to be re-triggered since it already completed.\r\n\r\nWe can proceed with the remediation script under the reusable PC ticket PC-52678. Kindly confirm if we should go ahead.\r\n\r\nThanks,\r\n\r\nAryan\r\n\r\n## Remediation\r\nReuse PC-52678 (Closed, REUSABLE). Script: script-AEME-6495-scplus-remediation.groovy.\r\nCopy script, update order list to 5 ZA orders, update ITGC header to PC-52678(SAHME-3424).\r\nReset ES from ERROR to NEW for 4 orders. For ZA260730-44938330 (ES already NEW, process SUCCEEDED), set process to ERROR and restart at processExternalServices.\r\nOrders:\r\n1. ZA260730-44938330 (IMEI: 350557093608334) - ES NEW, process SUCCEEDED\r\n2. ZA260701-19072768 (IMEI: 355645121485547) - ES ERROR, process ERROR\r\n3. ZA260712-26897085 (IMEI: 355645121218054) - ES ERROR, process ERROR\r\n4. ZA260729-44585698 (IMEI: 352089363317956) - ES ERROR, process ERROR\r\n5. ZA260806-52510202 (IMEI: 352089363328953) - ES ERROR, process ERROR",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-10T05:07:14.446Z"
+      }
+    },
+    {
+      "key": "RT-703005",
+      "summary": "Regression - SMI STG2 - SA/QA/KW/OM: Recurring/Dunning process is NOT working for SC+ subscription orders",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Critical",
+      "project": "Regression Test",
+      "projectKey": "RT",
+      "issuetype": "Bug",
+      "updated": "2026-09-14T15:27:07.000+0900",
+      "created": "2026-08-18T12:32:51.000+0900",
+      "statusChangedAt": "2026-08-25T14:29:43.414+0900",
+      "assignedToMeAt": "",
+      "description": "Pre-condition\n1. Go to SA Campaign page\n[Internal Link]\n[Internal Link]\n2. Enter valid IMEI (357363630703578)\n3. Select SC+ Monthly Standalone/ SC+ Free Monthly Standalone\n(SMC-SA-STANDALONE-S36, SMC-SA-STANDALONE-S36-3MF)\n4. Add SC+ Monthly Standalone/ SC+ Free Monthly Standalone to cart\n5. Place a",
+      "commentsCount": 5,
+      "recentComments": [
+        {
+          "author": "Anh Mai",
+          "date": "2026-08-25T15:33:58.053+0900",
+          "snippet": "Hi ~@email\n1- For the orders that don’t have this issue, could you help us fix the auto-trigger instead of triggering them manually?\n2- Secondly, for the orders with a failed subscription process, could you please help check and fix why many subsequent orders had the same issue and help fix it?\nBeca"
+        },
+        {
+          "author": "Aswini Bharath",
+          "date": "2026-08-25T14:29:20.623+0900",
+          "snippet": "Hi ~@email \nI manually triggered the order {}SA260814-08839594{}, and it was processed successfully.\n\nFor orders SA260817-08949038 and {}SA260817-08934345{}, the subscription process had already failed. As a result, when we executed the {}tokoRecurringBillingJob{}, it was unable to trigger these ord"
+        }
+      ],
+      "lastCommentBy": "Anh Mai",
+      "lastCommentSnippet": "Hi ~@email\n1- For the orders that don’t have this issue, could you help us fix the auto-trigger instead of triggering them manually?\n2- Secondly, for the orders with a failed subscription process, could you please help check and fix why many subsequent orders had the same issue and help fix it?\nBeca",
+      "lastCommentDate": "2026-08-25T15:33:58.053+0900",
+      "url": "https://jira.secext.samsung.net/browse/RT-703005",
+      "linkedTickets": [
+        {
+          "key": "SAME-3965",
+          "summary": "SESAR - SC+ Monthly Subscription FI Issues",
+          "status": "Approved for Launch",
+          "statusCategory": "In Progress",
+          "relation": "tests",
+          "assignee": null
+        },
+        {
+          "key": "RT-683291",
+          "summary": "OM_92RC1 - Added service_14 - Verify Dunning flow for SC+ standalone monthly",
+          "status": "Failed",
+          "statusCategory": "In Progress",
+          "relation": "relates to",
+          "assignee": null
+        },
+        {
+          "key": "RT-683898",
+          "summary": "[SA_SUB_STANDALONE_05]: Recurring process for Monthly/Free Monthly SC+ Standalone\n",
+          "status": "Failed",
+          "statusCategory": "In Progress",
+          "relation": "relates to",
+          "assignee": null
+        },
+        {
+          "key": "RT-683899",
+          "summary": "[SA_SUB_STANDALONE_06]:  Dunning process for SC+ standalone months/free months",
+          "status": "Failed",
+          "statusCategory": "In Progress",
+          "relation": "relates to",
+          "assignee": null
+        },
+        {
+          "key": "RT-683903",
+          "summary": "[SA_SUB_STANDALONE_10]: Verify the Subscription Payment Failure Email\n\n\n \n\n",
+          "status": "Blocked-ES",
+          "statusCategory": "To Do",
+          "relation": "relates to",
+          "assignee": null
+        },
+        {
+          "key": "RT-683904",
+          "summary": "[SA_SUB_STANDALONE_11]: Verify the Subscription Payment Success Email\n\n\n \n\n",
+          "status": "Blocked-ES",
+          "statusCategory": "To Do",
+          "relation": "relates to",
+          "assignee": null
+        },
+        {
+          "key": "RT-683909",
+          "summary": "[SA_SUB_BUNDLE_04]: DUNNING PROCESS: Verify the initial payment fails\n",
+          "status": "Failed",
+          "statusCategory": "In Progress",
+          "relation": "relates to",
+          "assignee": null
+        },
+        {
+          "key": "RT-683912",
+          "summary": "[SA_SUB_BUNDLE_06]: Verify the 1st dunning email (friendly reminder email)\n",
+          "status": "Failed",
+          "statusCategory": "In Progress",
+          "relation": "relates to",
+          "assignee": null
+        },
+        {
+          "key": "RT-683913",
+          "summary": "[SA_SUB_BUNDLE_07]: Verify the SC+ monthly plan details on My Orders page when subscription status is Active\n\n",
+          "status": "Failed",
+          "statusCategory": "In Progress",
+          "relation": "relates to",
+          "assignee": null
+        },
+        {
+          "key": "RT-683914",
+          "summary": "[SA_SUB_BUNDLE_08]: Verify the SC+ monthly plan details on My Orders page when subscription status is On Hold\n\n",
+          "status": "Failed",
+          "statusCategory": "In Progress",
+          "relation": "relates to",
+          "assignee": null
+        },
+        {
+          "key": "RT-683923",
+          "summary": "[SA_SUB_BUNDLE_03]: RECURRING PROCESS: Verify the SC+ monthly purchase flow when billing date is EXCEPT the last day of the month",
+          "status": "Failed",
+          "statusCategory": "In Progress",
+          "relation": "relates to",
+          "assignee": null
+        },
+        {
+          "key": "RT-686340",
+          "summary": "QA_92RC1_AEME-5575_02: Recurring process of SC+ Bundle Monthly Subscription",
+          "status": "Failed",
+          "statusCategory": "In Progress",
+          "relation": "relates to",
+          "assignee": null
+        },
+        {
+          "key": "RT-687574",
+          "summary": "[KW_91RC1_SC+ Standalone Sub_01] Recurring process for Monthly/Free Monthly SC+ Standalone",
+          "status": "Failed",
+          "statusCategory": "In Progress",
+          "relation": "relates to",
+          "assignee": null
+        },
+        {
+          "key": "RT-687575",
+          "summary": "[KW_91RC1_SC+ Standalone Sub_02] Dunning process for SC+ standalone Monthly/Free Monthly",
+          "status": "Failed",
+          "statusCategory": "In Progress",
+          "relation": "relates to",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "none",
+        "excerpt": "",
+        "source": "",
+        "foundAt": "",
+        "issueNumber": null
+      }
+    },
+    {
+      "key": "GMT-21016",
+      "summary": "SMI | Nerp order  for Multiple Tenant",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Global Monitoring",
+      "projectKey": "GMT",
+      "issuetype": "Issue - Global Hybris",
+      "updated": "2026-09-14T06:03:21.000+0900",
+      "created": "2026-09-12T07:58:07.000+0900",
+      "statusChangedAt": "2026-09-14T06:03:21.306+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nWe could see the below list of orders in NERP order create in failed state and could see the orders is in waiting for transfer state with below exception so can you please check on this issue\n\nError message : This order type is not accepted.(YS03),TR260727-42008804 / 001 66982 Item 000010 ",
+      "commentsCount": 5,
+      "recentComments": [
+        {
+          "author": "Mohamed Imran A",
+          "date": "2026-09-14T06:02:50.773+0900",
+          "snippet": "Hi Aryan,\n\nPlease check with your team regarding the 0.01 price fix remediation for the 17 AE orders. We cannot confirm on the price fix remediation from our end.\n\nRegards, \nImran"
+        },
+        {
+          "author": "Ruban X",
+          "date": "2026-09-13T23:40:54.612+0900",
+          "snippet": "Please change the status to “SRE Review” when assigning it back to us (the SRE Team) for better follow-up."
+        }
+      ],
+      "lastCommentBy": "Mohamed Imran A",
+      "lastCommentSnippet": "Hi Aryan,\n\nPlease check with your team regarding the 0.01 price fix remediation for the 17 AE orders. We cannot confirm on the price fix remediation from our end.\n\nRegards, \nImran",
+      "lastCommentDate": "2026-09-14T06:02:50.773+0900",
+      "url": "https://jira.secext.samsung.net/browse/GMT-21016",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "# RCA: GMT-21016\r\nSMI | Nerp order for Multiple Tenant\r\nGenerated: 2026-09-12T13:00:00+05:30\r\n\r\nHi [~imran.a@partner.samsung.com] ,\r\n\r\nThe orders listed in this ticket are stuck in ORDER_SPLIT status with their consignments failing at the GERP/NERP sales order creation step. All three error types are SAP-side rejections, not Hybris platform bugs. The consignments enter a retry loop (approximately every 30 minutes) and remain in WAITING_FOR_TRANSFER until the SAP master data or configuration is corrected.\r\n\r\nAE Orders (17 orders -- This order type is not accepted.(YS03)):\r\nHybris sends FOC (Free-of-Charge) orders using document type YS03, which is defined in TokogerpfulfilmentservicesConstants.SD_CREATE_FOC.FOC_ORDER_DOC_TYPE. The code path in GerpSdOrderCreateMessageTransformation.getPiheader() sets the PIHEADER.DOCTYPE to YS03 when the order contains FOC non-promotion entries (detected by TokoOrderService.doesConsignmentContainFOCNonPromotion()). SAP is rejecting YS03 with error type E in the PTMESSAGE response, indicating that the YS03 document type is either not configured or not accepted for the AE sales area in SAP. Kibana logs confirm all 17 AE consignments failed at 2026-09-12 07:20:31 UTC with the same IntegrationException. This needs to be checked on the SAP side -- the YS03 doc type must be configured for the AE sales area, or if these orders should not be classified as FOC, the promotion/product configuration on the Hybris side needs to be reviewed.\r\n\r\nTR260727-42008804 (Cond.type-one of( 1202 ) is mandatory):\r\nSAP is rejecting the sales order because pricing condition type 1202 is mandatory but not provided in the PTCONDITION segment of the SOAP request. Kibana logs show the consignment has been retrying every 30 minutes since at least 2026-09-12 02:59 UTC (13 consecutive attempts observed). The error originates from SAP's pricing configuration -- condition type 1202 is set as mandatory in the SAP pricing procedure for the TR sales area, but Hybris is not sending this condition type in the PTCONDITION block. This is a SAP pricing configuration issue that needs the NERP/SAP team to either make condition type 1202 optional for this sales area or provide the condition record in SAP.\r\n\r\nSA260905-76255022 (Ship-to party 3145746 not defined for sales area 7111 30 ZR):\r\nSAP is rejecting the sales order because ship-to party number 3145746 is not configured for sales area 7111 / distribution channel 30 / division ZR. Hybris populates the ship-to partner (PIPARTNER role WE) using the gerpSdPartnerShipToId config, which correctly sends the customer's ship-to ID. SAP does not have this ship-to party defined in the customer master for the specified sales area. Kibana logs show 238 SOAP response traces at approximately 30-minute retry intervals. This is a SAP customer master data issue -- the ship-to party needs to be created or extended for sales area 7111/30/ZR in SAP. There is also a separate ticket SAME-3967 tracking SA260905-76255022 for an incorrect division issue.\r\n\r\nNone of these are Hybris platform bugs. The TokoGerpWarehouseAdapterImpl.sendConsignmentToWarehouseInternal() method correctly parses the SAP PTMESSAGE response, detects the TYPE=E errors, and throws IntegrationException. The consignment process (SendConsignmentToWarehouseActionV2) correctly retries per the configured retry count and delay. The fix for all three error categories lies on the SAP/NERP side.\r\n\r\nAs Shubham noted, these orders affect AE, SA, and TR, not IN countries. Kindly route this to the respective regional SAP/NERP teams for configuration fixes.\r\n\r\nThanks,\r\nAryan.",
+        "sections": {
+          "issue": "",
+          "rca": "# RCA: GMT-21016\r\nSMI | Nerp order for Multiple Tenant\r\nGenerated: 2026-09-12T13:00:00+05:30\r\n\r\nHi [~imran.a@partner.samsung.com] ,\r\n\r\nThe orders listed in this ticket are stuck in ORDER_SPLIT status with their consignments failing at the GERP/NERP sales order creation step. All three error types are SAP-side rejections, not Hybris platform bugs. The consignments enter a retry loop (approximately every 30 minutes) and remain in WAITING_FOR_TRANSFER until the SAP master data or configuration is corrected.\r\n\r\nAE Orders (17 orders -- This order type is not accepted.(YS03)):\r\nHybris sends FOC (Free-of-Charge) orders using document type YS03, which is defined in TokogerpfulfilmentservicesConstants.SD_CREATE_FOC.FOC_ORDER_DOC_TYPE. The code path in GerpSdOrderCreateMessageTransformation.getPiheader() sets the PIHEADER.DOCTYPE to YS03 when the order contains FOC non-promotion entries (detected by TokoOrderService.doesConsignmentContainFOCNonPromotion()). SAP is rejecting YS03 with error type E in the PTMESSAGE response, indicating that the YS03 document type is either not configured or not accepted for the AE sales area in SAP. Kibana logs confirm all 17 AE consignments failed at 2026-09-12 07:20:31 UTC with the same IntegrationException. This needs to be checked on the SAP side -- the YS03 doc type must be configured for the AE sales area, or if these orders should not be classified as FOC, the promotion/product configuration on the Hybris side needs to be reviewed.\r\n\r\nTR260727-42008804 (Cond.type-one of( 1202 ) is mandatory):\r\nSAP is rejecting the sales order because pricing condition type 1202 is mandatory but not provided in the PTCONDITION segment of the SOAP request. Kibana logs show the consignment has been retrying every 30 minutes since at least 2026-09-12 02:59 UTC (13 consecutive attempts observed). The error originates from SAP's pricing configuration -- condition type 1202 is set as mandatory in the SAP pricing procedure for the TR sales area, but Hybris is not sending this condition type in the PTCONDITION block. This is a SAP pricing configuration issue that needs the NERP/SAP team to either make condition type 1202 optional for this sales area or provide the condition record in SAP.\r\n\r\nSA260905-76255022 (Ship-to party 3145746 not defined for sales area 7111 30 ZR):\r\nSAP is rejecting the sales order because ship-to party number 3145746 is not configured for sales area 7111 / distribution channel 30 / division ZR. Hybris populates the ship-to partner (PIPARTNER role WE) using the gerpSdPartnerShipToId config, which correctly sends the customer's ship-to ID. SAP does not have this ship-to party defined in the customer master for the specified sales area. Kibana logs show 238 SOAP response traces at approximately 30-minute retry intervals. This is a SAP customer master data issue -- the ship-to party needs to be created or extended for sales area 7111/30/ZR in SAP. There is also a separate ticket SAME-3967 tracking SA260905-76255022 for an incorrect division issue.\r\n\r\nNone of these are Hybris platform bugs. The TokoGerpWarehouseAdapterImpl.sendConsignmentToWarehouseInternal() method correctly parses the SAP PTMESSAGE response, detects the TYPE=E errors, and throws IntegrationException. The consignment process (SendConsignmentToWarehouseActionV2) correctly retries per the configured retry count and delay. The fix for all three error categories lies on the SAP/NERP side.\r\n\r\nAs Shubham noted, these orders affect AE, SA, and TR, not IN countries. Kindly route this to the respective regional SAP/NERP teams for configuration fixes.\r\n\r\nThanks,\r\nAryan.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-12T07:39:15.491Z"
+      }
+    },
     {
       "key": "AEME-6535",
       "summary": "[PROD] | Update SC+ Automated Report",
@@ -107,45 +403,6 @@
         "source": "",
         "foundAt": "",
         "issueNumber": null
-      }
-    },
-    {
-      "key": "GMT-21026",
-      "summary": "[SMI MENA] | CONSIGNMENT_PROCESS_ERROR - TR Tenant",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Global Monitoring",
-      "projectKey": "GMT",
-      "issuetype": "Issue - Global Hybris",
-      "updated": "2026-09-12T17:19:03.000+0900",
-      "created": "2026-09-12T15:25:29.000+0900",
-      "statusChangedAt": "2026-09-12T17:16:38.375+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nWe could see the below orders are in NERP Order Create Failed State which is Stuck in commitStock state on 10th Sept 15:30 IST. Kindly check on this issue?\n\nError msg : CONSIGNMENT_PROCESS_ERROR\n\nOrders File: ^Order API Status-data-2026-09-12 11_48_42.numbers",
-      "commentsCount": 1,
-      "recentComments": [
-        {
-          "author": "Kyungwon Kang",
-          "date": "2026-09-12T15:30:30.309+0900",
-          "snippet": "(This is generated by AI)\n\nBased on the incident report provided, here is the analysis:\n\nWhen: 2026-09-12T15:25:29.000+0900 (Reported)\nTitle: CONSIGNMENT_PROCESS_ERROR - TR Tenant\nDescription: Orders in the TR Tenant are stuck in the \"commitStock\" state within the NERP Order Create process on Septem"
-        }
-      ],
-      "lastCommentBy": "Kyungwon Kang",
-      "lastCommentSnippet": "(This is generated by AI)\n\nBased on the incident report provided, here is the analysis:\n\nWhen: 2026-09-12T15:25:29.000+0900 (Reported)\nTitle: CONSIGNMENT_PROCESS_ERROR - TR Tenant\nDescription: Orders in the TR Tenant are stuck in the \"commitStock\" state within the NERP Order Create process on Septem",
-      "lastCommentDate": "2026-09-12T15:30:30.309+0900",
-      "url": "https://jira.secext.samsung.net/browse/GMT-21026",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "[SMI MENA] | CONSIGNMENT_PROCESS_ERROR - TR Tenant\r\nGenerated: 2026-09-12T08:45:00.000Z\r\n\r\n## Issue\r\n\r\nTwo TR (Turkey) tenant orders (TR260911-80724904 and TR260912-81652251) are stuck in the consignment process at the commitStock action. Both orders were placed on September 10-11, 2026, and the consignment business process (consignment-process-v11-36) entered ERROR state. The order-level process (order-process-v25-69) is still RUNNING, waiting for the consignment to complete. The error surfaced as CONSIGNMENT_PROCESS_ERROR in the NERP Order Create flow, with orders reported as \"Stuck in commitStock.\"\r\n\r\n## RCA\r\n\r\nBoth orders are in SHIPPING_PREPARATION status with their consignment processes in ERROR state at the commitStock action node. The consignment process definition for the TR tenant is consignment-process-v11-36 (confirmed via DB query). The process flow is: sendReplacementConsignmentToWarehouse (OK) -> commitStock -> sendShippingRequestedNotification. The commitStock action is handled by CommitStockAction.java in the tokofulfilmentprocess extension.\r\n\r\nCommitStockAction.executeAction() performs the following:\r\n1. Checks if stock is externally managed or if interceptors are enabled (would skip commit)\r\n2. Calls tokoStockServiceImpl.lockAllAffectedStockLevels() to lock stock levels for the consignment's warehouse (WC17-S751)\r\n3. Iterates through consignment entries, skipping pre-order, 3PA, and warranty/service products\r\n4. For each physical product, calls tokoStockServiceImpl.commit() which internally calls checkAndGetStockLevelConsideringFutureStock() then tokoStockLevelDao.commit()\r\n5. If any exception occurs, it is caught, logged as \"Error while commit stock\", and re-thrown, causing the process engine to set the consignment process to ERROR state\r\n\r\nDB verification of stock levels at warehouse WC17-S751 shows sufficient stock for all affected products:\r\n- SM-A376BZWGTUR: available=56, reserved=30\r\n- SM-A376BLVGTUR: available=12, reserved=8\r\n- EP-T2510NWEGWW: available=202, reserved=182\r\n- EP-T2510NBEGWW: available=841, reserved=71\r\n\r\nSince stock is available and the process still errored, the failure is likely in the checkAndGetStockLevelConsideringFutureStock() method or in the stock level locking mechanism (lockAllAffectedStockLevels). This method acquires pessimistic locks on stock level rows by PK ordering, and a deadlock or lock timeout during concurrent order processing could cause the commit to fail with an exception.\r\n\r\nPayment status confirms both orders have ACCEPTED authorization and ACCEPTED capture, ruling out payment-related causes. External services show SMC in NEW status with 2 blank entries, which is expected for orders that haven't completed the consignment flow.\r\n\r\nThis is a recurring pattern: Jira cross-reference found 212 resolved commitStock tickets across multiple regions (NFME, NGME, UAME, CNME, URME, CAME) and 84 tickets matching NERP + commitStock. The root cause in prior resolved tickets has been consistently attributed to stock-level locking issues during concurrent processing or transient stock state inconsistencies, with remediation via consignment process restart from the commitStock action.\r\n\r\n## Possible Remediation\r\n\r\nRestart the errored consignment processes from the commitStock action node. Since stock is confirmed available at the warehouse, the process should succeed on retry. The remediation involves:\r\n\r\n1. For each errored consignment process (order-process-v25-69-TR260911-80724904-1789078729072_1 and order-process-v25-69-TR260912-81652251-1789172269631_1):\r\n   a. Reset the process state from ERROR to WAITING\r\n   b. Restart the process from the commitStock action node\r\n   c. Monitor to ensure the process transitions to sendShippingRequestedNotification and beyond\r\n\r\n2. If the process errors again after restart, investigate the specific exception in Kibana logs (search for \"Error while commit stock\" + order code) to determine if there is a deeper stock-level data inconsistency or a locking issue that needs to be resolved before the process can proceed.\r\n\r\n3. For a permanent fix, review the stock level locking strategy and consider adding retry logic or a transient error handling mechanism in CommitStockAction to prevent single-stock-commit failures from permanently erroring the consignment process.\r\n\r\nReferences:\r\n- CommitStockAction.java: tokofulfilmentprocess/src/com/samsung/toko/fulfilmentprocess/actions/consignment/CommitStockAction.java\r\n- Process definition: consignment-process-v11-36.xml (TR tenant)\r\n- Similar resolved tickets: NFME-4248, NGME-15201, NGME-14757, UAME-1813, URME-1995, PC-34849",
-        "sections": {
-          "issue": "Two TR (Turkey) tenant orders (TR260911-80724904 and TR260912-81652251) are stuck in the consignment process at the commitStock action. Both orders were placed on September 10-11, 2026, and the consignment business process (consignment-process-v11-36) entered ERROR state. The order-level process (order-process-v25-69) is still RUNNING, waiting for the consignment to complete. The error surfaced as CONSIGNMENT_PROCESS_ERROR in the NERP Order Create flow, with orders reported as \"Stuck in commitStock.\"",
-          "rca": "Both orders are in SHIPPING_PREPARATION status with their consignment processes in ERROR state at the commitStock action node. The consignment process definition for the TR tenant is consignment-process-v11-36 (confirmed via DB query). The process flow is: sendReplacementConsignmentToWarehouse (OK) -> commitStock -> sendShippingRequestedNotification. The commitStock action is handled by CommitStockAction.java in the tokofulfilmentprocess extension.\r\n\r\nCommitStockAction.executeAction() performs the following:\r\n1. Checks if stock is externally managed or if interceptors are enabled (would skip commit)\r\n2. Calls tokoStockServiceImpl.lockAllAffectedStockLevels() to lock stock levels for the consignment's warehouse (WC17-S751)\r\n3. Iterates through consignment entries, skipping pre-order, 3PA, and warranty/service products\r\n4. For each physical product, calls tokoStockServiceImpl.commit() which internally calls checkAndGetStockLevelConsideringFutureStock() then tokoStockLevelDao.commit()\r\n5. If any exception occurs, it is caught, logged as \"Error while commit stock\", and re-thrown, causing the process engine to set the consignment process to ERROR state\r\n\r\nDB verification of stock levels at warehouse WC17-S751 shows sufficient stock for all affected products:\r\n- SM-A376BZWGTUR: available=56, reserved=30\r\n- SM-A376BLVGTUR: available=12, reserved=8\r\n- EP-T2510NWEGWW: available=202, reserved=182\r\n- EP-T2510NBEGWW: available=841, reserved=71\r\n\r\nSince stock is available and the process still errored, the failure is likely in the checkAndGetStockLevelConsideringFutureStock() method or in the stock level locking mechanism (lockAllAffectedStockLevels). This method acquires pessimistic locks on stock level rows by PK ordering, and a deadlock or lock timeout during concurrent order processing could cause the commit to fail with an exception.\r\n\r\nPayment status confirms both orders have ACCEPTED authorization and ACCEPTED capture, ruling out payment-related causes. External services show SMC in NEW status with 2 blank entries, which is expected for orders that haven't completed the consignment flow.\r\n\r\nThis is a recurring pattern: Jira cross-reference found 212 resolved commitStock tickets across multiple regions (NFME, NGME, UAME, CNME, URME, CAME) and 84 tickets matching NERP + commitStock. The root cause in prior resolved tickets has been consistently attributed to stock-level locking issues during concurrent processing or transient stock state inconsistencies, with remediation via consignment process restart from the commitStock action.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-12T08:32:08.024Z"
       }
     },
     {
@@ -304,59 +561,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-03T13:44:59.592Z"
-      }
-    },
-    {
-      "key": "SAHME-3424",
-      "summary": "SC+ Policy Creation 09.09.2026",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "South Africa Maintenance & Enhancements",
-      "projectKey": "SAHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-10T21:07:34.000+0900",
-      "created": "2026-09-09T18:00:27.000+0900",
-      "statusChangedAt": "2026-09-09T18:44:31.714+0900",
-      "assignedToMeAt": "",
-      "description": "Hi All\n\n \n\nPlease retrigger the attached Samsung Care Plus orders with provided IMEI number and serial numbers provided. Share the error response log.\n\n \n|Order Number|IMEI|\n|ZA260730-44938330|350557093608334|\n|ZA260701-19072768|355645121485547|\n|ZA260712-26897085|355645121218054|\n|ZA260729-44585698",
-      "commentsCount": 2,
-      "recentComments": [
-        {
-          "author": "Nosipho Mkhungo",
-          "date": "2026-09-10T19:33:39.724+0900",
-          "snippet": "~@email[ please proceed with"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-10T18:14:43.297+0900",
-          "snippet": "Hi Nosipho ,\n\nFor all 5 orders, the SC+ policy creation failed during the processExternalServices step of the consignment process. The SMC external service entries need to be reset to NEW status and the consignment processes need to be restarted at processExternalServices to retrigger the SC+ regist"
-        }
-      ],
-      "lastCommentBy": "Nosipho Mkhungo",
-      "lastCommentSnippet": "~@email[ please proceed with",
-      "lastCommentDate": "2026-09-10T19:33:39.724+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAHME-3424",
-      "linkedTickets": [
-        {
-          "key": "SAHME-3361",
-          "summary": "SC+ Policy Creation 06.08.2026",
-          "status": "Launch Verification",
-          "statusCategory": "Done",
-          "relation": "clones",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "SC+ Policy Creation 09.09.2026 - 5 ZA-region orders needing SC+ retrigger\r\nGenerated: 2026-09-10T04:41:36.015Z\r\n\r\nHi [~n.mkhungo@samsung.com] ,\r\n\r\nWe investigated the 5 SC+ orders listed in the ticket. The consignment process for each order failed at the processExternalServices action when attempting to register the Samsung Care+ policy with the SMC API.\r\n\r\nZA260701-19072768, ZA260712-26897085, ZA260729-44585698, ZA260806-52510202:\r\nAll four orders have consignment status COMPLETED and order status SHIPPED, meaning the goods were physically delivered. However, the SMC ExternalService entry on each order is in ERROR status and the consignment process (consignment-process-v11-36) is in ERROR state. The order process (order-process-v25-69) is stuck in RUNNING because it is waiting for the consignment process to complete. Payment authorisation and capture were successful on all orders.\r\n\r\nZA260730-44938330:\r\nThis order has status COMPLETED with both consignments SUCCEEDED. The SMC ExternalService entry is in NEW status, meaning it was never processed. The consignment process already completed successfully, so the ES was never picked up during the processExternalServices action. This is likely a remnant from the previous remediation attempt under SAHME-3361 where the ES was reset to NEW but the process was not restarted.\r\n\r\nFrom the parent ticket SAHME-3361, the SMC API rejected the registration requests with two error types: NOT_EXISTS_PRODUCT_ID (code USR-A1002, \"the product id is not valid\") and INVALID_REQUEST_PARAMETERS (code USR-A0002, \"South Africa Identity Book is invalid\"). These are SMC-side validation rejections, not Hybris platform defects. The consignment process correctly transitioned to ERROR when the SMC API returned the error response.\r\n\r\nThe remediation approach is to reset the ExternalService status from ERROR to NEW, then restart the consignment process at the processExternalServices action. This is the same approach confirmed in SAHME-3361 and reusing the approved script from PC-52678. For ZA260730-44938330, the ES is already in NEW but the process needs to be re-triggered since it already completed.\r\n\r\nWe can proceed with the remediation script under the reusable PC ticket PC-52678. Kindly confirm if we should go ahead.\r\n\r\nThanks,\r\n\r\nAryan\r\n\r\n## Remediation\r\nReuse PC-52678 (Closed, REUSABLE). Script: script-AEME-6495-scplus-remediation.groovy.\r\nCopy script, update order list to 5 ZA orders, update ITGC header to PC-52678(SAHME-3424).\r\nReset ES from ERROR to NEW for 4 orders. For ZA260730-44938330 (ES already NEW, process SUCCEEDED), set process to ERROR and restart at processExternalServices.\r\nOrders:\r\n1. ZA260730-44938330 (IMEI: 350557093608334) - ES NEW, process SUCCEEDED\r\n2. ZA260701-19072768 (IMEI: 355645121485547) - ES ERROR, process ERROR\r\n3. ZA260712-26897085 (IMEI: 355645121218054) - ES ERROR, process ERROR\r\n4. ZA260729-44585698 (IMEI: 352089363317956) - ES ERROR, process ERROR\r\n5. ZA260806-52510202 (IMEI: 352089363328953) - ES ERROR, process ERROR",
-        "sections": {
-          "issue": "",
-          "rca": "SC+ Policy Creation 09.09.2026 - 5 ZA-region orders needing SC+ retrigger\r\nGenerated: 2026-09-10T04:41:36.015Z\r\n\r\nHi [~n.mkhungo@samsung.com] ,\r\n\r\nWe investigated the 5 SC+ orders listed in the ticket. The consignment process for each order failed at the processExternalServices action when attempting to register the Samsung Care+ policy with the SMC API.\r\n\r\nZA260701-19072768, ZA260712-26897085, ZA260729-44585698, ZA260806-52510202:\r\nAll four orders have consignment status COMPLETED and order status SHIPPED, meaning the goods were physically delivered. However, the SMC ExternalService entry on each order is in ERROR status and the consignment process (consignment-process-v11-36) is in ERROR state. The order process (order-process-v25-69) is stuck in RUNNING because it is waiting for the consignment process to complete. Payment authorisation and capture were successful on all orders.\r\n\r\nZA260730-44938330:\r\nThis order has status COMPLETED with both consignments SUCCEEDED. The SMC ExternalService entry is in NEW status, meaning it was never processed. The consignment process already completed successfully, so the ES was never picked up during the processExternalServices action. This is likely a remnant from the previous remediation attempt under SAHME-3361 where the ES was reset to NEW but the process was not restarted.\r\n\r\nFrom the parent ticket SAHME-3361, the SMC API rejected the registration requests with two error types: NOT_EXISTS_PRODUCT_ID (code USR-A1002, \"the product id is not valid\") and INVALID_REQUEST_PARAMETERS (code USR-A0002, \"South Africa Identity Book is invalid\"). These are SMC-side validation rejections, not Hybris platform defects. The consignment process correctly transitioned to ERROR when the SMC API returned the error response.\r\n\r\nThe remediation approach is to reset the ExternalService status from ERROR to NEW, then restart the consignment process at the processExternalServices action. This is the same approach confirmed in SAHME-3361 and reusing the approved script from PC-52678. For ZA260730-44938330, the ES is already in NEW but the process needs to be re-triggered since it already completed.\r\n\r\nWe can proceed with the remediation script under the reusable PC ticket PC-52678. Kindly confirm if we should go ahead.\r\n\r\nThanks,\r\n\r\nAryan\r\n\r\n## Remediation\r\nReuse PC-52678 (Closed, REUSABLE). Script: script-AEME-6495-scplus-remediation.groovy.\r\nCopy script, update order list to 5 ZA orders, update ITGC header to PC-52678(SAHME-3424).\r\nReset ES from ERROR to NEW for 4 orders. For ZA260730-44938330 (ES already NEW, process SUCCEEDED), set process to ERROR and restart at processExternalServices.\r\nOrders:\r\n1. ZA260730-44938330 (IMEI: 350557093608334) - ES NEW, process SUCCEEDED\r\n2. ZA260701-19072768 (IMEI: 355645121485547) - ES ERROR, process ERROR\r\n3. ZA260712-26897085 (IMEI: 355645121218054) - ES ERROR, process ERROR\r\n4. ZA260729-44585698 (IMEI: 352089363317956) - ES ERROR, process ERROR\r\n5. ZA260806-52510202 (IMEI: 352089363328953) - ES ERROR, process ERROR",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-10T05:07:14.446Z"
       }
     },
     {
@@ -825,27 +1029,16 @@
         "responseSnippet": "All 35 RCA files are present. Now I'll read them all in parallel batches.\nAll 35 RCA files have been read. Now I'll compose the JSON with concise summaries and write it."
       }
     ],
-    "pid": 9040,
-    "uptime": 24515,
+    "pid": 18320,
+    "uptime": 296,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
-    "startTime": "2026-09-12T20:41:05.968Z",
+    "startTime": "2026-09-14T11:02:40.346Z",
     "version": "v3",
     "lastResponseAt": "2026-09-12T08:33:03.521Z",
     "lastResponseIssue": 193,
-    "ideSessions": [
-      {
-        "pid": 20824,
-        "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 72299,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "recheck all features, the star thing i am unable to star or unstar any ticket",
-        "lastExchange": "recheck all features, the star thing i am unable to star or unstar any ticket",
-        "sessionId": "aryan-v1"
-      }
-    ],
+    "ideSessions": [],
     "activityLog": [
       {
         "id": "1789201983534-gqndjd",
@@ -2787,20 +2980,20 @@
         "lastOutput": "Starting Phase 0 - reading past learnings, checking for existing cache/RCA files, and reading the Aryantone style guide in parallel.\nThere's an existing lock file for GMT-21026. Let me check it and look for the Aryantone style guide and cache file.\nNo existing cache file for GMT-21026. Lock was created at 08:19 UTC (about 18 minutes ago). This is a fresh investigation. Let me check MCP availability and the workflow MCP configuration.\nGood. The workflow MCP is configured. The issue mentions using"
       }
     },
-    "bridgeLogTail": "[2026-09-12T20:31:18.012Z] ==========================================\n[2026-09-12T20:31:18.014Z] === Hardened GitHub Bridge v3 Started ===\n[2026-09-12T20:31:18.015Z] === with Aipro Auto-Launch ===\n[2026-09-12T20:31:18.016Z] ==========================================\n[2026-09-12T20:31:18.017Z] PID: 14076\n[2026-09-12T20:31:18.018Z] Repo: aryanverma2410/agent-bridge\n[2026-09-12T20:31:18.019Z] Poll interval: 10000ms\n[2026-09-12T20:31:18.020Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\aipro.cmd\n[2026-09-12T20:31:18.021Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-09-12T20:31:18.022Z] Waiting for messages...\n[2026-09-12T20:41:05.955Z] ==========================================\n[2026-09-12T20:41:05.957Z] === Hardened GitHub Bridge v3 Started ===\n[2026-09-12T20:41:05.958Z] === with Aipro Auto-Launch ===\n[2026-09-12T20:41:05.959Z] ==========================================\n[2026-09-12T20:41:05.960Z] PID: 9040\n[2026-09-12T20:41:05.961Z] Repo: aryanverma2410/agent-bridge\n[2026-09-12T20:41:05.962Z] Poll interval: 10000ms\n[2026-09-12T20:41:05.963Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\aipro.cmd\n[2026-09-12T20:41:05.964Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-09-12T20:41:05.966Z] Waiting for messages...",
+    "bridgeLogTail": "[2026-09-12T20:41:05.955Z] ==========================================\n[2026-09-12T20:41:05.957Z] === Hardened GitHub Bridge v3 Started ===\n[2026-09-12T20:41:05.958Z] === with Aipro Auto-Launch ===\n[2026-09-12T20:41:05.959Z] ==========================================\n[2026-09-12T20:41:05.960Z] PID: 9040\n[2026-09-12T20:41:05.961Z] Repo: aryanverma2410/agent-bridge\n[2026-09-12T20:41:05.962Z] Poll interval: 10000ms\n[2026-09-12T20:41:05.963Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\aipro.cmd\n[2026-09-12T20:41:05.964Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-09-12T20:41:05.966Z] Waiting for messages...\n[2026-09-14T11:02:37.868Z] ==========================================\n[2026-09-14T11:02:38.428Z] === Hardened GitHub Bridge v3 Started ===\n[2026-09-14T11:02:38.718Z] === with Aipro Auto-Launch ===\n[2026-09-14T11:02:39.194Z] ==========================================\n[2026-09-14T11:02:39.838Z] PID: 18320\n[2026-09-14T11:02:39.942Z] Repo: aryanverma2410/agent-bridge\n[2026-09-14T11:02:39.976Z] Poll interval: 10000ms\n[2026-09-14T11:02:40.000Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\aipro.cmd\n[2026-09-14T11:02:40.007Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-09-14T11:02:40.064Z] Waiting for messages...",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-09-13T03:29:31.036Z",
-      "ageMs": 13350
+      "lastWrite": "2026-09-14T11:07:34.823Z",
+      "ageMs": 4108
     },
-    "watchdogLogTail": "[2026-09-13T03:27:15.933Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-13T03:27:30.941Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-13T03:27:45.955Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-13T03:28:00.968Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-13T03:28:15.979Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-13T03:28:30.990Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-13T03:28:45.999Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-13T03:29:01.009Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-13T03:29:16.022Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-13T03:29:31.036Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-09-14T11:07:32.175Z] Check interval: 15000ms\n[2026-09-14T11:07:32.176Z] Stale threshold: 30000ms\n[2026-09-14T11:07:32.177Z] Max restarts: 50/hour\n[2026-09-14T11:07:32.178Z] Bridge script: C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\bridge.js\n[2026-09-14T11:07:32.178Z] Dashboard script: C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\jira-dashboard-server.js\n[2026-09-14T11:07:32.184Z] Bridge already running (PID 18320). Adopting.\n[2026-09-14T11:07:32.186Z] Dashboard not running. Starting fresh.\n[2026-09-14T11:07:32.187Z] Starting jira-dashboard-server.js...\n[2026-09-14T11:07:32.356Z] Dashboard started with PID 18580 (restart #1, 1 in last hour)\n[2026-09-14T11:07:34.817Z] DUPLICATE watchdog detected: PID 16460 — killing"
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-13T03:29:14.060Z",
+      "lastCheck": "2026-09-14T11:07:34.126Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -2809,25 +3002,25 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-13T03:29:14.060Z",
-      "downSince": "2026-09-12T16:23:54.084Z",
-      "downDuration": 39919976,
-      "alert": true
+      "lastCheck": "2026-09-14T11:07:34.126Z",
+      "downSince": "2026-09-14T11:07:34.126Z",
+      "downDuration": 0,
+      "alert": false
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-13T03:29:14.060Z",
-      "downSince": "2026-09-13T03:22:14.446Z",
-      "downDuration": 419614,
-      "alert": true
+      "lastCheck": "2026-09-14T11:07:34.126Z",
+      "downSince": "2026-09-14T11:07:34.126Z",
+      "downDuration": 0,
+      "alert": false
     }
   ],
   "hacReport": {
-    "generatedAt": "2026-09-12T07:19:59.146Z",
-    "generatedAtLocal": "Sep 12, 2026, 12:49:59 PM",
-    "queryDate": "2026-09-11",
+    "generatedAt": "2026-09-13T03:30:50.710Z",
+    "generatedAtLocal": "Sep 13, 2026, 09:00:50 AM",
+    "queryDate": "2026-09-12",
     "modified": {
       "headers": [
         "CLUSTER",
@@ -2842,8 +3035,8 @@
           "CLUSTER": "SMI",
           "YEAR": "2026",
           "MONTH": "Sep",
-          "DAY": "11",
-          "COUNT": "652",
+          "DAY": "12",
+          "COUNT": "483",
           "TYPE": "MODIFIED"
         }
       ],
@@ -2863,14 +3056,14 @@
           "CLUSTER": "SMI",
           "YEAR": "2026",
           "MONTH": "Sep",
-          "DAY": "11",
-          "COUNT": "229",
+          "DAY": "12",
+          "COUNT": "168",
           "TYPE": "CREATED"
         }
       ],
       "error": null
     },
-    "textReport": "Hi Reglo, Tin,\nPFA the results for SMI\n\nCLUSTER\tYEAR\tMONTH\tDAY\tCOUNT\tTYPE\nSMI\t2026\tSep\t11\t652\tMODIFIED\n\nCLUSTER\tYEAR\tMONTH\tDAY\tCOUNT\tTYPE\nSMI\t2026\tSep\t11\t229\tCREATED"
+    "textReport": "Hi Reglo, Tin,\nPFA the results for SMI\n\nCLUSTER\tYEAR\tMONTH\tDAY\tCOUNT\tTYPE\nSMI\t2026\tSep\t12\t483\tMODIFIED\n\nCLUSTER\tYEAR\tMONTH\tDAY\tCOUNT\tTYPE\nSMI\t2026\tSep\t12\t168\tCREATED"
   },
   "scheduledJobs": {
     "jobs": [
@@ -2886,11 +3079,11 @@
         },
         "enabled": true,
         "createdAt": "2026-09-03T05:31:01.816Z",
-        "lastRunAt": "2026-09-12T07:20:05.069Z",
-        "lastOutput": "Warning: Ignoring extra certs from `C:\\SDSI_GDC.crt`, load failed: error:80000002:system library::No such file or directory\r\nWarning: 256-color support not detected. Using a terminal with at least 256-color support is recommended for a better visual experience.\nYOLO mode is enabled. All tool calls will be automatically approved.\nYOLO mode is enabled. All tool calls will be automatically approved.\n(node:23448) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.\n(Use `node --trace-warnings ...` to show where the warning was created)\nRipgrep is not available. Falling back to GrepTool.\nC:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\n\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\n\r\nNode.js v22.22.0\r\nScript executed successfully. Results for **SMI cluster** (Sep 11, 2026):\n\n| Type | Count |\n|------|-------|\n| MODIFIED | 652 |\n| CREATED | 229 |\n\nReport saved to `hac-report.json`.\n",
-        "lastOutputAt": "2026-09-12T07:20:05.069Z",
+        "lastRunAt": "2026-09-13T03:30:58.158Z",
+        "lastOutput": "Warning: Ignoring extra certs from `C:\\SDSI_GDC.crt`, load failed: error:80000002:system library::No such file or directory\r\nWarning: 256-color support not detected. Using a terminal with at least 256-color support is recommended for a better visual experience.\nYOLO mode is enabled. All tool calls will be automatically approved.\nYOLO mode is enabled. All tool calls will be automatically approved.\n(node:33060) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.\n(Use `node --trace-warnings ...` to show where the warning was created)\nRipgrep is not available. Falling back to GrepTool.\nC:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\n\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\n\r\nNode.js v22.22.0\r\nScript executed successfully. Here's what happened:\n\n1. **Authenticated** to HAC backoffice (despite a cert warning, auth succeeded)\n2. **Ran Modified Orders query** → `SMI` cluster, Sep 12, 2026: **483 modified orders**\n3. **Ran Created Orders query** → `SMI` cluster, Sep 12, 2026: **168 created orders**\n4. **Saved** the report to `C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\hac-report.json`\n\nNote: The script emitted a TLS warning (`NODE_TLS_REJECT_UNAUTHORIZED=0`) — it's disabling cert verification to connect to HAC, which is expected for internal backoffice access with self-signed certificates.\n",
+        "lastOutputAt": "2026-09-13T03:30:58.158Z",
         "lastStatus": "success",
-        "nextRunAt": "2026-09-13T03:30:00.000Z"
+        "nextRunAt": "2026-09-14T03:30:00.000Z"
       }
     ],
     "queue": {
