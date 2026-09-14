@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-14T12:10:22.007Z",
+  "generatedAt": "2026-09-14T12:10:59.604Z",
   "totalTickets": 14,
   "tickets": [
     {
@@ -24,9 +24,15 @@
       "url": "https://jira.secext.samsung.net/browse/MHME-1434",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-09-14T12:01:21.380Z"
+        "status": "found",
+        "excerpt": "Summary: missing gift for MA260902-74340282\r\nGenerated: 2026-09-14T12:15:00.000Z\r\n\r\nHi [~ashwani.v@samsung.com] ,\r\n\r\nThe order MA260902-74340282 has a promotional gift entry (entry number 1) with product code EI-T5600BWEGMA (Galaxy SmartTag2 White) that should be EI-T5600BBEGMA (Galaxy SmartTag2 Black). The wrong SKU was configured in the promotion rule, and the Hybris promotion engine correctly applied whatever product code was configured in the rule at checkout time. This is a promotion configuration error, not a platform code defect.\r\n\r\nThe order currently has 2 consignments due to a split:\r\n1. MA260902-74340282 (main consignment) — status SHIPPING_REQUESTED, contains the gift entry EI-T5600BWEGMA (qty 1, basePrice 249 MAD, totalPrice 0.38 MAD)\r\n2. MA260902-74340282_1 (split consignment) — status SHIPPING_PREPARATION, contains the main product EF-RS936CBEGWW (qty 1, basePrice 399 MAD, totalPrice 0.62 MAD)\r\n\r\nThe order total is 1.00 MAD with cash on delivery payment. Payment has been authorized and captured. The order process is running (at isDelayedFiRequired action) and both consignment processes are in RUNNING state. No GERP billing numbers have been assigned yet, which means the consignment feed to NERP has not been finalized.\r\n\r\nBoth SKUs exist in the product catalog — EI-T5600BBEGMA (Black) and EI-T5600BWEGMA (White) are both \"Galaxy SmartTag2\" variants across 7 catalog versions each. The gift entry has giveAway=false and nonGiveAwayFOC=false, with a non-zero totalPrice of 0.38 MAD, indicating this is a promotional bundle rather than a standard free-of-charge gift.\r\n\r\nThe fix is to update the product reference on order entry 1 from EI-T5600BWEGMA to EI-T5600BBEGMA. Since ConsignmentEntry resolves its product through the OrderEntry relation (not a direct product field), updating the OrderEntry product reference will automatically reflect on the consignment entry.\r\n\r\nThe promotion rule and voucher configuration should also be corrected to use EI-T5600BBEGMA for future orders to prevent recurrence.\r\n\r\nNo Kibana logs were available for the MENA region during this investigation (cookie bridge stale for kibana-mena). The DB state provides sufficient evidence — there are no process errors or stuck states, the issue is purely a configuration error in the promotion rule SKU.\r\n\r\n## Remediation\r\n\r\nA HAC Groovy script can perform the SKU swap by:\r\n1. Finding the OrderEntry on MA260902-74340282 where entryNumber = 1 (product code EI-T5600BWEGMA)\r\n2. Looking up the correct product EI-T5600BBEGMA from the Morocco (ma) product catalog\r\n3. Calling orderEntry.setProduct(correctProduct) and modelService.save(orderEntry)\r\n4. If the consignment has already been sent to GERP/NERP with the wrong SKU, the consignment process may need to be restarted from sendConsignmentToExternalERP\r\n\r\nKindly confirm if we can proceed with the SKU update so we can push the order forward.\r\n\r\nThanks,\r\n\r\nAryan.",
+        "sections": {
+          "issue": "",
+          "rca": "Summary: missing gift for MA260902-74340282\r\nGenerated: 2026-09-14T12:15:00.000Z\r\n\r\nHi [~ashwani.v@samsung.com] ,\r\n\r\nThe order MA260902-74340282 has a promotional gift entry (entry number 1) with product code EI-T5600BWEGMA (Galaxy SmartTag2 White) that should be EI-T5600BBEGMA (Galaxy SmartTag2 Black). The wrong SKU was configured in the promotion rule, and the Hybris promotion engine correctly applied whatever product code was configured in the rule at checkout time. This is a promotion configuration error, not a platform code defect.\r\n\r\nThe order currently has 2 consignments due to a split:\r\n1. MA260902-74340282 (main consignment) — status SHIPPING_REQUESTED, contains the gift entry EI-T5600BWEGMA (qty 1, basePrice 249 MAD, totalPrice 0.38 MAD)\r\n2. MA260902-74340282_1 (split consignment) — status SHIPPING_PREPARATION, contains the main product EF-RS936CBEGWW (qty 1, basePrice 399 MAD, totalPrice 0.62 MAD)\r\n\r\nThe order total is 1.00 MAD with cash on delivery payment. Payment has been authorized and captured. The order process is running (at isDelayedFiRequired action) and both consignment processes are in RUNNING state. No GERP billing numbers have been assigned yet, which means the consignment feed to NERP has not been finalized.\r\n\r\nBoth SKUs exist in the product catalog — EI-T5600BBEGMA (Black) and EI-T5600BWEGMA (White) are both \"Galaxy SmartTag2\" variants across 7 catalog versions each. The gift entry has giveAway=false and nonGiveAwayFOC=false, with a non-zero totalPrice of 0.38 MAD, indicating this is a promotional bundle rather than a standard free-of-charge gift.\r\n\r\nThe fix is to update the product reference on order entry 1 from EI-T5600BWEGMA to EI-T5600BBEGMA. Since ConsignmentEntry resolves its product through the OrderEntry relation (not a direct product field), updating the OrderEntry product reference will automatically reflect on the consignment entry.\r\n\r\nThe promotion rule and voucher configuration should also be corrected to use EI-T5600BBEGMA for future orders to prevent recurrence.\r\n\r\nNo Kibana logs were available for the MENA region during this investigation (cookie bridge stale for kibana-mena). The DB state provides sufficient evidence — there are no process errors or stuck states, the issue is purely a configuration error in the promotion rule SKU.\r\n\r\n## Remediation\r\n\r\nA HAC Groovy script can perform the SKU swap by:\r\n1. Finding the OrderEntry on MA260902-74340282 where entryNumber = 1 (product code EI-T5600BWEGMA)\r\n2. Looking up the correct product EI-T5600BBEGMA from the Morocco (ma) product catalog\r\n3. Calling orderEntry.setProduct(correctProduct) and modelService.save(orderEntry)\r\n4. If the consignment has already been sent to GERP/NERP with the wrong SKU, the consignment process may need to be restarted from sendConsignmentToExternalERP\r\n\r\nKindly confirm if we can proceed with the SKU update so we can push the order forward.\r\n\r\nThanks,\r\n\r\nAryan.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-14T12:10:56.588Z"
       }
     },
     {
@@ -960,7 +966,7 @@
       }
     ],
     "pid": 14028,
-    "uptime": 3737,
+    "uptime": 3778,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -969,7 +975,7 @@
         "issueTitle": "Investigate ticket MHME-1434",
         "snippet": "Auto-triggered investigation for new ticket MHME-1434.\n\nTicket: MHME-1434\nSummary: missing gift for MA260902-74340282\n\nU",
         "pid": 21620,
-        "elapsed": 522
+        "elapsed": 563
       }
     ],
     "startTime": "2026-09-14T11:07:58.624Z",
@@ -980,7 +986,7 @@
       {
         "pid": 12004,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 3342,
+        "ageSeconds": 3380,
         "status": "running",
         "isChild": false,
         "taskSummary": "recheck all features, the star thing i am unable to star or unstar any ticket",
@@ -990,7 +996,7 @@
       {
         "pid": 21208,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 3303,
+        "ageSeconds": 3341,
         "status": "running",
         "isChild": false,
         "taskSummary": "log 1 hr on the parent ticket as well",
@@ -2956,7 +2962,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-14T11:07:58.318Z",
-      "ageMs": 3745894
+      "ageMs": 3783814
     },
     "watchdogLogTail": "[2026-09-14T11:07:32.178Z] Dashboard script: C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\jira-dashboard-server.js\n[2026-09-14T11:07:32.184Z] Bridge already running (PID 18320). Adopting.\n[2026-09-14T11:07:32.186Z] Dashboard not running. Starting fresh.\n[2026-09-14T11:07:32.187Z] Starting jira-dashboard-server.js...\n[2026-09-14T11:07:32.356Z] Dashboard started with PID 18580 (restart #1, 1 in last hour)\n[2026-09-14T11:07:34.817Z] DUPLICATE watchdog detected: PID 16460 — killing\n[2026-09-14T11:07:51.593Z] RESTART NEEDED: Bridge process (PID 18320) not found\n[2026-09-14T11:07:53.099Z] Could not kill PID 18320: Command failed: taskkill /PID 18320 /F /T\n[2026-09-14T11:07:58.106Z] Starting bridge.js...\n[2026-09-14T11:07:58.274Z] Bridge started with PID 14028 (restart #1, 1 in last hour)",
     "jobOutputs": {}
@@ -2966,7 +2972,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-14T12:09:40.177Z",
+      "lastCheck": "2026-09-14T12:10:39.749Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -2975,18 +2981,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-14T12:09:40.177Z",
+      "lastCheck": "2026-09-14T12:10:39.749Z",
       "downSince": "2026-09-14T11:07:34.126Z",
-      "downDuration": 3726051,
+      "downDuration": 3785623,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-14T12:09:40.177Z",
+      "lastCheck": "2026-09-14T12:10:39.749Z",
       "downSince": "2026-09-14T12:02:40.522Z",
-      "downDuration": 419655,
+      "downDuration": 479227,
       "alert": true
     }
   ],
