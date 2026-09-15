@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T17:30:59.932Z",
+  "generatedAt": "2026-09-15T17:31:38.811Z",
   "totalTickets": 22,
   "tickets": [
     {
@@ -11,27 +11,27 @@
       "project": "PROD Change",
       "projectKey": "PC",
       "issuetype": "Hybris Platform",
-      "updated": "2026-09-16T02:27:15.000+0900",
+      "updated": "2026-09-16T02:33:33.000+0900",
       "created": "2026-09-14T23:03:11.000+0900",
       "statusChangedAt": "",
       "assignedToMeAt": "",
       "description": "For extracting EA Dealer Multistore PII data as requested in ticket : TKME-2324. Script extracts all 13 requested fields: Dealer Code, Branch, IP Address, User ID, Email ID, User Name, Activation Status, Authority Group, Usergroup, Whitelisted Static IP, EA Dealer Store Auth Status, Retiree List Sta",
-      "commentsCount": 2,
+      "commentsCount": 3,
       "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-09-16T02:33:33.056+0900",
+          "snippet": "Hi,\n\nUpdated the script to fix the StoreEmployeeGroup to dealer matching logic. The root cause was that StoreEmployeeGroup.store points to PointOfService (not BaseStore), while OmnichannelDealer.store points to BaseStore. Fixed by bridging through PointOfService.baseStore.\n\nRe-tested on S2 staging. "
+        },
         {
           "author": "Aryan Verma",
           "date": "2026-09-16T02:27:15.709+0900",
           "snippet": "Hi,\n\nTested the script on S2 staging. Script executed successfully and extracted data for 34 EA Dealer Multistore dealers.\n\nS2 staging has 34 OmnichannelDealer records, all linked to Toko TR Store. The user-related fields (User ID, Email ID, User Name, Activation Status, Authority Group, Usergroup) "
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-15T22:30:17.857+0900",
-          "snippet": "Hi,\n\nTested the script on S2 staging. Script executed successfully and extracted data for 34 EA Dealer Multistore dealers.\n\nSample output (first 5 rows):\n||Dealer Code||Branch||IP Address||User ID||Email ID||User Name||Activation Status||Authority Group||Usergroup||Whitelisted Static IP||EA Dealer S"
         }
       ],
       "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi,\n\nTested the script on S2 staging. Script executed successfully and extracted data for 34 EA Dealer Multistore dealers.\n\nS2 staging has 34 OmnichannelDealer records, all linked to Toko TR Store. The user-related fields (User ID, Email ID, User Name, Activation Status, Authority Group, Usergroup) ",
-      "lastCommentDate": "2026-09-16T02:27:15.709+0900",
+      "lastCommentSnippet": "Hi,\n\nUpdated the script to fix the StoreEmployeeGroup to dealer matching logic. The root cause was that StoreEmployeeGroup.store points to PointOfService (not BaseStore), while OmnichannelDealer.store points to BaseStore. Fixed by bridging through PointOfService.baseStore.\n\nRe-tested on S2 staging. ",
+      "lastCommentDate": "2026-09-16T02:33:33.056+0900",
       "url": "https://jira.secext.samsung.net/browse/PC-54055",
       "linkedTickets": [
         {
@@ -1337,7 +1337,7 @@
       }
     ],
     "pid": 36252,
-    "uptime": 5944,
+    "uptime": 5979,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1349,7 +1349,7 @@
       {
         "pid": 12004,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 108980,
+        "ageSeconds": 109019,
         "status": "running",
         "isChild": false,
         "taskSummary": "I want to remove my dependence of the cookie bridge on port 9292 as it requires manual interventi...",
@@ -1359,7 +1359,7 @@
       {
         "pid": 19100,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 103642,
+        "ageSeconds": 103681,
         "status": "running",
         "isChild": false,
         "taskSummary": "yes",
@@ -1369,7 +1369,7 @@
       {
         "pid": 14820,
         "cwd": "c:\\windows",
-        "ageSeconds": 100165,
+        "ageSeconds": 100204,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1379,7 +1379,7 @@
       {
         "pid": 27260,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 93289,
+        "ageSeconds": 93328,
         "status": "running",
         "isChild": false,
         "taskSummary": "I want to remove my dependence of the cookie bridge on port 9292 as it requires manual interventi...",
@@ -1389,7 +1389,7 @@
       {
         "pid": 34576,
         "cwd": "unknown",
-        "ageSeconds": 11099,
+        "ageSeconds": 11138,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -3492,7 +3492,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-15T16:22:41.764Z",
-      "ageMs": 4101528
+      "ageMs": 4139863
     },
     "watchdogLogTail": "[2026-09-15T10:04:11.467Z] Bridge is degraded (failures: 1). Will not restart yet.\n[2026-09-15T10:07:41.904Z] Bridge is degraded (failures: 1). Will not restart yet.\n[2026-09-15T10:47:42.400Z] DUPLICATE watchdog detected: PID 38720 — killing\n[2026-09-15T15:51:47.281Z] RESTART NEEDED: No heartbeat file found\n[2026-09-15T15:51:49.568Z] Killed bridge PID 14028\n[2026-09-15T15:51:55.230Z] Starting bridge.js...\n[2026-09-15T15:51:55.416Z] Bridge started with PID 36252 (restart #2, 1 in last hour)\n[2026-09-15T15:52:40.575Z] DUPLICATE watchdog detected: PID 34632 — killing\n[2026-09-15T15:57:41.200Z] DUPLICATE watchdog detected: PID 32060 — killing\n[2026-09-15T16:22:41.763Z] DUPLICATE watchdog detected: PID 30340 — killing"
   },
@@ -3501,7 +3501,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-15T17:30:24.281Z",
+      "lastCheck": "2026-09-15T17:31:21.218Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3510,18 +3510,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-15T17:30:24.281Z",
+      "lastCheck": "2026-09-15T17:31:21.218Z",
       "downSince": "2026-09-15T15:10:07.383Z",
-      "downDuration": 8416898,
+      "downDuration": 8473835,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-15T17:30:24.281Z",
+      "lastCheck": "2026-09-15T17:31:21.218Z",
       "downSince": "2026-09-15T16:48:18.738Z",
-      "downDuration": 2525543,
+      "downDuration": 2582480,
       "alert": true
     }
   ],
