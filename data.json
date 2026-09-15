@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T18:47:36.683Z",
+  "generatedAt": "2026-09-15T18:48:15.193Z",
   "totalTickets": 22,
   "tickets": [
     {
@@ -1337,7 +1337,7 @@
       }
     ],
     "pid": 36252,
-    "uptime": 10541,
+    "uptime": 10576,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1349,7 +1349,7 @@
       {
         "pid": 12004,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 113577,
+        "ageSeconds": 113615,
         "status": "running",
         "isChild": false,
         "taskSummary": "I want to remove my dependence of the cookie bridge on port 9292 as it requires manual interventi...",
@@ -1359,17 +1359,17 @@
       {
         "pid": 19100,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 108239,
+        "ageSeconds": 108277,
         "status": "running",
         "isChild": false,
-        "taskSummary": "okay. follow the same procedure, and make them in the same ile but different sheets",
-        "lastExchange": "okay. follow the same procedure, and make them in the same ile but different sheets",
+        "taskSummary": "its running ininitely. check i it ran in logs. I ran this script //NOTE ITGC_JIRA:PC-53902(AEME-6...",
+        "lastExchange": "its running ininitely. check i it ran in logs. I ran this script //NOTE ITGC_JIRA:PC-53902(AEME-6540)\n// Combined remediation: copy paymentInfo from original PT to clawback PT + restart clawback process\n// Orders: AE260808-54285973 (2230 AED), AE260725-39348428 (2195 AED)\n// Root cause: Clawback PaymentTransactions have null paymentInfo (info) and null requestId.\n//             Checkout.com cannot build MIT auth request without card token.\n// Fix: 1. Copy paymentInfo + requestId from original Checkout.com PT to clawback PT\n//      2. Set clawback process state from ERROR to CREATED (restartProcess fails on ERROR)\n//      3. Restart process at reAuthorizeIfNeeded node\n// References: PC-53768 (paymentInfo copy), PC-53902 (process restart with ERROR→CREATED)\n\nimport de.hybris.platform.servicelayer.search.FlexibleSearchQuery\n\ndef ORDER_CODES = [\n    \"AE260808-54285973\",\n    \"AE260725-39348428\"\n]\n\ndef flexibleSearchService = spring.getBean(\"flexibleSearchService\")\ndef businessProcessService = spring.getBean(\"businessProcessService\")\ndef modelService = spring.getBean(\"modelService\")\n\nORDER_CODES.each { orderCode ->\n    println \"\"\n    println \"=== Processing order: \" + orderCode + \" ===\"\n\n    def orderQuery = new FlexibleSearchQuery(\"SELECT {pk} FROM {Order} WHERE {code} = ?code AND {originalversion} IS NULL\")\n    orderQuery.addQueryParameter(\"code\", orderCode)\n    def orderResult = flexibleSearchService.search(orderQuery)\n    if (orderResult.getResult().isEmpty()) {\n        println \"ERROR: Order \" + orderCode + \" not found!\"\n        return\n    }\n    def order = orderResult.getResult().get(0)\n    println \"Order found: \" + order.code\n\n    def ptQuery = new FlexibleSearchQuery(\"SELECT {pk} FROM {PaymentTransaction} WHERE {order} = ?order\")\n    ptQuery.addQueryParameter(\"order\", order.getPk())\n    def ptResult = flexibleSearchService.search(ptQuery)\n    def paymentTransactions = ptResult.getResult()\n\n    // Find original PT: has paymentInfo + requestId + checkoutDotCom provider\n    def originalPT = paymentTransactions.find {\n        it.getInfo() != null && it.getRequestId() != null && it.getPaymentProvider() == \"checkoutDotComFlowPaymentMode\"\n    }\n    if (!originalPT) {\n        println \"ERROR: Could not find original Checkout.com PaymentTransaction with paymentInfo for \" + orderCode\n        return\n    }\n    println \"Original PT: \" + originalPT.getCode() + \", info=\" + originalPT.getInfo() + \", requestId=\" + originalPT.getRequestId()\n\n    // Find clawback PT: null paymentInfo + checkoutDotCom provider + different code from original\n    def clawbackPT = paymentTransactions.find {\n        (it.getInfo() == null || it.getInfo().toString().trim() == \"\") && it.getPaymentProvider() == \"checkoutDotComFlowPaymentMode\" && it.getCode() != originalPT.getCode()\n    }\n    if (!clawbackPT) {\n        println \"ERROR: Could not find clawback PaymentTransaction (null info) for \" + orderCode\n        return\n    }\n    println \"Clawback PT: \" + clawbackPT.getCode() + \", info=\" + clawbackPT.getInfo()\n\n    // Step 1: Copy paymentInfo + requestId from original PT to clawback PT\n    println \"Copying paymentInfo from \" + originalPT.getCode() + \" to \" + clawbackPT.getCode()\n    clawbackPT.setInfo(originalPT.getInfo())\n    clawbackPT.setRequestId(originalPT.getRequestId())\n    modelService.save(clawbackPT)\n    println \"Saved clawback PT with info=\" + clawbackPT.getInfo() + \", requestId=\" + clawbackPT.getRequestId()\n\n    // Step 2: Find and restart clawback business process\n    def bpQuery = new FlexibleSearchQuery(\"SELECT {pk}, {code}, {state} FROM {BusinessProcess} WHERE {code} LIKE ?pattern\")\n    bpQuery.addQueryParameter(\"pattern\", \"%\" + orderCode + \"%Clawback%\")\n    def bpResult = flexibleSearchService.search(bpQuery)\n    def clawbackProcesses = bpResult.getResult()\n\n    if (clawbackProcesses.isEmpty()) {\n        println \"No clawback process found for \" + orderCode\n        return\n    }\n\n    clawbackProcesses.each { bp ->\n        def stateCode = bp.getState() != null ? bp.getState().getCode() : \"null\"\n        println \"ClawbackProcess: \" + bp.getCode() + \", state=\" + stateCode\n\n        // Hybris restartProcess fails on ERROR state — set to CREATED first\n        if (\"ERROR\" == stateCode) {\n            def CREATED = bp.getState().getClass().valueOf(\"CREATED\")\n            bp.setState(CREATED)\n            modelService.save(bp)\n            println \"Set state to CREATED\"\n        }\n\n        businessProcessService.restartProcess(bp, \"reAuthorizeIfNeeded\")\n        println \"Restarted at reAuthorizeIfNeeded\"\n    }\n\n    println \"=== Done for order: \" + orderCode + \" ===\"\n}\n\nprintln \"\"\nprintln \"All orders processed.\"",
         "sessionId": "bin"
       },
       {
         "pid": 14820,
         "cwd": "c:\\windows",
-        "ageSeconds": 104762,
+        "ageSeconds": 104800,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1379,7 +1379,7 @@
       {
         "pid": 27260,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 97886,
+        "ageSeconds": 97924,
         "status": "running",
         "isChild": false,
         "taskSummary": "I want to remove my dependence of the cookie bridge on port 9292 as it requires manual interventi...",
@@ -1389,7 +1389,7 @@
       {
         "pid": 34576,
         "cwd": "unknown",
-        "ageSeconds": 15695,
+        "ageSeconds": 15734,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -3492,7 +3492,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-15T18:09:16.799Z",
-      "ageMs": 2302857
+      "ageMs": 2341831
     },
     "watchdogLogTail": "[2026-09-15T10:07:41.904Z] Bridge is degraded (failures: 1). Will not restart yet.\n[2026-09-15T10:47:42.400Z] DUPLICATE watchdog detected: PID 38720 — killing\n[2026-09-15T15:51:47.281Z] RESTART NEEDED: No heartbeat file found\n[2026-09-15T15:51:49.568Z] Killed bridge PID 14028\n[2026-09-15T15:51:55.230Z] Starting bridge.js...\n[2026-09-15T15:51:55.416Z] Bridge started with PID 36252 (restart #2, 1 in last hour)\n[2026-09-15T15:52:40.575Z] DUPLICATE watchdog detected: PID 34632 — killing\n[2026-09-15T15:57:41.200Z] DUPLICATE watchdog detected: PID 32060 — killing\n[2026-09-15T16:22:41.763Z] DUPLICATE watchdog detected: PID 30340 — killing\n[2026-09-15T18:09:16.798Z] Dashboard is degraded (failures: 1). Will not restart yet."
   },
