@@ -1,7 +1,60 @@
 {
-  "generatedAt": "2026-09-16T12:04:51.661Z",
-  "totalTickets": 25,
+  "generatedAt": "2026-09-16T12:05:29.386Z",
+  "totalTickets": 26,
   "tickets": [
+    {
+      "key": "AEME-6500",
+      "summary": "Stuck Order || 21-Aug",
+      "status": "QA Server Review",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "UAE Maintenance & Enhancements",
+      "projectKey": "AEME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-09-16T21:07:25.000+0900",
+      "created": "2026-08-21T16:09:34.000+0900",
+      "statusChangedAt": "2026-09-16T21:07:25.784+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team\n\n \n\nOrder is being stuck in Hybris. Please check that if it is due to stock absence, please add stock and push the order into NERP\n|AE260820-64424013|WAITING_FOR_SEND_FINANCIAL|20/08/2026|\n\n \n\nSC+ activation fails\n\nPlease find the orders below that are stuck in SC+. Kindly check and fix the ",
+      "commentsCount": 10,
+      "recentComments": [
+        {
+          "author": "Jaffar Ali",
+          "date": "2026-09-15T19:32:09.737+0900",
+          "snippet": "Hi ~@email \n\n \n\nThe policy for this order # AE260819-63130115 is active, but still there is a Pre-registration request which should be cancelled.\n\n!image-2026-09-10-11-20-57-352.png|thumbnail!\n\nAnd for this order # AE260818-62761004 also the policy is active and 3 open pre-registration requests shou"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-09-15T03:32:03.133+0900",
+          "snippet": "Hi Jaffar,\n\nAE260820-64120710 — Order is already in COMPLETED status. The original issue was a missing shipping address at order placement which caused ORDER_SPLIT. Shipping details were updated and the order moved forward. Kibana logs from Aug 20 are outside retention window so I cannot trace the e"
+        }
+      ],
+      "lastCommentBy": "Jaffar Ali",
+      "lastCommentSnippet": "Hi ~@email \n\n \n\nThe policy for this order # AE260819-63130115 is active, but still there is a Pre-registration request which should be cancelled.\n\n!image-2026-09-10-11-20-57-352.png|thumbnail!\n\nAnd for this order # AE260818-62761004 also the policy is active and 3 open pre-registration requests shou",
+      "lastCommentDate": "2026-09-15T19:32:09.737+0900",
+      "url": "https://jira.secext.samsung.net/browse/AEME-6500",
+      "linkedTickets": [
+        {
+          "key": "PC-53305",
+          "summary": "SMC Re-registration Remediation for AE260819-63130115",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "Stuck Order || 21-Aug\r\nGenerated: 2026-09-07T14:50:00+09:00\r\n\r\nHi Jaffar ,\r\n\r\nWe have verified the current DB state of all orders reported in this ticket. Below is the status and root cause for each order.\r\n\r\nAE260820-64424013: This order is now in COMPLETED status. The consignment (AE260820-64424013) is COMPLETED with tracking number 50960751402, shipped on Aug 21 and completed on Aug 22. The order process (order-process-v25-69) has SUCCEEDED. Payment was captured successfully (AED 1366.20). This order was previously stuck at WAITING_FOR_SEND_FINANCIAL due to stock absence. Stock was subsequently updated and the order progressed to completion. No further action is needed.\r\n\r\nAE260818-62761004: This order is in SHIPPING_REQUESTED status. The order has two consignments: the main consignment (AE260818-62761004) is in SHIPPING_REQUESTED, and the split consignment (AE260818-62761004_1) is COMPLETED with tracking 50960205074, shipped and completed on Aug 20. The order process (order-process-v25-69) is in RUNNING state, looping at waitForWarehouseSubprocessEnd and isProcessCompleted. The consignment process for the split consignment (AE260818-62761004_1) has SUCCEEDED.\r\n\r\nRegarding SC+, the External Service entries show: one SMC entry in CANCELLED status and one SMC entry in NEW status. The SMC service was created for consignment entry product SMC-MFRE-AE-MOB-50 (Samsung Care+ for the Galaxy Z Fold device SM-L715FZKAXSG). The CANCELLED entry is from the original consignment, and the NEW entry is from the split consignment where the SC+ service was re-created. The consignment process for the main consignment is in ERROR state.\r\n\r\nKibana logs for this order (18,784 events over 30 days) show the checkout, payment capture, and order processing all completed successfully. The SC+ external service invocation was processed via 'processExternalServicesAction' and 'processExternalServicesOnConditionAction' in the order process. The SMC entry moved to CANCELLED on the main consignment because the order was split (the product went to the _1 consignment which completed). However, the order process is stuck at waitForWarehouseSubprocessEnd because the main consignment (AE260818-62761004) is still in SHIPPING_REQUESTED and has not been shipped.\r\n\r\nThe root cause is that the main consignment remains in SHIPPING_REQUESTED because the warehouse (WC21-S701) has not confirmed shipment for this consignment. The split consignment has already shipped and completed, but the main consignment is still awaiting warehouse confirmation. The order process will remain in the waitForWarehouseSubprocessEnd loop until the main consignment is either shipped or cancelled.\r\n\r\nAE260819-63130115: This order is in SHIPPING_REQUESTED status. The order has two consignments: the main consignment (AE260819-63130115) is in SHIPPING_REQUESTED, and the split consignment (AE260819-63130115_1) is COMPLETED. The consignment process for the main consignment is in ERROR state. The order process is in RUNNING state, looping at waitForWarehouseSubprocessEnd.\r\n\r\nThe External Service entries show one SMC entry in CANCELLED and one SMC entry in UPDATE_ERROR. The SMC service product is SMC-MFRE-AE-MOB-45 (Samsung Care+ for Galaxy Z Fold SM-F976BZKPMEA). As previously communicated, the SMC activation failed during the device update call to the SMC server, leaving the ExternalService in UPDATE_ERROR. The consignment process is in ERROR due to this SMC failure.\r\n\r\nRemediation for this order is pending under PC-53305 (SMC re-registration, clear stale policy and re-register). PC-53305 is currently in \"To do\" status, awaiting approval.\r\n\r\nAE260819-63387054: This order is now in COMPLETED status. The order process has SUCCEEDED. The External Service entry shows STANDALONE_SMC with status UPDATED. Payment was captured successfully (AED 599.00). This order was remediated under PC-52918 (device model params updated on ExternalService and order process restarted). The order has reached completion. No further action is needed.\r\n\r\nAE260820-64120710: This order was stuck in ORDER_SPLIT status due to missing shipping address. After the shipping details were updated, the order moved to the next status. No further action is needed.\r\n\r\nSummary:\r\n- AE260820-64424013: COMPLETED. Resolved (stock updated).\r\n- AE260819-63387054: COMPLETED. Remediated via PC-52918.\r\n- AE260820-64120710: Resolved (shipping address updated).\r\n- AE260818-62761004: Stuck at SHIPPING_REQUESTED. Main consignment awaiting warehouse shipment confirmation. SC+ has CANCELLED + NEW entries.\r\n- AE260819-63130115: Stuck at SHIPPING_REQUESTED. SMC in UPDATE_ERROR. Remediation pending under PC-53305 (awaiting approval).\r\n\r\nThanks,\r\nAryan.",
+        "sections": {
+          "issue": "",
+          "rca": "Stuck Order || 21-Aug\r\nGenerated: 2026-09-07T14:50:00+09:00\r\n\r\nHi Jaffar ,\r\n\r\nWe have verified the current DB state of all orders reported in this ticket. Below is the status and root cause for each order.\r\n\r\nAE260820-64424013: This order is now in COMPLETED status. The consignment (AE260820-64424013) is COMPLETED with tracking number 50960751402, shipped on Aug 21 and completed on Aug 22. The order process (order-process-v25-69) has SUCCEEDED. Payment was captured successfully (AED 1366.20). This order was previously stuck at WAITING_FOR_SEND_FINANCIAL due to stock absence. Stock was subsequently updated and the order progressed to completion. No further action is needed.\r\n\r\nAE260818-62761004: This order is in SHIPPING_REQUESTED status. The order has two consignments: the main consignment (AE260818-62761004) is in SHIPPING_REQUESTED, and the split consignment (AE260818-62761004_1) is COMPLETED with tracking 50960205074, shipped and completed on Aug 20. The order process (order-process-v25-69) is in RUNNING state, looping at waitForWarehouseSubprocessEnd and isProcessCompleted. The consignment process for the split consignment (AE260818-62761004_1) has SUCCEEDED.\r\n\r\nRegarding SC+, the External Service entries show: one SMC entry in CANCELLED status and one SMC entry in NEW status. The SMC service was created for consignment entry product SMC-MFRE-AE-MOB-50 (Samsung Care+ for the Galaxy Z Fold device SM-L715FZKAXSG). The CANCELLED entry is from the original consignment, and the NEW entry is from the split consignment where the SC+ service was re-created. The consignment process for the main consignment is in ERROR state.\r\n\r\nKibana logs for this order (18,784 events over 30 days) show the checkout, payment capture, and order processing all completed successfully. The SC+ external service invocation was processed via 'processExternalServicesAction' and 'processExternalServicesOnConditionAction' in the order process. The SMC entry moved to CANCELLED on the main consignment because the order was split (the product went to the _1 consignment which completed). However, the order process is stuck at waitForWarehouseSubprocessEnd because the main consignment (AE260818-62761004) is still in SHIPPING_REQUESTED and has not been shipped.\r\n\r\nThe root cause is that the main consignment remains in SHIPPING_REQUESTED because the warehouse (WC21-S701) has not confirmed shipment for this consignment. The split consignment has already shipped and completed, but the main consignment is still awaiting warehouse confirmation. The order process will remain in the waitForWarehouseSubprocessEnd loop until the main consignment is either shipped or cancelled.\r\n\r\nAE260819-63130115: This order is in SHIPPING_REQUESTED status. The order has two consignments: the main consignment (AE260819-63130115) is in SHIPPING_REQUESTED, and the split consignment (AE260819-63130115_1) is COMPLETED. The consignment process for the main consignment is in ERROR state. The order process is in RUNNING state, looping at waitForWarehouseSubprocessEnd.\r\n\r\nThe External Service entries show one SMC entry in CANCELLED and one SMC entry in UPDATE_ERROR. The SMC service product is SMC-MFRE-AE-MOB-45 (Samsung Care+ for Galaxy Z Fold SM-F976BZKPMEA). As previously communicated, the SMC activation failed during the device update call to the SMC server, leaving the ExternalService in UPDATE_ERROR. The consignment process is in ERROR due to this SMC failure.\r\n\r\nRemediation for this order is pending under PC-53305 (SMC re-registration, clear stale policy and re-register). PC-53305 is currently in \"To do\" status, awaiting approval.\r\n\r\nAE260819-63387054: This order is now in COMPLETED status. The order process has SUCCEEDED. The External Service entry shows STANDALONE_SMC with status UPDATED. Payment was captured successfully (AED 599.00). This order was remediated under PC-52918 (device model params updated on ExternalService and order process restarted). The order has reached completion. No further action is needed.\r\n\r\nAE260820-64120710: This order was stuck in ORDER_SPLIT status due to missing shipping address. After the shipping details were updated, the order moved to the next status. No further action is needed.\r\n\r\nSummary:\r\n- AE260820-64424013: COMPLETED. Resolved (stock updated).\r\n- AE260819-63387054: COMPLETED. Remediated via PC-52918.\r\n- AE260820-64120710: Resolved (shipping address updated).\r\n- AE260818-62761004: Stuck at SHIPPING_REQUESTED. Main consignment awaiting warehouse shipment confirmation. SC+ has CANCELLED + NEW entries.\r\n- AE260819-63130115: Stuck at SHIPPING_REQUESTED. SMC in UPDATE_ERROR. Remediation pending under PC-53305 (awaiting approval).\r\n\r\nThanks,\r\nAryan.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-07T07:08:41.349Z"
+      }
+    },
     {
       "key": "SAME-3979",
       "summary": "Order Refund - SA260730-45663184 (Block Auto Refund)",
@@ -1551,7 +1604,7 @@
       }
     ],
     "pid": 28444,
-    "uptime": 29297,
+    "uptime": 29337,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1563,7 +1616,7 @@
       {
         "pid": 12004,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 175812,
+        "ageSeconds": 175850,
         "status": "running",
         "isChild": false,
         "taskSummary": "edit the jira-action-queue skill to make thiings accoring to our format",
@@ -1573,17 +1626,17 @@
       {
         "pid": 19100,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 170474,
+        "ageSeconds": 170512,
         "status": "running",
         "isChild": false,
-        "taskSummary": "write 1 line \"FOllowing orders are being tracked under:\"",
-        "lastExchange": "write 1 line \"FOllowing orders are being tracked under:\"",
+        "taskSummary": "yes and assign back , put it to SRE Review and log 25mins and update labels",
+        "lastExchange": "yes and assign back , put it to SRE Review and log 25mins and update labels",
         "sessionId": "bin"
       },
       {
         "pid": 14820,
         "cwd": "c:\\windows",
-        "ageSeconds": 166997,
+        "ageSeconds": 167035,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1593,7 +1646,7 @@
       {
         "pid": 27260,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 160121,
+        "ageSeconds": 160159,
         "status": "running",
         "isChild": false,
         "taskSummary": "edit the jira-action-queue skill to make thiings accoring to our format",
@@ -1603,7 +1656,7 @@
       {
         "pid": 34576,
         "cwd": "unknown",
-        "ageSeconds": 77931,
+        "ageSeconds": 77968,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -3841,7 +3894,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-16T09:58:38.676Z",
-      "ageMs": 7575561
+      "ageMs": 7614488
     },
     "watchdogLogTail": "[2026-09-16T09:27:41.717Z] DUPLICATE watchdog detected: PID 30384 — killing\n[2026-09-16T09:58:09.310Z] DASHBOARD RESTART NEEDED: No dashboard heartbeat file found\n[2026-09-16T09:58:12.297Z] Killed dashboard PID 30108\n[2026-09-16T09:58:23.523Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 30108) not found\n[2026-09-16T09:58:27.010Z] Could not kill dashboard PID 30108: Command failed: taskkill /PID 30108 /F /T\n[2026-09-16T09:58:27.019Z] Starting jira-dashboard-server.js...\n[2026-09-16T09:58:27.339Z] Dashboard started with PID 36296 (restart #7, 1 in last hour)\n[2026-09-16T09:58:32.553Z] Starting jira-dashboard-server.js...\n[2026-09-16T09:58:32.990Z] Dashboard started with PID 16168 (restart #8, 2 in last hour)\n[2026-09-16T09:58:38.676Z] DUPLICATE jira-dashboard-server detected: PID 36296 — killing"
   },
