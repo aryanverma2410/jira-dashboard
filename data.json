@@ -1,7 +1,76 @@
 {
-  "generatedAt": "2026-09-16T17:24:03.611Z",
+  "generatedAt": "2026-09-16T17:24:41.571Z",
   "totalTickets": 22,
   "tickets": [
+    {
+      "key": "AEME-6535",
+      "summary": "[PROD] | Update SC+ Automated Report",
+      "status": "QA Server Review",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "UAE Maintenance & Enhancements",
+      "projectKey": "AEME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-09-17T02:26:53.000+0900",
+      "created": "2026-09-03T14:51:39.000+0900",
+      "statusChangedAt": "2026-09-03T20:03:13.952+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\n \n\nEnv: PROD Env\n\nBackground:\n\nThe SUBS wants to add columns to the existing SC+ automated report as per the below file:\n\n^UAE PROD Daily SC+ Report29-Jul-2026_Yara (1).xlsx\n\n \n\nApproval:\n\n^20260824_[SGE_Non-PII_Update_SC%2B_Report.eml]\n\n \n\nRegards\n\nTalib\n\nCC: ~@email",
+      "commentsCount": 7,
+      "recentComments": [
+        {
+          "author": "Dilip Boddula",
+          "date": "2026-09-16T14:32:37.649+0900",
+          "snippet": "Dear ~@email ,\n\n\n\nThe conversion logic is correct for QAR. Please proceed with it for now.\n\nBut ideally, the USD price is configured as a JSON file in the base store of each country. Can we make it fetch from them for all countries so that it is consistent with the actual setup?\n\nRegards\nDilip"
+        },
+        {
+          "author": "Talib Raza Zaidi",
+          "date": "2026-09-15T14:42:29.212+0900",
+          "snippet": "Hi ~@email,\n\n \n\nFor Qatar SMC Query: Only Qatar needs to be added.\n\n \n\nHi ~@email ,\n\n \n\nCan you please confirm on the conversion rate of Qatar riyal to USD? As per my checking it is same as AED only.\n\n\nRegards\n\nTalib\n\nCC: ~@email"
+        }
+      ],
+      "lastCommentBy": "Dilip Boddula",
+      "lastCommentSnippet": "Dear ~@email ,\n\n\n\nThe conversion logic is correct for QAR. Please proceed with it for now.\n\nBut ideally, the USD price is configured as a JSON file in the base store of each country. Can we make it fetch from them for all countries so that it is consistent with the actual setup?\n\nRegards\nDilip",
+      "lastCommentDate": "2026-09-16T14:32:37.649+0900",
+      "url": "https://jira.secext.samsung.net/browse/AEME-6535",
+      "linkedTickets": [
+        {
+          "key": "PC-53535",
+          "summary": "Update SC+ Daily Report - Add 18 SubscriptionData Columns",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        },
+        {
+          "key": "PC-53922",
+          "summary": "Update SC+ Automated Report — column renames, initial order payment mode, Payment Cycle reorder, recipient update, Qatar",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        },
+        {
+          "key": "PC-53923",
+          "summary": "Update SC+ Automated Report — column renames, initial order payment mode, Payment Cycle reorder, recipient update, Qatar",
+          "status": "Reviewed",
+          "statusCategory": "In Progress",
+          "relation": "blocks",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "[PROD] | Update SC+ Automated Report\r\nGenerated: 2026-09-03T20:30:00.000Z\r\n\r\nIssue:\r\nThe SUBS team (Talib Raza Zaidi, CC Dilip B) requested adding new columns to the existing UAE PROD Daily SC+ automated report. The report is a Groovy script stored in the Hybris database as gcc-PROD-Daily-SC-ReportScript (version 44, active), executed daily via the ScriptCronJob gcc-Report-NonPII-Email-PRODDailySCReportCronJob backed by ScriptingJob gcc-PRODDailySCReportScriptingJob. The script queries the ExternalService table for entries where provider is SMC or STANDALONE_SMC, filtering by order codes starting with AE, KW, OM, or BH from the last 60 days, excluding TEMPORARY statuses. The existing report exports 20 columns (indexes 0-19) as a password-protected xlsx emailed to a distribution list including Firas, Anna, Francis, Dilip, Amr, Vishal, Jaffar, Talib, and Yashwant. The SUBS team provided an Excel file showing the desired additional columns covering SubscriptionData fields, and an SGE approval email confirming Non-PII classification for the change.\r\n\r\nRCA:\r\nThis is a report enhancement request, not a platform bug or incident. The current SC+ daily report script (gcc-PROD-Daily-SC-ReportScript, ITGC reference PC-29527) generates 20 columns per ExternalService row but does not include any SubscriptionData fields. The SUBS team needs visibility into subscription payment metadata — subscription tokens, payment cycles, retry counts, payment dates, subscription status, and freeMonths — alongside the existing order and SC+ activation data. The report script is the correct place to add these columns because it already joins ExternalService to Order and iterates per-row. The SubscriptionData model is accessible via the Order's payment information and contains all the requested fields. The Excel attachment (UAE PROD Daily SC+ Report29-Jul-2026_Yara (1).xlsx) specifies 18 new columns to be added as columns U through AL (indexes 20-37).\r\n\r\nPossible remediation:\r\nA Groovy script (script-AEME-6535-scplus-report.groovy, 23311 bytes) was created under PC-53535 to modify gcc-PROD-Daily-SC-ReportScript. The script adds 18 new columns: columns U and V pull Site and Payment Mode from PaymentTransaction; columns W through AL pull SubscriptionData fields (Subscription Token, Payment Info, Payment Mode display, Next Payment Date, Policy Start Date, Last Payment Date, Payment Cycle, Payment Day, Token Created Date, Current Retry Sequence, Max Retry Count, Total Payments, Current Successful Payment No, Subscription Status, Subscription End Date, freeMonths). The second sheet (externalServiceMissingOrders) listing standalone SMC orders without ExternalService entries is preserved. The ITGC reference in the script header is PC-53535(AEME-6535). PC-53535 has been reviewed by Vaibhav Jain and is in Reviewed status. The script is applied by updating the ScriptingJob script content via the HAC scripting console. Rollback is reverting to version 44 (original script without the 18 new columns). Verification is confirming the daily SC+ report email includes columns U-AL populated with SubscriptionData and payment mode data for each order row.\r\n\r\n## Remediation\r\n- PC ticket: PC-53535 (Reviewed by Vaibhav Jain)\r\n- Script: script-AEME-6535-scplus-report.groovy (23311 bytes, attached to PC-53535)\r\n- Implementation: Update ScriptingJob script content for gcc-PROD-Daily-SC-ReportScript via HAC scripting console\r\n- Columns added: 18 new columns U-AL (indexes 20-37) covering SubscriptionData and payment mode fields\r\n- Verification: Daily SC+ report email should include 18 new columns U-AL populated with SubscriptionData and payment mode data for each order row\r\n- Rollback: Revert script content to version 44 (original script without the 18 new columns)\r\n- Parent ticket: AEME-6535 (QA Server Review, Blocks relationship)\r\n- Status: Remediation complete, PC-53535 Reviewed",
+        "sections": {
+          "issue": "The SUBS team (Talib Raza Zaidi, CC Dilip B) requested adding new columns to the existing UAE PROD Daily SC+ automated report. The report is a Groovy script stored in the Hybris database as gcc-PROD-Daily-SC-ReportScript (version 44, active), executed daily via the ScriptCronJob gcc-Report-NonPII-Email-PRODDailySCReportCronJob backed by ScriptingJob gcc-PRODDailySCReportScriptingJob. The script queries the ExternalService table for entries where provider is SMC or STANDALONE_SMC, filtering by order codes starting with AE, KW, OM, or BH from the last 60 days, excluding TEMPORARY statuses. The existing report exports 20 columns (indexes 0-19) as a password-protected xlsx emailed to a distribution list including Firas, Anna, Francis, Dilip, Amr, Vishal, Jaffar, Talib, and Yashwant. The SUBS team provided an Excel file showing the desired additional columns covering SubscriptionData fields, and an SGE approval email confirming Non-PII classification for the change.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-03T13:39:50.839Z"
+      }
+    },
     {
       "key": "PC-53923",
       "summary": "Update SC+ Automated Report — column renames, initial order payment mode, Payment Cycle reorder, recipient update, Qatar",
@@ -642,75 +711,6 @@
         "source": "",
         "foundAt": "",
         "issueNumber": null
-      }
-    },
-    {
-      "key": "AEME-6535",
-      "summary": "[PROD] | Update SC+ Automated Report",
-      "status": "QA Server Review",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-16T14:32:37.000+0900",
-      "created": "2026-09-03T14:51:39.000+0900",
-      "statusChangedAt": "2026-09-03T20:03:13.952+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\n \n\nEnv: PROD Env\n\nBackground:\n\nThe SUBS wants to add columns to the existing SC+ automated report as per the below file:\n\n^UAE PROD Daily SC+ Report29-Jul-2026_Yara (1).xlsx\n\n \n\nApproval:\n\n^20260824_[SGE_Non-PII_Update_SC%2B_Report.eml]\n\n \n\nRegards\n\nTalib\n\nCC: ~@email",
-      "commentsCount": 7,
-      "recentComments": [
-        {
-          "author": "Dilip Boddula",
-          "date": "2026-09-16T14:32:37.649+0900",
-          "snippet": "Dear ~@email ,\n\n\n\nThe conversion logic is correct for QAR. Please proceed with it for now.\n\nBut ideally, the USD price is configured as a JSON file in the base store of each country. Can we make it fetch from them for all countries so that it is consistent with the actual setup?\n\nRegards\nDilip"
-        },
-        {
-          "author": "Talib Raza Zaidi",
-          "date": "2026-09-15T14:42:29.212+0900",
-          "snippet": "Hi ~@email,\n\n \n\nFor Qatar SMC Query: Only Qatar needs to be added.\n\n \n\nHi ~@email ,\n\n \n\nCan you please confirm on the conversion rate of Qatar riyal to USD? As per my checking it is same as AED only.\n\n\nRegards\n\nTalib\n\nCC: ~@email"
-        }
-      ],
-      "lastCommentBy": "Dilip Boddula",
-      "lastCommentSnippet": "Dear ~@email ,\n\n\n\nThe conversion logic is correct for QAR. Please proceed with it for now.\n\nBut ideally, the USD price is configured as a JSON file in the base store of each country. Can we make it fetch from them for all countries so that it is consistent with the actual setup?\n\nRegards\nDilip",
-      "lastCommentDate": "2026-09-16T14:32:37.649+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6535",
-      "linkedTickets": [
-        {
-          "key": "PC-53535",
-          "summary": "Update SC+ Daily Report - Add 18 SubscriptionData Columns",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "blocks",
-          "assignee": null
-        },
-        {
-          "key": "PC-53922",
-          "summary": "Update SC+ Automated Report — column renames, initial order payment mode, Payment Cycle reorder, recipient update, Qatar",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "blocks",
-          "assignee": null
-        },
-        {
-          "key": "PC-53923",
-          "summary": "Update SC+ Automated Report — column renames, initial order payment mode, Payment Cycle reorder, recipient update, Qatar",
-          "status": "Reviewed",
-          "statusCategory": "In Progress",
-          "relation": "blocks",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "[PROD] | Update SC+ Automated Report\r\nGenerated: 2026-09-03T20:30:00.000Z\r\n\r\nIssue:\r\nThe SUBS team (Talib Raza Zaidi, CC Dilip B) requested adding new columns to the existing UAE PROD Daily SC+ automated report. The report is a Groovy script stored in the Hybris database as gcc-PROD-Daily-SC-ReportScript (version 44, active), executed daily via the ScriptCronJob gcc-Report-NonPII-Email-PRODDailySCReportCronJob backed by ScriptingJob gcc-PRODDailySCReportScriptingJob. The script queries the ExternalService table for entries where provider is SMC or STANDALONE_SMC, filtering by order codes starting with AE, KW, OM, or BH from the last 60 days, excluding TEMPORARY statuses. The existing report exports 20 columns (indexes 0-19) as a password-protected xlsx emailed to a distribution list including Firas, Anna, Francis, Dilip, Amr, Vishal, Jaffar, Talib, and Yashwant. The SUBS team provided an Excel file showing the desired additional columns covering SubscriptionData fields, and an SGE approval email confirming Non-PII classification for the change.\r\n\r\nRCA:\r\nThis is a report enhancement request, not a platform bug or incident. The current SC+ daily report script (gcc-PROD-Daily-SC-ReportScript, ITGC reference PC-29527) generates 20 columns per ExternalService row but does not include any SubscriptionData fields. The SUBS team needs visibility into subscription payment metadata — subscription tokens, payment cycles, retry counts, payment dates, subscription status, and freeMonths — alongside the existing order and SC+ activation data. The report script is the correct place to add these columns because it already joins ExternalService to Order and iterates per-row. The SubscriptionData model is accessible via the Order's payment information and contains all the requested fields. The Excel attachment (UAE PROD Daily SC+ Report29-Jul-2026_Yara (1).xlsx) specifies 18 new columns to be added as columns U through AL (indexes 20-37).\r\n\r\nPossible remediation:\r\nA Groovy script (script-AEME-6535-scplus-report.groovy, 23311 bytes) was created under PC-53535 to modify gcc-PROD-Daily-SC-ReportScript. The script adds 18 new columns: columns U and V pull Site and Payment Mode from PaymentTransaction; columns W through AL pull SubscriptionData fields (Subscription Token, Payment Info, Payment Mode display, Next Payment Date, Policy Start Date, Last Payment Date, Payment Cycle, Payment Day, Token Created Date, Current Retry Sequence, Max Retry Count, Total Payments, Current Successful Payment No, Subscription Status, Subscription End Date, freeMonths). The second sheet (externalServiceMissingOrders) listing standalone SMC orders without ExternalService entries is preserved. The ITGC reference in the script header is PC-53535(AEME-6535). PC-53535 has been reviewed by Vaibhav Jain and is in Reviewed status. The script is applied by updating the ScriptingJob script content via the HAC scripting console. Rollback is reverting to version 44 (original script without the 18 new columns). Verification is confirming the daily SC+ report email includes columns U-AL populated with SubscriptionData and payment mode data for each order row.\r\n\r\n## Remediation\r\n- PC ticket: PC-53535 (Reviewed by Vaibhav Jain)\r\n- Script: script-AEME-6535-scplus-report.groovy (23311 bytes, attached to PC-53535)\r\n- Implementation: Update ScriptingJob script content for gcc-PROD-Daily-SC-ReportScript via HAC scripting console\r\n- Columns added: 18 new columns U-AL (indexes 20-37) covering SubscriptionData and payment mode fields\r\n- Verification: Daily SC+ report email should include 18 new columns U-AL populated with SubscriptionData and payment mode data for each order row\r\n- Rollback: Revert script content to version 44 (original script without the 18 new columns)\r\n- Parent ticket: AEME-6535 (QA Server Review, Blocks relationship)\r\n- Status: Remediation complete, PC-53535 Reviewed",
-        "sections": {
-          "issue": "The SUBS team (Talib Raza Zaidi, CC Dilip B) requested adding new columns to the existing UAE PROD Daily SC+ automated report. The report is a Groovy script stored in the Hybris database as gcc-PROD-Daily-SC-ReportScript (version 44, active), executed daily via the ScriptCronJob gcc-Report-NonPII-Email-PRODDailySCReportCronJob backed by ScriptingJob gcc-PRODDailySCReportScriptingJob. The script queries the ExternalService table for entries where provider is SMC or STANDALONE_SMC, filtering by order codes starting with AE, KW, OM, or BH from the last 60 days, excluding TEMPORARY statuses. The existing report exports 20 columns (indexes 0-19) as a password-protected xlsx emailed to a distribution list including Firas, Anna, Francis, Dilip, Amr, Vishal, Jaffar, Talib, and Yashwant. The SUBS team provided an Excel file showing the desired additional columns covering SubscriptionData fields, and an SGE approval email confirming Non-PII classification for the change.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-03T13:39:50.839Z"
       }
     },
     {
@@ -1405,7 +1405,7 @@
       }
     ],
     "pid": 28444,
-    "uptime": 48453,
+    "uptime": 48488,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1417,7 +1417,7 @@
       {
         "pid": 12004,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 194964,
+        "ageSeconds": 195003,
         "status": "running",
         "isChild": false,
         "taskSummary": "edit the jira-action-queue skill to make thiings accoring to our format",
@@ -1427,17 +1427,17 @@
       {
         "pid": 19100,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 189626,
+        "ageSeconds": 189664,
         "status": "running",
         "isChild": false,
-        "taskSummary": "add stg result csv file to the parent ticket for them to review",
-        "lastExchange": "add stg result csv file to the parent ticket for them to review",
+        "taskSummary": "why does it change the consignment when the stock is available",
+        "lastExchange": "why does it change the consignment when the stock is available",
         "sessionId": "bin"
       },
       {
         "pid": 14820,
         "cwd": "c:\\windows",
-        "ageSeconds": 186149,
+        "ageSeconds": 186188,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1447,7 +1447,7 @@
       {
         "pid": 27260,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 179273,
+        "ageSeconds": 179312,
         "status": "running",
         "isChild": false,
         "taskSummary": "edit the jira-action-queue skill to make thiings accoring to our format",
@@ -1457,7 +1457,7 @@
       {
         "pid": 34576,
         "cwd": "unknown",
-        "ageSeconds": 97083,
+        "ageSeconds": 97121,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -3710,7 +3710,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-16T16:47:43.243Z",
-      "ageMs": 2183061
+      "ageMs": 2222707
     },
     "watchdogLogTail": "[2026-09-16T15:02:41.095Z] DUPLICATE watchdog detected: PID 32568 — killing\n[2026-09-16T15:07:41.873Z] DUPLICATE watchdog detected: PID 35632 — killing\n[2026-09-16T15:12:41.737Z] DUPLICATE watchdog detected: PID 34308 — killing\n[2026-09-16T15:17:41.253Z] DUPLICATE watchdog detected: PID 33660 — killing\n[2026-09-16T15:22:41.715Z] DUPLICATE watchdog detected: PID 42492 — killing\n[2026-09-16T15:27:40.039Z] DUPLICATE watchdog detected: PID 17308 — killing\n[2026-09-16T15:32:41.916Z] DUPLICATE watchdog detected: PID 13568 — killing\n[2026-09-16T15:37:41.949Z] DUPLICATE watchdog detected: PID 31260 — killing\n[2026-09-16T15:42:41.116Z] DUPLICATE watchdog detected: PID 42400 — killing\n[2026-09-16T16:47:43.243Z] DUPLICATE watchdog detected: PID 43080 — killing"
   },
