@@ -1,7 +1,68 @@
 {
-  "generatedAt": "2026-09-16T10:02:31.186Z",
+  "generatedAt": "2026-09-16T10:03:10.050Z",
   "totalTickets": 23,
   "tickets": [
+    {
+      "key": "SAHME-3403",
+      "summary": "Request to allocate 0.01 value on accessory SKUs",
+      "status": "QA Server Review",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "South Africa Maintenance & Enhancements",
+      "projectKey": "SAHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-09-16T19:04:55.000+0900",
+      "created": "2026-09-01T17:32:59.000+0900",
+      "statusChangedAt": "2026-09-10T13:40:25.705+0900",
+      "assignedToMeAt": "",
+      "description": "Good,\n\nPlease can you allocate 0.01 to the below accessories on the orders. The accessories cannot be delivered due to the ongoing issue of NERP not accepting the 0.00 value from promotion rule discounted FOCs. \n|Order Nr.|Site|Product Name|Product ID|Product QTY|Price|\n|ZA260527-90723331|ZA|Carbon ",
+      "commentsCount": 16,
+      "recentComments": [
+        {
+          "author": "Lerato Mbambisa",
+          "date": "2026-09-16T19:04:55.259+0900",
+          "snippet": "Good day ~@email ,\n\nPlease can you advise on the progress of this ticket.\n\nIn addition, please can you advise if we would need to generate a new SO for the below orders where the 0.01 has not been applied?\n|rder Nr.|Site|Order Status|Product ID|Product QTY|Price|\n|ZA260709-24314835|RHQ_EPP|SHIPPING_"
+        },
+        {
+          "author": "Lerato Mbambisa",
+          "date": "2026-09-16T00:41:42.351+0900",
+          "snippet": "Good day ~@email ,\n\nNew SO generated on order ZA260527-90723331 and the DO created on this order. \n\nHowever the New SO did not generate on order ZA260812-57823087. please check.\n\nPlease also advise on order ZA260819-63371159.\n\nPass\n\n!image-2026-09-15-17-41-22-651.png!\n\nKind regards,\n\nLerato"
+        }
+      ],
+      "lastCommentBy": "Lerato Mbambisa",
+      "lastCommentSnippet": "Good day ~@email ,\n\nPlease can you advise on the progress of this ticket.\n\nIn addition, please can you advise if we would need to generate a new SO for the below orders where the 0.01 has not been applied?\n|rder Nr.|Site|Order Status|Product ID|Product QTY|Price|\n|ZA260709-24314835|RHQ_EPP|SHIPPING_",
+      "lastCommentDate": "2026-09-16T19:04:55.259+0900",
+      "url": "https://jira.secext.samsung.net/browse/SAHME-3403",
+      "linkedTickets": [
+        {
+          "key": "PC-53378",
+          "summary": "Script to set FOC entry price to 0.01 and retrigger consignment process",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        },
+        {
+          "key": "PC-54109",
+          "summary": "Script to reconcile wrong consignment entries and retrigger stuck process",
+          "status": "To do",
+          "statusCategory": "To Do",
+          "relation": "blocks",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "Request to allocate 0.01 value on accessory SKUs\r\nGenerated: 2026-09-01T17:24:31.812Z\r\n\r\n---\r\n\r\nHi Lerato ,\r\n\r\nI investigated the 30 orders listed in the ticket and confirmed that all accessory consignments are stuck because NERP is rejecting the zero-price line items. Here is what happened.\r\n\r\nPromotion rules on the ZA store set the accessory totalprice to 0.00 (Free of Charge) while the baseprice retains the original value (e.g. 1499.00 or 1295.00). When Hybris sends the consignment feed to NERP, the TokoSDAdditionalDataPopulator.populateGiftWithPurchaseData() method detects the 0.00 totalprice via TokoOrderService.doesConsignmentContainFOCNonPromotion() and classifies the entry as FOC non-promotion. This triggers a DOC_TYPE override from the region's normal sales order type (YS10) to the FOC order type (YS03). NERP then attempts to look up a valid T184 entry for the combination YS03 + the material's Item Category Group + the FOC item category (YNB1), finds no valid mapping, and rejects the consignment with the error \"This order type is not accepted (YS03)\".\r\n\r\nDB verification confirms this across all 30 orders. Each order is split into two consignments: the _1 consignment containing the phone (SM-F*) shipped successfully with a GERP billing number, while the original consignment containing the accessory (EF-* or EB-* or EP-*) is stuck at SHIPPING_REQUESTED (27 orders) or SHIPPING_PREPARATION (1 order) because NERP never created the sales order. The order process is stuck at waitForWarehouseSubprocessEnd waiting for the accessory consignment to complete. All payments are captured successfully. Two orders (ZA260806-52232515 and ZA260823-67050593) have already progressed past this stage with their accessory consignments showing COMPLETED status.\r\n\r\nBy setting the accessory entry totalprice from 0.00 to 0.01, the entry will no longer be classified as FOC non-promotion by doesConsignmentContainFOCNonPromotion(). This prevents the DOC_TYPE override, keeping it as YS10 (normal order), and the item category will use the standard mapping. T184 has valid entries for YS10 + the accessory material groups, so NERP will accept the order.\r\n\r\nThis is the same remediation approach confirmed and successfully applied in SAHME-3392 and SAHME-3386 for the ZA region, and in CLME-2989, CLME-2836, and CLME-4092 for the Chile region where the NERP teams approved sending the zero-price SKU value as a nominal amount.\r\n\r\nA reusable approved script exists under PC-52664 (Closed, REUSABLE label) originally created for SAHME-3375. The script sets FOC entry totalprice from 0 to 0.01 on YS03 consignments and restarts the consignment process from the NERP SO creation node. Only the order list needs to be updated to match these 30 orders. The script is idempotent (only modifies entries where totalprice equals zero) and only restarts processes in ERROR or WAITING state.\r\n\r\nKindly confirm if we can proceed with applying the 0.01 price to these 30 accessory entries so we can push the orders forward.\r\n\r\nThanks,\r\nAryan.\r\n\r\n## Remediation\r\n- Reusable PC ticket: PC-52664 (Closed, REUSABLE, approved by D2C Team)\r\n- Script: script-SAHME-3375-foc-price-remediation.groovy\r\n- Adaptation: Copy script to script-SAHME-3403-foc-price-remediation.groovy, replace 3-order list with 30 SAHME-3403 order codes, update header to PC-52664(SAHME-3403)\r\n- Logic: Set FOC entry totalprice from 0.00 to 0.01 on YS03 consignments, restart consignment process from sendConsignmentToExternalERP",
+        "sections": {
+          "issue": "",
+          "rca": "Request to allocate 0.01 value on accessory SKUs\r\nGenerated: 2026-09-01T17:24:31.812Z\r\n\r\n---\r\n\r\nHi Lerato ,\r\n\r\nI investigated the 30 orders listed in the ticket and confirmed that all accessory consignments are stuck because NERP is rejecting the zero-price line items. Here is what happened.\r\n\r\nPromotion rules on the ZA store set the accessory totalprice to 0.00 (Free of Charge) while the baseprice retains the original value (e.g. 1499.00 or 1295.00). When Hybris sends the consignment feed to NERP, the TokoSDAdditionalDataPopulator.populateGiftWithPurchaseData() method detects the 0.00 totalprice via TokoOrderService.doesConsignmentContainFOCNonPromotion() and classifies the entry as FOC non-promotion. This triggers a DOC_TYPE override from the region's normal sales order type (YS10) to the FOC order type (YS03). NERP then attempts to look up a valid T184 entry for the combination YS03 + the material's Item Category Group + the FOC item category (YNB1), finds no valid mapping, and rejects the consignment with the error \"This order type is not accepted (YS03)\".\r\n\r\nDB verification confirms this across all 30 orders. Each order is split into two consignments: the _1 consignment containing the phone (SM-F*) shipped successfully with a GERP billing number, while the original consignment containing the accessory (EF-* or EB-* or EP-*) is stuck at SHIPPING_REQUESTED (27 orders) or SHIPPING_PREPARATION (1 order) because NERP never created the sales order. The order process is stuck at waitForWarehouseSubprocessEnd waiting for the accessory consignment to complete. All payments are captured successfully. Two orders (ZA260806-52232515 and ZA260823-67050593) have already progressed past this stage with their accessory consignments showing COMPLETED status.\r\n\r\nBy setting the accessory entry totalprice from 0.00 to 0.01, the entry will no longer be classified as FOC non-promotion by doesConsignmentContainFOCNonPromotion(). This prevents the DOC_TYPE override, keeping it as YS10 (normal order), and the item category will use the standard mapping. T184 has valid entries for YS10 + the accessory material groups, so NERP will accept the order.\r\n\r\nThis is the same remediation approach confirmed and successfully applied in SAHME-3392 and SAHME-3386 for the ZA region, and in CLME-2989, CLME-2836, and CLME-4092 for the Chile region where the NERP teams approved sending the zero-price SKU value as a nominal amount.\r\n\r\nA reusable approved script exists under PC-52664 (Closed, REUSABLE label) originally created for SAHME-3375. The script sets FOC entry totalprice from 0 to 0.01 on YS03 consignments and restarts the consignment process from the NERP SO creation node. Only the order list needs to be updated to match these 30 orders. The script is idempotent (only modifies entries where totalprice equals zero) and only restarts processes in ERROR or WAITING state.\r\n\r\nKindly confirm if we can proceed with applying the 0.01 price to these 30 accessory entries so we can push the orders forward.\r\n\r\nThanks,\r\nAryan.\r\n\r\n## Remediation\r\n- Reusable PC ticket: PC-52664 (Closed, REUSABLE, approved by D2C Team)\r\n- Script: script-SAHME-3375-foc-price-remediation.groovy\r\n- Adaptation: Copy script to script-SAHME-3403-foc-price-remediation.groovy, replace 3-order list with 30 SAHME-3403 order codes, update header to PC-52664(SAHME-3403)\r\n- Logic: Set FOC entry totalprice from 0.00 to 0.01 on YS03 consignments, restart consignment process from sendConsignmentToExternalERP",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-01T11:54:42.289Z"
+      }
+    },
     {
       "key": "PC-54111",
       "summary": "Update gift SKU and retrigger consignment for MA260902-74340282",
@@ -93,67 +154,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-08T04:21:43.819Z"
-      }
-    },
-    {
-      "key": "SAHME-3403",
-      "summary": "Request to allocate 0.01 value on accessory SKUs",
-      "status": "QA Server Review",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "South Africa Maintenance & Enhancements",
-      "projectKey": "SAHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-16T18:56:03.000+0900",
-      "created": "2026-09-01T17:32:59.000+0900",
-      "statusChangedAt": "2026-09-10T13:40:25.705+0900",
-      "assignedToMeAt": "",
-      "description": "Good,\n\nPlease can you allocate 0.01 to the below accessories on the orders. The accessories cannot be delivered due to the ongoing issue of NERP not accepting the 0.00 value from promotion rule discounted FOCs. \n|Order Nr.|Site|Product Name|Product ID|Product QTY|Price|\n|ZA260527-90723331|ZA|Carbon ",
-      "commentsCount": 16,
-      "recentComments": [
-        {
-          "author": "Lerato Mbambisa",
-          "date": "2026-09-16T18:56:03.531+0900",
-          "snippet": "Good day ~@email ,\n\nPlease can you advise on the progress of this ticket.\n\nKind regards,\n\nLerato"
-        },
-        {
-          "author": "Lerato Mbambisa",
-          "date": "2026-09-16T00:41:42.351+0900",
-          "snippet": "Good day ~@email ,\n\nNew SO generated on order ZA260527-90723331 and the DO created on this order. \n\nHowever the New SO did not generate on order ZA260812-57823087. please check.\n\nPlease also advise on order ZA260819-63371159.\n\nPass\n\n!image-2026-09-15-17-41-22-651.png!\n\nKind regards,\n\nLerato"
-        }
-      ],
-      "lastCommentBy": "Lerato Mbambisa",
-      "lastCommentSnippet": "Good day ~@email ,\n\nPlease can you advise on the progress of this ticket.\n\nKind regards,\n\nLerato",
-      "lastCommentDate": "2026-09-16T18:56:03.531+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAHME-3403",
-      "linkedTickets": [
-        {
-          "key": "PC-53378",
-          "summary": "Script to set FOC entry price to 0.01 and retrigger consignment process",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "blocks",
-          "assignee": null
-        },
-        {
-          "key": "PC-54109",
-          "summary": "Script to reconcile wrong consignment entries and retrigger stuck process",
-          "status": "To do",
-          "statusCategory": "To Do",
-          "relation": "blocks",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "Request to allocate 0.01 value on accessory SKUs\r\nGenerated: 2026-09-01T17:24:31.812Z\r\n\r\n---\r\n\r\nHi Lerato ,\r\n\r\nI investigated the 30 orders listed in the ticket and confirmed that all accessory consignments are stuck because NERP is rejecting the zero-price line items. Here is what happened.\r\n\r\nPromotion rules on the ZA store set the accessory totalprice to 0.00 (Free of Charge) while the baseprice retains the original value (e.g. 1499.00 or 1295.00). When Hybris sends the consignment feed to NERP, the TokoSDAdditionalDataPopulator.populateGiftWithPurchaseData() method detects the 0.00 totalprice via TokoOrderService.doesConsignmentContainFOCNonPromotion() and classifies the entry as FOC non-promotion. This triggers a DOC_TYPE override from the region's normal sales order type (YS10) to the FOC order type (YS03). NERP then attempts to look up a valid T184 entry for the combination YS03 + the material's Item Category Group + the FOC item category (YNB1), finds no valid mapping, and rejects the consignment with the error \"This order type is not accepted (YS03)\".\r\n\r\nDB verification confirms this across all 30 orders. Each order is split into two consignments: the _1 consignment containing the phone (SM-F*) shipped successfully with a GERP billing number, while the original consignment containing the accessory (EF-* or EB-* or EP-*) is stuck at SHIPPING_REQUESTED (27 orders) or SHIPPING_PREPARATION (1 order) because NERP never created the sales order. The order process is stuck at waitForWarehouseSubprocessEnd waiting for the accessory consignment to complete. All payments are captured successfully. Two orders (ZA260806-52232515 and ZA260823-67050593) have already progressed past this stage with their accessory consignments showing COMPLETED status.\r\n\r\nBy setting the accessory entry totalprice from 0.00 to 0.01, the entry will no longer be classified as FOC non-promotion by doesConsignmentContainFOCNonPromotion(). This prevents the DOC_TYPE override, keeping it as YS10 (normal order), and the item category will use the standard mapping. T184 has valid entries for YS10 + the accessory material groups, so NERP will accept the order.\r\n\r\nThis is the same remediation approach confirmed and successfully applied in SAHME-3392 and SAHME-3386 for the ZA region, and in CLME-2989, CLME-2836, and CLME-4092 for the Chile region where the NERP teams approved sending the zero-price SKU value as a nominal amount.\r\n\r\nA reusable approved script exists under PC-52664 (Closed, REUSABLE label) originally created for SAHME-3375. The script sets FOC entry totalprice from 0 to 0.01 on YS03 consignments and restarts the consignment process from the NERP SO creation node. Only the order list needs to be updated to match these 30 orders. The script is idempotent (only modifies entries where totalprice equals zero) and only restarts processes in ERROR or WAITING state.\r\n\r\nKindly confirm if we can proceed with applying the 0.01 price to these 30 accessory entries so we can push the orders forward.\r\n\r\nThanks,\r\nAryan.\r\n\r\n## Remediation\r\n- Reusable PC ticket: PC-52664 (Closed, REUSABLE, approved by D2C Team)\r\n- Script: script-SAHME-3375-foc-price-remediation.groovy\r\n- Adaptation: Copy script to script-SAHME-3403-foc-price-remediation.groovy, replace 3-order list with 30 SAHME-3403 order codes, update header to PC-52664(SAHME-3403)\r\n- Logic: Set FOC entry totalprice from 0.00 to 0.01 on YS03 consignments, restart consignment process from sendConsignmentToExternalERP",
-        "sections": {
-          "issue": "",
-          "rca": "Request to allocate 0.01 value on accessory SKUs\r\nGenerated: 2026-09-01T17:24:31.812Z\r\n\r\n---\r\n\r\nHi Lerato ,\r\n\r\nI investigated the 30 orders listed in the ticket and confirmed that all accessory consignments are stuck because NERP is rejecting the zero-price line items. Here is what happened.\r\n\r\nPromotion rules on the ZA store set the accessory totalprice to 0.00 (Free of Charge) while the baseprice retains the original value (e.g. 1499.00 or 1295.00). When Hybris sends the consignment feed to NERP, the TokoSDAdditionalDataPopulator.populateGiftWithPurchaseData() method detects the 0.00 totalprice via TokoOrderService.doesConsignmentContainFOCNonPromotion() and classifies the entry as FOC non-promotion. This triggers a DOC_TYPE override from the region's normal sales order type (YS10) to the FOC order type (YS03). NERP then attempts to look up a valid T184 entry for the combination YS03 + the material's Item Category Group + the FOC item category (YNB1), finds no valid mapping, and rejects the consignment with the error \"This order type is not accepted (YS03)\".\r\n\r\nDB verification confirms this across all 30 orders. Each order is split into two consignments: the _1 consignment containing the phone (SM-F*) shipped successfully with a GERP billing number, while the original consignment containing the accessory (EF-* or EB-* or EP-*) is stuck at SHIPPING_REQUESTED (27 orders) or SHIPPING_PREPARATION (1 order) because NERP never created the sales order. The order process is stuck at waitForWarehouseSubprocessEnd waiting for the accessory consignment to complete. All payments are captured successfully. Two orders (ZA260806-52232515 and ZA260823-67050593) have already progressed past this stage with their accessory consignments showing COMPLETED status.\r\n\r\nBy setting the accessory entry totalprice from 0.00 to 0.01, the entry will no longer be classified as FOC non-promotion by doesConsignmentContainFOCNonPromotion(). This prevents the DOC_TYPE override, keeping it as YS10 (normal order), and the item category will use the standard mapping. T184 has valid entries for YS10 + the accessory material groups, so NERP will accept the order.\r\n\r\nThis is the same remediation approach confirmed and successfully applied in SAHME-3392 and SAHME-3386 for the ZA region, and in CLME-2989, CLME-2836, and CLME-4092 for the Chile region where the NERP teams approved sending the zero-price SKU value as a nominal amount.\r\n\r\nA reusable approved script exists under PC-52664 (Closed, REUSABLE label) originally created for SAHME-3375. The script sets FOC entry totalprice from 0 to 0.01 on YS03 consignments and restarts the consignment process from the NERP SO creation node. Only the order list needs to be updated to match these 30 orders. The script is idempotent (only modifies entries where totalprice equals zero) and only restarts processes in ERROR or WAITING state.\r\n\r\nKindly confirm if we can proceed with applying the 0.01 price to these 30 accessory entries so we can push the orders forward.\r\n\r\nThanks,\r\nAryan.\r\n\r\n## Remediation\r\n- Reusable PC ticket: PC-52664 (Closed, REUSABLE, approved by D2C Team)\r\n- Script: script-SAHME-3375-foc-price-remediation.groovy\r\n- Adaptation: Copy script to script-SAHME-3403-foc-price-remediation.groovy, replace 3-order list with 30 SAHME-3403 order codes, update header to PC-52664(SAHME-3403)\r\n- Logic: Set FOC entry totalprice from 0.00 to 0.01 on YS03 consignments, restart consignment process from sendConsignmentToExternalERP",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-01T11:54:42.289Z"
       }
     },
     {
@@ -1444,7 +1444,7 @@
       }
     ],
     "pid": 28444,
-    "uptime": 21960,
+    "uptime": 21998,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1456,7 +1456,7 @@
       {
         "pid": 12004,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 168471,
+        "ageSeconds": 168510,
         "status": "running",
         "isChild": false,
         "taskSummary": "edit the jira-action-queue skill to make thiings accoring to our format",
@@ -1466,7 +1466,7 @@
       {
         "pid": 19100,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 163133,
+        "ageSeconds": 163172,
         "status": "running",
         "isChild": false,
         "taskSummary": "remember to always check the ITGC comment after creating a PC. add it to memory and the pc ticket...",
@@ -1476,7 +1476,7 @@
       {
         "pid": 14820,
         "cwd": "c:\\windows",
-        "ageSeconds": 159656,
+        "ageSeconds": 159695,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1486,7 +1486,7 @@
       {
         "pid": 27260,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 152780,
+        "ageSeconds": 152820,
         "status": "running",
         "isChild": false,
         "taskSummary": "edit the jira-action-queue skill to make thiings accoring to our format",
@@ -1496,7 +1496,7 @@
       {
         "pid": 34576,
         "cwd": "unknown",
-        "ageSeconds": 70590,
+        "ageSeconds": 70629,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -3704,7 +3704,7 @@
     "watchdog": {
       "alive": true,
       "lastWrite": "2026-09-16T09:58:38.676Z",
-      "ageMs": 235824
+      "ageMs": 275825
     },
     "watchdogLogTail": "[2026-09-16T09:27:41.717Z] DUPLICATE watchdog detected: PID 30384 — killing\n[2026-09-16T09:58:09.310Z] DASHBOARD RESTART NEEDED: No dashboard heartbeat file found\n[2026-09-16T09:58:12.297Z] Killed dashboard PID 30108\n[2026-09-16T09:58:23.523Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 30108) not found\n[2026-09-16T09:58:27.010Z] Could not kill dashboard PID 30108: Command failed: taskkill /PID 30108 /F /T\n[2026-09-16T09:58:27.019Z] Starting jira-dashboard-server.js...\n[2026-09-16T09:58:27.339Z] Dashboard started with PID 36296 (restart #7, 1 in last hour)\n[2026-09-16T09:58:32.553Z] Starting jira-dashboard-server.js...\n[2026-09-16T09:58:32.990Z] Dashboard started with PID 16168 (restart #8, 2 in last hour)\n[2026-09-16T09:58:38.676Z] DUPLICATE jira-dashboard-server detected: PID 36296 — killing"
   },
@@ -3713,7 +3713,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-16T10:01:38.012Z",
+      "lastCheck": "2026-09-16T10:02:37.533Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3722,18 +3722,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-16T10:01:38.012Z",
+      "lastCheck": "2026-09-16T10:02:37.533Z",
       "downSince": "2026-09-16T09:58:34.814Z",
-      "downDuration": 183198,
+      "downDuration": 242719,
       "alert": false
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-16T10:01:38.012Z",
+      "lastCheck": "2026-09-16T10:02:37.533Z",
       "downSince": "2026-09-16T09:58:34.815Z",
-      "downDuration": 183197,
+      "downDuration": 242718,
       "alert": false
     }
   ],
