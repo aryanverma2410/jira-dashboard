@@ -199,7 +199,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .cmd-h-item .cmd-h-resp.expanded{max-height:none}
 .cmd-h-toggle{font-size:10px;color:var(--text-dim);margin-top:4px;cursor:pointer;text-align:center;user-select:none}
 .cmd-h-pending{font-size:12px;color:var(--warning);margin-top:6px}
-
+.cmd-h-live{font-size:11px;color:var(--text-dim);margin-top:6px;padding:8px;background:rgba(88,166,255,0.05);border:1px solid rgba(88,166,255,0.15);border-radius:6px;max-height:200px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;font-family:Consolas,Monaco,monospace;line-height:1.4}
 /* Solution Section (inside expanded ticket cards) */
 .solution-section{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
 .solution-label{font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
@@ -1011,12 +1011,12 @@ function wakeUpServer(){
     })
 }
 
-function relTime(ds){if(!ds)return '';var d=new Date(ds);var n=Date.now();var df=Math.floor((n-d.getTime())/1000);if(df<0)df=0;if(df<10)return 'just now';if(df<60)return df+'s ago';if(df<3600)return Math.floor(df/60)+'m ago';if(df<86400)return Math.floor(df/3600)+'h ago';if(df<604800)return Math.floor(df/86400)+'d ago';return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}
-function fmtUptime(s){if(!s||s<0)return '0s';var h=Math.floor(s/3600);var m=Math.floor((s%3600)/60);var ss=Math.floor(s%60);if(h>0)return h+'h '+m+'m';if(m>0)return m+'m '+ss+'s';return ss+'s'}
+function relTime(ds){if(!ds)return '';var d=new Date(ds);if(isNaN(d.getTime()))return '';var n=Date.now();var df=Math.floor((n-d.getTime())/1000);if(df<0)df=0;if(df<10)return 'just now';if(df<60)return df+'s ago';if(df<3600)return Math.floor(df/60)+'m ago';if(df<86400)return Math.floor(df/3600)+'h ago';if(df<604800)return Math.floor(df/86400)+'d ago';return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}
+function fmtUptime(s){if(!s||s<0||!isFinite(s))return '0s';var h=Math.floor(s/3600);var m=Math.floor((s%3600)/60);var ss=Math.floor(s%60);if(h>0)return h+'h '+m+'m';if(m>0)return m+'m '+ss+'s';return ss+'s'}
 function showToast(msg,type){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(type||'');setTimeout(function(){t.classList.remove('show')},3500)}
 function toast(msg){showToast(msg,'')}
 function formatTime(d){return d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
-function escapeHtml(str){if(!str)return '';return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function escapeHtml(str){if(!str)return '';str=String(str);return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 function statusClass(st,cat){var s=(st||'').toLowerCase();var c=(cat||'').toLowerCase();if(s.indexOf('open')===0||c==='to do')return 'open';if(s.indexOf('progress')>=0||c==='in progress')return 'in-progress';if(s==='reopened')return 'reopened';if(s==='done'||s==='closed'||s==='resolved'||c==='done')return 'done';return 'other'}
 function priorityColor(p){p=(p||'').toLowerCase();if(p==='highest'||p==='critical')return '#f85149';if(p==='high')return '#d29922';if(p==='medium')return '#58a6ff';if(p==='low'||p==='lowest')return '#3fb950';return '#8b949e'}
 function projectColor(k){if(!k)return '#8b949e';var c={AEME:'#58a6ff',PME:'#3fb950',NZHME:'#d29922',SPHME:'#f85149',TWME:'#bc8cff',THAME:'#ff7b72',VNME:'#79c0ff',HKHME:'#56d364',AUME:'#ffa657',MYME:'#e3b341',IDME:'#7ee787',SAM:'#f0883e',PC:'#a371f7',CIMC:'#7ee787',EI:'#79c0ff'};return c[k]||'#8b949e'}
@@ -1113,7 +1113,7 @@ function renderFilters(data){
 }
 function setFilter(f){currentFilter=f;if(rawData){renderFilters(rawData);renderTickets(rawData,[])}}
 function getFiltered(data){
-  return (data.tickets||[]).filter(function(t){
+  return ((data&&data.tickets)||[]).filter(function(t){
     if(currentFilter!=='All'&&t.issuetype!==currentFilter)return false;
     if(searchTerm){var s=searchTerm.toLowerCase();if((t.key||'').toLowerCase().indexOf(s)<0&&(t.summary||'').toLowerCase().indexOf(s)<0&&(t.project||'').toLowerCase().indexOf(s)<0)return false}
     return true
@@ -1680,7 +1680,11 @@ function renderCmdHistory(){
       h+='<div class="cmd-h-resp" onclick="this.classList.toggle(\'expanded\')">'+escapeHtml(resp)+'</div>';
       h+='<div class="cmd-h-toggle" onclick="var r=this.previousElementSibling;r.classList.toggle(\'expanded\');this.textContent=r.classList.contains(\'expanded\')?\'\\u25B2 collapse\':\'\\u25BC expand\'">\u25BC expand</div>';
     }
-    else h+='<div class="cmd-h-pending">Waiting for response...<span class="pending-dot"></span></div>';
+    else{
+      h+='<div class="cmd-h-pending">Waiting for response...<span class="pending-dot"></span></div>';
+      h+='<pre class="cmd-h-live" id="cmdLive_'+item.issueNum+'"></pre>';
+      startLivePolling(item.issueNum);
+    }
     h+='</div>'
   });
   el.innerHTML=h
@@ -1698,7 +1702,40 @@ function pollCmdResponses(data){
       }
     })
   });
-  if(upd){localStorage.setItem('cmdHistory',JSON.stringify(hist));renderCmdHistory()}
+  if(upd){
+    localStorage.setItem('cmdHistory',JSON.stringify(hist));
+    hist.forEach(function(h){if(h.response)stopLivePolling(h.issueNum);});
+    renderCmdHistory();
+  }
+}
+
+// ===== LIVE THINKING STREAM =====
+var livePollTimers={};
+function startLivePolling(issueNum){
+  if(livePollTimers[issueNum])return;
+  livePollTimers[issueNum]=true;
+  function poll(){
+    fetch('http://127.0.0.1:9293/live/'+issueNum)
+      .then(function(r){return r.json()})
+      .then(function(d){
+        var el=document.getElementById('cmdLive_'+issueNum);
+        if(!el){stopLivePolling(issueNum);return}
+        if(d.active&&d.output){
+          el.textContent=d.output;
+          el.scrollTop=el.scrollHeight;
+          setTimeout(poll,2000);
+        } else {
+          setTimeout(poll,3000);
+        }
+      })
+      .catch(function(){
+        setTimeout(poll,5000);
+      });
+  }
+  poll();
+}
+function stopLivePolling(issueNum){
+  delete livePollTimers[issueNum];
 }
 
 // ===== ACTIVITY VIEW (Bridge health + jobs + activity feed) =====
@@ -2408,7 +2445,7 @@ var tasksOrigSwitchView;
 
 // ===== ACTION QUEUE (Jira Action Queue / logQueue) =====
 // Track firing status in localStorage: { itemId: { issueNum, status, firedAt } }
-function getAQStatuses(){return JSON.parse(localStorage.getItem('aqStatuses')||'{}')}
+function getAQStatuses(){try{return JSON.parse(localStorage.getItem('aqStatuses')||'{}')}catch(e){return {}}}
 function setAQStatus(id,status,issueNum){var s=getAQStatuses();s[id]={status:status,issueNum:issueNum||null,firedAt:Date.now()};localStorage.setItem('aqStatuses',JSON.stringify(s))}
 function getAQStatus(id){var s=getAQStatuses();return s[id]||null}
 
@@ -2582,14 +2619,16 @@ function fireActionQueue(){
     if(acts.transition)body+='Transition: '+acts.transition+NL;
     if(acts.fallbackTransition)body+='Fallback transition: '+acts.fallbackTransition+NL;
     if(acts.assignee)body+='Assignee: '+acts.assignee+NL;
-    if(acts.labels)body+='Labels: '+acts.labels.join(', ')+NL;
+    if(acts.labels){var la=Array.isArray(acts.labels)?acts.labels:(acts.labels.add||[]);if(la.length>0)body+='Labels: '+la.join(', ')+NL}
     if(item.notes)body+='Notes: '+item.notes+NL;
   });
   body+=NL+'Sent from dashboard';
   createIssue(summary,body,function(e,d){
     if(btn){btn.disabled=false;btn.innerHTML='&#9889; Fire Queue'}
     if(e||!d||!d.number){showToast('Failed to fire action queue','error');return}
+    aq.forEach(function(item){setAQStatus(item.id,'firing',d.number)});
     showToast('Action queue fired (Issue #'+d.number+'). Items will be processed sequentially.','success');
+    renderActionQueue();
   });
 }
 
@@ -2608,7 +2647,7 @@ function fireActionQueueItem(id){
   if(acts.transition)body+='Transition: '+acts.transition+NL;
   if(acts.fallbackTransition)body+='Fallback transition: '+acts.fallbackTransition+NL;
   if(acts.assignee)body+='Assignee: '+acts.assignee+NL;
-  if(acts.labels)body+='Labels: '+acts.labels.join(', ')+NL;
+  if(acts.labels){var lb=Array.isArray(acts.labels)?acts.labels:(acts.labels.add||[]);if(lb.length>0)body+='Labels: '+lb.join(', ')+NL}
   if(item.notes)body+='Notes: '+item.notes+NL;
   body+=NL+'After executing successfully, remove this item (id '+id+') from the file.'+NL+
     'Do not process any other items.'+NL+
@@ -2631,7 +2670,11 @@ function removeActionQueueItem(id){
     'Sent from dashboard',
     function(e,d){
       if(e||!d||!d.number){showToast('Failed to send removal','error');return}
+      var statuses=getAQStatuses();
+      delete statuses[id];
+      localStorage.setItem('aqStatuses',JSON.stringify(statuses));
       showToast('Removal request sent (Issue #'+d.number+')','success');
+      renderActionQueue();
     });
 }
 
@@ -2691,15 +2734,16 @@ function submitQuickAdd(){
   if(assignee)actions.assignee=assignee;
   if(labels)actions.labels=labels.split(',').map(function(l){return l.trim()}).filter(Boolean);
   var today=new Date().toISOString().split('T')[0];
+  var newItem={
+    id: '<next available id (increment from max existing id)>',
+    ticket: key,
+    actions: actions,
+    createdAt: today,
+    notes: notes||'Queued from dashboard'
+  };
   var body='Append a new item to the file C:\\Users\\aryan.v1\\.gemini\\tmp\\bin\\memory\\jira-action-queue.json'+NL+
     'New item structure:'+NL+
-    '{'+NL+
-    '  "id": <next available id (increment from max existing id)>, '+NL+
-    '  "ticket": "'+key+'", '+NL+
-    '  "actions": '+JSON.stringify(actions)+','+NL+
-    '  "createdAt": "'+today+'",'+NL+
-    '  "notes": "'+(notes||'Queued from dashboard')+'"'+NL+
-    '}'+NL+
+    JSON.stringify(newItem,null,2)+NL+
     'Add this to the existing JSON array. Do not change existing items.'+NL+
     'Sent from dashboard';
   showToast('Queuing action for '+key+'...','');
@@ -2723,7 +2767,7 @@ function showFaqModal(){
     if(acts.worklogHours)detail.push(acts.worklogHours+'h worklog');
     if(acts.transition)detail.push(acts.transition);
     if(acts.assignee)detail.push('assign '+acts.assignee);
-    if(acts.labels&&acts.labels.length>0)detail.push('labels: '+acts.labels.join(','));
+    if(acts.labels){var ld=Array.isArray(acts.labels)?acts.labels:(acts.labels.add||[]);if(ld.length>0)detail.push('labels: '+ld.join(','))}
     html+='<div class="faq-item-check">'+
       '<input type="checkbox" checked data-aq-id="'+item.id+'">'+
       '<div class="faq-item-info">'+
@@ -2760,19 +2804,30 @@ function confirmFireAll(){
     if(acts.transition)body+='Transition: '+acts.transition+NL;
     if(acts.fallbackTransition)body+='Fallback transition: '+acts.fallbackTransition+NL;
     if(acts.assignee)body+='Assignee: '+acts.assignee+NL;
-    if(acts.labels)body+='Labels: '+acts.labels.join(', ')+NL;
+    if(acts.labels){var lc=Array.isArray(acts.labels)?acts.labels:(acts.labels.add||[]);if(lc.length>0)body+='Labels: '+lc.join(', ')+NL}
     if(item.notes)body+='Notes: '+item.notes+NL;
   });
   body+=NL+'Sent from dashboard';
   createIssue(summary,body,function(e,d){
     if(btn){btn.disabled=false;btn.innerHTML='&#9889; Fire Queue'}
     if(e||!d||!d.number){showToast('Failed to fire action queue','error');return}
+    items.forEach(function(item){setAQStatus(item.id,'firing',d.number)});
     showToast('Action queue fired (Issue #'+d.number+'). '+items.length+' items will be processed sequentially.','success');
+    renderActionQueue();
   });
 }
 
 // F2: Retry Failed Queue Items
 function retryFailedItem(id){
+  var aq=rawData&&rawData.actionQueue||[];
+  if(!aq.some(function(i){return i.id===id})){
+    showToast('Item #'+id+' no longer in queue (already executed?)','error');
+    var statuses=getAQStatuses();
+    delete statuses[id];
+    localStorage.setItem('aqStatuses',JSON.stringify(statuses));
+    renderActionQueue();
+    return;
+  }
   var statuses=getAQStatuses();
   delete statuses[id];
   localStorage.setItem('aqStatuses',JSON.stringify(statuses));
@@ -2818,7 +2873,8 @@ function ticketAgeClass(updated){
 function isInvestigating(key){
   if(!rawData||!rawData.tickets)return false;
   var t=rawData.tickets.find(function(x){return x.key===key});
-  return t&&t.solution&&t.solution.status==='investigating';
+  if(!t||!t.solution)return false;
+  return t.solution.status==='investigating';
 }
 
 // F_K: RCA Matrix View
