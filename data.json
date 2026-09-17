@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-17T13:29:27.000Z",
+  "generatedAt": "2026-09-17T13:30:06.463Z",
   "totalTickets": 17,
   "tickets": [
     {
@@ -1136,7 +1136,7 @@
       }
     ],
     "pid": 29984,
-    "uptime": 64948,
+    "uptime": 64988,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1148,7 +1148,7 @@
       {
         "pid": 27260,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 251597,
+        "ageSeconds": 251636,
         "status": "running",
         "isChild": false,
         "taskSummary": "do this kinda testing for the whole dashboard",
@@ -1158,17 +1158,17 @@
       {
         "pid": 15796,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 9005,
+        "ageSeconds": 9044,
         "status": "running",
         "isChild": false,
-        "taskSummary": "failed iis fine, just note the error/message sent from their end",
-        "lastExchange": "failed iis fine, just note the error/message sent from their end",
+        "taskSummary": "use this script to activate and get the error code as well if it fails: //NOTE ITGC_JIRA:PC-52678...",
+        "lastExchange": "use this script to activate and get the error code as well if it fails: //NOTE ITGC_JIRA:PC-52678(GMT-20796)\n//Remediate SMC external service stuck in UPDATE_ERROR - direct SMC API call to see actual error\n//Reusable PC-52678 script, inspired by PC-3698(SPHME-7890) direct-call pattern\n\nimport de.hybris.platform.processengine.enums.ProcessState\nimport com.samsung.toko.core.enums.ExternalServiceStatus\nimport com.samsung.toko.core.enums.ExternalServiceType\nimport com.samsung.toko.util.SMCExternalServicesUtilities\nimport com.samsung.toko.dto.SMCRegistrationResponse\nimport com.samsung.toko.dto.SMCDeviceResponse\nimport org.springframework.http.HttpMethod\nimport com.samsung.toko.util.TokoJsonUtils\nimport com.samsung.toko.core.model.TokoVariantProductModel\nimport com.samsung.toko.core.order.externalservice.ExternalServiceConfigParam\nimport com.samsung.toko.core.order.externalservice.ExternalServiceUtility\nimport org.apache.commons.lang.StringUtils\nimport com.samsung.toko.exceptions.fulfilmentservices.SMCWebClientResultFailedException\nimport com.samsung.toko.constants.TokosmcservicesConstants\n\nfss = spring.getBean(\"flexibleSearchService\")\nmodelService = spring.getBean(\"modelService\")\nenumSvc = spring.getBean(\"enumerationService\")\nbps = spring.getBean(\"businessProcessService\")\ntokoStoreConfigService = spring.getBean(\"tokoStoreConfigService\")\ntokoConfigPropertyService = spring.getBean(\"tokoConfigPropertyService\")\ntokoERPConfigStrategy = spring.getBean(\"tokoERPConfigStrategy\")\nsmcServiceActivationService = spring.getBean(\"smcServiceActivationService\")\n\ndef orders = \"\"\"\n\n\nAE260818-6276100\n\n\n\"\"\".readLines()*.trim().findAll { it } as Set\n\nint ok = 0, skip = 0, err = 0\n\nprintln \"Direct SMC API call for \" + orders.size() + \" order(s)\"\nprintln \"\"\nfor (o in orders) {\n    def res = fss.search(\"SELECT {o.pk} FROM {Order AS o} WHERE {o.code}='$o' AND {o.originalVersion} IS NULL\").result\n    if (res.isEmpty()) { println \"$o [SKIP] not found\"; skip++; continue }\n\n    def order = res[0]\n\n    activateOnRegistrationAPI = tokoStoreConfigService.getProperty(\"com.samsung.toko.smc.rest.url.externalService.activate.on.registration\", order.getStore())\n    scope = tokoStoreConfigService.getProperty(\"com.samsung.toko.smc.rest.url.externalService.scope\", order.getStore())\n    serialNoRegex = tokoStoreConfigService.getProperty(\"validation.serialNo.regexp\", order.getStore())\n    autoUpdateEnabled = tokoConfigPropertyService.getPropertyBooleanValueFromDB(\"toko.smc.auto.update.imei.serialno\", order.getStore())\n\n    boolean anyProcessed = false\n\n    for (es in order.getExternalServiceEntries()) {\n        def st = es.status?.code\n        println \"$o ES type=${es.serviceType?.code} status=$st provider=${es.provider} serviceProduct=${es.serviceProduct?.code}\"\n\n        if (st != 'ERROR' && st != 'UPDATE_ERROR') {\n            println \"  -> [SKIP] status is $st, not ERROR/UPDATE_ERROR\"\n            continue\n        }\n\n        anyProcessed = true\n\n        try {\n            // Build the SMC registration activation request (same as PC-3698 pattern)\n            def product = (TokoVariantProductModel) es.getOrderEntry().getProduct()\n            def erpConfig = tokoERPConfigStrategy.getErpConfig(order, product.getCompanyCode())\n            String salesChannelId = smcServiceActivationService.getSalesChannelId(es.orderEntry)\n\n            def smcReq = SMCExternalServicesUtilities.createSMCRegistrationActivationRequest(\n                order, es.orderEntry.consignmentEntries[0].consignment, es,\n                erpConfig, scope, serialNoRegex, autoUpdateEnabled, salesChannelId, false)\n\n            // Handle SMC upgrade scenario\n            if (ExternalServiceUtility.hasConfigParameter(\n                    es.getOrderEntry().getOrder().getStore(), es.getServiceType(),\n                    ExternalServiceConfigParam.SKIP_SMC_UPGRADE_EXTERNALSERVICE_PROCESSSING, es.getProvider())\n                && ExternalServiceUtility.isSmcWithUpgrade(es)) {\n                smcReq.setActualDeviceValue(es.getOrderEntry().getTotalPrice().toString())\n            }\n\n            // Postal code strategy\n            if (smcServiceActivationService.tokoSmcPostalCodeStrategyMap.containsKey(order.getStore().getUid())) {\n                smcReq.setPostalCode(\n                    smcServiceActivationService.tokoSmcPostalCodeStrategyMap.get(order.getStore().getUid()).getPostCode(order))\n            }\n\n            // Payment method\n            def paymentMethod = smcServiceActivationService.getPaymentMethod(order)\n            if (StringUtils.isNotBlank(paymentMethod)) {\n                smcReq.setPaymentMethod(paymentMethod)\n            }\n\n            // Set smcRegistrationDatetime from secondGI\n            String newsmcRegistrationDatetime\n            for (consignmentEntry in es.orderEntry.consignmentEntries) {\n                if (consignmentEntry.getSecondGI() != null) {\n                    newsmcRegistrationDatetime = SMCExternalServicesUtilities.getSecondGI(consignmentEntry.consignment, es.getOrderEntry())\n                    if (null != consignmentEntry.UnitSpecificAttributeGroups[0]) {\n                        def deviceImei = consignmentEntry.UnitSpecificAttributeGroups[0].ExtendedProductAttributes[0].value\n                        println \"  -> deviceImei=$deviceImei\"\n                        smcReq.setDeviceImei(deviceImei)\n                    }\n                }\n            }\n            println \"  -> smcRegistrationDatetime=$newsmcRegistrationDatetime\"\n            smcReq.setSmcRegistrationDatetime(newsmcRegistrationDatetime.toString())\n\n            // Suppress email from SC+\n            smcReq.setIdType('mail_inactive')\n\n            // Print the full request JSON\n            println \"  -> SMC Request JSON:\"\n            println TokoJsonUtils.convertToJsonStringOrElseReturnEmptyString(smcReq)\n\n            // Call SMC API directly\n            SMCDeviceResponse response = null\n            final Map<String, String> params = new HashMap<>()\n            params.put(\"country\", order.getStore().getUid())\n\n            try {\n                response = (SMCDeviceResponse) SMCWebClient.executeRESTExchangeRequest(\n                    smcReq, params, SMCDeviceResponse.class, activateOnRegistrationAPI, HttpMethod.POST)\n                println \"  -> SMC Response: $response\"\n            } catch (SMCWebClientResultFailedException e) {\n               // println \"  -> [SMC ERROR] $o: ${e.getMessage()}\"\n                println \"  -> SMC Response Body: ${e.getDetailedMessage()}\"\n                java.io.StringWriter sw = new java.io.StringWriter()\n                e.printStackTrace(new java.io.PrintWriter(sw))\n                println sw.toString()\n                err++\n                continue\n            }\n\n //           println \"  -> Full response JSON: \" + TokoJsonUtils.convertToJsonStringOrElseReturnEmptyString(response)\n\n            if (null != response) {\n                // Save response and update status\n                def registrationId = response.getMobilecare_serial_number()\n                if (StringUtils.isBlank(es.getProviderRegistrationId())) {\n                    es.setProviderRegistrationId(registrationId)\n                }\n\n                final Map<String, String> parametersToAdd = new HashMap<>()\n                parametersToAdd.put(TokosmcservicesConstants.SMC_RESPONSE_PARAM_PROVIDER_REGISTRATION_ID, registrationId)\n                parametersToAdd.put(TokosmcservicesConstants.SMC_RESPONSE_PARAM_SERIAL_NUMBER, registrationId)\n                parametersToAdd.put(TokosmcservicesConstants.SMC_RESPONSE_PARAM_STATUS_CODE, response.getStatus_code())\n                parametersToAdd.put(TokosmcservicesConstants.SMC_RESPONSE_PARAM_POLICY_ID, response.getPolicy_id())\n                parametersToAdd.put(TokosmcservicesConstants.SMC_RESPONSE_PARAM_CERTIFICATE_NUMBER, response.getMobilecare_certificate_number())\n\n                SMCExternalServicesUtilities.saveResponseParameters(modelService, es, parametersToAdd)\n                println \"  -> SC+ response saved\"\n\n                if (es.status.code != 'UPDATED') {\n                    println \"  -> Status changed to UPDATED from \" + es.status.code\n                    es.setStatus(ExternalServiceStatus.UPDATED)\n                    modelService.save(es)\n                }\n                println \"$o [OK] SMC API call succeeded, status=UPDATED\"\n                ok++\n            } else {\n                println \"$o [ERR] SMC returned null response\"\n                err++\n            }\n        } catch (e) {\n            println \"$o [ERR] \" + e\n            java.io.StringWriter sw = new java.io.StringWriter()\n            e.printStackTrace(new java.io.PrintWriter(sw))\n            println sw.toString()\n            err++\n        }\n    }\n\n    if (!anyProcessed) { println \"$o [SKIP] no ExternalService in ERROR/UPDATE_ERROR\"; skip++; continue }\n}\n\nprintln \"\"\nprintln \"Summary: ok=\" + ok + \" skip=\" + skip + \" err=\" + err",
         "sessionId": "bin"
       },
       {
         "pid": 42528,
         "cwd": "c:\\windows",
-        "ageSeconds": 9001,
+        "ageSeconds": 9040,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1178,7 +1178,7 @@
       {
         "pid": 39856,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 8996,
+        "ageSeconds": 9035,
         "status": "running",
         "isChild": false,
         "taskSummary": "do this kinda testing for the whole dashboard",
@@ -3446,7 +3446,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-17T13:02:41.778Z",
-      "ageMs": 1609525
+      "ageMs": 1647386
     },
     "watchdogLogTail": "[2026-09-17T11:07:31.994Z] Stale threshold: 30000ms\n[2026-09-17T11:07:31.995Z] Max restarts: 50/hour\n[2026-09-17T11:07:31.996Z] Bridge script: C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\bridge.js\n[2026-09-17T11:07:31.997Z] Dashboard script: C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\jira-dashboard-server.js\n[2026-09-17T11:07:32.003Z] Bridge already running (PID 29984). Adopting.\n[2026-09-17T11:07:32.009Z] Dashboard already running (PID 42260). Adopting.\n[2026-09-17T12:42:41.823Z] DUPLICATE watchdog detected: PID 32000 — killing\n[2026-09-17T12:47:41.891Z] DUPLICATE watchdog detected: PID 17756 — killing\n[2026-09-17T12:52:42.736Z] DUPLICATE watchdog detected: PID 45664 — killing\n[2026-09-17T13:02:41.778Z] DUPLICATE watchdog detected: PID 30448 — killing"
   },
@@ -3455,7 +3455,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-17T13:29:03.484Z",
+      "lastCheck": "2026-09-17T13:30:03.463Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3464,7 +3464,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-17T13:29:03.484Z",
+      "lastCheck": "2026-09-17T13:30:03.463Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3473,9 +3473,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-17T13:29:03.484Z",
+      "lastCheck": "2026-09-17T13:30:03.463Z",
       "downSince": "2026-09-17T02:34:32.566Z",
-      "downDuration": 39270918,
+      "downDuration": 39330897,
       "alert": true
     }
   ],
