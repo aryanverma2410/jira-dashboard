@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-17T10:47:07.342Z",
+  "generatedAt": "2026-09-17T10:47:45.917Z",
   "totalTickets": 17,
   "tickets": [
     {
@@ -1152,7 +1152,7 @@
       }
     ],
     "pid": 29984,
-    "uptime": 55211,
+    "uptime": 55246,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1164,7 +1164,7 @@
       {
         "pid": 12004,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 257548,
+        "ageSeconds": 257586,
         "status": "running",
         "isChild": false,
         "taskSummary": "make each feature more robust as much as you can and double check each feature flow. firt plan an...",
@@ -1174,17 +1174,17 @@
       {
         "pid": 19100,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 252209,
+        "ageSeconds": 252248,
         "status": "running",
         "isChild": false,
-        "taskSummary": "The VDI time is behind by 2min 22sec. how can I fix this script to give the corect auth token num...",
-        "lastExchange": "The VDI time is behind by 2min 22sec. how can I fix this script to give the corect auth token number: // ==UserScript==\n// @name         YCloud Auto Login (TOTP)\n// @match        https://ycloud.accounts.ondemand.com/*\n// @run-at       document-idle\n// @grant        none\n// ==/UserScript==\n\nconst TOTP_SECRET = \"4RFNRCG5TQZTVYAOC5BASYYO46OAFWFV\";\nconst setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, \"value\").set;\n\nfunction base32Decode(str) {\n    const alphabet = \"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567\";\n    str = str.toUpperCase().replace(/[^A-Z2-7]/g, \"\");\n    const bytes = [];\n    let buffer = 0, bits = 0;\n    for (const c of str) {\n        const val = alphabet.indexOf(c);\n        if (val < 0) continue;\n        buffer = (buffer << 5) | val;\n        bits += 5;\n        if (bits >= 8) {\n            bytes.push((buffer >> (bits - 8)) & 0xFF);\n            bits -= 8;\n        }\n    }\n    return new Uint8Array(bytes);\n}\n\nasync function generateTOTP(secret) {\n    const key = base32Decode(secret);\n    const counter = Math.floor(Date.now() / 1000 / 30);\n    const msg = new ArrayBuffer(8);\n    new DataView(msg).setUint32(4, counter);\n    const cryptoKey = await crypto.subtle.importKey(\"raw\", key, {name: \"HMAC\", hash: \"SHA-1\"}, false, [\"sign\"]);\n    const hmac = await crypto.subtle.sign(\"HMAC\", cryptoKey, msg);\n    const hb = new Uint8Array(hmac);\n    const offset = hb[hb.length - 1] & 0xf;\n    const code = ((hb[offset] & 0x7f) << 24) | (hb[offset + 1] << 16) | (hb[offset + 2] << 8) | hb[offset + 3];\n    return (code % 1000000).toString().padStart(6, \"0\");\n}\n\nfunction clickSubmit() {\n    const btn = document.querySelector(\"button[type='submit'], input[type='submit'], button.fn-button--primary, .ids-button--primary\");\n    if (btn) { btn.click(); return true; }\n    const form = document.querySelector(\"form\");\n    if (form) { form.submit(); return true; }\n    return false;\n}\n\n// Phase 1: Fill username if present\nconst i = setInterval(() => {\n    const u = document.querySelector(\"input[name='j_username']\");\n    if (!u) return;\n    clearInterval(i);\n    setter.call(u, \"aryan.v1@samsung.com\");\n    u.dispatchEvent(new Event(\"input\", { bubbles: true }));\n    u.dispatchEvent(new Event(\"change\", { bubbles: true }));\n    setTimeout(() => clickSubmit(), 500);\n}, 300);\n\n// Phase 2: Fill TOTP if present\nconst j = setInterval(() => {\n    const o = document.querySelector(\"input[name='j_otpcode']\");\n    if (!o) return;\n    clearInterval(j);\n    generateTOTP(TOTP_SECRET).then(code => {\n        setter.call(o, code);\n        o.dispatchEvent(new Event(\"input\", { bubbles: true }));\n        o.dispatchEvent(new Event(\"change\", { bubbles: true }));\n        setTimeout(() => clickSubmit(), 500);\n    });\n}, 300);",
+        "taskSummary": "check if this would work: A more robust approach would be to fetch server time from an HTTP respo...",
+        "lastExchange": "check if this would work: A more robust approach\n  would be to fetch server time from an HTTP response header (Date:) and\n  compute the offset dynamically, but for a fixed VDI skew the static offset\n  works fine.",
         "sessionId": "bin"
       },
       {
         "pid": 14820,
         "cwd": "c:\\windows",
-        "ageSeconds": 248733,
+        "ageSeconds": 248771,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1194,7 +1194,7 @@
       {
         "pid": 27260,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 241857,
+        "ageSeconds": 241895,
         "status": "running",
         "isChild": false,
         "taskSummary": "make each feature more robust as much as you can and double check each feature flow. firt plan an...",
@@ -1204,7 +1204,7 @@
       {
         "pid": 34576,
         "cwd": "unknown",
-        "ageSeconds": 159666,
+        "ageSeconds": 159705,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -3457,7 +3457,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-17T10:07:42.097Z",
-      "ageMs": 2368550
+      "ageMs": 2407085
     },
     "watchdogLogTail": "[2026-09-17T09:13:18.180Z] Dashboard is degraded (failures: 627). Will not restart yet.\n[2026-09-17T09:24:20.090Z] Dashboard is degraded (failures: 638). Will not restart yet.\n[2026-09-17T09:52:35.828Z] Dashboard is degraded (failures: 666). Will not restart yet.\n[2026-09-17T09:53:35.862Z] Dashboard is degraded (failures: 667). Will not restart yet.\n[2026-09-17T09:54:35.674Z] Dashboard is degraded (failures: 668). Will not restart yet.\n[2026-09-17T09:55:35.967Z] Dashboard is degraded (failures: 669). Will not restart yet.\n[2026-09-17T09:56:35.936Z] Dashboard is degraded (failures: 670). Will not restart yet.\n[2026-09-17T09:57:40.925Z] DUPLICATE watchdog detected: PID 33836 — killing\n[2026-09-17T10:02:42.839Z] DUPLICATE watchdog detected: PID 40036 — killing\n[2026-09-17T10:07:42.096Z] DUPLICATE watchdog detected: PID 29188 — killing"
   },
@@ -3466,7 +3466,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-17T10:46:38.767Z",
+      "lastCheck": "2026-09-17T10:47:38.590Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3475,18 +3475,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-17T10:46:38.767Z",
+      "lastCheck": "2026-09-17T10:47:38.590Z",
       "downSince": "2026-09-16T19:58:16.301Z",
-      "downDuration": 53302466,
+      "downDuration": 53362289,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-17T10:46:38.767Z",
+      "lastCheck": "2026-09-17T10:47:38.590Z",
       "downSince": "2026-09-17T02:34:32.566Z",
-      "downDuration": 29526201,
+      "downDuration": 29586024,
       "alert": true
     }
   ],
