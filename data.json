@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-17T21:32:10.982Z",
+  "generatedAt": "2026-09-17T21:32:51.276Z",
   "totalTickets": 16,
   "tickets": [
     {
@@ -1049,7 +1049,7 @@
       }
     ],
     "pid": 50420,
-    "uptime": 95,
+    "uptime": 135,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1061,7 +1061,7 @@
       {
         "pid": 27260,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 280561,
+        "ageSeconds": 280601,
         "status": "running",
         "isChild": false,
         "taskSummary": "does it show mid convo of the ai as well. I would like to see updated mid thinking as well, and j...",
@@ -1071,17 +1071,17 @@
       {
         "pid": 15796,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 37969,
+        "ageSeconds": 38009,
         "status": "running",
         "isChild": false,
-        "taskSummary": "check more on this: The payment_captured webhooks for both successful charges were retried repeat...",
-        "lastExchange": "check more on this: The payment_captured webhooks for both successful     \n   charges were retried                                                  \n     repeatedly by Checkout.com over the next ~18 hours because of auth  \n     header mismatch errors on the webhook endpoint:                     \n      - Run 1 capture webhook: retried at 18:54, 19:02, 19:15, 19:39,    \n   20:42,                                                                \n        and into Sep 16                                                  \n      - Run 2 capture webhook: retried at 18:58, 19:15, 20:54, and into  \n   Sep                                                                   \n        16                                                               \n                                                                         \n     This didn't affect the charges themselves — the captures were       \n   already                                                               \n     completed at the gateway. But it indicates the webhook signature    \n     validation had issues, which may have contributed to log visibility \n     problems during the incident.                                       \n▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀\n✦ The payment_captured webhook is Checkout.com's async notification to\n  Hybris saying \"the capture is done.\" It's separate from the synchronous\n  API response (HTTP 202) that already confirmed the charge.\n\n  What happened: When Checkout.com sent these webhooks to the Hybris\n  endpoint, the TokoCheckoutDotComWebhookEventStrategy rejected them with\n  Invalid Authorization Header — the webhook signature didn't match what\n  Hybris expected. Checkout.com interprets a non-200 response as\n  \"delivery failed\" and automatically retries.\n\n  Why retries lasted 18 hours: Checkout.com has an exponential backoff\n  retry schedule. Since every attempt hit the same auth header validation\n  error, the retries kept coming — last one seen at Sep 17 04:24.\n\n  Why charges were unaffected: The actual capture was already completed\n  synchronously — Checkout.com returned HTTP 202 Pending, then the\n  platform polled/processed the payment approved response and created the\n  CAPTURE ACCEPTED PTE in the DB. The webhook is just a redundant\n  notification channel, not the source of truth.\n\n  Connection to the incident: Between Run 1 (18:38) and Run 2 (18:45),\n  when we checked Kibana for confirmation, the logs for AE260808-54285973\n  showed Authorization Header mismatch WARNs and payment_captured webhook\n  noise — not the clean payment_approved + CAPTURE ACCEPTED signals we\n  were looking for. Meanwhile, AE260725-39348428 had clear ERROR logs.\n  The webhook errors on the successful order may have made it harder to\n  distinguish \"payment succeeded with webhook issues\" from \"payment\n  failed,\" contributing to the decision to re-run.",
+        "taskSummary": "add and highight this in the AEME-6540-incident-Report.docx",
+        "lastExchange": "add and highight this in the AEME-6540-incident-Report.docx",
         "sessionId": "bin"
       },
       {
         "pid": 42528,
         "cwd": "c:\\windows",
-        "ageSeconds": 37965,
+        "ageSeconds": 38005,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1091,7 +1091,7 @@
       {
         "pid": 34344,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 3323,
+        "ageSeconds": 3364,
         "status": "running",
         "isChild": false,
         "taskSummary": "does it show mid convo of the ai as well. I would like to see updated mid thinking as well, and j...",
@@ -1101,7 +1101,7 @@
       {
         "pid": 49184,
         "cwd": "unknown",
-        "ageSeconds": 678,
+        "ageSeconds": 719,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -3473,17 +3473,17 @@
     "bridgeLogTail": "[2026-09-17T21:29:13.508Z] aipro completed for #306 (10 chars)\n[2026-09-17T21:29:14.572Z] Comment posted on #306\n[2026-09-17T21:30:35.820Z] ==========================================\n[2026-09-17T21:30:35.839Z] === Hardened GitHub Bridge v3 Started ===\n[2026-09-17T21:30:35.840Z] === with Aipro Auto-Launch ===\n[2026-09-17T21:30:35.849Z] ==========================================\n[2026-09-17T21:30:35.870Z] PID: 50420\n[2026-09-17T21:30:35.884Z] Repo: aryanverma2410/agent-bridge\n[2026-09-17T21:30:35.887Z] Poll interval: 10000ms\n[2026-09-17T21:30:35.895Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-09-17T21:30:35.901Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-09-17T21:30:35.911Z] Waiting for messages...\n[2026-09-17T21:31:22.885Z] INBOX <- #307 from aryanverma2410: \"TEST: Live thinking stream - what is 7+7?\"\n[2026-09-17T21:31:23.655Z] Comment posted on #307\n[2026-09-17T21:31:23.657Z] Auto-ack posted on #307\n[2026-09-17T21:31:23.668Z] Spawning aipro for #307: \"TEST: Live thinking stream - what is 7+7?\"\n[2026-09-17T21:31:23.677Z] Created new session d2512157-a816-4268-9393-43a22c431582 for #307\n[2026-09-17T21:31:23.903Z] 1 new message(s) added to inbox.\n[2026-09-17T21:31:43.497Z] aipro completed for #307 (10 chars)\n[2026-09-17T21:31:44.494Z] Comment posted on #307",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-09-17T21:32:07.292Z",
-      "ageMs": 8934
+      "lastWrite": "2026-09-17T21:32:52.326Z",
+      "ageMs": 4232
     },
-    "watchdogLogTail": "[2026-09-17T21:29:52.254Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-17T21:30:07.258Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-17T21:30:22.259Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-17T21:30:37.264Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-17T21:30:52.272Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-17T21:31:07.279Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-17T21:31:22.287Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-17T21:31:37.290Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-17T21:31:52.295Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-17T21:32:07.292Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-09-17T21:30:37.264Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-17T21:30:52.272Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-17T21:31:07.279Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-17T21:31:22.287Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-17T21:31:37.290Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-17T21:31:52.295Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-17T21:32:07.292Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-17T21:32:22.307Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-17T21:32:37.315Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-17T21:32:52.327Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-17T21:31:37.974Z",
+      "lastCheck": "2026-09-17T21:32:37.928Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3492,7 +3492,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-17T21:31:37.974Z",
+      "lastCheck": "2026-09-17T21:32:37.928Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3501,9 +3501,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-17T21:31:37.974Z",
+      "lastCheck": "2026-09-17T21:32:37.928Z",
       "downSince": "2026-09-17T21:16:37.977Z",
-      "downDuration": 899997,
+      "downDuration": 959951,
       "alert": true
     }
   ],
