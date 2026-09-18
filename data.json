@@ -1,60 +1,7 @@
 {
-  "generatedAt": "2026-09-18T07:29:47.622Z",
-  "totalTickets": 15,
+  "generatedAt": "2026-09-18T07:30:25.714Z",
+  "totalTickets": 14,
   "tickets": [
-    {
-      "key": "MHME-1434",
-      "summary": "missing gift for MA260902-74340282",
-      "status": "QA Server Review",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Morocco Maintenance & Enhancements",
-      "projectKey": "MHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-18T16:30:17.000+0900",
-      "created": "2026-09-14T20:59:40.000+0900",
-      "statusChangedAt": "2026-09-15T19:33:53.802+0900",
-      "assignedToMeAt": "",
-      "description": "I am reaching out to request an update to the SKU associated with voucher MA260902-74340282. The current SKU, EI-T5600BWEGMA, is causing an issue where the customer is unable to receive the intended free gift. To resolve this, I kindly request that the SKU be updated to EI-T5600BBEGMA. This change w",
-      "commentsCount": 5,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-18T16:30:16.420+0900",
-          "snippet": "Hi Ashwani,\n\nThanks for the clarification. So to confirm, you no longer want the SKU swap on the existing order MA260902-74340282, and instead you need a new voucher created for EI-T5600BBEGMA (Galaxy SmartTag2 Black) so the customer can place a new order to receive the missing gift?\n\nPlease confirm"
-        },
-        {
-          "author": "Ashwani Verma",
-          "date": "2026-09-17T20:22:25.845+0900",
-          "snippet": "Hi ~@email \n\nThere's a confusion,\n\nsorry for the mistake the voucher is MA260427-60420457 , and the order N placed with the voucher is MA260902-74340282 , we created the do for EF-RS936CBEGWW  but EI-T5600BWEGMA is OOS , now we need to create a new voucher to deliver the missing gift to the customer"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Ashwani,\n\nThanks for the clarification. So to confirm, you no longer want the SKU swap on the existing order MA260902-74340282, and instead you need a new voucher created for EI-T5600BBEGMA (Galaxy SmartTag2 Black) so the customer can place a new order to receive the missing gift?\n\nPlease confirm",
-      "lastCommentDate": "2026-09-18T16:30:16.420+0900",
-      "url": "https://jira.secext.samsung.net/browse/MHME-1434",
-      "linkedTickets": [
-        {
-          "key": "PC-54111",
-          "summary": "Update gift SKU and retrigger consignment for MA260902-74340282",
-          "status": "To do",
-          "statusCategory": "To Do",
-          "relation": "blocks",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: MHME-1434\nVoucher MA260902-74340282 — wrong SmartTag2 variant (white instead of black)\nGenerated: 2026-09-14T21:30:00+09:00\n\nHi Ashwani ,\n\nOrder MA260902-74340282 was placed on 2026-09-02 with two products: a Galaxy Ring (EF-RS936CBEGWW) at 399.00 MAD and a Galaxy SmartTag2 (EI-T5600BWEGMA) at 249.00 MAD, bundled at 1.00 MAD via coupon MA260427. The SmartTag2 on the order is the white variant (EI-T5600BWEGMA) but the customer was supposed to receive the black variant (EI-T5600BBEGMA).\n\nThe root cause is a configuration error in the promotion rule. Three PromotionSourceRule records for the Malaysia store have the wrong SmartTag2 SKU in their conditions JSON:\n\n1. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-4356_MissingGift_MA260427 (pk=8865856754671, coupon MA260427)\n2. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-3833-MA260427-60420457 (pk=8862974088175, coupon MA260427-60420457)\n3. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-3833-MA260427-60420457 (pk=8863267525615, coupon MA260427-60420457)\n\nIn all three rules, Container A qualifies on the Galaxy Ring (EF-RS936CBEGWW) and Container B qualifies on the SmartTag2. The conditions JSON for Container B specifies EI-T5600BWEGMA::maEstoreProductCatalog (white) instead of EI-T5600BBEGMA::maEstoreProductCatalog (black). When the customer applied coupon MA260427 at checkout, the promotion engine matched the rule and added the white SmartTag2 variant to the cart at the bundle price of 1 MAD. The action sets a y_target_bundle_price of 1 MAD with CHEAPEST selection strategy across containers A and B.\n\nThe order is currently in SHIPPING_REQUESTED status and has been split into two consignments. Consignment MA260902-74340282 contains the SmartTag2 (shipped 2026-09-11, status SHIPPING_REQUESTED). Consignment MA260902-74340282_1 contains the Galaxy Ring (status SHIPPING_PREPARATION). Payment is COD with both AUTHORIZATION and CAPTURE entries accepted at 1.00 MAD.\n\nTo fix this, the promotion rule conditions need to be updated in Backoffice to replace EI-T5600BWEGMA with EI-T5600BBEGMA in the qualifying products for Container B. This will prevent incorrect free gifts on future orders. For this specific order, the product reference on OrderEntry 1 (pk=9458182488110) and the corresponding ConsignmentEntry on consignment MA260902-74340282 need to be updated from EI-T5600BWEGMA to EI-T5600BBEGMA. Since the consignment is already in SHIPPING_REQUESTED, this should be coordinated with the logistics team to ensure the correct physical product is dispatched.\n\nKindly confirm if we should proceed with updating the promotion rules and the order entry product reference.\n\nThanks,\nAryan.\n\n## Remediation\n\n- **Type**: Promotion rule config fix + order entry product swap\n- **Affected PromotionSourceRules**: 3 (pk=8865856754671, 8862974088175, 8863267525615)\n- **Affected OrderEntry**: pk=9458182488110 (entry 1, order MA260902-74340282)\n- **Affected ConsignmentEntry**: consignment MA260902-74340282, entry 1\n- **Wrong SKU**: EI-T5600BWEGMA (white SmartTag2)\n- **Correct SKU**: EI-T5600BBEGMA (black SmartTag2)\n- **Coupons**: MA260427 (pk=8804448933144), MA260427-60420457 (pk=8801959351576)\n- **Reusable PC ticket**: None — this is a data/config fix, not a standard remediation type\n- **Script needed**: Groovy script to update PromotionSourceRule conditions JSON + OrderEntry product + ConsignmentEntry product",
-        "sections": {
-          "issue": "",
-          "rca": "# RCA: MHME-1434\nVoucher MA260902-74340282 — wrong SmartTag2 variant (white instead of black)\nGenerated: 2026-09-14T21:30:00+09:00\n\nHi Ashwani ,\n\nOrder MA260902-74340282 was placed on 2026-09-02 with two products: a Galaxy Ring (EF-RS936CBEGWW) at 399.00 MAD and a Galaxy SmartTag2 (EI-T5600BWEGMA) at 249.00 MAD, bundled at 1.00 MAD via coupon MA260427. The SmartTag2 on the order is the white variant (EI-T5600BWEGMA) but the customer was supposed to receive the black variant (EI-T5600BBEGMA).\n\nThe root cause is a configuration error in the promotion rule. Three PromotionSourceRule records for the Malaysia store have the wrong SmartTag2 SKU in their conditions JSON:\n\n1. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-4356_MissingGift_MA260427 (pk=8865856754671, coupon MA260427)\n2. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-3833-MA260427-60420457 (pk=8862974088175, coupon MA260427-60420457)\n3. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-3833-MA260427-60420457 (pk=8863267525615, coupon MA260427-60420457)\n\nIn all three rules, Container A qualifies on the Galaxy Ring (EF-RS936CBEGWW) and Container B qualifies on the SmartTag2. The conditions JSON for Container B specifies EI-T5600BWEGMA::maEstoreProductCatalog (white) instead of EI-T5600BBEGMA::maEstoreProductCatalog (black). When the customer applied coupon MA260427 at checkout, the promotion engine matched the rule and added the white SmartTag2 variant to the cart at the bundle price of 1 MAD. The action sets a y_target_bundle_price of 1 MAD with CHEAPEST selection strategy across containers A and B.\n\nThe order is currently in SHIPPING_REQUESTED status and has been split into two consignments. Consignment MA260902-74340282 contains the SmartTag2 (shipped 2026-09-11, status SHIPPING_REQUESTED). Consignment MA260902-74340282_1 contains the Galaxy Ring (status SHIPPING_PREPARATION). Payment is COD with both AUTHORIZATION and CAPTURE entries accepted at 1.00 MAD.\n\nTo fix this, the promotion rule conditions need to be updated in Backoffice to replace EI-T5600BWEGMA with EI-T5600BBEGMA in the qualifying products for Container B. This will prevent incorrect free gifts on future orders. For this specific order, the product reference on OrderEntry 1 (pk=9458182488110) and the corresponding ConsignmentEntry on consignment MA260902-74340282 need to be updated from EI-T5600BWEGMA to EI-T5600BBEGMA. Since the consignment is already in SHIPPING_REQUESTED, this should be coordinated with the logistics team to ensure the correct physical product is dispatched.\n\nKindly confirm if we should proceed with updating the promotion rules and the order entry product reference.\n\nThanks,\nAryan.\n\n## Remediation\n\n- **Type**: Promotion rule config fix + order entry product swap\n- **Affected PromotionSourceRules**: 3 (pk=8865856754671, 8862974088175, 8863267525615)\n- **Affected OrderEntry**: pk=9458182488110 (entry 1, order MA260902-74340282)\n- **Affected ConsignmentEntry**: consignment MA260902-74340282, entry 1\n- **Wrong SKU**: EI-T5600BWEGMA (white SmartTag2)\n- **Correct SKU**: EI-T5600BBEGMA (black SmartTag2)\n- **Coupons**: MA260427 (pk=8804448933144), MA260427-60420457 (pk=8801959351576)\n- **Reusable PC ticket**: None — this is a data/config fix, not a standard remediation type\n- **Script needed**: Groovy script to update PromotionSourceRule conditions JSON + OrderEntry product + ConsignmentEntry product",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-14T15:37:26.457Z"
-      }
-    },
     {
       "key": "AEME-6540",
       "summary": "[PROD] | Manual Chargeback || 07-Sep",
@@ -994,7 +941,7 @@
       }
     ],
     "pid": 44968,
-    "uptime": 34874,
+    "uptime": 34914,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1006,7 +953,7 @@
       {
         "pid": 27260,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 316417,
+        "ageSeconds": 316455,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -1016,7 +963,7 @@
       {
         "pid": 15796,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 73825,
+        "ageSeconds": 73863,
         "status": "running",
         "isChild": false,
         "taskSummary": "yes",
@@ -1026,7 +973,7 @@
       {
         "pid": 42528,
         "cwd": "c:\\windows",
-        "ageSeconds": 73821,
+        "ageSeconds": 73859,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1036,7 +983,7 @@
       {
         "pid": 34344,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 39179,
+        "ageSeconds": 39218,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -1046,7 +993,7 @@
       {
         "pid": 49184,
         "cwd": "unknown",
-        "ageSeconds": 36535,
+        "ageSeconds": 36573,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -3523,17 +3470,17 @@
     "bridgeLogTail": "[2026-09-18T05:50:10.120Z] STDOUT data for #322: 112 bytes\n[2026-09-18T05:50:10.122Z] LIVE write for #322: 120 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_322.txt\n[2026-09-18T05:50:10.151Z] STDOUT data for #322: 114 bytes\n[2026-09-18T05:50:10.153Z] LIVE write for #322: 130 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_322.txt\n[2026-09-18T05:50:10.184Z] STDOUT data for #322: 114 bytes\n[2026-09-18T05:50:10.187Z] LIVE write for #322: 140 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_322.txt\n[2026-09-18T05:50:10.216Z] STDOUT data for #322: 114 bytes\n[2026-09-18T05:50:10.218Z] LIVE write for #322: 151 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_322.txt\n[2026-09-18T05:50:10.246Z] STDOUT data for #322: 115 bytes\n[2026-09-18T05:50:10.249Z] LIVE write for #322: 162 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_322.txt\n[2026-09-18T05:50:10.280Z] STDOUT data for #322: 112 bytes\n[2026-09-18T05:50:10.282Z] LIVE write for #322: 170 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_322.txt\n[2026-09-18T05:50:10.512Z] STDOUT data for #322: 111 bytes\n[2026-09-18T05:50:10.515Z] LIVE write for #322: 177 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_322.txt\n[2026-09-18T05:50:10.516Z] STDOUT data for #322: 462 bytes\n[2026-09-18T05:50:10.518Z] LIVE write for #322: 224 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_322.txt\n[2026-09-18T05:50:10.521Z] STDOUT data for #322: 325 bytes\n[2026-09-18T05:50:10.523Z] LIVE write for #322: 224 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_322.txt\n[2026-09-18T05:50:11.569Z] aipro completed for #322 (224 chars)\n[2026-09-18T05:50:12.309Z] Comment posted on #322",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-09-18T07:29:47.831Z",
-      "ageMs": 2364
+      "lastWrite": "2026-09-18T07:30:17.845Z",
+      "ageMs": 10635
     },
-    "watchdogLogTail": "[2026-09-18T07:27:32.801Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T07:27:47.809Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T07:28:02.819Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T07:28:17.821Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T07:28:32.823Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T07:28:47.824Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T07:29:02.827Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T07:29:17.831Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T07:29:32.834Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T07:29:47.830Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-09-18T07:28:02.819Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T07:28:17.821Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T07:28:32.823Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T07:28:47.824Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T07:29:02.827Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T07:29:17.831Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T07:29:32.834Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T07:29:47.830Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T07:30:02.831Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T07:30:17.845Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-18T07:29:04.315Z",
+      "lastCheck": "2026-09-18T07:30:04.659Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3542,18 +3489,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-18T07:29:04.315Z",
+      "lastCheck": "2026-09-18T07:30:04.659Z",
       "downSince": "2026-09-18T06:01:42.474Z",
-      "downDuration": 5241841,
+      "downDuration": 5302185,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-18T07:29:04.315Z",
+      "lastCheck": "2026-09-18T07:30:04.659Z",
       "downSince": "2026-09-18T02:00:59.734Z",
-      "downDuration": 19684581,
+      "downDuration": 19744925,
       "alert": true
     }
   ],
