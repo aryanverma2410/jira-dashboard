@@ -1,7 +1,51 @@
 {
-  "generatedAt": "2026-09-18T05:42:10.249Z",
+  "generatedAt": "2026-09-18T05:42:51.239Z",
   "totalTickets": 15,
   "tickets": [
+    {
+      "key": "MHME-1431",
+      "summary": "Order Stuck - SHIPPED - MA260801-47652001 | MA260714-28260833",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Morocco Maintenance & Enhancements",
+      "projectKey": "MHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-09-18T14:44:35.000+0900",
+      "created": "2026-09-09T15:19:31.000+0900",
+      "statusChangedAt": "2026-09-09T15:23:10.562+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nPlease check why below orders are stuck in SHIPPED status.\n\nAs per NERP, SIT return has been completed.\n\n \n\nThanks,\n\nArj\n\n~@email",
+      "commentsCount": 7,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-09-18T14:44:35.617+0900",
+          "snippet": "Hi ~@email ,\n\nThanks for the confirmation. We are preparing PC ticket for the same.\n\nRegards\n\nAryan"
+        },
+        {
+          "author": "Arjenelle Acabado",
+          "date": "2026-09-17T16:20:53.997+0900",
+          "snippet": "Hi ~@email \n\nThank you for the detailed explanation.\n\nPlease proceed w/ the remediation as below.\n----\n_However, given the urgency, we will proceed with a Hybris-side remediation script that completes the missing steps for each order individually. The script will create the SIT refund entry on the c"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi ~@email ,\n\nThanks for the confirmation. We are preparing PC ticket for the same.\n\nRegards\n\nAryan",
+      "lastCommentDate": "2026-09-18T14:44:35.617+0900",
+      "url": "https://jira.secext.samsung.net/browse/MHME-1431",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "# RCA: MHME-1431\n\n**Ticket**: Order Stuck - SHIPPED - MA260801-47652001 | MA260714-28260833\n**Generated**: 2026-09-09T15:30:00Z\n\nHi [~arjenelle.a@samsung.com] ,\n\nBoth orders are stuck in SHIPPED because the NERP post-goods-receipt billing callback has not been received by Hybris. This is expected system behaviour based on the SIT return handling logic.\n\nMA260801-47652001:\nThe consignment has additionalConsignmentStatus set to SIT_RETURN_PENDING_BILLING. The GERP billing doc (3242151848) was received on Aug 17, and secondGI is populated (20260817000000). However, the consignment is not moving to COMPLETED because the config `toko.gerp.check.sit.billing.ma` is set to true, which requires all SIT entries to have a billing number AND the process parameters BILLING-CALLBACK-RECEIVED and SIT-RETURN-1ST-GI-CALLBACK-RECEIVED to be set. Neither of these process parameters exists on the consignment process, meaning the NERP post-goods-receipt callback was never received by Hybris.\n\nMA260714-28260833:\nSame situation. The consignment has additionalConsignmentStatus set to SIT_RETURN_PENDING_BILLING. GERP billing doc (3238774650) was received on Jul 24, and secondGI is populated (20260723000000). The same config checks apply and the same process parameters are missing.\n\nThe code path is in TokoGerpWarehouseAdapterImpl.updateConsignmentForDO(). When the system detects a SIT return on the consignment, it logs \"contains SIT Return. Marking it as COMPLETED\" and then checks two conditions before actually updating the status:\n1. Whether all SIT entries have a gerpBillingNr (the billing check, enabled for MA via `toko.gerp.check.sit.billing.ma=true`)\n2. Whether the process parameters BILLING-CALLBACK-RECEIVED and SIT-RETURN-1ST-GI-CALLBACK-RECEIVED are both true (the 1st GI wait check, enabled for MA via `toko.sit.wait.for.1st.gi.enabled.ma=true`)\n\nSince the NERP post-goods-receipt callback never arrived, these process parameters were never set, so the inner condition fails. The consignment status stays SHIPPED and additionalConsignmentStatus is set to SIT_RETURN_PENDING_BILLING. The consignment process loops every 30 minutes, re-evaluating and getting the same result each time.\n\nThis is the same design documented in SED-208963 — SIT return orders should remain in SHIPPED status until the post-goods-receipt is confirmed from NERP. The consignments are behaving as designed.\n\nKindly check with the NERP team whether the post-goods-receipt callback was sent for these two orders. If NERP confirms the callback was sent but Hybris did not process it, we can investigate further. If the callback was never sent, these orders will remain in SHIPPED until it is.\n\nThanks,\nAryan.\n\n## Remediation\n\nNo Hybris-side remediation is applicable at this time. The orders are behaving as designed per the SIT return handling logic. The NERP team needs to confirm whether the post-goods-receipt callback was sent. If NERP confirms it was sent but not processed by Hybris, a deeper investigation is needed. If NERP needs to resend the callback, the orders will automatically progress to COMPLETED once the process parameters are set.\n\nIf manual intervention is required (NERP confirms callback was sent but lost), a Groovy script can be written to set the missing process parameters (BILLING-CALLBACK-RECEIVED and SIT-RETURN-1ST-GI-CALLBACK-RECEIVED) on the consignment processes and trigger the isShippedComplete transition. This would follow the same pattern as PC-52596 (push order from SHIPPED).",
+        "sections": {
+          "issue": "",
+          "rca": "# RCA: MHME-1431\n\n**Ticket**: Order Stuck - SHIPPED - MA260801-47652001 | MA260714-28260833\n**Generated**: 2026-09-09T15:30:00Z\n\nHi [~arjenelle.a@samsung.com] ,\n\nBoth orders are stuck in SHIPPED because the NERP post-goods-receipt billing callback has not been received by Hybris. This is expected system behaviour based on the SIT return handling logic.\n\nMA260801-47652001:\nThe consignment has additionalConsignmentStatus set to SIT_RETURN_PENDING_BILLING. The GERP billing doc (3242151848) was received on Aug 17, and secondGI is populated (20260817000000). However, the consignment is not moving to COMPLETED because the config `toko.gerp.check.sit.billing.ma` is set to true, which requires all SIT entries to have a billing number AND the process parameters BILLING-CALLBACK-RECEIVED and SIT-RETURN-1ST-GI-CALLBACK-RECEIVED to be set. Neither of these process parameters exists on the consignment process, meaning the NERP post-goods-receipt callback was never received by Hybris.\n\nMA260714-28260833:\nSame situation. The consignment has additionalConsignmentStatus set to SIT_RETURN_PENDING_BILLING. GERP billing doc (3238774650) was received on Jul 24, and secondGI is populated (20260723000000). The same config checks apply and the same process parameters are missing.\n\nThe code path is in TokoGerpWarehouseAdapterImpl.updateConsignmentForDO(). When the system detects a SIT return on the consignment, it logs \"contains SIT Return. Marking it as COMPLETED\" and then checks two conditions before actually updating the status:\n1. Whether all SIT entries have a gerpBillingNr (the billing check, enabled for MA via `toko.gerp.check.sit.billing.ma=true`)\n2. Whether the process parameters BILLING-CALLBACK-RECEIVED and SIT-RETURN-1ST-GI-CALLBACK-RECEIVED are both true (the 1st GI wait check, enabled for MA via `toko.sit.wait.for.1st.gi.enabled.ma=true`)\n\nSince the NERP post-goods-receipt callback never arrived, these process parameters were never set, so the inner condition fails. The consignment status stays SHIPPED and additionalConsignmentStatus is set to SIT_RETURN_PENDING_BILLING. The consignment process loops every 30 minutes, re-evaluating and getting the same result each time.\n\nThis is the same design documented in SED-208963 — SIT return orders should remain in SHIPPED status until the post-goods-receipt is confirmed from NERP. The consignments are behaving as designed.\n\nKindly check with the NERP team whether the post-goods-receipt callback was sent for these two orders. If NERP confirms the callback was sent but Hybris did not process it, we can investigate further. If the callback was never sent, these orders will remain in SHIPPED until it is.\n\nThanks,\nAryan.\n\n## Remediation\n\nNo Hybris-side remediation is applicable at this time. The orders are behaving as designed per the SIT return handling logic. The NERP team needs to confirm whether the post-goods-receipt callback was sent. If NERP confirms it was sent but not processed by Hybris, a deeper investigation is needed. If NERP needs to resend the callback, the orders will automatically progress to COMPLETED once the process parameters are set.\n\nIf manual intervention is required (NERP confirms callback was sent but lost), a Groovy script can be written to set the missing process parameters (BILLING-CALLBACK-RECEIVED and SIT-RETURN-1ST-GI-CALLBACK-RECEIVED) on the consignment processes and trigger the isShippedComplete transition. This would follow the same pattern as PC-52596 (push order from SHIPPED).",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-09T10:55:14.901Z"
+      }
+    },
     {
       "key": "MHME-1439",
       "summary": "SMI - List of MENA Extracts",
@@ -329,50 +373,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-03T13:50:55.004Z"
-      }
-    },
-    {
-      "key": "MHME-1431",
-      "summary": "Order Stuck - SHIPPED - MA260801-47652001 | MA260714-28260833",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Morocco Maintenance & Enhancements",
-      "projectKey": "MHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-17T16:21:05.000+0900",
-      "created": "2026-09-09T15:19:31.000+0900",
-      "statusChangedAt": "2026-09-09T15:23:10.562+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nPlease check why below orders are stuck in SHIPPED status.\n\nAs per NERP, SIT return has been completed.\n\n \n\nThanks,\n\nArj\n\n~@email",
-      "commentsCount": 6,
-      "recentComments": [
-        {
-          "author": "Arjenelle Acabado",
-          "date": "2026-09-17T16:20:53.997+0900",
-          "snippet": "Hi ~@email \n\nThank you for the detailed explanation.\n\nPlease proceed w/ the remediation as below.\n----\n_However, given the urgency, we will proceed with a Hybris-side remediation script that completes the missing steps for each order individually. The script will create the SIT refund entry on the c"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-15T03:38:33.078+0900",
-          "snippet": "Hi ~@email ,\n\nThe root cause for these 6 orders is that NERP did not send the SIT return billing callback (INVOIC01) and goods issue callback (DELVRY03) to Hybris. Without these callbacks, the consignment process cannot detect that the SIT return is complete, so the orders remain stuck in SHIPPED wi"
-        }
-      ],
-      "lastCommentBy": "Arjenelle Acabado",
-      "lastCommentSnippet": "Hi ~@email \n\nThank you for the detailed explanation.\n\nPlease proceed w/ the remediation as below.\n----\n_However, given the urgency, we will proceed with a Hybris-side remediation script that completes the missing steps for each order individually. The script will create the SIT refund entry on the c",
-      "lastCommentDate": "2026-09-17T16:20:53.997+0900",
-      "url": "https://jira.secext.samsung.net/browse/MHME-1431",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: MHME-1431\n\n**Ticket**: Order Stuck - SHIPPED - MA260801-47652001 | MA260714-28260833\n**Generated**: 2026-09-09T15:30:00Z\n\nHi [~arjenelle.a@samsung.com] ,\n\nBoth orders are stuck in SHIPPED because the NERP post-goods-receipt billing callback has not been received by Hybris. This is expected system behaviour based on the SIT return handling logic.\n\nMA260801-47652001:\nThe consignment has additionalConsignmentStatus set to SIT_RETURN_PENDING_BILLING. The GERP billing doc (3242151848) was received on Aug 17, and secondGI is populated (20260817000000). However, the consignment is not moving to COMPLETED because the config `toko.gerp.check.sit.billing.ma` is set to true, which requires all SIT entries to have a billing number AND the process parameters BILLING-CALLBACK-RECEIVED and SIT-RETURN-1ST-GI-CALLBACK-RECEIVED to be set. Neither of these process parameters exists on the consignment process, meaning the NERP post-goods-receipt callback was never received by Hybris.\n\nMA260714-28260833:\nSame situation. The consignment has additionalConsignmentStatus set to SIT_RETURN_PENDING_BILLING. GERP billing doc (3238774650) was received on Jul 24, and secondGI is populated (20260723000000). The same config checks apply and the same process parameters are missing.\n\nThe code path is in TokoGerpWarehouseAdapterImpl.updateConsignmentForDO(). When the system detects a SIT return on the consignment, it logs \"contains SIT Return. Marking it as COMPLETED\" and then checks two conditions before actually updating the status:\n1. Whether all SIT entries have a gerpBillingNr (the billing check, enabled for MA via `toko.gerp.check.sit.billing.ma=true`)\n2. Whether the process parameters BILLING-CALLBACK-RECEIVED and SIT-RETURN-1ST-GI-CALLBACK-RECEIVED are both true (the 1st GI wait check, enabled for MA via `toko.sit.wait.for.1st.gi.enabled.ma=true`)\n\nSince the NERP post-goods-receipt callback never arrived, these process parameters were never set, so the inner condition fails. The consignment status stays SHIPPED and additionalConsignmentStatus is set to SIT_RETURN_PENDING_BILLING. The consignment process loops every 30 minutes, re-evaluating and getting the same result each time.\n\nThis is the same design documented in SED-208963 — SIT return orders should remain in SHIPPED status until the post-goods-receipt is confirmed from NERP. The consignments are behaving as designed.\n\nKindly check with the NERP team whether the post-goods-receipt callback was sent for these two orders. If NERP confirms the callback was sent but Hybris did not process it, we can investigate further. If the callback was never sent, these orders will remain in SHIPPED until it is.\n\nThanks,\nAryan.\n\n## Remediation\n\nNo Hybris-side remediation is applicable at this time. The orders are behaving as designed per the SIT return handling logic. The NERP team needs to confirm whether the post-goods-receipt callback was sent. If NERP confirms it was sent but not processed by Hybris, a deeper investigation is needed. If NERP needs to resend the callback, the orders will automatically progress to COMPLETED once the process parameters are set.\n\nIf manual intervention is required (NERP confirms callback was sent but lost), a Groovy script can be written to set the missing process parameters (BILLING-CALLBACK-RECEIVED and SIT-RETURN-1ST-GI-CALLBACK-RECEIVED) on the consignment processes and trigger the isShippedComplete transition. This would follow the same pattern as PC-52596 (push order from SHIPPED).",
-        "sections": {
-          "issue": "",
-          "rca": "# RCA: MHME-1431\n\n**Ticket**: Order Stuck - SHIPPED - MA260801-47652001 | MA260714-28260833\n**Generated**: 2026-09-09T15:30:00Z\n\nHi [~arjenelle.a@samsung.com] ,\n\nBoth orders are stuck in SHIPPED because the NERP post-goods-receipt billing callback has not been received by Hybris. This is expected system behaviour based on the SIT return handling logic.\n\nMA260801-47652001:\nThe consignment has additionalConsignmentStatus set to SIT_RETURN_PENDING_BILLING. The GERP billing doc (3242151848) was received on Aug 17, and secondGI is populated (20260817000000). However, the consignment is not moving to COMPLETED because the config `toko.gerp.check.sit.billing.ma` is set to true, which requires all SIT entries to have a billing number AND the process parameters BILLING-CALLBACK-RECEIVED and SIT-RETURN-1ST-GI-CALLBACK-RECEIVED to be set. Neither of these process parameters exists on the consignment process, meaning the NERP post-goods-receipt callback was never received by Hybris.\n\nMA260714-28260833:\nSame situation. The consignment has additionalConsignmentStatus set to SIT_RETURN_PENDING_BILLING. GERP billing doc (3238774650) was received on Jul 24, and secondGI is populated (20260723000000). The same config checks apply and the same process parameters are missing.\n\nThe code path is in TokoGerpWarehouseAdapterImpl.updateConsignmentForDO(). When the system detects a SIT return on the consignment, it logs \"contains SIT Return. Marking it as COMPLETED\" and then checks two conditions before actually updating the status:\n1. Whether all SIT entries have a gerpBillingNr (the billing check, enabled for MA via `toko.gerp.check.sit.billing.ma=true`)\n2. Whether the process parameters BILLING-CALLBACK-RECEIVED and SIT-RETURN-1ST-GI-CALLBACK-RECEIVED are both true (the 1st GI wait check, enabled for MA via `toko.sit.wait.for.1st.gi.enabled.ma=true`)\n\nSince the NERP post-goods-receipt callback never arrived, these process parameters were never set, so the inner condition fails. The consignment status stays SHIPPED and additionalConsignmentStatus is set to SIT_RETURN_PENDING_BILLING. The consignment process loops every 30 minutes, re-evaluating and getting the same result each time.\n\nThis is the same design documented in SED-208963 — SIT return orders should remain in SHIPPED status until the post-goods-receipt is confirmed from NERP. The consignments are behaving as designed.\n\nKindly check with the NERP team whether the post-goods-receipt callback was sent for these two orders. If NERP confirms the callback was sent but Hybris did not process it, we can investigate further. If the callback was never sent, these orders will remain in SHIPPED until it is.\n\nThanks,\nAryan.\n\n## Remediation\n\nNo Hybris-side remediation is applicable at this time. The orders are behaving as designed per the SIT return handling logic. The NERP team needs to confirm whether the post-goods-receipt callback was sent. If NERP confirms it was sent but not processed by Hybris, a deeper investigation is needed. If NERP needs to resend the callback, the orders will automatically progress to COMPLETED once the process parameters are set.\n\nIf manual intervention is required (NERP confirms callback was sent but lost), a Groovy script can be written to set the missing process parameters (BILLING-CALLBACK-RECEIVED and SIT-RETURN-1ST-GI-CALLBACK-RECEIVED) on the consignment processes and trigger the isShippedComplete transition. This would follow the same pattern as PC-52596 (push order from SHIPPED).",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-09T10:55:14.901Z"
       }
     },
     {
@@ -994,7 +994,7 @@
       }
     ],
     "pid": 44968,
-    "uptime": 28415,
+    "uptime": 28455,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1006,7 +1006,7 @@
       {
         "pid": 27260,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 309960,
+        "ageSeconds": 310002,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -1016,7 +1016,7 @@
       {
         "pid": 15796,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 67368,
+        "ageSeconds": 67410,
         "status": "running",
         "isChild": false,
         "taskSummary": "create script for MHME-1431 and verify each and everything before writing code",
@@ -1026,7 +1026,7 @@
       {
         "pid": 42528,
         "cwd": "c:\\windows",
-        "ageSeconds": 67363,
+        "ageSeconds": 67406,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1036,7 +1036,7 @@
       {
         "pid": 34344,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 32722,
+        "ageSeconds": 32764,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -1046,7 +1046,7 @@
       {
         "pid": 49184,
         "cwd": "unknown",
-        "ageSeconds": 30077,
+        "ageSeconds": 30119,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -3508,17 +3508,17 @@
     "bridgeLogTail": "[2026-09-18T05:41:07.433Z] STDOUT data for #321: 112 bytes\n[2026-09-18T05:41:07.437Z] LIVE write for #321: 5126 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_321.txt\n[2026-09-18T05:41:07.466Z] STDOUT data for #321: 111 bytes\n[2026-09-18T05:41:07.469Z] LIVE write for #321: 5134 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_321.txt\n[2026-09-18T05:41:07.499Z] STDOUT data for #321: 112 bytes\n[2026-09-18T05:41:07.502Z] LIVE write for #321: 5143 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_321.txt\n[2026-09-18T05:41:07.534Z] STDOUT data for #321: 114 bytes\n[2026-09-18T05:41:07.537Z] LIVE write for #321: 5153 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_321.txt\n[2026-09-18T05:41:07.568Z] STDOUT data for #321: 119 bytes\n[2026-09-18T05:41:07.572Z] LIVE write for #321: 5169 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_321.txt\n[2026-09-18T05:41:07.656Z] STDOUT data for #321: 111 bytes\n[2026-09-18T05:41:07.659Z] LIVE write for #321: 5177 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_321.txt\n[2026-09-18T05:41:07.659Z] STDOUT data for #321: 115 bytes\n[2026-09-18T05:41:07.664Z] LIVE write for #321: 5188 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_321.txt\n[2026-09-18T05:41:07.692Z] STDOUT data for #321: 117 bytes\n[2026-09-18T05:41:07.696Z] LIVE write for #321: 5202 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_321.txt\n[2026-09-18T05:41:07.735Z] STDOUT data for #321: 347 bytes\n[2026-09-18T05:41:07.738Z] LIVE write for #321: 5202 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_321.txt\n[2026-09-18T05:41:09.275Z] aipro completed for #321 (5202 chars)\n[2026-09-18T05:41:10.412Z] Comment posted on #321",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-09-18T05:42:13.035Z",
-      "ageMs": 2630
+      "lastWrite": "2026-09-18T05:42:43.053Z",
+      "ageMs": 14975
     },
-    "watchdogLogTail": "[2026-09-18T05:39:57.043Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:40:12.052Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:40:27.054Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:40:42.053Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:40:57.057Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:41:12.064Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:41:27.068Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:41:43.008Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:41:58.018Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:42:13.034Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-09-18T05:40:27.054Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:40:42.053Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:40:57.057Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:41:12.064Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:41:27.068Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:41:43.008Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:41:58.018Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:42:13.034Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:42:28.043Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:42:43.051Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-18T05:41:36.463Z",
+      "lastCheck": "2026-09-18T05:42:36.276Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3527,7 +3527,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-18T05:41:36.463Z",
+      "lastCheck": "2026-09-18T05:42:36.276Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3536,9 +3536,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-18T05:41:36.463Z",
+      "lastCheck": "2026-09-18T05:42:36.276Z",
       "downSince": "2026-09-18T02:00:59.734Z",
-      "downDuration": 13236729,
+      "downDuration": 13296542,
       "alert": true
     }
   ],
