@@ -1,40 +1,7 @@
 {
-  "generatedAt": "2026-09-18T11:56:02.727Z",
+  "generatedAt": "2026-09-18T11:56:43.682Z",
   "totalTickets": 18,
   "tickets": [
-    {
-      "key": "SAHME-3437",
-      "summary": "Order stuck on Waiting for send Financial",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "South Africa Maintenance & Enhancements",
-      "projectKey": "SAHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-18T20:17:06.000+0900",
-      "created": "2026-09-18T20:05:10.000+0900",
-      "statusChangedAt": "2026-09-18T20:16:49.461+0900",
-      "assignedToMeAt": "",
-      "description": "Good day,\n\nOrder ZA260915-85021615 is stuck on Waiting for send Financials status however there is stock in the warehouse.\n\nUA32H5000FUXXA\n\nQA65QN70HAUXXA !image-2026-09-18-13-04-44-850.png!\n\nKind regards,\n\nLerato",
-      "commentsCount": 0,
-      "recentComments": [],
-      "lastCommentBy": "",
-      "lastCommentSnippet": "",
-      "lastCommentDate": "",
-      "url": "https://jira.secext.samsung.net/browse/SAHME-3437",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Ticket Summary: Order stuck on Waiting for send Financial\r\nGenerated: 2026-09-18T20:30:00+09:00\r\n\r\nIssue:\r\nOrder ZA260915-85021615 is stuck at WAITING_FOR_SEND_FINANCIAL status. The order was placed on 2026-09-15 with two products (UA32H5000FUXXA and QA65QN70HAUXXA) totaling 15343.25 ZAR. Payment was authorized and captured successfully. The order business process (order-process-v25-69) is in ERROR state with endMessage \"An error occurred while executing the process.\" Zero consignments were created, meaning the order never progressed to the warehouse allocation stage.\r\n\r\nRCA:\r\nThe order process (order-process-v25-69) advanced normally through checkout, fraud check, and payment. The sendFinancialUpdate action set the order status to WAITING_FOR_SEND_FINANCIAL and attempted to POST the financial posting to GERP. The completeFinancialUpdate action node then threw an exception during the GERP FI (financial integration) call, causing the process to transition to ERROR state. This is a transient GERP-integration I/O failure, typically a Connection reset or timeout at the GERP FI endpoint.\r\n\r\nThe DB confirms: order process state ERROR, endMessage \"An error occurred while executing the process.\", errorStackTrace stored in BusinessProcessParameter context (byte array, not readable via FlexibleSearch). Zero consignments exist because splitOrder was never reached -- it comes after completeFinancialUpdate in the process flow. Payment transactions show AUTHORIZATION and CAPTURE both ACCEPTED for the full amount (15343.25 ZAR), so the payment side completed without issue. Two external service entries exist but are blank, consistent with the process failing before external services were invoked.\r\n\r\nKibana was unavailable during this investigation (cookie bridge returning 405/401), so the exact exception message could not be confirmed from logs. However, the DB state is conclusive: process ERROR + WAITING_FOR_SEND_FINANCIAL status + zero consignments is the signature pattern for a GERP financial update I/O failure. This same pattern was confirmed in prior investigations across multiple regions (TKME-2302, TKME-2308, SAHME-3399 for the ZA region) and in the codebase trace of the order-process-v25-69 process definition.\r\n\r\nThis is not a stock allocation issue. The ticket reporter mentions stock exists in the warehouse, but the process never reached the splitOrder stage where stock allocation occurs. The failure is upstream of stock allocation, at the GERP financial integration step.\r\n\r\nPossible remediation:\r\nRestart the order process from the sendFinancialUpdate or completeFinancialUpdate action node. If the GERP FI endpoint is now reachable, the financial update will succeed on retry and the order will proceed to splitOrder, consignment creation, and fulfillment. If GERP is still experiencing connectivity issues, the process will error again -- coordinate with the GERP team to confirm endpoint availability before retrying.\r\n\r\nThe remediation can be executed via HAC Groovy script: set the errored order process state to WAITING and restart it at the sendFinancialUpdate action. This is the standard process restart pattern used across all regions for GERP I/O failures.",
-        "sections": {
-          "issue": "Order ZA260915-85021615 is stuck at WAITING_FOR_SEND_FINANCIAL status. The order was placed on 2026-09-15 with two products (UA32H5000FUXXA and QA65QN70HAUXXA) totaling 15343.25 ZAR. Payment was authorized and captured successfully. The order business process (order-process-v25-69) is in ERROR state with endMessage \"An error occurred while executing the process.\" Zero consignments were created, meaning the order never progressed to the warehouse allocation stage.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-18T11:25:38.198Z"
-      }
-    },
     {
       "key": "PC-54290",
       "summary": "Set consignment to COMPLETED and retrigger from waitForWarehouse for SIT return stuck orders",
@@ -44,7 +11,7 @@
       "project": "PROD Change",
       "projectKey": "PC",
       "issuetype": "Hybris Platform",
-      "updated": "2026-09-18T20:04:20.000+0900",
+      "updated": "2026-09-18T20:58:30.000+0900",
       "created": "2026-09-18T18:02:33.000+0900",
       "statusChangedAt": "",
       "assignedToMeAt": "",
@@ -77,6 +44,39 @@
         "source": "",
         "foundAt": "",
         "issueNumber": null
+      }
+    },
+    {
+      "key": "SAHME-3437",
+      "summary": "Order stuck on Waiting for send Financial",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "South Africa Maintenance & Enhancements",
+      "projectKey": "SAHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-09-18T20:17:06.000+0900",
+      "created": "2026-09-18T20:05:10.000+0900",
+      "statusChangedAt": "2026-09-18T20:16:49.461+0900",
+      "assignedToMeAt": "",
+      "description": "Good day,\n\nOrder ZA260915-85021615 is stuck on Waiting for send Financials status however there is stock in the warehouse.\n\nUA32H5000FUXXA\n\nQA65QN70HAUXXA !image-2026-09-18-13-04-44-850.png!\n\nKind regards,\n\nLerato",
+      "commentsCount": 0,
+      "recentComments": [],
+      "lastCommentBy": "",
+      "lastCommentSnippet": "",
+      "lastCommentDate": "",
+      "url": "https://jira.secext.samsung.net/browse/SAHME-3437",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "Ticket Summary: Order stuck on Waiting for send Financial\r\nGenerated: 2026-09-18T20:30:00+09:00\r\n\r\nIssue:\r\nOrder ZA260915-85021615 is stuck at WAITING_FOR_SEND_FINANCIAL status. The order was placed on 2026-09-15 with two products (UA32H5000FUXXA and QA65QN70HAUXXA) totaling 15343.25 ZAR. Payment was authorized and captured successfully. The order business process (order-process-v25-69) is in ERROR state with endMessage \"An error occurred while executing the process.\" Zero consignments were created, meaning the order never progressed to the warehouse allocation stage.\r\n\r\nRCA:\r\nThe order process (order-process-v25-69) advanced normally through checkout, fraud check, and payment. The sendFinancialUpdate action set the order status to WAITING_FOR_SEND_FINANCIAL and attempted to POST the financial posting to GERP. The completeFinancialUpdate action node then threw an exception during the GERP FI (financial integration) call, causing the process to transition to ERROR state. This is a transient GERP-integration I/O failure, typically a Connection reset or timeout at the GERP FI endpoint.\r\n\r\nThe DB confirms: order process state ERROR, endMessage \"An error occurred while executing the process.\", errorStackTrace stored in BusinessProcessParameter context (byte array, not readable via FlexibleSearch). Zero consignments exist because splitOrder was never reached -- it comes after completeFinancialUpdate in the process flow. Payment transactions show AUTHORIZATION and CAPTURE both ACCEPTED for the full amount (15343.25 ZAR), so the payment side completed without issue. Two external service entries exist but are blank, consistent with the process failing before external services were invoked.\r\n\r\nKibana was unavailable during this investigation (cookie bridge returning 405/401), so the exact exception message could not be confirmed from logs. However, the DB state is conclusive: process ERROR + WAITING_FOR_SEND_FINANCIAL status + zero consignments is the signature pattern for a GERP financial update I/O failure. This same pattern was confirmed in prior investigations across multiple regions (TKME-2302, TKME-2308, SAHME-3399 for the ZA region) and in the codebase trace of the order-process-v25-69 process definition.\r\n\r\nThis is not a stock allocation issue. The ticket reporter mentions stock exists in the warehouse, but the process never reached the splitOrder stage where stock allocation occurs. The failure is upstream of stock allocation, at the GERP financial integration step.\r\n\r\nPossible remediation:\r\nRestart the order process from the sendFinancialUpdate or completeFinancialUpdate action node. If the GERP FI endpoint is now reachable, the financial update will succeed on retry and the order will proceed to splitOrder, consignment creation, and fulfillment. If GERP is still experiencing connectivity issues, the process will error again -- coordinate with the GERP team to confirm endpoint availability before retrying.\r\n\r\nThe remediation can be executed via HAC Groovy script: set the errored order process state to WAITING and restart it at the sendFinancialUpdate action. This is the standard process restart pattern used across all regions for GERP I/O failures.",
+        "sections": {
+          "issue": "Order ZA260915-85021615 is stuck at WAITING_FOR_SEND_FINANCIAL status. The order was placed on 2026-09-15 with two products (UA32H5000FUXXA and QA65QN70HAUXXA) totaling 15343.25 ZAR. Payment was authorized and captured successfully. The order business process (order-process-v25-69) is in ERROR state with endMessage \"An error occurred while executing the process.\" Zero consignments were created, meaning the order never progressed to the warehouse allocation stage.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-18T11:25:38.198Z"
       }
     },
     {
@@ -1122,7 +1122,7 @@
       }
     ],
     "pid": 44968,
-    "uptime": 50848,
+    "uptime": 50890,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1134,7 +1134,7 @@
       {
         "pid": 27260,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 332392,
+        "ageSeconds": 332433,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -1144,7 +1144,7 @@
       {
         "pid": 15796,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 89800,
+        "ageSeconds": 89841,
         "status": "running",
         "isChild": false,
         "taskSummary": "add 35m logs on PC ticket for stg testing",
@@ -1154,7 +1154,7 @@
       {
         "pid": 42528,
         "cwd": "c:\\windows",
-        "ageSeconds": 89796,
+        "ageSeconds": 89837,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1164,7 +1164,7 @@
       {
         "pid": 34344,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 55154,
+        "ageSeconds": 55195,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -1174,7 +1174,7 @@
       {
         "pid": 49184,
         "cwd": "unknown",
-        "ageSeconds": 52510,
+        "ageSeconds": 52551,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -3697,7 +3697,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-18T10:57:42.921Z",
-      "ageMs": 3504462
+      "ageMs": 3543437
     },
     "watchdogLogTail": "[2026-09-18T10:02:41.669Z] DUPLICATE watchdog detected: PID 35748 — killing\n[2026-09-18T10:12:42.310Z] DUPLICATE watchdog detected: PID 13296 — killing\n[2026-09-18T10:17:42.034Z] DUPLICATE watchdog detected: PID 41776 — killing\n[2026-09-18T10:22:41.243Z] DUPLICATE watchdog detected: PID 19224 — killing\n[2026-09-18T10:27:42.479Z] DUPLICATE watchdog detected: PID 35048 — killing\n[2026-09-18T10:32:41.752Z] DUPLICATE watchdog detected: PID 31764 — killing\n[2026-09-18T10:37:41.786Z] DUPLICATE watchdog detected: PID 34180 — killing\n[2026-09-18T10:42:41.608Z] DUPLICATE watchdog detected: PID 31416 — killing\n[2026-09-18T10:47:42.868Z] DUPLICATE watchdog detected: PID 45380 — killing\n[2026-09-18T10:57:42.921Z] DUPLICATE watchdog detected: PID 17856 — killing"
   },
@@ -3706,7 +3706,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-18T11:55:18.543Z",
+      "lastCheck": "2026-09-18T11:56:18.597Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3715,7 +3715,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-18T11:55:18.543Z",
+      "lastCheck": "2026-09-18T11:56:18.597Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3724,9 +3724,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-18T11:55:18.543Z",
+      "lastCheck": "2026-09-18T11:56:18.597Z",
       "downSince": "2026-09-18T08:51:56.653Z",
-      "downDuration": 11001890,
+      "downDuration": 11061944,
       "alert": true
     }
   ],
