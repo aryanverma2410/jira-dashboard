@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-18T08:51:58.624Z",
-  "totalTickets": 17,
+  "generatedAt": "2026-09-18T08:52:37.495Z",
+  "totalTickets": 16,
   "tickets": [
     {
       "key": "PC-53923",
@@ -208,67 +208,6 @@
         "source": "",
         "foundAt": "",
         "issueNumber": null
-      }
-    },
-    {
-      "key": "AEME-6540",
-      "summary": "[PROD] | Manual Chargeback || 07-Sep",
-      "status": "QA Server Review",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-18T16:18:54.000+0900",
-      "created": "2026-09-07T14:47:06.000+0900",
-      "statusChangedAt": "2026-09-08T19:58:17.387+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\n \n\nPlease manual trigger the trade in chargeback amount for the below order\n|AE260808-54285973|SM-F971BZKIMEA|AE-080826-719312|REJECTED|2230|\n|AE260725-39348428|SM-F971BZGOMEA|AE-280726-713980|REJECTED|2195|\n\n \n\nRegards\n\nJaffar",
-      "commentsCount": 7,
-      "recentComments": [
-        {
-          "author": "Dilip Boddula",
-          "date": "2026-09-17T23:24:06.077+0900",
-          "snippet": "Dear ~@email  ~@email \n\n \n\nCould you please check why the chargeback was triggered thrice? The customer is complaining that within a matter of {}10 minutes{}, the chargeback was triggered 3 times. This is something not acceptable.\n\nPlease check and let us know how this has happened.\n\n \n\n!image012.pn"
-        },
-        {
-          "author": "Talib Raza Zaidi",
-          "date": "2026-09-18T16:18:54.891+0900",
-          "snippet": "Hi ~@email,\n\n \n\nCan you please share the request and response for the chargeback done for the order AE260725-39348428?\n\nAlso, please let us know how for order AE260808-54285973, the chargeback was done multiple times.\n\n \n\nUpdate:\n\nPlease don't do the manual charging back from the original card for o"
-        }
-      ],
-      "lastCommentBy": "Dilip Boddula",
-      "lastCommentSnippet": "Dear ~@email  ~@email \n\n \n\nCould you please check why the chargeback was triggered thrice? The customer is complaining that within a matter of {}10 minutes{}, the chargeback was triggered 3 times. This is something not acceptable.\n\nPlease check and let us know how this has happened.\n\n \n\n!image012.pn",
-      "lastCommentDate": "2026-09-17T23:24:06.077+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6540",
-      "linkedTickets": [
-        {
-          "key": "PC-53768",
-          "summary": "Script to copy paymentInfo to clawback PaymentTransaction and retrigger ClawbackProcess",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "blocks",
-          "assignee": null
-        },
-        {
-          "key": "PC-53902",
-          "summary": "Script to retrigger clawback authorization for declined Checkout.com unscheduled payments",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "blocks",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: AEME-6540\n\n[PROD] | Manual Chargeback || 07-Sep\nGenerated: 2026-09-08T09:20:00Z\n\nHi Jaffar ,\n\nBoth orders AE260808-54285973 and AE260725-39348428 are in COMPLETED status with all order and consignment processes succeeded. The trade-in external service (NORTHLADDER) is in CANCELLED status, which confirms the trade-in devices were rejected by NorthLadder.\n\nThe clawback (chargeback) process was already auto-triggered by the NorthLadder status check cronjob (TokoNorthLadderStatusCheckJob) when it detected the REJECTED appraisal status. Both orders have a ClawbackProcess running with process definition clawback-process-v23, and both are currently stuck in RUNNING state with no end message.\n\nThe clawback payment authorization was attempted via Checkout.com but was declined. For order AE260808-54285973, the authorization attempt failed with ERROR status at 2026-09-01 02:01. For order AE260725-39348428, the authorization attempt failed with ERROR status at 2026-08-23 02:01. The error indicates the card used for the original purchase was declined when Checkout.com attempted to authorize the clawback debit.\n\nA similar issue was previously reported in SED-74835 (AEME-3427) where the clawback process failed at the reAuthorizeIfNeeded action because paymentInfo was null and Checkout.com could not re-authorize the card for the clawback amount. The resolution there was to use a different credit card.\n\nThe ClawbackProcess is stuck in RUNNING state because the payment authorization failed but the process never transitioned to ERROR or a retry state. The process is effectively waiting for a successful payment authorization that will not come without manual intervention.\n\nTo remediate this, a Groovy script can be written to re-trigger the clawback process from the takeClawBackPaymentAction step, which will attempt a fresh payment authorization via Checkout.com for the clawback amounts (2230 AED for AE260808-54285973 and 2195 AED for AE260725-39348428). If the card is still declined, the customer would need to provide an alternative payment method.\n\nNo reusable PC ticket exists for clawback remediation. Would you like me to write a remediation script for this?\n\nThanks,\nAryan.\n\n## Remediation\n\n- **Remediation type**: Clawback process re-trigger (new type — no reusable PC ticket exists)\n- **PC ticket**: None yet (pending user confirmation)\n- **Script**: Not yet created (pending user confirmation)\n- **Similar past ticket**: SED-74835 (AEME-3427) — clawback failed at reAuthorizeIfNeeded due to paymentInfo null\n- **Orders**: AE260808-54285973 (clawback amount 2230 AED), AE260725-39348428 (clawback amount 2195 AED)",
-        "sections": {
-          "issue": "",
-          "rca": "# RCA: AEME-6540\n\n[PROD] | Manual Chargeback || 07-Sep\nGenerated: 2026-09-08T09:20:00Z\n\nHi Jaffar ,\n\nBoth orders AE260808-54285973 and AE260725-39348428 are in COMPLETED status with all order and consignment processes succeeded. The trade-in external service (NORTHLADDER) is in CANCELLED status, which confirms the trade-in devices were rejected by NorthLadder.\n\nThe clawback (chargeback) process was already auto-triggered by the NorthLadder status check cronjob (TokoNorthLadderStatusCheckJob) when it detected the REJECTED appraisal status. Both orders have a ClawbackProcess running with process definition clawback-process-v23, and both are currently stuck in RUNNING state with no end message.\n\nThe clawback payment authorization was attempted via Checkout.com but was declined. For order AE260808-54285973, the authorization attempt failed with ERROR status at 2026-09-01 02:01. For order AE260725-39348428, the authorization attempt failed with ERROR status at 2026-08-23 02:01. The error indicates the card used for the original purchase was declined when Checkout.com attempted to authorize the clawback debit.\n\nA similar issue was previously reported in SED-74835 (AEME-3427) where the clawback process failed at the reAuthorizeIfNeeded action because paymentInfo was null and Checkout.com could not re-authorize the card for the clawback amount. The resolution there was to use a different credit card.\n\nThe ClawbackProcess is stuck in RUNNING state because the payment authorization failed but the process never transitioned to ERROR or a retry state. The process is effectively waiting for a successful payment authorization that will not come without manual intervention.\n\nTo remediate this, a Groovy script can be written to re-trigger the clawback process from the takeClawBackPaymentAction step, which will attempt a fresh payment authorization via Checkout.com for the clawback amounts (2230 AED for AE260808-54285973 and 2195 AED for AE260725-39348428). If the card is still declined, the customer would need to provide an alternative payment method.\n\nNo reusable PC ticket exists for clawback remediation. Would you like me to write a remediation script for this?\n\nThanks,\nAryan.\n\n## Remediation\n\n- **Remediation type**: Clawback process re-trigger (new type — no reusable PC ticket exists)\n- **PC ticket**: None yet (pending user confirmation)\n- **Script**: Not yet created (pending user confirmation)\n- **Similar past ticket**: SED-74835 (AEME-3427) — clawback failed at reAuthorizeIfNeeded due to paymentInfo null\n- **Orders**: AE260808-54285973 (clawback amount 2230 AED), AE260725-39348428 (clawback amount 2195 AED)",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-08T09:30:11.034Z"
       }
     },
     {
@@ -1061,7 +1000,7 @@
       }
     ],
     "pid": 44968,
-    "uptime": 39806,
+    "uptime": 39846,
     "failures": 0,
     "activeJobCount": 2,
     "jobs": [
@@ -1070,14 +1009,14 @@
         "issueTitle": "Investigate ticket GMT-21241",
         "snippet": "Auto-triggered investigation for new ticket GMT-21241.\n\nTicket: GMT-21241\nSummary: SMI | Cronjobs in Aborted status\n\nUse",
         "pid": 49316,
-        "elapsed": 211
+        "elapsed": 251
       },
       {
         "issueNum": 325,
         "issueTitle": "Investigate ticket NPSM-88647",
         "snippet": "Auto-triggered investigation for new ticket NPSM-88647.\n\nTicket: NPSM-88647\nSummary: [107590229][SA] [Online Purchasing]",
         "pid": 30584,
-        "elapsed": 96
+        "elapsed": 136
       }
     ],
     "startTime": "2026-09-17T21:48:32.569Z",
@@ -1088,7 +1027,7 @@
       {
         "pid": 27260,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 321348,
+        "ageSeconds": 321387,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -1098,7 +1037,7 @@
       {
         "pid": 15796,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 78756,
+        "ageSeconds": 78795,
         "status": "running",
         "isChild": false,
         "taskSummary": "you are prohibited from running any groovy on prod",
@@ -1108,7 +1047,7 @@
       {
         "pid": 42528,
         "cwd": "c:\\windows",
-        "ageSeconds": 78752,
+        "ageSeconds": 78791,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1118,7 +1057,7 @@
       {
         "pid": 34344,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 44110,
+        "ageSeconds": 44149,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -1128,7 +1067,7 @@
       {
         "pid": 49184,
         "cwd": "unknown",
-        "ageSeconds": 41465,
+        "ageSeconds": 41504,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -3631,10 +3570,10 @@
     "bridgeLogTail": "[2026-09-18T08:51:52.428Z] STDOUT data for #324: 109 bytes\n[2026-09-18T08:51:52.430Z] LIVE write for #324: 471 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_324.txt\n[2026-09-18T08:51:52.456Z] STDOUT data for #325: 104 bytes\n[2026-09-18T08:51:52.458Z] LIVE write for #325: 164 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_325.txt\n[2026-09-18T08:51:52.465Z] STDOUT data for #324: 107 bytes\n[2026-09-18T08:51:52.467Z] LIVE write for #324: 475 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_324.txt\n[2026-09-18T08:51:52.504Z] STDOUT data for #324: 113 bytes\n[2026-09-18T08:51:52.506Z] LIVE write for #324: 485 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_324.txt\n[2026-09-18T08:51:52.594Z] STDOUT data for #324: 109 bytes\n[2026-09-18T08:51:52.596Z] LIVE write for #324: 491 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_324.txt\n[2026-09-18T08:51:52.631Z] STDOUT data for #324: 104 bytes\n[2026-09-18T08:51:52.633Z] LIVE write for #324: 492 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_324.txt\n[2026-09-18T08:51:55.069Z] STDOUT data for #325: 221 bytes\n[2026-09-18T08:51:55.070Z] LIVE write for #325: 164 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_325.txt\n[2026-09-18T08:51:55.071Z] STDOUT data for #325: 951 bytes\n[2026-09-18T08:51:55.072Z] LIVE write for #325: 164 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_325.txt\n[2026-09-18T08:51:55.172Z] STDOUT data for #324: 238 bytes\n[2026-09-18T08:51:55.174Z] LIVE write for #324: 492 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_324.txt\n[2026-09-18T08:51:55.175Z] STDOUT data for #324: 583 bytes\n[2026-09-18T08:51:55.177Z] LIVE write for #324: 492 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_324.txt",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-09-18T08:52:02.324Z",
-      "ageMs": 168
+      "lastWrite": "2026-09-18T08:52:28.180Z",
+      "ageMs": 12275
     },
-    "watchdogLogTail": "[2026-09-18T08:51:39.853Z] Killed dashboard PID 28372\n[2026-09-18T08:51:43.159Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T08:51:46.953Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 28372) not found\n[2026-09-18T08:51:49.848Z] Could not kill dashboard PID 28372: Command failed: taskkill /PID 28372 /F /T\n[2026-09-18T08:51:49.862Z] Starting jira-dashboard-server.js...\n[2026-09-18T08:51:50.062Z] Dashboard started with PID 13612 (restart #6, 1 in last hour)\n[2026-09-18T08:51:54.861Z] Starting jira-dashboard-server.js...\n[2026-09-18T08:51:55.022Z] Dashboard started with PID 17452 (restart #7, 2 in last hour)\n[2026-09-18T08:51:58.163Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T08:52:02.305Z] DUPLICATE jira-dashboard-server detected: PID 13612 — killing",
+    "watchdogLogTail": "[2026-09-18T08:51:46.953Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 28372) not found\n[2026-09-18T08:51:49.848Z] Could not kill dashboard PID 28372: Command failed: taskkill /PID 28372 /F /T\n[2026-09-18T08:51:49.862Z] Starting jira-dashboard-server.js...\n[2026-09-18T08:51:50.062Z] Dashboard started with PID 13612 (restart #6, 1 in last hour)\n[2026-09-18T08:51:54.861Z] Starting jira-dashboard-server.js...\n[2026-09-18T08:51:55.022Z] Dashboard started with PID 17452 (restart #7, 2 in last hour)\n[2026-09-18T08:51:58.163Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T08:52:02.305Z] DUPLICATE jira-dashboard-server detected: PID 13612 — killing\n[2026-09-18T08:52:13.170Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T08:52:28.178Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.",
     "jobOutputs": {}
   },
   "mcps": [
