@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-18T05:22:53.079Z",
-  "totalTickets": 17,
+  "generatedAt": "2026-09-18T05:23:32.974Z",
+  "totalTickets": 16,
   "tickets": [
     {
       "key": "MHME-1439",
@@ -27,50 +27,6 @@
         "status": "investigating",
         "issueNumber": null,
         "lockedAt": "2026-09-18T04:58:00.892Z"
-      }
-    },
-    {
-      "key": "SAHME-3399",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "South Africa Maintenance & Enhancements",
-      "projectKey": "SAHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-18T00:15:36.000+0900",
-      "created": "2026-08-26T21:54:33.000+0900",
-      "statusChangedAt": "2026-08-26T21:54:34.833+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|ZA260825-68383788|2026/08/25|WAITING_FOR_SEND_FINANCIAL|\n|ZA260822-65638688|2026/08/22|WAITING_FOR_SEND_FINANCIAL|\n|ZA260822-65856992|2026/08/22|WAITING_FOR_SEND_FINANCIA",
-      "commentsCount": 4,
-      "recentComments": [
-        {
-          "author": "Lerato Mbambisa",
-          "date": "2026-09-18T00:15:20.674+0900",
-          "snippet": "Good day ~@email ,\n\nStock has been transferred for order ZA260822-65638688. Please assist with processing the order to the next status.\n\n!image-2026-09-17-17-15-01-480.png!\n\nKind regards,\n\nLerato"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-10T18:43:42.851+0900",
-          "snippet": "Hi ~@email ,\n\nCould you please update the stock level for ZA260822-65638688\n\nWe can retrigger the order process then to push the order forward\n\nRegards\n\nAryan"
-        }
-      ],
-      "lastCommentBy": "Lerato Mbambisa",
-      "lastCommentSnippet": "Good day ~@email ,\n\nStock has been transferred for order ZA260822-65638688. Please assist with processing the order to the next status.\n\n!image-2026-09-17-17-15-01-480.png!\n\nKind regards,\n\nLerato",
-      "lastCommentDate": "2026-09-18T00:15:20.674+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAHME-3399",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Ticket Summary: Stuck order on Hybris (3 ZA-region orders at WAITING_FOR_SEND_FINANCIAL)\r\nGenerated: 2026-09-10T10:15:00+09:00\r\n\r\nIssue:\r\nThree South Africa region orders were flagged as stuck at WAITING_FOR_SEND_FINANCIAL status on 2026-08-26. DB verification on 2026-09-10 confirmed that two of the three orders have already self-resolved. ZA260825-68383788 progressed to COMPLETED with its consignment delivered and GERP billing completed on 2026-09-07. ZA260822-65856992 was cancelled and refunded (REFUND_FOLLOW_ON accepted on 2026-09-09). Only ZA260822-65638688 remains genuinely stuck.\r\n\r\nRCA:\r\nThe order ZA260822-65638688 was placed on 2026-08-22 with payment mode za-PJNPaymentMode, total 5399.10 ZAR. Payment was authorised and captured successfully (AUTHORIZATION and CAPTURE both ACCEPTED). The order process (order-process-v25-69) advanced through checkout, fraud check, payment, and financial update stages without error. The process reached the splitOrder action, which calls OrderSplittingService.splitOrderForConsignment to allocate order entries to warehouse consignments based on stock availability and warehouse configuration for the za store.\r\n\r\nZero consignments were created. The DB confirms no consignment records, no consignment entries, and no consignment processes exist for this order. The order has product entries (the splitOrder code iterates entries that have no consignment allocations and are not DEAD or digital delivery), but the OOTB Hybris OrderSplittingService could not assign them to any warehouse because the product is out of stock across all configured warehouses for the za site.\r\n\r\nAfter splitOrder returned an empty consignment list, the process moved to the waitForWarehouseSubprocessEnd wait node. This node waits for a ConsignmentSubprocessEnd event. Since no consignment subprocesses were started (zero consignments), this event will never fire. The process then cycles between waitForWarehouseSubprocessEnd and isProcessCompleted, which keeps returning NOK because no subprocess has completed. The task logs show 50+ splitOrder entries, indicating the process engine has retried this node multiple times. The order status remains WAITING_FOR_SEND_FINANCIAL because splitOrderAction never reached its final line (setOrderStatus ORDER_SPLIT) on the first execution, or the status was set before splitOrder and never updated.\r\n\r\nLerato Mbambisa confirmed in her comment on 2026-09-10 that this order is \"awaiting stock transfer\", which aligns with the DB evidence of zero consignments due to stock unavailability.\r\n\r\nPossible remediation:\r\nThis is a stock allocation issue, not a Hybris platform bug. Two options exist:\r\n\r\nOption A (preferred): The regional team arranges stock transfer to a ZA warehouse for the product on this order. Once stock is available, restart the order process from the splitOrder action so that OrderSplittingService can create consignments and the order proceeds to fulfillment.\r\n\r\nOption B: If stock cannot be transferred, cancel the order and process a full refund to the customer. The payment was captured (5399.10 ZAR), so a REFUND_FOLLOW_ON transaction would be needed, similar to what was done for ZA260822-65856992.\r\n\r\nNo HAC script is required for either option. The process restart in Option A can be done via HAC Groovy script if needed, but the prerequisite (stock availability) must be confirmed first by the regional team. This order should not be remediated from the Hybris side until the stock situation is clarified.",
-        "sections": {
-          "issue": "Three South Africa region orders were flagged as stuck at WAITING_FOR_SEND_FINANCIAL status on 2026-08-26. DB verification on 2026-09-10 confirmed that two of the three orders have already self-resolved. ZA260825-68383788 progressed to COMPLETED with its consignment delivered and GERP billing completed on 2026-09-07. ZA260822-65856992 was cancelled and refunded (REFUND_FOLLOW_ON accepted on 2026-09-09). Only ZA260822-65638688 remains genuinely stuck.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-10T05:22:51.881Z"
       }
     },
     {
@@ -1076,7 +1032,7 @@
       }
     ],
     "pid": 44968,
-    "uptime": 27261,
+    "uptime": 27297,
     "failures": 0,
     "activeJobCount": 2,
     "jobs": [
@@ -1085,14 +1041,14 @@
         "issueTitle": "Investigate ticket MHME-1439",
         "snippet": "Auto-triggered investigation for new ticket MHME-1439.\n\nTicket: MHME-1439\nSummary: SMI - List of MENA Extracts\n\nUse the ",
         "pid": 29436,
-        "elapsed": 1481
+        "elapsed": 1518
       },
       {
         "issueNum": 321,
         "issueTitle": "Investigate ticket GMT-21225",
         "snippet": "Auto-triggered investigation for new ticket GMT-21225.\n\nTicket: GMT-21225\nSummary: SMI | SC+ orders in error state\n\nUse ",
         "pid": 20648,
-        "elapsed": 147
+        "elapsed": 184
       }
     ],
     "startTime": "2026-09-17T21:48:32.569Z",
@@ -1103,7 +1059,7 @@
       {
         "pid": 27260,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 308803,
+        "ageSeconds": 308849,
         "status": "running",
         "isChild": false,
         "taskSummary": "does it show mid convo of the ai as well. I would like to see updated mid thinking as well, and j...",
@@ -1113,7 +1069,7 @@
       {
         "pid": 15796,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 66211,
+        "ageSeconds": 66257,
         "status": "running",
         "isChild": false,
         "taskSummary": "which of these scripts is most simmilar to ours",
@@ -1123,7 +1079,7 @@
       {
         "pid": 42528,
         "cwd": "c:\\windows",
-        "ageSeconds": 66207,
+        "ageSeconds": 66253,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1133,7 +1089,7 @@
       {
         "pid": 34344,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 31565,
+        "ageSeconds": 31612,
         "status": "running",
         "isChild": false,
         "taskSummary": "does it show mid convo of the ai as well. I would like to see updated mid thinking as well, and j...",
@@ -1143,7 +1099,27 @@
       {
         "pid": 49184,
         "cwd": "unknown",
-        "ageSeconds": 28920,
+        "ageSeconds": 28967,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "aipro session",
+        "lastExchange": null,
+        "sessionId": null
+      },
+      {
+        "pid": 34724,
+        "cwd": "unknown",
+        "ageSeconds": 2,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "aipro session",
+        "lastExchange": null,
+        "sessionId": null
+      },
+      {
+        "pid": 24696,
+        "cwd": "unknown",
+        "ageSeconds": 2,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -3598,13 +3574,13 @@
         ]
       }
     },
-    "bridgeLogTail": "[2026-09-18T05:22:51.716Z] STDOUT data for #321: 108 bytes\n[2026-09-18T05:22:51.718Z] LIVE write for #321: 218 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_321.txt\n[2026-09-18T05:22:51.779Z] STDOUT data for #321: 120 bytes\n[2026-09-18T05:22:51.781Z] LIVE write for #321: 235 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_321.txt\n[2026-09-18T05:22:51.784Z] STDOUT data for #321: 105 bytes\n[2026-09-18T05:22:51.789Z] LIVE write for #321: 237 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_321.txt\n[2026-09-18T05:22:51.802Z] STDOUT data for #321: 115 bytes\n[2026-09-18T05:22:51.804Z] LIVE write for #321: 249 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_321.txt\n[2026-09-18T05:22:51.818Z] STDOUT data for #321: 117 bytes\n[2026-09-18T05:22:51.821Z] LIVE write for #321: 263 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_321.txt\n[2026-09-18T05:22:51.877Z] STDOUT data for #321: 113 bytes\n[2026-09-18T05:22:51.881Z] LIVE write for #321: 273 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_321.txt\n[2026-09-18T05:22:51.882Z] STDOUT data for #321: 107 bytes\n[2026-09-18T05:22:51.888Z] LIVE write for #321: 277 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_321.txt\n[2026-09-18T05:22:51.893Z] STDOUT data for #321: 117 bytes\n[2026-09-18T05:22:51.901Z] LIVE write for #321: 291 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_321.txt\n[2026-09-18T05:22:56.879Z] STDOUT data for #321: 337 bytes\n[2026-09-18T05:22:56.881Z] LIVE write for #321: 291 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_321.txt\n[2026-09-18T05:22:56.881Z] STDOUT data for #321: 1108 bytes\n[2026-09-18T05:22:56.884Z] LIVE write for #321: 291 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_321.txt",
+    "bridgeLogTail": "    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-09-18T05:23:42.614Z] aipro stderr for #320: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-09-18T05:22:56.232Z",
-      "ageMs": 1065
+      "lastWrite": "2026-09-18T05:23:26.401Z",
+      "ageMs": 16972
     },
-    "watchdogLogTail": "[2026-09-18T05:20:41.147Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:20:56.153Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:21:11.168Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:21:26.177Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:21:41.184Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:21:56.194Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:22:11.206Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:22:26.209Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:22:41.219Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:22:56.227Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.",
+    "watchdogLogTail": "[2026-09-18T05:21:11.168Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:21:26.177Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:21:41.184Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:21:56.194Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:22:11.206Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:22:26.209Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:22:41.219Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:22:56.227Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:23:11.230Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-18T05:23:26.232Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.",
     "jobOutputs": {}
   },
   "mcps": [
@@ -3612,7 +3588,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-18T05:22:12.493Z",
+      "lastCheck": "2026-09-18T05:23:12.807Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3621,7 +3597,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-18T05:22:12.493Z",
+      "lastCheck": "2026-09-18T05:23:12.807Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3630,9 +3606,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-18T05:22:12.493Z",
+      "lastCheck": "2026-09-18T05:23:12.807Z",
       "downSince": "2026-09-18T02:00:59.734Z",
-      "downDuration": 12072759,
+      "downDuration": 12133073,
       "alert": true
     }
   ],
