@@ -1,7 +1,51 @@
 {
-  "generatedAt": "2026-09-18T17:44:37.560Z",
+  "generatedAt": "2026-09-18T17:45:16.952Z",
   "totalTickets": 15,
   "tickets": [
+    {
+      "key": "PC-54290",
+      "summary": "Set consignment to COMPLETED and retrigger from waitForWarehouse for SIT return stuck orders",
+      "status": "To do",
+      "statusCategory": "To Do",
+      "priority": "Low",
+      "project": "PROD Change",
+      "projectKey": "PC",
+      "issuetype": "Hybris Platform",
+      "updated": "2026-09-19T02:47:26.000+0900",
+      "created": "2026-09-18T18:02:33.000+0900",
+      "statusChangedAt": "",
+      "assignedToMeAt": "",
+      "description": "For orders mentioned in ticket : MHME-1431. Script: script-MHME-1431-sit-return-complete.groovy. Sets consignment status to COMPLETED, additionalConsignmentStatus to SIT_RETURN_COMPLETED, and triggers _WaitForWarehouse event on consignment process to advance the order forward.\n\nScript: ^script-MHME-",
+      "commentsCount": 1,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-09-19T02:47:26.222+0900",
+          "snippet": "Test Order: MA260904-08716308\nBefore / After Comparison\n||Field||Before (Run 1)||After (Run 1)||\n|Consignment Status|SHIPPED|COMPLETED|\n|Additional Consignment Status|SIT_RETURN_PENDING_BILLING|SIT_RETURN_PENDING_BILLING|\n|Consignment Process State|RUNNING|SUCCEEDED|\n|Script Output|—|Processed: 1, S"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Test Order: MA260904-08716308\nBefore / After Comparison\n||Field||Before (Run 1)||After (Run 1)||\n|Consignment Status|SHIPPED|COMPLETED|\n|Additional Consignment Status|SIT_RETURN_PENDING_BILLING|SIT_RETURN_PENDING_BILLING|\n|Consignment Process State|RUNNING|SUCCEEDED|\n|Script Output|—|Processed: 1, S",
+      "lastCommentDate": "2026-09-19T02:47:26.222+0900",
+      "url": "https://jira.secext.samsung.net/browse/PC-54290",
+      "linkedTickets": [
+        {
+          "key": "MHME-1431",
+          "summary": "Order Stuck - SHIPPED - MA260801-47652001 | MA260714-28260833",
+          "status": "QA Server Review",
+          "statusCategory": "In Progress",
+          "relation": "is blocked by",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "none",
+        "excerpt": "",
+        "source": "",
+        "foundAt": "",
+        "issueNumber": null
+      }
+    },
     {
       "key": "TKME-2327",
       "summary": "NERP Error - WH update for the order",
@@ -117,50 +161,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-16T07:36:32.056Z"
-      }
-    },
-    {
-      "key": "PC-54290",
-      "summary": "Set consignment to COMPLETED and retrigger from waitForWarehouse for SIT return stuck orders",
-      "status": "To do",
-      "statusCategory": "To Do",
-      "priority": "Low",
-      "project": "PROD Change",
-      "projectKey": "PC",
-      "issuetype": "Hybris Platform",
-      "updated": "2026-09-18T20:58:30.000+0900",
-      "created": "2026-09-18T18:02:33.000+0900",
-      "statusChangedAt": "",
-      "assignedToMeAt": "",
-      "description": "For orders mentioned in ticket : MHME-1431. Script: script-MHME-1431-sit-return-complete.groovy. Sets consignment status to COMPLETED, additionalConsignmentStatus to SIT_RETURN_COMPLETED, and triggers _WaitForWarehouse event on consignment process to advance the order forward.\n\nScript: ^script-MHME-",
-      "commentsCount": 1,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-18T20:04:20.643+0900",
-          "snippet": "S2 Staging Validation — Idempotency Test\n\nTest Order: MA260904-08716308 (consignment-process-v11-36, same version as P1)\nBefore / After Comparison\n||Field||Before (Run 1)||After (Run 1)||\n|Consignment Status|SHIPPED|COMPLETED|\n|Additional Consignment Status|SIT_RETURN_PENDING_BILLING|SIT_RETURN_PEND"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "S2 Staging Validation — Idempotency Test\n\nTest Order: MA260904-08716308 (consignment-process-v11-36, same version as P1)\nBefore / After Comparison\n||Field||Before (Run 1)||After (Run 1)||\n|Consignment Status|SHIPPED|COMPLETED|\n|Additional Consignment Status|SIT_RETURN_PENDING_BILLING|SIT_RETURN_PEND",
-      "lastCommentDate": "2026-09-18T20:04:20.643+0900",
-      "url": "https://jira.secext.samsung.net/browse/PC-54290",
-      "linkedTickets": [
-        {
-          "key": "MHME-1431",
-          "summary": "Order Stuck - SHIPPED - MA260801-47652001 | MA260714-28260833",
-          "status": "QA Server Review",
-          "statusCategory": "In Progress",
-          "relation": "is blocked by",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "none",
-        "excerpt": "",
-        "source": "",
-        "foundAt": "",
-        "issueNumber": null
       }
     },
     {
@@ -1006,7 +1006,7 @@
       }
     ],
     "pid": 53436,
-    "uptime": 5055,
+    "uptime": 5095,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1018,7 +1018,7 @@
       {
         "pid": 27260,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 353307,
+        "ageSeconds": 353347,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -1028,7 +1028,7 @@
       {
         "pid": 15796,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 110715,
+        "ageSeconds": 110755,
         "status": "running",
         "isChild": false,
         "taskSummary": "add a=aryan.v1 label as well",
@@ -1038,7 +1038,7 @@
       {
         "pid": 42528,
         "cwd": "c:\\windows",
-        "ageSeconds": 110711,
+        "ageSeconds": 110750,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1048,7 +1048,7 @@
       {
         "pid": 34344,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 76069,
+        "ageSeconds": 76109,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -1058,7 +1058,7 @@
       {
         "pid": 49184,
         "cwd": "unknown",
-        "ageSeconds": 73424,
+        "ageSeconds": 73464,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -3581,7 +3581,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-18T17:12:45.124Z",
-      "ageMs": 1915509
+      "ageMs": 1954875
     },
     "watchdogLogTail": "[2026-09-18T16:19:48.438Z] Starting bridge.js...\n[2026-09-18T16:19:48.628Z] Bridge started with PID 46108 (restart #1, 1 in last hour)\n[2026-09-18T16:20:00.133Z] Starting bridge.js...\n[2026-09-18T16:20:00.321Z] Bridge started with PID 39280 (restart #2, 2 in last hour)\n[2026-09-18T16:20:03.902Z] DUPLICATE \\\\bridge.js detected: PID 46108 — killing\n[2026-09-18T16:20:07.146Z] RESTART NEEDED: Bridge process (PID 39280) not found\n[2026-09-18T16:20:10.521Z] Could not kill PID 39280: Command failed: taskkill /PID 39280 /F /T\n[2026-09-18T16:20:17.562Z] Starting bridge.js...\n[2026-09-18T16:20:17.723Z] Bridge started with PID 53436 (restart #3, 3 in last hour)\n[2026-09-18T17:12:45.124Z] DUPLICATE watchdog detected: PID 28308 — killing"
   },
@@ -3590,7 +3590,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-18T17:44:09.369Z",
+      "lastCheck": "2026-09-18T17:45:09.830Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3599,7 +3599,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-18T17:44:09.369Z",
+      "lastCheck": "2026-09-18T17:45:09.830Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3608,9 +3608,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-18T17:44:09.369Z",
+      "lastCheck": "2026-09-18T17:45:09.830Z",
       "downSince": "2026-09-18T17:11:09.582Z",
-      "downDuration": 1979787,
+      "downDuration": 2040248,
       "alert": true
     }
   ],
