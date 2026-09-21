@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-21T13:49:04.775Z",
+  "generatedAt": "2026-09-21T13:49:43.864Z",
   "totalTickets": 14,
   "tickets": [
     {
@@ -552,14 +552,14 @@
       "linkedTickets": [],
       "solution": {
         "status": "found",
-        "excerpt": "Agent encountered an error while processing your request. Please try again or rephrase. Exit code: 1",
+        "excerpt": "# RCA: SAME-3979\nOrder Refund - SA260730-45663184 (Block Auto Refund)\nGenerated: 2026-09-21\n\nHi [~arjenelle.a@samsung.com] ,\n\nOrder SA260730-45663184 was placed on Jul 31 with Checkout.com (checkoutDotComFlowPaymentMode) for 31.00 SAR. The payment AUTHORIZATION and CAPTURE both completed successfully on the same day. However, the order process (order-process-v25-69) failed early in the fulfilment flow shortly after consignment creation, with endMessage \"Order failed\". The consignment process (consignment-process-v11-36) also failed with endMessage \"Order not placed.\"\n\nThe refund step in the order process is the action \"refundCancelOrder\" (bean refundCancelOrderActionV3), which sits in the cancellation path: waitForCancelledOrder -> isChargeBackRefundProcessed -> isInstantRefundEnabledCheckBeforeFinancialUpdate -> refundCancelOrder -> sendRefundNotification -> failed. This path is only reachable while the order process is still active and progressing through its defined states.\n\nBecause the order process entered the \"failed\" end state immediately after the consignment failure, it never reached the cancellation/refund branch. The process treats \"failed\" as a terminal state. The order was subsequently set to CANCELLED on Aug 6 (via external/backoffice action), but this status change does not re-engage the business process. The sendOrderCancelledEmailProcess ran separately and successfully, but the payment refund, which is part of the order-process-v25-69 flow, was never triggered.\n\nThe DB was checked on Sep 21 and confirms only two PaymentTransactionEntry records exist: AUTHORIZATION-1 (ACCEPTED, 31.00 SAR) and CAPTURE-2 (ACCEPTED, 31.00 SAR). No REFUND entry was ever created.\n\nRegarding the duplicate refund concern: the order process is in FAILED state (terminal), the order status is CANCELLED, and no automated mechanism will trigger a refund on this order going forward. The manual refund from PG is the only refund that has occurred. Auto refund will not happen on this order.\n\nThe order process was manually moved to failed state on Sep 17 to stop the 48-day loop between WaitForWarehouse and WaitForSendToWarehouse. The consignment is in CANCELLED status since Sep 17.\n\nThanks,\nAryan.",
         "sections": {
           "issue": "",
-          "rca": "Agent encountered an error while processing your request. Please try again or rephrase. Exit code: 1",
+          "rca": "# RCA: SAME-3979\nOrder Refund - SA260730-45663184 (Block Auto Refund)\nGenerated: 2026-09-21\n\nHi [~arjenelle.a@samsung.com] ,\n\nOrder SA260730-45663184 was placed on Jul 31 with Checkout.com (checkoutDotComFlowPaymentMode) for 31.00 SAR. The payment AUTHORIZATION and CAPTURE both completed successfully on the same day. However, the order process (order-process-v25-69) failed early in the fulfilment flow shortly after consignment creation, with endMessage \"Order failed\". The consignment process (consignment-process-v11-36) also failed with endMessage \"Order not placed.\"\n\nThe refund step in the order process is the action \"refundCancelOrder\" (bean refundCancelOrderActionV3), which sits in the cancellation path: waitForCancelledOrder -> isChargeBackRefundProcessed -> isInstantRefundEnabledCheckBeforeFinancialUpdate -> refundCancelOrder -> sendRefundNotification -> failed. This path is only reachable while the order process is still active and progressing through its defined states.\n\nBecause the order process entered the \"failed\" end state immediately after the consignment failure, it never reached the cancellation/refund branch. The process treats \"failed\" as a terminal state. The order was subsequently set to CANCELLED on Aug 6 (via external/backoffice action), but this status change does not re-engage the business process. The sendOrderCancelledEmailProcess ran separately and successfully, but the payment refund, which is part of the order-process-v25-69 flow, was never triggered.\n\nThe DB was checked on Sep 21 and confirms only two PaymentTransactionEntry records exist: AUTHORIZATION-1 (ACCEPTED, 31.00 SAR) and CAPTURE-2 (ACCEPTED, 31.00 SAR). No REFUND entry was ever created.\n\nRegarding the duplicate refund concern: the order process is in FAILED state (terminal), the order status is CANCELLED, and no automated mechanism will trigger a refund on this order going forward. The manual refund from PG is the only refund that has occurred. Auto refund will not happen on this order.\n\nThe order process was manually moved to failed state on Sep 17 to stop the 48-day loop between WaitForWarehouse and WaitForSendToWarehouse. The consignment is in CANCELLED status since Sep 17.\n\nThanks,\nAryan.",
           "remediation": ""
         },
         "source": "RCA MD",
-        "foundAt": "2026-09-16T11:32:16.127Z"
+        "foundAt": "2026-09-21T13:49:42.331Z"
       }
     },
     {
@@ -955,7 +955,7 @@
       }
     ],
     "pid": 24384,
-    "uptime": 17164,
+    "uptime": 17203,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -967,7 +967,7 @@
       {
         "pid": 14380,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 10096,
+        "ageSeconds": 10135,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -977,7 +977,7 @@
       {
         "pid": 21428,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 7639,
+        "ageSeconds": 7677,
         "status": "running",
         "isChild": false,
         "taskSummary": "track if all orders are remediated GMT-21093",
@@ -987,7 +987,7 @@
       {
         "pid": 20928,
         "cwd": "c:\\windows",
-        "ageSeconds": 6062,
+        "ageSeconds": 6101,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -3540,7 +3540,7 @@
     "watchdog": {
       "alive": true,
       "lastWrite": "2026-09-21T13:42:44.458Z",
-      "ageMs": 384096
+      "ageMs": 423105
     },
     "watchdogLogTail": "[2026-09-21T09:02:58.835Z] Starting bridge.js...\n[2026-09-21T09:02:58.989Z] Bridge started with PID 24384 (restart #1, 1 in last hour)\n[2026-09-21T09:03:02.998Z] Starting jira-dashboard-server.js...\n[2026-09-21T09:03:03.161Z] Dashboard started with PID 15012 (restart #1, 1 in last hour)\n[2026-09-21T12:37:40.306Z] DUPLICATE watchdog detected: PID 6840 — killing\n[2026-09-21T12:57:40.421Z] DUPLICATE watchdog detected: PID 14376 — killing\n[2026-09-21T13:02:40.968Z] DUPLICATE watchdog detected: PID 20504 — killing\n[2026-09-21T13:07:42.466Z] DUPLICATE watchdog detected: PID 12812 — killing\n[2026-09-21T13:17:40.887Z] DUPLICATE watchdog detected: PID 28168 — killing\n[2026-09-21T13:42:44.455Z] DUPLICATE watchdog detected: PID 34524 — killing"
   },
@@ -3549,7 +3549,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-21T13:48:38.971Z",
+      "lastCheck": "2026-09-21T13:49:39.452Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3558,7 +3558,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-21T13:48:38.971Z",
+      "lastCheck": "2026-09-21T13:49:39.452Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3567,9 +3567,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-21T13:48:38.971Z",
+      "lastCheck": "2026-09-21T13:49:39.452Z",
       "downSince": "2026-09-21T09:03:05.495Z",
-      "downDuration": 17133476,
+      "downDuration": 17193957,
       "alert": true
     }
   ],
