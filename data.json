@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-21T17:09:39.217Z",
+  "generatedAt": "2026-09-21T17:10:17.612Z",
   "totalTickets": 12,
   "tickets": [
     {
@@ -874,7 +874,7 @@
       }
     ],
     "pid": 24384,
-    "uptime": 29200,
+    "uptime": 29237,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -886,7 +886,7 @@
       {
         "pid": 14380,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 22130,
+        "ageSeconds": 22169,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -896,17 +896,17 @@
       {
         "pid": 21428,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 19673,
+        "ageSeconds": 19711,
         "status": "running",
         "isChild": false,
-        "taskSummary": "queue this with 1hr logs, LV, assign back and update labels",
-        "lastExchange": "queue this with 1hr logs, LV, assign back and update labels",
+        "taskSummary": "who are these tickets assigned to?",
+        "lastExchange": "who are these tickets assigned to?",
         "sessionId": "bin"
       },
       {
         "pid": 20928,
         "cwd": "c:\\windows",
-        "ageSeconds": 18096,
+        "ageSeconds": 18134,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -3474,7 +3474,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-21T13:42:44.458Z",
-      "ageMs": 12417856
+      "ageMs": 12456418
     },
     "watchdogLogTail": "[2026-09-21T09:02:58.835Z] Starting bridge.js...\n[2026-09-21T09:02:58.989Z] Bridge started with PID 24384 (restart #1, 1 in last hour)\n[2026-09-21T09:03:02.998Z] Starting jira-dashboard-server.js...\n[2026-09-21T09:03:03.161Z] Dashboard started with PID 15012 (restart #1, 1 in last hour)\n[2026-09-21T12:37:40.306Z] DUPLICATE watchdog detected: PID 6840 — killing\n[2026-09-21T12:57:40.421Z] DUPLICATE watchdog detected: PID 14376 — killing\n[2026-09-21T13:02:40.968Z] DUPLICATE watchdog detected: PID 20504 — killing\n[2026-09-21T13:07:42.466Z] DUPLICATE watchdog detected: PID 12812 — killing\n[2026-09-21T13:17:40.887Z] DUPLICATE watchdog detected: PID 28168 — killing\n[2026-09-21T13:42:44.455Z] DUPLICATE watchdog detected: PID 34524 — killing"
   },
@@ -3483,7 +3483,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-21T17:09:05.260Z",
+      "lastCheck": "2026-09-21T17:10:05.628Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3492,7 +3492,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-21T17:09:05.260Z",
+      "lastCheck": "2026-09-21T17:10:05.628Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3501,9 +3501,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-21T17:09:05.260Z",
+      "lastCheck": "2026-09-21T17:10:05.628Z",
       "downSince": "2026-09-21T09:03:05.495Z",
-      "downDuration": 29159765,
+      "downDuration": 29220133,
       "alert": true
     }
   ],
@@ -3581,5 +3581,21 @@
       "pending": []
     }
   },
-  "actionQueue": []
+  "actionQueue": [
+    {
+      "id": 1,
+      "ticket": "SAME-3979",
+      "actions": {
+        "comment": "Hi [~arjenelle.a@samsung.com] ,\n\nKibana logs from Jul 31 have rolled off and no stacktrace was captured in BusinessProcessParameter, so the original failure point cannot be definitively identified. The consignment entered WAITING_FOR_WAREHOUSE_CANCELLING shortly after creation on Jul 31 and the order process failed with \"Order failed\", preventing it from ever reaching the refundCancelOrder action. The process looped between WaitForWarehouse and WaitForSendToWarehouse until it was manually moved to failed on Sep 17. No REFUND PaymentTransactionEntry exists. Auto refund will not trigger on this order. If a newer order with a similar issue can be provided, we can investigate the root cause in detail.\n\nThanks,\nAryan.",
+        "worklogHours": 1,
+        "transition": "Launch Verification",
+        "fallbackTransition": "SRE Review",
+        "assignee": null,
+        "linkType": null,
+        "linkTicket": null
+      },
+      "createdAt": "2026-09-21",
+      "notes": "SAME-3979 RCA comment + 1h worklog + LV + labels"
+    }
+  ]
 }
