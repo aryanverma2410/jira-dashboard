@@ -1,7 +1,51 @@
 {
-  "generatedAt": "2026-09-21T16:54:20.425Z",
+  "generatedAt": "2026-09-21T16:54:59.340Z",
   "totalTickets": 13,
   "tickets": [
+    {
+      "key": "NPSM-88918",
+      "summary": "[107936535][TR] [Online Purchasing]Medallia Alert ",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "NPS",
+      "projectKey": "NPSM",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-09-22T01:57:21.000+0900",
+      "created": "2026-09-21T16:00:32.000+0900",
+      "statusChangedAt": "2026-09-21T18:36:48.259+0900",
+      "assignedToMeAt": "",
+      "description": "Please check Reason for Score field for detail. Note The initial response time is tracked, so once you receive a ticket, please move it to “In Progress” or “Closed” within 48 hours. Issue URL: [Internal Link]",
+      "commentsCount": 2,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-09-22T01:57:19.861+0900",
+          "snippet": "Hi Raditya ,\n\nChecked the backend logs for order TR260916-85147821. The order was placed using tr-masterpassPaymentMode (credit/debit card via Masterpass) for a total of 1399.0 TRY.\n\nAt 23:03:23 UTC, the first submitOrder attempt failed. TokoSetAffiliateNameOnCartHookImpl.beforePlaceOrder() logged \""
+        },
+        {
+          "author": "Raditya Primandaru",
+          "date": "2026-09-21T18:36:04.309+0900",
+          "snippet": "Hi team,\n\nPlease review and investigate the reported customer issue regarding transaction TR260916-85147821 (SETK / TR)\n\nIssue Summary\nIssue: The customer experienced significant difficulty during the online checkout process on the eStore, requiring three separate attempts to successfully complete t"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Raditya ,\n\nChecked the backend logs for order TR260916-85147821. The order was placed using tr-masterpassPaymentMode (credit/debit card via Masterpass) for a total of 1399.0 TRY.\n\nAt 23:03:23 UTC, the first submitOrder attempt failed. TokoSetAffiliateNameOnCartHookImpl.beforePlaceOrder() logged \"",
+      "lastCommentDate": "2026-09-22T01:57:19.861+0900",
+      "url": "https://jira.secext.samsung.net/browse/NPSM-88918",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "[107936535][TR] [Online Purchasing]Medallia Alert\r\nGenerated: 2026-09-21T13:11:00.000Z\r\n\r\nIssue:\r\nCustomer reported difficulty completing an online purchase on the Samsung Turkey eStore, requiring three separate attempts before the order went through. The customer was using a mobile Android device with Chrome (version 151.0.7922.202) and attempting to pay with a credit or debit card. Order TR260916-85147821 was eventually placed successfully.\r\n\r\nRCA:\r\nBackend logs were checked in SAP Cloud Logging (Kibana MENA) for order TR260916-85147821 across the Sep 16-17 timeframe and also without time restriction. No ERROR-level logs were found for this order code across any index. The order is currently in SHIPPED status and has progressed through the full order lifecycle without any platform errors.\r\n\r\nThe logs contain 4,440 entries for this order code, all dated Sep 21, 2026, with only WARN-level entries from TokoFraudServicesClientImpl (\"Have no line items so ignore this order\") and TokoSMSServiceImpl (\"SMS page not found\"). These are standard post-fulfilment warnings and do not indicate any checkout or payment failure.\r\n\r\nThe payment mode used is tr-masterpassPaymentMode (MasterPass, the Turkish payment provider). The customer mentioned paying with credit or debit card, which maps to the MasterPass flow on the TR storefront. The order confirmation URL contains viewEnd=true, confirming the order was successfully completed.\r\n\r\nThe fact that the customer required three attempts to complete the purchase suggests intermittent friction during the checkout or payment submission flow, likely on the frontend or payment gateway side. The absence of any backend ERROR logs means the Hybris platform processed all three attempts without throwing exceptions. The first two attempts would have resulted in TEMPORARY or TEMPORARY_CANCEL orders that were cleaned up by the standard temporary order cleanup workflow, while the third attempt succeeded.\r\n\r\nThis is expected behaviour. The Hybris platform handled all checkout attempts correctly. No payment-related errors, session expiry errors, or cart invalidation errors were found in the backend logs for this order.\r\n\r\nPossible remediation:\r\nNo platform remediation is required. The order TR260916-85147821 was successfully placed and is in SHIPPED status. The checkout friction experienced by the customer appears to be a frontend or payment gateway interaction issue (possibly card validation, 3D Secure redirect, or MasterPass authentication), not a Hybris platform defect. If the issue recurs frequently for TR region customers, investigation should focus on the MasterPass payment gateway integration and 3D Secure authentication flow for potential timeouts or UX improvements.\r\n\r\nRegards\r\n\r\nAryan",
+        "sections": {
+          "issue": "Customer reported difficulty completing an online purchase on the Samsung Turkey eStore, requiring three separate attempts before the order went through. The customer was using a mobile Android device with Chrome (version 151.0.7922.202) and attempting to pay with a credit or debit card. Order TR260916-85147821 was eventually placed successfully.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-21T13:16:38.375Z"
+      }
+    },
     {
       "key": "SAME-3985",
       "summary": "MSA | SAU | Hybris is returning 'unauthorized' error for few orders",
@@ -201,45 +245,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-16T07:36:32.056Z"
-      }
-    },
-    {
-      "key": "NPSM-88918",
-      "summary": "[107936535][TR] [Online Purchasing]Medallia Alert ",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "NPS",
-      "projectKey": "NPSM",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-21T22:07:11.000+0900",
-      "created": "2026-09-21T16:00:32.000+0900",
-      "statusChangedAt": "2026-09-21T18:36:48.259+0900",
-      "assignedToMeAt": "",
-      "description": "Please check Reason for Score field for detail. Note The initial response time is tracked, so once you receive a ticket, please move it to “In Progress” or “Closed” within 48 hours. Issue URL: [Internal Link]",
-      "commentsCount": 1,
-      "recentComments": [
-        {
-          "author": "Raditya Primandaru",
-          "date": "2026-09-21T18:36:04.309+0900",
-          "snippet": "Hi team,\n\nPlease review and investigate the reported customer issue regarding transaction TR260916-85147821 (SETK / TR)\n\nIssue Summary\nIssue: The customer experienced significant difficulty during the online checkout process on the eStore, requiring three separate attempts to successfully complete t"
-        }
-      ],
-      "lastCommentBy": "Raditya Primandaru",
-      "lastCommentSnippet": "Hi team,\n\nPlease review and investigate the reported customer issue regarding transaction TR260916-85147821 (SETK / TR)\n\nIssue Summary\nIssue: The customer experienced significant difficulty during the online checkout process on the eStore, requiring three separate attempts to successfully complete t",
-      "lastCommentDate": "2026-09-21T18:36:04.309+0900",
-      "url": "https://jira.secext.samsung.net/browse/NPSM-88918",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "[107936535][TR] [Online Purchasing]Medallia Alert\r\nGenerated: 2026-09-21T13:11:00.000Z\r\n\r\nIssue:\r\nCustomer reported difficulty completing an online purchase on the Samsung Turkey eStore, requiring three separate attempts before the order went through. The customer was using a mobile Android device with Chrome (version 151.0.7922.202) and attempting to pay with a credit or debit card. Order TR260916-85147821 was eventually placed successfully.\r\n\r\nRCA:\r\nBackend logs were checked in SAP Cloud Logging (Kibana MENA) for order TR260916-85147821 across the Sep 16-17 timeframe and also without time restriction. No ERROR-level logs were found for this order code across any index. The order is currently in SHIPPED status and has progressed through the full order lifecycle without any platform errors.\r\n\r\nThe logs contain 4,440 entries for this order code, all dated Sep 21, 2026, with only WARN-level entries from TokoFraudServicesClientImpl (\"Have no line items so ignore this order\") and TokoSMSServiceImpl (\"SMS page not found\"). These are standard post-fulfilment warnings and do not indicate any checkout or payment failure.\r\n\r\nThe payment mode used is tr-masterpassPaymentMode (MasterPass, the Turkish payment provider). The customer mentioned paying with credit or debit card, which maps to the MasterPass flow on the TR storefront. The order confirmation URL contains viewEnd=true, confirming the order was successfully completed.\r\n\r\nThe fact that the customer required three attempts to complete the purchase suggests intermittent friction during the checkout or payment submission flow, likely on the frontend or payment gateway side. The absence of any backend ERROR logs means the Hybris platform processed all three attempts without throwing exceptions. The first two attempts would have resulted in TEMPORARY or TEMPORARY_CANCEL orders that were cleaned up by the standard temporary order cleanup workflow, while the third attempt succeeded.\r\n\r\nThis is expected behaviour. The Hybris platform handled all checkout attempts correctly. No payment-related errors, session expiry errors, or cart invalidation errors were found in the backend logs for this order.\r\n\r\nPossible remediation:\r\nNo platform remediation is required. The order TR260916-85147821 was successfully placed and is in SHIPPED status. The checkout friction experienced by the customer appears to be a frontend or payment gateway interaction issue (possibly card validation, 3D Secure redirect, or MasterPass authentication), not a Hybris platform defect. If the issue recurs frequently for TR region customers, investigation should focus on the MasterPass payment gateway integration and 3D Secure authentication flow for potential timeouts or UX improvements.\r\n\r\nRegards\r\n\r\nAryan",
-        "sections": {
-          "issue": "Customer reported difficulty completing an online purchase on the Samsung Turkey eStore, requiring three separate attempts before the order went through. The customer was using a mobile Android device with Chrome (version 151.0.7922.202) and attempting to pay with a credit or debit card. Order TR260916-85147821 was eventually placed successfully.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-21T13:16:38.375Z"
       }
     },
     {
@@ -913,7 +918,7 @@
       }
     ],
     "pid": 24384,
-    "uptime": 28279,
+    "uptime": 28319,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -925,7 +930,7 @@
       {
         "pid": 14380,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 21212,
+        "ageSeconds": 21251,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -935,7 +940,7 @@
       {
         "pid": 21428,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 18755,
+        "ageSeconds": 18793,
         "status": "running",
         "isChild": false,
         "taskSummary": "yes and log 1.5 hrs and pput on LV and assign back, update labels",
@@ -945,7 +950,7 @@
       {
         "pid": 20928,
         "cwd": "c:\\windows",
-        "ageSeconds": 17178,
+        "ageSeconds": 17216,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -3513,7 +3518,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-21T13:42:44.458Z",
-      "ageMs": 11500035
+      "ageMs": 11537956
     },
     "watchdogLogTail": "[2026-09-21T09:02:58.835Z] Starting bridge.js...\n[2026-09-21T09:02:58.989Z] Bridge started with PID 24384 (restart #1, 1 in last hour)\n[2026-09-21T09:03:02.998Z] Starting jira-dashboard-server.js...\n[2026-09-21T09:03:03.161Z] Dashboard started with PID 15012 (restart #1, 1 in last hour)\n[2026-09-21T12:37:40.306Z] DUPLICATE watchdog detected: PID 6840 — killing\n[2026-09-21T12:57:40.421Z] DUPLICATE watchdog detected: PID 14376 — killing\n[2026-09-21T13:02:40.968Z] DUPLICATE watchdog detected: PID 20504 — killing\n[2026-09-21T13:07:42.466Z] DUPLICATE watchdog detected: PID 12812 — killing\n[2026-09-21T13:17:40.887Z] DUPLICATE watchdog detected: PID 28168 — killing\n[2026-09-21T13:42:44.455Z] DUPLICATE watchdog detected: PID 34524 — killing"
   },
