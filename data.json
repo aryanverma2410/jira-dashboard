@@ -1,7 +1,99 @@
 {
-  "generatedAt": "2026-09-21T13:32:39.002Z",
+  "generatedAt": "2026-09-21T13:33:19.203Z",
   "totalTickets": 14,
   "tickets": [
+    {
+      "key": "TKME-2332",
+      "summary": "MSA | TUR | Hybris is returning 'unauthorized' error for few orders",
+      "status": "QA Server Review",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Turkey Maintenance & Enhancements",
+      "projectKey": "TKME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-09-21T22:35:39.000+0900",
+      "created": "2026-09-21T16:55:25.000+0900",
+      "statusChangedAt": "2026-09-21T22:35:39.247+0900",
+      "assignedToMeAt": "",
+      "description": "MSA has triggered order notification for the orders below, but hybris is throwing the below error:\n\n{\"error\":\"unauthorized\",\"error_description\":\"loadClientByClientId failed\"} \nOrders: \n|PO IDs|Order ID|\n|TR260918-87215099|eab612c9-f95c-4862-acfc-625d8d07a9aa|\n\nKindly help look into this issue.\n\nThan",
+      "commentsCount": 0,
+      "recentComments": [],
+      "lastCommentBy": "",
+      "lastCommentSnippet": "",
+      "lastCommentDate": "",
+      "url": "https://jira.secext.samsung.net/browse/TKME-2332",
+      "linkedTickets": [
+        {
+          "key": "PC-54387",
+          "summary": "Retrigger fraudCheckExternal for MSA unauthorized orders (4 orders across TR/ZAF/SAU)",
+          "status": "To do",
+          "statusCategory": "To Do",
+          "relation": "blocks",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "none",
+        "excerpt": "",
+        "source": "",
+        "foundAt": "",
+        "issueNumber": null
+      }
+    },
+    {
+      "key": "PC-54387",
+      "summary": "Retrigger fraudCheckExternal for MSA unauthorized orders (4 orders across TR/ZAF/SAU)",
+      "status": "To do",
+      "statusCategory": "To Do",
+      "priority": "Medium",
+      "project": "PROD Change",
+      "projectKey": "PC",
+      "issuetype": "Hybris Platform",
+      "updated": "2026-09-21T22:35:38.000+0900",
+      "created": "2026-09-21T21:27:08.000+0900",
+      "statusChangedAt": "",
+      "assignedToMeAt": "",
+      "description": "Orders stuck in WAITING_FOR_EXTERNAL_FRAUD_RESULT because MSA OAuth callback failed (loadClientByClientId). OAuth issue now resolved. Retriggering fraudCheckExternal to let orders flow naturally through fraud check.\n\nParent tickets: TKME-2332 (TUR), SAHME-3439 (ZAF), SAME-3985 (SAU)\nOrders: TR260918",
+      "commentsCount": 0,
+      "recentComments": [],
+      "lastCommentBy": "",
+      "lastCommentSnippet": "",
+      "lastCommentDate": "",
+      "url": "https://jira.secext.samsung.net/browse/PC-54387",
+      "linkedTickets": [
+        {
+          "key": "SAHME-3439",
+          "summary": "MSA | ZAF | Hybris is returning 'unauthorized' error for few orders",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "relation": "is blocked by",
+          "assignee": null
+        },
+        {
+          "key": "SAME-3985",
+          "summary": "MSA | SAU | Hybris is returning 'unauthorized' error for few orders",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "relation": "is blocked by",
+          "assignee": null
+        },
+        {
+          "key": "TKME-2332",
+          "summary": "MSA | TUR | Hybris is returning 'unauthorized' error for few orders",
+          "status": "QA Server Review",
+          "statusCategory": "In Progress",
+          "relation": "is blocked by",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "none",
+        "excerpt": "",
+        "source": "",
+        "foundAt": "",
+        "issueNumber": null
+      }
+    },
     {
       "key": "NPSM-88918",
       "summary": "[107936535][TR] [Online Purchasing]Medallia Alert ",
@@ -39,98 +131,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-21T13:16:38.375Z"
-      }
-    },
-    {
-      "key": "PC-54387",
-      "summary": "Retrigger fraudCheckExternal for MSA unauthorized orders (4 orders across TR/ZAF/SAU)",
-      "status": "To do",
-      "statusCategory": "To Do",
-      "priority": "Medium",
-      "project": "PROD Change",
-      "projectKey": "PC",
-      "issuetype": "Hybris Platform",
-      "updated": "2026-09-21T21:36:37.000+0900",
-      "created": "2026-09-21T21:27:08.000+0900",
-      "statusChangedAt": "",
-      "assignedToMeAt": "",
-      "description": "Orders stuck in WAITING_FOR_EXTERNAL_FRAUD_RESULT because MSA OAuth callback failed (loadClientByClientId). OAuth issue now resolved. Retriggering fraudCheckExternal to let orders flow naturally through fraud check.\n\nParent tickets: TKME-2332 (TUR), SAHME-3439 (ZAF), SAME-3985 (SAU)\nOrders: TR260918",
-      "commentsCount": 0,
-      "recentComments": [],
-      "lastCommentBy": "",
-      "lastCommentSnippet": "",
-      "lastCommentDate": "",
-      "url": "https://jira.secext.samsung.net/browse/PC-54387",
-      "linkedTickets": [
-        {
-          "key": "SAHME-3439",
-          "summary": "MSA | ZAF | Hybris is returning 'unauthorized' error for few orders",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
-          "relation": "is blocked by",
-          "assignee": null
-        },
-        {
-          "key": "SAME-3985",
-          "summary": "MSA | SAU | Hybris is returning 'unauthorized' error for few orders",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
-          "relation": "is blocked by",
-          "assignee": null
-        },
-        {
-          "key": "TKME-2332",
-          "summary": "MSA | TUR | Hybris is returning 'unauthorized' error for few orders",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
-          "relation": "is blocked by",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "none",
-        "excerpt": "",
-        "source": "",
-        "foundAt": "",
-        "issueNumber": null
-      }
-    },
-    {
-      "key": "TKME-2332",
-      "summary": "MSA | TUR | Hybris is returning 'unauthorized' error for few orders",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Turkey Maintenance & Enhancements",
-      "projectKey": "TKME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-21T21:28:57.000+0900",
-      "created": "2026-09-21T16:55:25.000+0900",
-      "statusChangedAt": "2026-09-21T17:02:02.521+0900",
-      "assignedToMeAt": "",
-      "description": "MSA has triggered order notification for the orders below, but hybris is throwing the below error:\n\n{\"error\":\"unauthorized\",\"error_description\":\"loadClientByClientId failed\"} \nOrders: \n|PO IDs|Order ID|\n|TR260918-87215099|eab612c9-f95c-4862-acfc-625d8d07a9aa|\n\nKindly help look into this issue.\n\nThan",
-      "commentsCount": 0,
-      "recentComments": [],
-      "lastCommentBy": "",
-      "lastCommentSnippet": "",
-      "lastCommentDate": "",
-      "url": "https://jira.secext.samsung.net/browse/TKME-2332",
-      "linkedTickets": [
-        {
-          "key": "PC-54387",
-          "summary": "Retrigger fraudCheckExternal for MSA unauthorized orders (4 orders across TR/ZAF/SAU)",
-          "status": "To do",
-          "statusCategory": "To Do",
-          "relation": "blocks",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "none",
-        "excerpt": "",
-        "source": "",
-        "foundAt": "",
-        "issueNumber": null
       }
     },
     {
@@ -949,7 +949,7 @@
       }
     ],
     "pid": 24384,
-    "uptime": 16176,
+    "uptime": 16220,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -961,7 +961,7 @@
       {
         "pid": 14380,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 9111,
+        "ageSeconds": 9151,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -971,7 +971,7 @@
       {
         "pid": 21428,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 6653,
+        "ageSeconds": 6693,
         "status": "running",
         "isChild": false,
         "taskSummary": "comment format not correct",
@@ -981,7 +981,7 @@
       {
         "pid": 20928,
         "cwd": "c:\\windows",
-        "ageSeconds": 5077,
+        "ageSeconds": 5116,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -3534,7 +3534,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-21T13:17:40.888Z",
-      "ageMs": 902860
+      "ageMs": 942387
     },
     "watchdogLogTail": "[2026-09-21T09:02:57.987Z] Could not kill dashboard PID 16232: Command failed: taskkill /PID 16232 /F /T\n[2026-09-21T09:02:58.835Z] Starting bridge.js...\n[2026-09-21T09:02:58.989Z] Bridge started with PID 24384 (restart #1, 1 in last hour)\n[2026-09-21T09:03:02.998Z] Starting jira-dashboard-server.js...\n[2026-09-21T09:03:03.161Z] Dashboard started with PID 15012 (restart #1, 1 in last hour)\n[2026-09-21T12:37:40.306Z] DUPLICATE watchdog detected: PID 6840 — killing\n[2026-09-21T12:57:40.421Z] DUPLICATE watchdog detected: PID 14376 — killing\n[2026-09-21T13:02:40.968Z] DUPLICATE watchdog detected: PID 20504 — killing\n[2026-09-21T13:07:42.466Z] DUPLICATE watchdog detected: PID 12812 — killing\n[2026-09-21T13:17:40.887Z] DUPLICATE watchdog detected: PID 28168 — killing"
   },
