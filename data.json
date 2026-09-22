@@ -1,7 +1,51 @@
 {
-  "generatedAt": "2026-09-22T17:38:44.531Z",
+  "generatedAt": "2026-09-22T17:39:22.042Z",
   "totalTickets": 11,
   "tickets": [
+    {
+      "key": "NPSM-88990",
+      "summary": "[108025098][AE] [Online Purchasing]Medallia Alert ",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "NPS",
+      "projectKey": "NPSM",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-09-23T02:41:50.000+0900",
+      "created": "2026-09-22T17:20:15.000+0900",
+      "statusChangedAt": "2026-09-22T20:46:47.071+0900",
+      "assignedToMeAt": "",
+      "description": "Please check Reason for Score field for detail. Note The initial response time is tracked, so once you receive a ticket, please move it to “In Progress” or “Closed” within 48 hours. Issue URL: [Internal Link]",
+      "commentsCount": 2,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-09-23T02:41:50.828+0900",
+          "snippet": "Hi Ismail ,\n\nChecked the backend logs for the two orders associated with this customer.\n\nOrder AE260922-91202971_1 was placed with Tabby at 11:13:44 UTC and order AE260922-91202971_2 was placed with Tamara at 11:14:04 UTC. Both payment modes were evaluated as eligible for the cart at 11:10:52 UTC, c"
+        },
+        {
+          "author": "Ismail Fauzan",
+          "date": "2026-09-22T20:47:33.107+0900",
+          "snippet": "Hi Team,\n\nThe customer reported that installment payment options were not available, including Tamara.\n\nQA checked the available information and found:\n * The customer has 2 orders with Temporary Expired status, using Tamara Installment and Tabby Installment.\n!screenshot-1.png|thumbnail!\n\n * DXA sho"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Ismail ,\n\nChecked the backend logs for the two orders associated with this customer.\n\nOrder AE260922-91202971_1 was placed with Tabby at 11:13:44 UTC and order AE260922-91202971_2 was placed with Tamara at 11:14:04 UTC. Both payment modes were evaluated as eligible for the cart at 11:10:52 UTC, c",
+      "lastCommentDate": "2026-09-23T02:41:50.828+0900",
+      "url": "https://jira.secext.samsung.net/browse/NPSM-88990",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "[108025098][AE] [Online Purchasing]Medallia Alert\r\nGenerated: 2026-09-22T11:55:00.000Z\r\n\r\n## Issue\r\n\r\nCustomer reported that installment payment options were not available, including Tamara. QA investigation found 2 orders with TEMPORARY_EXPIRED status using Tamara Installment and Tabby Installment payment modes. DXA showed an error notification during the payment attempt. The customer complaint was \"May installment options not available even tamara\" on the AE B2C storefront checkout payment step.\r\n\r\n## RCA\r\n\r\nHi Team,\r\n\r\nWe checked the backend Kibana logs for the customer's order journey on Sep 22 2026. Zero ERROR-level logs were found for any of the customer's orders.\r\n\r\nThe customer placed orders through the telesales EPP channel (site: telesales_epp) with an ASM agent assisting. The customer created multiple temporary orders trying different payment modes:\r\n\r\nAE260922-91156513:\r\nTwo temporary orders were created. Order _1 was created at 11:21 UTC with ae-tamaraPayment mode for 5699 AED. Order _2 was created at 11:22 UTC with ae-TabbyPaymentMode for 5599 AED. The Tabby payment gateway responded successfully for order _2, returning a valid checkout URL with installment plan options (3 installments of 1399.75 AED). The customer did not complete the payment redirect step. The temporary orders expired and were cleaned up by the ae-tokoCleanUpTemporaryOrdersJobPerformable cron job at approximately 11:56 UTC, transitioning them to TEMPORARY_EXPIRED status.\r\n\r\nAE260922-91202971:\r\nTwo temporary orders were created. Order _1 was created at 11:13 UTC with ae-TabbyPaymentMode for 7299 AED. The Tabby payment gateway rejected the installment request with status \"rejected\" and rejection_reason_code \"not_available\", meaning Tabby determined the customer or order was not eligible for installments at that time. This is a gateway-side decision, not a platform error. The customer then retried at 11:14 UTC creating order _2 with ae-tamaraPayment for 7399 AED (slightly different total indicating the cart was modified). The full place order hook chain executed normally with no errors. Again the customer did not complete the payment redirect step.\r\n\r\nThe logs show that during payment mode eligibility checks, several payment modes were marked as not eligible with the reason \"AS agent is logged in but payment modes is not enabled for ASM.\" This is expected behaviour for telesales EPP sessions where certain payment modes are restricted when an ASM agent is handling the session.\r\n\r\nNo payment-related errors, no exceptions, and no system failures were found in the logs for any of these orders. The TEMPORARY_EXPIRED status is the designed outcome when customers create temporary orders but do not complete the payment confirmation step within the configured timeout period. The cleanup cron job ae-tokoCleanUpTemporaryOrdersJobPerformable handles this transition automatically.\r\n\r\nThe DXA error notification the customer received was likely the Tabby rejection response for order AE260922-91202971_1, where the gateway returned \"not_available\". This is a third-party payment gateway decision based on their own risk and eligibility assessment, not a Hybris platform issue.\r\n\r\nThis is expected behaviour. No platform bug or code defect was involved.\r\n\r\n## Possible Remediation\r\n\r\nNo remediation is required. The customer's orders followed the normal checkout flow and expired as designed when payment was not completed. If the customer wants to purchase, they should initiate a new order on the AE storefront. The Tabby rejection for one order was a gateway-side eligibility decision and the customer successfully got a Tamara option on a subsequent attempt.\r\n\r\nRegards\r\n\r\nAryan",
+        "sections": {
+          "issue": "Customer reported that installment payment options were not available, including Tamara. QA investigation found 2 orders with TEMPORARY_EXPIRED status using Tamara Installment and Tabby Installment payment modes. DXA showed an error notification during the payment attempt. The customer complaint was \"May installment options not available even tamara\" on the AE B2C storefront checkout payment step.",
+          "rca": "Hi Team,\r\n\r\nWe checked the backend Kibana logs for the customer's order journey on Sep 22 2026. Zero ERROR-level logs were found for any of the customer's orders.\r\n\r\nThe customer placed orders through the telesales EPP channel (site: telesales_epp) with an ASM agent assisting. The customer created multiple temporary orders trying different payment modes:\r\n\r\nAE260922-91156513:\r\nTwo temporary orders were created. Order _1 was created at 11:21 UTC with ae-tamaraPayment mode for 5699 AED. Order _2 was created at 11:22 UTC with ae-TabbyPaymentMode for 5599 AED. The Tabby payment gateway responded successfully for order _2, returning a valid checkout URL with installment plan options (3 installments of 1399.75 AED). The customer did not complete the payment redirect step. The temporary orders expired and were cleaned up by the ae-tokoCleanUpTemporaryOrdersJobPerformable cron job at approximately 11:56 UTC, transitioning them to TEMPORARY_EXPIRED status.\r\n\r\nAE260922-91202971:\r\nTwo temporary orders were created. Order _1 was created at 11:13 UTC with ae-TabbyPaymentMode for 7299 AED. The Tabby payment gateway rejected the installment request with status \"rejected\" and rejection_reason_code \"not_available\", meaning Tabby determined the customer or order was not eligible for installments at that time. This is a gateway-side decision, not a platform error. The customer then retried at 11:14 UTC creating order _2 with ae-tamaraPayment for 7399 AED (slightly different total indicating the cart was modified). The full place order hook chain executed normally with no errors. Again the customer did not complete the payment redirect step.\r\n\r\nThe logs show that during payment mode eligibility checks, several payment modes were marked as not eligible with the reason \"AS agent is logged in but payment modes is not enabled for ASM.\" This is expected behaviour for telesales EPP sessions where certain payment modes are restricted when an ASM agent is handling the session.\r\n\r\nNo payment-related errors, no exceptions, and no system failures were found in the logs for any of these orders. The TEMPORARY_EXPIRED status is the designed outcome when customers create temporary orders but do not complete the payment confirmation step within the configured timeout period. The cleanup cron job ae-tokoCleanUpTemporaryOrdersJobPerformable handles this transition automatically.\r\n\r\nThe DXA error notification the customer received was likely the Tabby rejection response for order AE260922-91202971_1, where the gateway returned \"not_available\". This is a third-party payment gateway decision based on their own risk and eligibility assessment, not a Hybris platform issue.\r\n\r\nThis is expected behaviour. No platform bug or code defect was involved.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-22T12:01:01.627Z"
+      }
+    },
     {
       "key": "TKME-2326",
       "summary": "Stuck order on Hybris",
@@ -44,45 +88,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-16T11:01:15.923Z"
-      }
-    },
-    {
-      "key": "NPSM-88990",
-      "summary": "[108025098][AE] [Online Purchasing]Medallia Alert ",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "NPS",
-      "projectKey": "NPSM",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-22T20:52:11.000+0900",
-      "created": "2026-09-22T17:20:15.000+0900",
-      "statusChangedAt": "2026-09-22T20:46:47.071+0900",
-      "assignedToMeAt": "",
-      "description": "Please check Reason for Score field for detail. Note The initial response time is tracked, so once you receive a ticket, please move it to “In Progress” or “Closed” within 48 hours. Issue URL: [Internal Link]",
-      "commentsCount": 1,
-      "recentComments": [
-        {
-          "author": "Ismail Fauzan",
-          "date": "2026-09-22T20:47:33.107+0900",
-          "snippet": "Hi Team,\n\nThe customer reported that installment payment options were not available, including Tamara.\n\nQA checked the available information and found:\n * The customer has 2 orders with Temporary Expired status, using Tamara Installment and Tabby Installment.\n!screenshot-1.png|thumbnail!\n\n * DXA sho"
-        }
-      ],
-      "lastCommentBy": "Ismail Fauzan",
-      "lastCommentSnippet": "Hi Team,\n\nThe customer reported that installment payment options were not available, including Tamara.\n\nQA checked the available information and found:\n * The customer has 2 orders with Temporary Expired status, using Tamara Installment and Tabby Installment.\n!screenshot-1.png|thumbnail!\n\n * DXA sho",
-      "lastCommentDate": "2026-09-22T20:47:33.107+0900",
-      "url": "https://jira.secext.samsung.net/browse/NPSM-88990",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "[108025098][AE] [Online Purchasing]Medallia Alert\r\nGenerated: 2026-09-22T11:55:00.000Z\r\n\r\n## Issue\r\n\r\nCustomer reported that installment payment options were not available, including Tamara. QA investigation found 2 orders with TEMPORARY_EXPIRED status using Tamara Installment and Tabby Installment payment modes. DXA showed an error notification during the payment attempt. The customer complaint was \"May installment options not available even tamara\" on the AE B2C storefront checkout payment step.\r\n\r\n## RCA\r\n\r\nHi Team,\r\n\r\nWe checked the backend Kibana logs for the customer's order journey on Sep 22 2026. Zero ERROR-level logs were found for any of the customer's orders.\r\n\r\nThe customer placed orders through the telesales EPP channel (site: telesales_epp) with an ASM agent assisting. The customer created multiple temporary orders trying different payment modes:\r\n\r\nAE260922-91156513:\r\nTwo temporary orders were created. Order _1 was created at 11:21 UTC with ae-tamaraPayment mode for 5699 AED. Order _2 was created at 11:22 UTC with ae-TabbyPaymentMode for 5599 AED. The Tabby payment gateway responded successfully for order _2, returning a valid checkout URL with installment plan options (3 installments of 1399.75 AED). The customer did not complete the payment redirect step. The temporary orders expired and were cleaned up by the ae-tokoCleanUpTemporaryOrdersJobPerformable cron job at approximately 11:56 UTC, transitioning them to TEMPORARY_EXPIRED status.\r\n\r\nAE260922-91202971:\r\nTwo temporary orders were created. Order _1 was created at 11:13 UTC with ae-TabbyPaymentMode for 7299 AED. The Tabby payment gateway rejected the installment request with status \"rejected\" and rejection_reason_code \"not_available\", meaning Tabby determined the customer or order was not eligible for installments at that time. This is a gateway-side decision, not a platform error. The customer then retried at 11:14 UTC creating order _2 with ae-tamaraPayment for 7399 AED (slightly different total indicating the cart was modified). The full place order hook chain executed normally with no errors. Again the customer did not complete the payment redirect step.\r\n\r\nThe logs show that during payment mode eligibility checks, several payment modes were marked as not eligible with the reason \"AS agent is logged in but payment modes is not enabled for ASM.\" This is expected behaviour for telesales EPP sessions where certain payment modes are restricted when an ASM agent is handling the session.\r\n\r\nNo payment-related errors, no exceptions, and no system failures were found in the logs for any of these orders. The TEMPORARY_EXPIRED status is the designed outcome when customers create temporary orders but do not complete the payment confirmation step within the configured timeout period. The cleanup cron job ae-tokoCleanUpTemporaryOrdersJobPerformable handles this transition automatically.\r\n\r\nThe DXA error notification the customer received was likely the Tabby rejection response for order AE260922-91202971_1, where the gateway returned \"not_available\". This is a third-party payment gateway decision based on their own risk and eligibility assessment, not a Hybris platform issue.\r\n\r\nThis is expected behaviour. No platform bug or code defect was involved.\r\n\r\n## Possible Remediation\r\n\r\nNo remediation is required. The customer's orders followed the normal checkout flow and expired as designed when payment was not completed. If the customer wants to purchase, they should initiate a new order on the AE storefront. The Tabby rejection for one order was a gateway-side eligibility decision and the customer successfully got a Tamara option on a subsequent attempt.\r\n\r\nRegards\r\n\r\nAryan",
-        "sections": {
-          "issue": "Customer reported that installment payment options were not available, including Tamara. QA investigation found 2 orders with TEMPORARY_EXPIRED status using Tamara Installment and Tabby Installment payment modes. DXA showed an error notification during the payment attempt. The customer complaint was \"May installment options not available even tamara\" on the AE B2C storefront checkout payment step.",
-          "rca": "Hi Team,\r\n\r\nWe checked the backend Kibana logs for the customer's order journey on Sep 22 2026. Zero ERROR-level logs were found for any of the customer's orders.\r\n\r\nThe customer placed orders through the telesales EPP channel (site: telesales_epp) with an ASM agent assisting. The customer created multiple temporary orders trying different payment modes:\r\n\r\nAE260922-91156513:\r\nTwo temporary orders were created. Order _1 was created at 11:21 UTC with ae-tamaraPayment mode for 5699 AED. Order _2 was created at 11:22 UTC with ae-TabbyPaymentMode for 5599 AED. The Tabby payment gateway responded successfully for order _2, returning a valid checkout URL with installment plan options (3 installments of 1399.75 AED). The customer did not complete the payment redirect step. The temporary orders expired and were cleaned up by the ae-tokoCleanUpTemporaryOrdersJobPerformable cron job at approximately 11:56 UTC, transitioning them to TEMPORARY_EXPIRED status.\r\n\r\nAE260922-91202971:\r\nTwo temporary orders were created. Order _1 was created at 11:13 UTC with ae-TabbyPaymentMode for 7299 AED. The Tabby payment gateway rejected the installment request with status \"rejected\" and rejection_reason_code \"not_available\", meaning Tabby determined the customer or order was not eligible for installments at that time. This is a gateway-side decision, not a platform error. The customer then retried at 11:14 UTC creating order _2 with ae-tamaraPayment for 7399 AED (slightly different total indicating the cart was modified). The full place order hook chain executed normally with no errors. Again the customer did not complete the payment redirect step.\r\n\r\nThe logs show that during payment mode eligibility checks, several payment modes were marked as not eligible with the reason \"AS agent is logged in but payment modes is not enabled for ASM.\" This is expected behaviour for telesales EPP sessions where certain payment modes are restricted when an ASM agent is handling the session.\r\n\r\nNo payment-related errors, no exceptions, and no system failures were found in the logs for any of these orders. The TEMPORARY_EXPIRED status is the designed outcome when customers create temporary orders but do not complete the payment confirmation step within the configured timeout period. The cleanup cron job ae-tokoCleanUpTemporaryOrdersJobPerformable handles this transition automatically.\r\n\r\nThe DXA error notification the customer received was likely the Tabby rejection response for order AE260922-91202971_1, where the gateway returned \"not_available\". This is a third-party payment gateway decision based on their own risk and eligibility assessment, not a Hybris platform issue.\r\n\r\nThis is expected behaviour. No platform bug or code defect was involved.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-22T12:01:01.627Z"
       }
     },
     {
@@ -739,7 +744,7 @@
       }
     ],
     "pid": 32028,
-    "uptime": 11199,
+    "uptime": 11234,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -748,7 +753,7 @@
         "issueTitle": "Fire Action Queue item #2: NPSM-88990",
         "snippet": "Execute /logQueue for a single item now.\nFile: C:\\Users\\aryan.v1\\.gemini\\tmp\\bin\\memory\\jira-action-queue.json\nProcess O",
         "pid": 29624,
-        "elapsed": 69
+        "elapsed": 103
       }
     ],
     "startTime": "2026-09-22T14:32:04.104Z",
@@ -759,7 +764,7 @@
       {
         "pid": 14380,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 110276,
+        "ageSeconds": 110313,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -769,7 +774,7 @@
       {
         "pid": 16648,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 85676,
+        "ageSeconds": 85713,
         "status": "running",
         "isChild": false,
         "taskSummary": "rerun with same ITGC label",
@@ -779,7 +784,7 @@
       {
         "pid": 17888,
         "cwd": "c:\\windows",
-        "ageSeconds": 32101,
+        "ageSeconds": 32139,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -789,7 +794,7 @@
       {
         "pid": 28428,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 32000,
+        "ageSeconds": 32038,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -3441,11 +3446,11 @@
         ]
       }
     },
-    "bridgeLogTail": "    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-09-22T17:38:38.465Z] STDOUT data for #380: 206 bytes\n[2026-09-22T17:38:38.467Z] LIVE write for #380: 156 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_380.txt\n[2026-09-22T17:38:38.468Z] STDOUT data for #380: 193 bytes\n[2026-09-22T17:38:38.469Z] LIVE write for #380: 156 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_380.txt\n[2026-09-22T17:38:38.481Z] STDOUT data for #380: 1282 bytes\n[2026-09-22T17:38:38.483Z] LIVE write for #380: 156 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_380.txt\n[2026-09-22T17:38:38.483Z] STDOUT data for #380: 1292 bytes\n[2026-09-22T17:38:38.485Z] LIVE write for #380: 156 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_380.txt\n[2026-09-22T17:38:41.491Z] STDOUT data for #380: 363 bytes\n[2026-09-22T17:38:41.494Z] LIVE write for #380: 156 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_380.txt",
+    "bridgeLogTail": "    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-09-22T17:39:25.141Z] aipro stderr for #380: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-22T14:32:03.759Z",
-      "ageMs": 11203240
+      "ageMs": 11241953
     },
     "watchdogLogTail": "[2026-09-22T14:31:28.536Z] Bridge started with PID 16320 (restart #62, 36 in last hour)\n[2026-09-22T14:31:30.926Z] RESTART NEEDED: Bridge process (PID 16320) not found\n[2026-09-22T14:31:33.935Z] Could not kill PID 16320: Command failed: taskkill /PID 16320 /F /T\n[2026-09-22T14:31:46.179Z] Starting bridge.js...\n[2026-09-22T14:31:46.342Z] Bridge started with PID 29772 (restart #63, 37 in last hour)\n[2026-09-22T14:31:49.886Z] DUPLICATE \\\\bridge.js detected: PID 35392 — killing\n[2026-09-22T14:31:53.112Z] RESTART NEEDED: Bridge process (PID 29772) not found\n[2026-09-22T14:31:56.095Z] Could not kill PID 29772: Command failed: taskkill /PID 29772 /F /T\n[2026-09-22T14:32:03.591Z] Starting bridge.js...\n[2026-09-22T14:32:03.755Z] Bridge started with PID 32028 (restart #64, 38 in last hour)",
     "jobOutputs": {}
