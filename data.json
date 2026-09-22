@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-22T12:00:29.071Z",
+  "generatedAt": "2026-09-22T12:01:07.991Z",
   "totalTickets": 18,
   "tickets": [
     {
@@ -302,9 +302,15 @@
       "url": "https://jira.secext.samsung.net/browse/NPSM-88990",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-09-22T11:50:02.916Z"
+        "status": "found",
+        "excerpt": "[108025098][AE] [Online Purchasing]Medallia Alert\r\nGenerated: 2026-09-22T11:55:00.000Z\r\n\r\n## Issue\r\n\r\nCustomer reported that installment payment options were not available, including Tamara. QA investigation found 2 orders with TEMPORARY_EXPIRED status using Tamara Installment and Tabby Installment payment modes. DXA showed an error notification during the payment attempt. The customer complaint was \"May installment options not available even tamara\" on the AE B2C storefront checkout payment step.\r\n\r\n## RCA\r\n\r\nHi Team,\r\n\r\nWe checked the backend Kibana logs for the customer's order journey on Sep 22 2026. Zero ERROR-level logs were found for any of the customer's orders.\r\n\r\nThe customer placed orders through the telesales EPP channel (site: telesales_epp) with an ASM agent assisting. The customer created multiple temporary orders trying different payment modes:\r\n\r\nAE260922-91156513:\r\nTwo temporary orders were created. Order _1 was created at 11:21 UTC with ae-tamaraPayment mode for 5699 AED. Order _2 was created at 11:22 UTC with ae-TabbyPaymentMode for 5599 AED. The Tabby payment gateway responded successfully for order _2, returning a valid checkout URL with installment plan options (3 installments of 1399.75 AED). The customer did not complete the payment redirect step. The temporary orders expired and were cleaned up by the ae-tokoCleanUpTemporaryOrdersJobPerformable cron job at approximately 11:56 UTC, transitioning them to TEMPORARY_EXPIRED status.\r\n\r\nAE260922-91202971:\r\nTwo temporary orders were created. Order _1 was created at 11:13 UTC with ae-TabbyPaymentMode for 7299 AED. The Tabby payment gateway rejected the installment request with status \"rejected\" and rejection_reason_code \"not_available\", meaning Tabby determined the customer or order was not eligible for installments at that time. This is a gateway-side decision, not a platform error. The customer then retried at 11:14 UTC creating order _2 with ae-tamaraPayment for 7399 AED (slightly different total indicating the cart was modified). The full place order hook chain executed normally with no errors. Again the customer did not complete the payment redirect step.\r\n\r\nThe logs show that during payment mode eligibility checks, several payment modes were marked as not eligible with the reason \"AS agent is logged in but payment modes is not enabled for ASM.\" This is expected behaviour for telesales EPP sessions where certain payment modes are restricted when an ASM agent is handling the session.\r\n\r\nNo payment-related errors, no exceptions, and no system failures were found in the logs for any of these orders. The TEMPORARY_EXPIRED status is the designed outcome when customers create temporary orders but do not complete the payment confirmation step within the configured timeout period. The cleanup cron job ae-tokoCleanUpTemporaryOrdersJobPerformable handles this transition automatically.\r\n\r\nThe DXA error notification the customer received was likely the Tabby rejection response for order AE260922-91202971_1, where the gateway returned \"not_available\". This is a third-party payment gateway decision based on their own risk and eligibility assessment, not a Hybris platform issue.\r\n\r\nThis is expected behaviour. No platform bug or code defect was involved.\r\n\r\n## Possible Remediation\r\n\r\nNo remediation is required. The customer's orders followed the normal checkout flow and expired as designed when payment was not completed. If the customer wants to purchase, they should initiate a new order on the AE storefront. The Tabby rejection for one order was a gateway-side eligibility decision and the customer successfully got a Tamara option on a subsequent attempt.\r\n\r\nRegards\r\n\r\nAryan",
+        "sections": {
+          "issue": "Customer reported that installment payment options were not available, including Tamara. QA investigation found 2 orders with TEMPORARY_EXPIRED status using Tamara Installment and Tabby Installment payment modes. DXA showed an error notification during the payment attempt. The customer complaint was \"May installment options not available even tamara\" on the AE B2C storefront checkout payment step.",
+          "rca": "Hi Team,\r\n\r\nWe checked the backend Kibana logs for the customer's order journey on Sep 22 2026. Zero ERROR-level logs were found for any of the customer's orders.\r\n\r\nThe customer placed orders through the telesales EPP channel (site: telesales_epp) with an ASM agent assisting. The customer created multiple temporary orders trying different payment modes:\r\n\r\nAE260922-91156513:\r\nTwo temporary orders were created. Order _1 was created at 11:21 UTC with ae-tamaraPayment mode for 5699 AED. Order _2 was created at 11:22 UTC with ae-TabbyPaymentMode for 5599 AED. The Tabby payment gateway responded successfully for order _2, returning a valid checkout URL with installment plan options (3 installments of 1399.75 AED). The customer did not complete the payment redirect step. The temporary orders expired and were cleaned up by the ae-tokoCleanUpTemporaryOrdersJobPerformable cron job at approximately 11:56 UTC, transitioning them to TEMPORARY_EXPIRED status.\r\n\r\nAE260922-91202971:\r\nTwo temporary orders were created. Order _1 was created at 11:13 UTC with ae-TabbyPaymentMode for 7299 AED. The Tabby payment gateway rejected the installment request with status \"rejected\" and rejection_reason_code \"not_available\", meaning Tabby determined the customer or order was not eligible for installments at that time. This is a gateway-side decision, not a platform error. The customer then retried at 11:14 UTC creating order _2 with ae-tamaraPayment for 7399 AED (slightly different total indicating the cart was modified). The full place order hook chain executed normally with no errors. Again the customer did not complete the payment redirect step.\r\n\r\nThe logs show that during payment mode eligibility checks, several payment modes were marked as not eligible with the reason \"AS agent is logged in but payment modes is not enabled for ASM.\" This is expected behaviour for telesales EPP sessions where certain payment modes are restricted when an ASM agent is handling the session.\r\n\r\nNo payment-related errors, no exceptions, and no system failures were found in the logs for any of these orders. The TEMPORARY_EXPIRED status is the designed outcome when customers create temporary orders but do not complete the payment confirmation step within the configured timeout period. The cleanup cron job ae-tokoCleanUpTemporaryOrdersJobPerformable handles this transition automatically.\r\n\r\nThe DXA error notification the customer received was likely the Tabby rejection response for order AE260922-91202971_1, where the gateway returned \"not_available\". This is a third-party payment gateway decision based on their own risk and eligibility assessment, not a Hybris platform issue.\r\n\r\nThis is expected behaviour. No platform bug or code defect was involved.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-22T12:01:01.627Z"
       }
     },
     {
@@ -1069,7 +1075,7 @@
       }
     ],
     "pid": 38412,
-    "uptime": 50404,
+    "uptime": 50444,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -1078,7 +1084,7 @@
         "issueTitle": "Investigate ticket NPSM-88990",
         "snippet": "Auto-triggered investigation for new ticket NPSM-88990.\n\nTicket: NPSM-88990\nSummary: [108025098][AE] [Online Purchasing]",
         "pid": 25964,
-        "elapsed": 614
+        "elapsed": 654
       }
     ],
     "startTime": "2026-09-21T22:00:24.514Z",
@@ -1089,7 +1095,7 @@
       {
         "pid": 14380,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 89980,
+        "ageSeconds": 90019,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -1099,7 +1105,7 @@
       {
         "pid": 16648,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 65380,
+        "ageSeconds": 65419,
         "status": "running",
         "isChild": false,
         "taskSummary": "format it better",
@@ -1109,7 +1115,7 @@
       {
         "pid": 17888,
         "cwd": "c:\\windows",
-        "ageSeconds": 11806,
+        "ageSeconds": 11845,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1119,7 +1125,7 @@
       {
         "pid": 28428,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 11705,
+        "ageSeconds": 11744,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -3741,11 +3747,11 @@
         ]
       }
     },
-    "bridgeLogTail": "    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-09-22T11:58:59.128Z] aipro stderr for #378: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
+    "bridgeLogTail": "[2026-09-22T12:00:54.302Z] STDOUT data for #378: 122 bytes\n[2026-09-22T12:00:54.304Z] LIVE write for #378: 4863 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_378.txt\n[2026-09-22T12:00:54.318Z] STDOUT data for #378: 119 bytes\n[2026-09-22T12:00:54.321Z] LIVE write for #378: 4879 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_378.txt\n[2026-09-22T12:00:54.386Z] STDOUT data for #378: 107 bytes\n[2026-09-22T12:00:54.388Z] LIVE write for #378: 4883 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_378.txt\n[2026-09-22T12:00:54.390Z] STDOUT data for #378: 117 bytes\n[2026-09-22T12:00:54.392Z] LIVE write for #378: 4897 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_378.txt\n[2026-09-22T12:00:55.141Z] STDOUT data for #378: 689 bytes\n[2026-09-22T12:00:55.144Z] LIVE write for #378: 4897 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_378.txt\n[2026-09-22T12:00:55.155Z] STDOUT data for #378: 703 bytes\n[2026-09-22T12:00:55.160Z] LIVE write for #378: 4897 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_378.txt\n[2026-09-22T12:01:01.593Z] STDOUT data for #378: 3972 bytes\n[2026-09-22T12:01:01.596Z] LIVE write for #378: 4897 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_378.txt\n[2026-09-22T12:01:01.674Z] STDOUT data for #378: 124 bytes\n[2026-09-22T12:01:01.680Z] LIVE write for #378: 4897 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_378.txt\n[2026-09-22T12:01:02.952Z] STDOUT data for #378: 159 bytes\n[2026-09-22T12:01:02.955Z] LIVE write for #378: 4953 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_378.txt\n[2026-09-22T12:01:02.963Z] STDOUT data for #378: 104 bytes\n[2026-09-22T12:01:02.973Z] LIVE write for #378: 4954 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_378.txt",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-22T10:12:46.411Z",
-      "ageMs": 6466930
+      "ageMs": 6504950
     },
     "watchdogLogTail": "[2026-09-22T07:21:14.545Z] Dashboard is degraded (failures: 231). Will not restart yet.\n[2026-09-22T07:22:14.571Z] Dashboard is degraded (failures: 232). Will not restart yet.\n[2026-09-22T07:23:14.446Z] Dashboard is degraded (failures: 233). Will not restart yet.\n[2026-09-22T07:24:14.609Z] Dashboard is degraded (failures: 234). Will not restart yet.\n[2026-09-22T08:06:28.370Z] Dashboard is degraded (failures: 276). Will not restart yet.\n[2026-09-22T08:07:31.896Z] Dashboard is degraded (failures: 277). Will not restart yet.\n[2026-09-22T10:12:38.682Z] DASHBOARD RESTART NEEDED: No dashboard heartbeat file found\n[2026-09-22T10:12:41.242Z] Killed dashboard PID 30948\n[2026-09-22T10:12:46.247Z] Starting jira-dashboard-server.js...\n[2026-09-22T10:12:46.409Z] Dashboard started with PID 36556 (restart #4, 1 in last hour)",
     "jobOutputs": {}
