@@ -1,7 +1,60 @@
 {
-  "generatedAt": "2026-09-23T11:01:06.473Z",
-  "totalTickets": 14,
+  "generatedAt": "2026-09-23T11:01:44.190Z",
+  "totalTickets": 15,
   "tickets": [
+    {
+      "key": "MHME-1434",
+      "summary": "missing gift for MA260902-74340282",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Morocco Maintenance & Enhancements",
+      "projectKey": "MHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-09-23T20:01:10.000+0900",
+      "created": "2026-09-14T20:59:40.000+0900",
+      "statusChangedAt": "2026-09-23T20:01:10.618+0900",
+      "assignedToMeAt": "",
+      "description": "I am reaching out to request an update to the SKU associated with voucher MA260902-74340282. The current SKU, EI-T5600BWEGMA, is causing an issue where the customer is unable to receive the intended free gift. To resolve this, I kindly request that the SKU be updated to EI-T5600BBEGMA. This change w",
+      "commentsCount": 7,
+      "recentComments": [
+        {
+          "author": "Ashwani Verma",
+          "date": "2026-09-23T18:10:07.716+0900",
+          "snippet": "Hi ~@email \n\ncan you please share the voucher code for the missing product.\n\nThanks \n\n~@email"
+        },
+        {
+          "author": "Ashwani Verma",
+          "date": "2026-09-18T19:01:18.336+0900",
+          "snippet": "Hi ~@email \n\nI just confirm with her that we need to create a new voucher to deliver the missing gift to the customer, SKU: EI-T5600BBEGMA.\n\nyou can proceed for the further action accordingly.\n\nThanks\n\n~@email"
+        }
+      ],
+      "lastCommentBy": "Ashwani Verma",
+      "lastCommentSnippet": "Hi ~@email \n\ncan you please share the voucher code for the missing product.\n\nThanks \n\n~@email",
+      "lastCommentDate": "2026-09-23T18:10:07.716+0900",
+      "url": "https://jira.secext.samsung.net/browse/MHME-1434",
+      "linkedTickets": [
+        {
+          "key": "PC-54111",
+          "summary": "Update gift SKU and retrigger consignment for MA260902-74340282",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "# RCA: MHME-1434\nVoucher MA260902-74340282 — wrong SmartTag2 variant (white instead of black)\nGenerated: 2026-09-14T21:30:00+09:00\n\nHi Ashwani ,\n\nOrder MA260902-74340282 was placed on 2026-09-02 with two products: a Galaxy Ring (EF-RS936CBEGWW) at 399.00 MAD and a Galaxy SmartTag2 (EI-T5600BWEGMA) at 249.00 MAD, bundled at 1.00 MAD via coupon MA260427. The SmartTag2 on the order is the white variant (EI-T5600BWEGMA) but the customer was supposed to receive the black variant (EI-T5600BBEGMA).\n\nThe root cause is a configuration error in the promotion rule. Three PromotionSourceRule records for the Malaysia store have the wrong SmartTag2 SKU in their conditions JSON:\n\n1. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-4356_MissingGift_MA260427 (pk=8865856754671, coupon MA260427)\n2. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-3833-MA260427-60420457 (pk=8862974088175, coupon MA260427-60420457)\n3. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-3833-MA260427-60420457 (pk=8863267525615, coupon MA260427-60420457)\n\nIn all three rules, Container A qualifies on the Galaxy Ring (EF-RS936CBEGWW) and Container B qualifies on the SmartTag2. The conditions JSON for Container B specifies EI-T5600BWEGMA::maEstoreProductCatalog (white) instead of EI-T5600BBEGMA::maEstoreProductCatalog (black). When the customer applied coupon MA260427 at checkout, the promotion engine matched the rule and added the white SmartTag2 variant to the cart at the bundle price of 1 MAD. The action sets a y_target_bundle_price of 1 MAD with CHEAPEST selection strategy across containers A and B.\n\nThe order is currently in SHIPPING_REQUESTED status and has been split into two consignments. Consignment MA260902-74340282 contains the SmartTag2 (shipped 2026-09-11, status SHIPPING_REQUESTED). Consignment MA260902-74340282_1 contains the Galaxy Ring (status SHIPPING_PREPARATION). Payment is COD with both AUTHORIZATION and CAPTURE entries accepted at 1.00 MAD.\n\nTo fix this, the promotion rule conditions need to be updated in Backoffice to replace EI-T5600BWEGMA with EI-T5600BBEGMA in the qualifying products for Container B. This will prevent incorrect free gifts on future orders. For this specific order, the product reference on OrderEntry 1 (pk=9458182488110) and the corresponding ConsignmentEntry on consignment MA260902-74340282 need to be updated from EI-T5600BWEGMA to EI-T5600BBEGMA. Since the consignment is already in SHIPPING_REQUESTED, this should be coordinated with the logistics team to ensure the correct physical product is dispatched.\n\nKindly confirm if we should proceed with updating the promotion rules and the order entry product reference.\n\nThanks,\nAryan.\n\n## Remediation\n\n- **Type**: Promotion rule config fix + order entry product swap\n- **Affected PromotionSourceRules**: 3 (pk=8865856754671, 8862974088175, 8863267525615)\n- **Affected OrderEntry**: pk=9458182488110 (entry 1, order MA260902-74340282)\n- **Affected ConsignmentEntry**: consignment MA260902-74340282, entry 1\n- **Wrong SKU**: EI-T5600BWEGMA (white SmartTag2)\n- **Correct SKU**: EI-T5600BBEGMA (black SmartTag2)\n- **Coupons**: MA260427 (pk=8804448933144), MA260427-60420457 (pk=8801959351576)\n- **Reusable PC ticket**: None — this is a data/config fix, not a standard remediation type\n- **Script needed**: Groovy script to update PromotionSourceRule conditions JSON + OrderEntry product + ConsignmentEntry product",
+        "sections": {
+          "issue": "",
+          "rca": "# RCA: MHME-1434\nVoucher MA260902-74340282 — wrong SmartTag2 variant (white instead of black)\nGenerated: 2026-09-14T21:30:00+09:00\n\nHi Ashwani ,\n\nOrder MA260902-74340282 was placed on 2026-09-02 with two products: a Galaxy Ring (EF-RS936CBEGWW) at 399.00 MAD and a Galaxy SmartTag2 (EI-T5600BWEGMA) at 249.00 MAD, bundled at 1.00 MAD via coupon MA260427. The SmartTag2 on the order is the white variant (EI-T5600BWEGMA) but the customer was supposed to receive the black variant (EI-T5600BBEGMA).\n\nThe root cause is a configuration error in the promotion rule. Three PromotionSourceRule records for the Malaysia store have the wrong SmartTag2 SKU in their conditions JSON:\n\n1. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-4356_MissingGift_MA260427 (pk=8865856754671, coupon MA260427)\n2. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-3833-MA260427-60420457 (pk=8862974088175, coupon MA260427-60420457)\n3. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-3833-MA260427-60420457 (pk=8863267525615, coupon MA260427-60420457)\n\nIn all three rules, Container A qualifies on the Galaxy Ring (EF-RS936CBEGWW) and Container B qualifies on the SmartTag2. The conditions JSON for Container B specifies EI-T5600BWEGMA::maEstoreProductCatalog (white) instead of EI-T5600BBEGMA::maEstoreProductCatalog (black). When the customer applied coupon MA260427 at checkout, the promotion engine matched the rule and added the white SmartTag2 variant to the cart at the bundle price of 1 MAD. The action sets a y_target_bundle_price of 1 MAD with CHEAPEST selection strategy across containers A and B.\n\nThe order is currently in SHIPPING_REQUESTED status and has been split into two consignments. Consignment MA260902-74340282 contains the SmartTag2 (shipped 2026-09-11, status SHIPPING_REQUESTED). Consignment MA260902-74340282_1 contains the Galaxy Ring (status SHIPPING_PREPARATION). Payment is COD with both AUTHORIZATION and CAPTURE entries accepted at 1.00 MAD.\n\nTo fix this, the promotion rule conditions need to be updated in Backoffice to replace EI-T5600BWEGMA with EI-T5600BBEGMA in the qualifying products for Container B. This will prevent incorrect free gifts on future orders. For this specific order, the product reference on OrderEntry 1 (pk=9458182488110) and the corresponding ConsignmentEntry on consignment MA260902-74340282 need to be updated from EI-T5600BWEGMA to EI-T5600BBEGMA. Since the consignment is already in SHIPPING_REQUESTED, this should be coordinated with the logistics team to ensure the correct physical product is dispatched.\n\nKindly confirm if we should proceed with updating the promotion rules and the order entry product reference.\n\nThanks,\nAryan.\n\n## Remediation\n\n- **Type**: Promotion rule config fix + order entry product swap\n- **Affected PromotionSourceRules**: 3 (pk=8865856754671, 8862974088175, 8863267525615)\n- **Affected OrderEntry**: pk=9458182488110 (entry 1, order MA260902-74340282)\n- **Affected ConsignmentEntry**: consignment MA260902-74340282, entry 1\n- **Wrong SKU**: EI-T5600BWEGMA (white SmartTag2)\n- **Correct SKU**: EI-T5600BBEGMA (black SmartTag2)\n- **Coupons**: MA260427 (pk=8804448933144), MA260427-60420457 (pk=8801959351576)\n- **Reusable PC ticket**: None — this is a data/config fix, not a standard remediation type\n- **Script needed**: Groovy script to update PromotionSourceRule conditions JSON + OrderEntry product + ConsignmentEntry product",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-14T15:37:26.457Z"
+      }
+    },
     {
       "key": "SAHME-3441",
       "summary": "Samsung Rewards not allocated to customer post purchases",
@@ -852,7 +905,7 @@
       }
     ],
     "pid": 20836,
-    "uptime": 1377,
+    "uptime": 1418,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -864,7 +917,7 @@
       {
         "pid": 5464,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 878,
+        "ageSeconds": 916,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -3537,7 +3590,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-23T10:38:05.907Z",
-      "ageMs": 1382847
+      "ageMs": 1420620
     },
     "watchdogLogTail": "[2026-09-23T10:37:31.708Z] Max restarts: 50/hour\n[2026-09-23T10:37:31.711Z] Bridge script: C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\bridge.js\n[2026-09-23T10:37:31.713Z] Dashboard script: C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\jira-dashboard-server.js\n[2026-09-23T10:37:31.723Z] Bridge already running (PID 15752). Adopting.\n[2026-09-23T10:37:31.733Z] Dashboard already running (PID 7564). Adopting.\n[2026-09-23T10:37:34.396Z] DUPLICATE watchdog detected: PID 15120 — killing\n[2026-09-23T10:37:51.312Z] RESTART NEEDED: Bridge process (PID 15752) not found\n[2026-09-23T10:37:53.266Z] Could not kill PID 15752: Command failed: taskkill /PID 15752 /F /T\n[2026-09-23T10:38:05.720Z] Starting bridge.js...\n[2026-09-23T10:38:05.905Z] Bridge started with PID 20836 (restart #1, 1 in last hour)"
   },
@@ -3546,7 +3599,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-23T11:00:09.850Z",
+      "lastCheck": "2026-09-23T11:01:10.419Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3555,18 +3608,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-23T11:00:09.851Z",
+      "lastCheck": "2026-09-23T11:01:10.419Z",
       "downSince": "2026-09-23T10:37:07.347Z",
-      "downDuration": 1382504,
+      "downDuration": 1443072,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-23T11:00:09.851Z",
+      "lastCheck": "2026-09-23T11:01:10.419Z",
       "downSince": "2026-09-23T10:40:04.734Z",
-      "downDuration": 1205117,
+      "downDuration": 1265685,
       "alert": true
     }
   ],
