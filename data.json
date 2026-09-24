@@ -1,49 +1,7 @@
 {
-  "generatedAt": "2026-09-24T15:23:30.306Z",
-  "totalTickets": 12,
+  "generatedAt": "2026-09-24T15:24:09.362Z",
+  "totalTickets": 11,
   "tickets": [
-    {
-      "key": "TKME-2342",
-      "summary": "Orders are stuck in Order split status",
-      "status": "QA Server Review",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Turkey Maintenance & Enhancements",
-      "projectKey": "TKME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-24T23:37:59.000+0900",
-      "created": "2026-09-24T21:53:18.000+0900",
-      "statusChangedAt": "2026-09-24T22:40:04.157+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nWe noticed that no SO have been created today. Could you please check this issue?\n\nAll the orders are are in order split status and consignment process is waiting at waitForSendToWarehouse action and the cronjob  tr-tokoTransferConsignmentToWarehouseJob is not picking the orders and send t",
-      "commentsCount": 0,
-      "recentComments": [],
-      "lastCommentBy": "",
-      "lastCommentSnippet": "",
-      "lastCommentDate": "",
-      "url": "https://jira.secext.samsung.net/browse/TKME-2342",
-      "linkedTickets": [
-        {
-          "key": "PC-54582",
-          "summary": "Retrigger consignment processes stuck at sendConsignmentToWarehouse from waitForSendToWarehouse",
-          "status": "Reviewed",
-          "statusCategory": "In Progress",
-          "relation": "blocks",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "Agent encountered an error while processing your request. Please try again or rephrase. Exit code: 52",
-        "sections": {
-          "issue": "",
-          "rca": "Agent encountered an error while processing your request. Please try again or rephrase. Exit code: 52",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-24T13:04:03.115Z"
-      }
-    },
     {
       "key": "TKME-2341",
       "summary": "SC+ E-Store Registration Failure - Part 3",
@@ -732,7 +690,7 @@
       }
     ],
     "pid": 34568,
-    "uptime": 87675,
+    "uptime": 87714,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -744,7 +702,7 @@
       {
         "pid": 5464,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 103023,
+        "ageSeconds": 103062,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -754,17 +712,17 @@
       {
         "pid": 17092,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 99934,
+        "ageSeconds": 99973,
         "status": "running",
         "isChild": false,
-        "taskSummary": "update this updated script on the PC ticket: //NOTE ITGC_JIRA:PC-54582(TKME-2342) //Batch auto-re...",
-        "lastExchange": "update this updated script on the PC ticket: //NOTE ITGC_JIRA:PC-54582(TKME-2342)\n//Batch auto-remediation: search consignment processes with \"No value present\" error and retrigger from waitForSendToWarehouse\n\nimport de.hybris.platform.processengine.enums.ProcessState\n\nfss = spring.getBean(\"flexibleSearchService\")\nmodelService = spring.getBean(\"modelService\")\nbusinessProcessService = spring.getBean(\"businessProcessService\")\n\nBATCH_SIZE = 100\n\n// Optimised: select PK only, filter SUCCEEDED/FAILED in SQL, no ORDER BY\ndef pks = fss.search(\"\"\"\n    SELECT {bp.pk}\n    FROM {\n        BusinessProcessParameter AS bpp\n        JOIN BusinessProcess AS bp ON {bp.pk} = {bpp.process}\n        JOIN ProcessState AS ps ON {ps.pk} = {bp.state}\n    }\n    WHERE {bp.processDefinitionName} = 'consignment-process-v11-36'\n    AND {bpp.value} LIKE '%No value present%'\n    AND {ps.code} NOT IN ('SUCCEEDED', 'FAILED')\n    AND {ps.code} IN ('ERROR')\n\"\"\").result\n\nprintln \"Processes to remediate: ${pks.size()}\"\n\nif (pks.isEmpty()) {\n    println \"Nothing to remediate.\"\n    return\n}\n\ndef batches = pks.collate(BATCH_SIZE)\nprintln \"Batches: ${batches.size()} (batch size ${BATCH_SIZE})\"\nprintln \"\"\n\nfor (int i = 0; i < batches.size(); i++) {\n    def batch = batches[i]\n    println \"===== BATCH ${i+1}/${batches.size()} (${batch.size()} processes) =====\"\n\n    for (cp in batch) {\n        try {\n            def fresh = modelService.get(cp.pk)\n            if (fresh.currentTasks) modelService.removeAll(fresh.currentTasks)\n            fresh.setState(ProcessState.ERROR)\n            modelService.save(fresh)\n            businessProcessService.restartProcess(fresh, \"waitForSendToWarehouse\")\n            println \"DONE: ${fresh.code}\"\n        } catch (Exception e) {\n            println \"FAIL: ${cp.code} | ${e.message}\"\n        }\n    }\n    println \"\"\n}\n\nprintln \"Batch remediation complete. Total processed: ${pks.size()}\"",
+        "taskSummary": "post this comment with 2.5hrs log",
+        "lastExchange": "post this comment with 2.5hrs log",
         "sessionId": "bin"
       },
       {
         "pid": 22640,
         "cwd": "c:\\windows",
-        "ageSeconds": 98932,
+        "ageSeconds": 98971,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -774,7 +732,7 @@
       {
         "pid": 20620,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 98352,
+        "ageSeconds": 98391,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -3537,7 +3495,7 @@
     "watchdog": {
       "alive": true,
       "lastWrite": "2026-09-24T15:22:51.470Z",
-      "ageMs": 42002
+      "ageMs": 82439
     },
     "watchdogLogTail": "[2026-09-24T11:10:40.741Z] Starting jira-dashboard-server.js...\n[2026-09-24T11:10:40.978Z] Dashboard started with PID 34804 (restart #5, 1 in last hour)\n[2026-09-24T11:10:45.747Z] Starting jira-dashboard-server.js...\n[2026-09-24T11:10:49.436Z] Dashboard started with PID 41092 (restart #6, 2 in last hour)\n[2026-09-24T11:10:53.449Z] DUPLICATE jira-dashboard-server detected: PID 34804 — killing\n[2026-09-24T11:42:42.370Z] DUPLICATE watchdog detected: PID 18972 — killing\n[2026-09-24T11:47:45.450Z] DUPLICATE watchdog detected: PID 38436 — killing\n[2026-09-24T14:52:43.214Z] DUPLICATE watchdog detected: PID 37980 — killing\n[2026-09-24T14:57:43.866Z] DUPLICATE watchdog detected: PID 3612 — killing\n[2026-09-24T15:22:51.469Z] DUPLICATE watchdog detected: PID 34412 — killing"
   },
@@ -3546,7 +3504,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-24T15:22:25.994Z",
+      "lastCheck": "2026-09-24T15:23:34.011Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3555,7 +3513,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-24T15:22:25.994Z",
+      "lastCheck": "2026-09-24T15:23:34.011Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3564,9 +3522,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-24T15:22:25.994Z",
+      "lastCheck": "2026-09-24T15:23:34.011Z",
       "downSince": "2026-09-24T14:40:06.121Z",
-      "downDuration": 2539873,
+      "downDuration": 2607890,
       "alert": true
     }
   ],
