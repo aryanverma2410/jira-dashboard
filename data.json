@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-24T07:33:36.174Z",
+  "generatedAt": "2026-09-24T07:34:13.958Z",
   "totalTickets": 11,
   "tickets": [
     {
@@ -677,7 +677,7 @@
       }
     ],
     "pid": 34568,
-    "uptime": 59481,
+    "uptime": 59515,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -686,7 +686,7 @@
         "issueTitle": "Investigate ticket AEME-6582",
         "snippet": "Auto-triggered investigation for new ticket AEME-6582.\n\nTicket: AEME-6582\nSummary: RCA Request || 24-Sep\n\nUse the invest",
         "pid": 31312,
-        "elapsed": 570
+        "elapsed": 605
       }
     ],
     "startTime": "2026-09-23T15:02:15.703Z",
@@ -697,7 +697,7 @@
       {
         "pid": 5464,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 74828,
+        "ageSeconds": 74866,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -707,7 +707,7 @@
       {
         "pid": 17092,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 71740,
+        "ageSeconds": 71778,
         "status": "running",
         "isChild": false,
         "taskSummary": "write point to point. only include cronjobs that are running at 6am",
@@ -717,7 +717,7 @@
       {
         "pid": 22640,
         "cwd": "c:\\windows",
-        "ageSeconds": 70738,
+        "ageSeconds": 70776,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -727,7 +727,7 @@
       {
         "pid": 20620,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 70158,
+        "ageSeconds": 70196,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -3439,11 +3439,11 @@
         ]
       }
     },
-    "bridgeLogTail": "      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n      at async GeminiChat.processStreamResponse (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:298143:22)\n      at async GeminiChat.streamWithRetries (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:297807:30)\n      at async _LocalAgentExecutor.callModel (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:313831:22)\n      at async _LocalAgentExecutor.executeTurn (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:313414:43),\n  repairError: JSONRepairError: Unexpected character \"'\" at position 14\n      at throwUnexpectedCharacter (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-AMPHR7K3.js:7552:11)\n      at jsonrepair (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-AMPHR7K3.js:7053:3)\n      at safeJsonParse (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-AMPHR7K3.js:7581:28)\n      at StreamingToolCallParser.getCompletedToolCalls (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-AMPHR7K3.js:7758:22)\n      at OpenAIContentConverter.convertOpenAIChunkToGemini (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-AMPHR7K3.js:8294:65)\n      at ContentGenerationPipeline.processStreamWithLogging (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-AMPHR7K3.js:8596:41)\n      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n      at async GeminiChat.processStreamResponse (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:298143:22)\n      at async GeminiChat.streamWithRetries (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:297807:30)\n      at async _LocalAgentExecutor.callModel (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:313831:22) {\n    position: 14\n  },\n  jsonString: '  console.log(\\'========================================\\');\\\\n  console.log(`Total unique tickets across all searches: ${allFoundTickets.size}`);\\\\n  console.log(\\'\\');\\\\n\\\\n{\"result\":   for (const [key, entry] of allFoundTickets) {\\\\n    const f = entry.issue.fields || {};\\\\n    const pcInfo = entry.pcRefs.length > 0 ? ` | PC Refs: ${entry.pcRefs.join(\\', \\')}` : \\'\\';\\\\n    console.log(`  ${key} [${f.status ? f.status.name : \\'?\\'}] - ${truncate(f.summary, 80)} (found in: ${entry.foundIn.join(\\'; \\')})${pcInfo}`);\\\\n  }\\\\n\\\\n  // Highlight tickets with PC references\\\\n  const ticketsWithPC = Array.from(allFoundTickets.values()).filter(e => e.pcRefs.length > 0);\\\\n  if (ticketsWithPC.length > 0) {\\\\n    console.log(\\'\\');\\\\n    console.log(\\'========================================\\');\\\\n    console.log(\\'TICKETS REFERENCING PC TICKETS\\');\\\\n    console.log(\\'========================================\\');\\\\n    for (const entry of ticketsWithPC) {\\\\n      const f = entry.issue.fields || {};\\\\n      console.log(`  ${entry.issue.key}: ${entry.pcRefs.join(\\', \\')} - ${truncate(f.summary, 80)}`);\\\\n    }\\\\n  } else {\\\\n    console.log(\\'\\');\\\\n    console.log(\\'No tickets found referencing PC tickets.\\');\\\\n  }\\\\n\\\\n  console.log(\\'\\');\\\\n  console.log(\\'=== Cross-Reference Search Complete ===\\');\\\\n}\\\\n\\\\nmain().catch(err => {\\\\n  console.error(\\'Fatal error:\\', err);\\\\n  process.exit(1);\\\\n});\\\\n\", \"file_path\": \"C:\\\\\\\\Users\\\\\\\\aryan.v1\\\\\\\\.gemini\\\\\\\\tmp\\\\\\\\aryan-v1\\\\\\\\jira_crossref_aeme6582.js\"}'\n}",
+    "bridgeLogTail": "    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-09-24T07:33:50.390Z] aipro stderr for #398: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-24T06:42:42.874Z",
-      "ageMs": 3055922
+      "ageMs": 3094645
     },
     "watchdogLogTail": "[2026-09-24T05:53:50.341Z] DASHBOARD RESTART NEEDED: No dashboard heartbeat file found\n[2026-09-24T05:53:52.737Z] Killed dashboard PID 39248\n[2026-09-24T05:53:57.257Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 39248) not found\n[2026-09-24T05:53:59.295Z] Could not kill dashboard PID 39248: Command failed: taskkill /PID 39248 /F /T\n[2026-09-24T05:53:59.304Z] Starting jira-dashboard-server.js...\n[2026-09-24T05:53:59.469Z] Dashboard started with PID 33108 (restart #3, 1 in last hour)\n[2026-09-24T05:54:04.311Z] Starting jira-dashboard-server.js...\n[2026-09-24T05:54:04.469Z] Dashboard started with PID 27860 (restart #4, 2 in last hour)\n[2026-09-24T05:54:12.302Z] DUPLICATE jira-dashboard-server detected: PID 33108 — killing\n[2026-09-24T06:42:42.873Z] DUPLICATE watchdog detected: PID 12280 — killing",
     "jobOutputs": {}
