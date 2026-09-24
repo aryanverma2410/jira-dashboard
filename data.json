@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-24T11:00:00.477Z",
+  "generatedAt": "2026-09-24T11:00:40.618Z",
   "totalTickets": 12,
   "tickets": [
     {
@@ -733,7 +733,7 @@
       }
     ],
     "pid": 34568,
-    "uptime": 71864,
+    "uptime": 71905,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -745,7 +745,7 @@
       {
         "pid": 5464,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 87215,
+        "ageSeconds": 87254,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -755,7 +755,7 @@
       {
         "pid": 17092,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 84126,
+        "ageSeconds": 84166,
         "status": "running",
         "isChild": false,
         "taskSummary": "queue this comment with 2hrs logs and assign back and update labels",
@@ -765,7 +765,7 @@
       {
         "pid": 22640,
         "cwd": "c:\\windows",
-        "ageSeconds": 83124,
+        "ageSeconds": 83164,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -775,7 +775,7 @@
       {
         "pid": 20620,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 82544,
+        "ageSeconds": 82584,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -3508,7 +3508,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-24T10:47:42.690Z",
-      "ageMs": 742869
+      "ageMs": 783652
     },
     "watchdogLogTail": "[2026-09-24T09:02:43.442Z] DUPLICATE watchdog detected: PID 35732 — killing\n[2026-09-24T09:07:43.586Z] DUPLICATE watchdog detected: PID 31256 — killing\n[2026-09-24T10:02:40.191Z] DUPLICATE watchdog detected: PID 35360 — killing\n[2026-09-24T10:07:41.328Z] DUPLICATE watchdog detected: PID 27368 — killing\n[2026-09-24T10:12:42.092Z] DUPLICATE watchdog detected: PID 35676 — killing\n[2026-09-24T10:22:41.519Z] DUPLICATE watchdog detected: PID 26580 — killing\n[2026-09-24T10:32:40.953Z] DUPLICATE watchdog detected: PID 40056 — killing\n[2026-09-24T10:37:42.325Z] DUPLICATE watchdog detected: PID 34308 — killing\n[2026-09-24T10:42:41.976Z] DUPLICATE watchdog detected: PID 22536 — killing\n[2026-09-24T10:47:42.689Z] DUPLICATE watchdog detected: PID 5024 — killing"
   },
@@ -3630,6 +3630,21 @@
       },
       "createdAt": "2026-09-24",
       "notes": "AEME-6527 status update comment + 2h worklog + assign back to jaffar.a"
+    },
+    {
+      "id": 2,
+      "ticket": "AEME-6574",
+      "actions": {
+        "comment": "Hi Talib,\n\nBelow are the findings from the PROD database check.\n\n1. Both cronjobs — aeDotComCmsNavSyncJob and ae-DotComCmsEppNavSyncJob — exist on PROD and are active, but have no Trigger entries.\n\n2. Below is the complete list of active cronjobs whose triggers fire at exactly 6:00 AM on PROD.\n\n||CronJob||Schedule (cronExpression)||Runtime||\n|toko-ae-productStatusCheckJob|hour=6, min=0 (classic)|~11 sec|\n|autoheal-smi-SurveyEmailDailyJobJob|0 0 6 1/1 * ? *|~5.5 min|\n|toko-abandonedCartJob|0 0 6 1/1 * ? *|<1 sec|\n|toko-ae_noon-marketplace-productCatalogCSVJob_chainos|0 0 6 1/1 * ? *|<1 sec|\n|toko-lowStockAlertEmailJob|0 0 6 1/1 * ? *|<1 sec|\n|toko-lowStockAlertEmailJob-allproducts|0 0 6 1/1 * ? *|<1 sec|\n|toko-lowStockAlertEmailJob-consolidated|0 0 6 1/1 * ? *|<1 sec|\n|toko-ma-StockInformationReport-a52a72|0 0 6 1/1 * ? *|<1 sec|\n|ZA_BlackFridayProductStockCronJob|0 0 6 1/1 * ? *|<1 sec|\n|in-deletedAccountOrderReport|0 0 6 ? * WED|<1 sec|\n|smi-SMCOrderReport|0 0 6 ? * 2 *|<1 sec|\n|toko-za-sendUserToMultiStoreLinkDataJob|0 0 6 ? * MON|<1 sec|\n|report-smi-resendEcomHistoricalDataJob|0 0 6 ? * * *|<1 sec|\n|in_bkc_homedel-tokoAbandonedCartRewardRefundJob|40 0 6 * * ?|<1 sec|\n|in_bkc_instore-tokoAbandonedCartRewardRefundJob|40 0 6 * * ?|<1 sec|\n|in_plus_store-tokoAbandonedCartRewardRefundJob|40 0 6 * * ?|<1 sec|\n|in_storeplus_service-tokoAbandonedCartRewardRefundJob|40 0 6 * * ?|<1 sec|\n|ma-tokoAbandondCartRewardRefundJob|40 0 6 * * ?|<1 sec|\n|ae_outlet_storetokoPromoQuotaDeactivationJob|0 0 0/6 1/1 * ? *|<1 sec|\n|autoheal-tr-removeCartsInExternalServiceWithNoOrderEntryJob|0 0 0/6 ? * * *|~2 min|\n|autoheal-tr-retrigger_erroredEasycepJob|0 0 0/6 1/1 * ? *|<1 sec|\n|CleanupComposite|0 0 */6 * * ?|<1 sec|\n|hc-smi-expiredTriggerAlertJob|0 0 */6 ? * *|<1 sec|\n|za-TokoClearVirtualReservedStockScriptCronJob|0 0 */6 * * ?|<1 sec|\n|in-tokoReplacementOrderGerpUpdateCronJob|0 0 0/6 * * ?|<1 sec|\n|toko-ae-tokoSalesReportJob-Daily|0 0 0/6 1/1 * ? *|<1 sec|\n|toko-eg-tokoSalesReportJob-Daily|0 0 0/6 1/1 * ? *|<1 sec|\n|toko-jo-tokoSalesReportJob-Daily|0 0 0/6 1/1 * ? *|<1 sec|\n|toko-ma-tokoSalesReportJob-Daily|0 0 0/6 1/1 * ? *|<1 sec|\n|toko-pk-tokoSalesReportJob-Daily|0 0 0/6 1/1 * ? *|<1 sec|\n|report-eg-tokoSalesReportJob-Daily|0 0 0/6 1/1 * ? *|<1 sec|\n|report-ma-tokoSalesReportJob-Daily|0 0 0/6 1/1 * ? *|<1 sec|\n|report-pk-tokoSalesReportJob-Daily|0 0 0/6 1/1 * ? *|<1 sec|\n|in_*tokoPromoQuotaDeactivationJob (x30 stores)|0 0 0/6 1/1 * ? *|<1 sec each|\n|il_*tokoPromoQuotaDeactivationJob (x7 stores)|0 0 0/6 1/1 * ? *|<1 sec each|\n|tr_*tokoPromoQuotaDeactivationJob (x9 stores)|0 0 0/6 1/1 * ? *|<1 sec each|\n|sa/iq/jo/kw/ma/qa_*tokoPromoQuotaDeactivationJob (x8 stores)|0 0 0/6 1/1 * ? *|<1 sec each|\n|Autoheal-smi-Improvement4Job|0 0 2/4 * * ?|~20 sec|\n|ae_TokoBazaarVoiceReviewStatusSyncCronJob|0 0/30 * * * ?|<1 sec|\n|ae-ar_AE_TokoBazaarVoiceReviewStatusSyncCronJob|0 0/30 * * * ?|<1 sec|\n|ae_TokoGCRMPointsAllocationJob|0 0/30 * * * ?|<1 sec|\n|ae-ar_AE_TokoGCRMPointsAllocationJob|0 0/30 * * * ?|<1 sec|\n|ae-TokoClearVirtualPreOrderStockScriptCronJob|0 0 */2 * * ?|<1 sec|\n|ae-tokoTransferConsignmentToWarehouseJob|0 0/10 * * * ?|<1 sec|\n|ae-tokoTempOrderServiceJobPerformable|0 */10 * ? * * *|<1 sec|\n|ae-tokoResetBackOrderCounterJob|0 0 * ? * * *|<1 sec|\n|ae-tokoStockImportUpdateJob-IM|0 0/20 * ? * * *|<1 sec|\n|tokoAuditLogCleanupJob|0 0/15 * 1/1 * ? *|~3 sec|\n|altchaCleanupCronJob|0 0/10 * * * ?|<1 sec|\n|autoheal-smi-cancelRefundOnTempExpiredJob|0 */5 * ? * * *|<1 sec|\n|autoheal-smi-setOrderDiscountInfoSentToERPJob|0 */2 * ? * * *|<1 sec|\n|autoheal-ae-autoCancelRingKit-pii|0 0/30 * 1/1 * ? *|<1 sec|\n|bdcCPIPromoInfoGreenOutboundSyncCronJob|0 0/30 * * * ?|<1 sec|\n|bdcCPIPromotionGreenOutboundSyncCronJob|0 0 0/1 * * ? *|<1 sec|\n|bdcCPIPromotionOutboundSyncCronJob|0 0 0/1 * * ? *|<1 sec|\n|bh-cancelled-c360-reports|0 */16 * * * ?|<1 sec|\n\n3. The heaviest job at 6:00 AM is autoheal-smi-SurveyEmailDailyJobJob at ~5.5 minutes.\n\n4. The fix is to create Trigger entries for both cronjobs with cronExpression 0 0 6 * * ? via ImpEx on PROD. This needs a PC ticket. Shall I go ahead?\n\nRegards,\nAryan",
+        "worklogHours": 2,
+        "transition": null,
+        "fallbackTransition": null,
+        "assignee": "t.zaidi",
+        "linkType": null,
+        "linkTicket": null
+      },
+      "createdAt": "2026-09-24",
+      "notes": "AEME-6574 6AM cronjob analysis comment + 2h worklog + assign back to t.zaidi"
     }
   ]
 }
