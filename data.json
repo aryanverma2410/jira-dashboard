@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-24T11:22:01.305Z",
-  "totalTickets": 12,
+  "generatedAt": "2026-09-24T11:22:40.928Z",
+  "totalTickets": 11,
   "tickets": [
     {
       "key": "AEME-6527",
@@ -61,56 +61,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-14T12:18:37.301Z"
-      }
-    },
-    {
-      "key": "SAME-3995",
-      "summary": "Order Stuck - EXTERNAL_FRAUD_RESULT_PROCESSED - SA260911-81353095",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Kingdom of Saudi Arabia Maintenance & Enhancements",
-      "projectKey": "SAME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-24T17:30:16.000+0900",
-      "created": "2026-09-24T16:58:14.000+0900",
-      "statusChangedAt": "2026-09-24T17:18:56.075+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nWe received another order which got stuck in EXTERNAL_FRAUD_RESULT_PROCESSED due to 0 qty showing on the order entries for SC+ monthly subscription.\n\nOrder:\n\nSA260911-81353095\n\n!image-2026-09-24-11-58-32-363.png!\n\n \n\nSame issue has been raised previously SAME-3975.\n\nSince we are receiving ",
-      "commentsCount": 0,
-      "recentComments": [],
-      "lastCommentBy": "",
-      "lastCommentSnippet": "",
-      "lastCommentDate": "",
-      "url": "https://jira.secext.samsung.net/browse/SAME-3995",
-      "linkedTickets": [
-        {
-          "key": "SAME-3975",
-          "summary": "Order Stuck - EXTERNAL_FRAUD_RESULT_PROCESSED - SA260901-73687515",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "relates to",
-          "assignee": null
-        },
-        {
-          "key": "SAME-3994",
-          "summary": "Stuck order on Hybris",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
-          "relation": "relates to",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: SAME-3995\nOrder Stuck - EXTERNAL_FRAUD_RESULT_PROCESSED - SA260911-81353095\nGenerated: 2026-09-24T08:45:00Z\n\nHi [~arjenelle.a@samsung.com] ,\n\nOrder SA260911-81353095 is stuck at EXTERNAL_FRAUD_RESULT_PROCESSED with the business process (order-process-v25-69-SA260911-81353095-1789788836038) in ERROR state. The order has SC+ (Samsung Care+) monthly subscription entries with 0 quantity, which prevents the external fraud check from completing properly. No consignments have been created.\n\nThe root cause is the SC+ monthly subscription OrderEntry with quantity 0 on the order. The class TokoFraudServicesClientImpl, which handles the external fraud check, iterates order entries (line items) to build the fraud check request payload. When it encounters entries with 0 quantity, it determines there are no valid line items and logs the warning \"Have no line items so ignore this order\", skipping the fraud check request to the external fraud service. Without a proper fraud result callback, the order process cannot advance past the fraud check stage correctly. The process eventually reaches reserveVirtualStock and enters ERROR state, leaving the order permanently stuck at EXTERNAL_FRAUD_RESULT_PROCESSED.\n\nThis is confirmed by the database state: the order process is in ERROR, 5 External Service entries exist (4 with NULL fields plus 1 SMC with status NEW), no consignments were created, and 2 Tabby payment transactions show AUTHORIZATION ACCEPTED for 7701 SAR. The task log shows the process progressed through fraudCheck, fraudCheckExternal, fraudExternalResultChecked, waitForFraudCheckResult, then isOrderCancelledV1, manualPriceCheck, storeApprovalCheck, and reserveVirtualStock before erroring.\n\nThis is the same issue as SAME-3975 (order SA260901-73687515), reported by the same reporter with the same 0-qty SC+ subscription pattern. That ticket was closed after the order was pushed forward.\n\nRemediation: Remove the 0-qty SC+ OrderEntry from the order, then restart the order business process from the fraudCheckExternal action node so the fraud check re-executes with valid line items. An existing fraud retrigger script pattern is available under PC-54387 (script-msa-fraud-retrigger-single.groovy), which sets the process to ERROR and calls businessProcessService.restartProcess(op, \"fraudCheckExternal\"). The script would need to be extended to first remove the 0-qty OrderEntry before retriggering.\n\nThanks,\n\nAryan",
-        "sections": {
-          "issue": "",
-          "rca": "# RCA: SAME-3995\nOrder Stuck - EXTERNAL_FRAUD_RESULT_PROCESSED - SA260911-81353095\nGenerated: 2026-09-24T08:45:00Z\n\nHi [~arjenelle.a@samsung.com] ,\n\nOrder SA260911-81353095 is stuck at EXTERNAL_FRAUD_RESULT_PROCESSED with the business process (order-process-v25-69-SA260911-81353095-1789788836038) in ERROR state. The order has SC+ (Samsung Care+) monthly subscription entries with 0 quantity, which prevents the external fraud check from completing properly. No consignments have been created.\n\nThe root cause is the SC+ monthly subscription OrderEntry with quantity 0 on the order. The class TokoFraudServicesClientImpl, which handles the external fraud check, iterates order entries (line items) to build the fraud check request payload. When it encounters entries with 0 quantity, it determines there are no valid line items and logs the warning \"Have no line items so ignore this order\", skipping the fraud check request to the external fraud service. Without a proper fraud result callback, the order process cannot advance past the fraud check stage correctly. The process eventually reaches reserveVirtualStock and enters ERROR state, leaving the order permanently stuck at EXTERNAL_FRAUD_RESULT_PROCESSED.\n\nThis is confirmed by the database state: the order process is in ERROR, 5 External Service entries exist (4 with NULL fields plus 1 SMC with status NEW), no consignments were created, and 2 Tabby payment transactions show AUTHORIZATION ACCEPTED for 7701 SAR. The task log shows the process progressed through fraudCheck, fraudCheckExternal, fraudExternalResultChecked, waitForFraudCheckResult, then isOrderCancelledV1, manualPriceCheck, storeApprovalCheck, and reserveVirtualStock before erroring.\n\nThis is the same issue as SAME-3975 (order SA260901-73687515), reported by the same reporter with the same 0-qty SC+ subscription pattern. That ticket was closed after the order was pushed forward.\n\nRemediation: Remove the 0-qty SC+ OrderEntry from the order, then restart the order business process from the fraudCheckExternal action node so the fraud check re-executes with valid line items. An existing fraud retrigger script pattern is available under PC-54387 (script-msa-fraud-retrigger-single.groovy), which sets the process to ERROR and calls businessProcessService.restartProcess(op, \"fraudCheckExternal\"). The script would need to be extended to first remove the 0-qty OrderEntry before retriggering.\n\nThanks,\n\nAryan",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-24T08:52:15.511Z"
       }
     },
     {
@@ -733,7 +683,7 @@
       }
     ],
     "pid": 34568,
-    "uptime": 73186,
+    "uptime": 73224,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -745,7 +695,7 @@
       {
         "pid": 5464,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 88534,
+        "ageSeconds": 88574,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -755,7 +705,7 @@
       {
         "pid": 17092,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 85446,
+        "ageSeconds": 85485,
         "status": "running",
         "isChild": false,
         "taskSummary": "update the codebase investigator agent to always use graphify skill to make codebase queries faster",
@@ -765,7 +715,7 @@
       {
         "pid": 22640,
         "cwd": "c:\\windows",
-        "ageSeconds": 84444,
+        "ageSeconds": 84483,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -775,7 +725,7 @@
       {
         "pid": 20620,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 83864,
+        "ageSeconds": 83904,
         "status": "running",
         "isChild": false,
         "taskSummary": "a window keeps popping up of node. annoying.fix that first.",
@@ -3508,7 +3458,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-24T11:10:53.451Z",
-      "ageMs": 672076
+      "ageMs": 712414
     },
     "watchdogLogTail": "[2026-09-24T10:47:42.689Z] DUPLICATE watchdog detected: PID 5024 — killing\n[2026-09-24T11:10:19.290Z] DASHBOARD RESTART NEEDED: No dashboard heartbeat file found\n[2026-09-24T11:10:23.534Z] Killed dashboard PID 27860\n[2026-09-24T11:10:36.227Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 27860) not found\n[2026-09-24T11:10:39.722Z] Could not kill dashboard PID 27860: Command failed: taskkill /PID 27860 /F /T\n[2026-09-24T11:10:40.741Z] Starting jira-dashboard-server.js...\n[2026-09-24T11:10:40.978Z] Dashboard started with PID 34804 (restart #5, 1 in last hour)\n[2026-09-24T11:10:45.747Z] Starting jira-dashboard-server.js...\n[2026-09-24T11:10:49.436Z] Dashboard started with PID 41092 (restart #6, 2 in last hour)\n[2026-09-24T11:10:53.449Z] DUPLICATE jira-dashboard-server detected: PID 34804 — killing"
   },
