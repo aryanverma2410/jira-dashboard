@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-28T13:07:55.991Z",
+  "generatedAt": "2026-09-28T13:08:34.081Z",
   "totalTickets": 12,
   "tickets": [
     {
@@ -709,7 +709,7 @@
       }
     ],
     "pid": 14040,
-    "uptime": 8108,
+    "uptime": 8146,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -721,7 +721,7 @@
       {
         "pid": 17308,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 8625,
+        "ageSeconds": 8663,
         "status": "running",
         "isChild": false,
         "taskSummary": "I always need to set the jira and kibna tabs to refresh every 30seconds manually. because I dont ...",
@@ -731,17 +731,17 @@
       {
         "pid": 13516,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 8619,
+        "ageSeconds": 8657,
         "status": "running",
         "isChild": false,
-        "taskSummary": "i need it to calculate the time drift at runtime itself // ==UserScript== // @name YCloud Auto Lo...",
-        "lastExchange": "i need it to calculate the time drift at runtime itself // ==UserScript==\n// @name         YCloud Auto Login (TOTP)\n// @match        https://ycloud.accounts.ondemand.com/*\n// @run-at       document-idle\n// ==/UserScript==\n\nif (window.__ycloud_totp) return;\nwindow.__ycloud_totp = true;\n\n// Only attempt TOTP once per browser session — multiple wrong retries lock the account\nif (sessionStorage.getItem(\"ycloud_totp_attempted\")) {\n    console.log(\"[TOTP] Already attempted this session — skipping to avoid account lock\");\n    return;\n}\n\nconst TOTP_SECRET = \"4RFNRCG5TQZTVYAOC5BASYYO46OAFWFV\";\nconst CLOCK_OFFSET_MS = 0 * 1000; // VDI clock is 2m22s behind server\nconst setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, \"value\").set;\n\nfunction base32Decode(str) {\n    const alphabet = \"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567\";\n    str = str.toUpperCase().replace(/[^A-Z2-7]/g, \"\");\n    const bytes = [];\n    let buffer = 0, bits = 0;\n    for (const c of str) {\n        const val = alphabet.indexOf(c);\n        if (val < 0) continue;\n        buffer = (buffer << 5) | val;\n        bits += 5;\n        if (bits >= 8) {\n            bytes.push((buffer >> (bits - 8)) & 0xFF);\n            bits -= 8;\n        }\n    }\n    return new Uint8Array(bytes);\n}\n\nasync function generateTOTP(secret) {\n    const key = base32Decode(secret);\n    const counter = Math.floor((Date.now() + CLOCK_OFFSET_MS) / 1000 / 30);\n    console.log(\"[TOTP] counter:\", counter);\n    const msg = new ArrayBuffer(8);\n    new DataView(msg).setUint32(4, counter);\n    const cryptoKey = await crypto.subtle.importKey(\"raw\", key, {name: \"HMAC\", hash: \"SHA-1\"}, false, [\"sign\"]);\n    const hmac = await crypto.subtle.sign(\"HMAC\", cryptoKey, msg);\n    const hb = new Uint8Array(hmac);\n    const offset = hb[hb.length - 1] & 0xf;\n    const code = ((hb[offset] & 0x7f) << 24) | (hb[offset + 1] << 16) | (hb[offset + 2] << 8) | hb[offset + 3];\n    return (code % 1000000).toString().padStart(6, \"0\");\n}\n\nfunction clickSubmit() {\n    const btn = document.querySelector(\"button[type='submit'], input[type='submit'], button.fn-button--primary, .ids-button--primary\");\n    if (btn) { btn.click(); return true; }\n    const form = document.querySelector(\"form\");\n    if (form) { form.submit(); return true; }\n    return false;\n}\n\n// Phase 1: Fill username if present\nconst i = setInterval(() => {\n    const u = document.querySelector(\"input[name='j_username']\");\n    if (!u) return;\n    clearInterval(i);\n    setter.call(u, \"aryan.v1@samsung.com\");\n    u.dispatchEvent(new Event(\"input\", { bubbles: true }));\n    u.dispatchEvent(new Event(\"change\", { bubbles: true }));\n    setTimeout(() => {\n        if (document.querySelector(\"input[name='j_username']\") && !document.querySelector(\"input[name='j_otpcode']\")) {\n            clickSubmit();\n        }\n    }, 500);\n}, 300);\n\n// Phase 2: Fill TOTP once, then mark session as attempted\nconst j = setInterval(() => {\n    const o = document.querySelector(\"input[name='j_otpcode']\");\n    if (!o) return;\n    clearInterval(j);\n    sessionStorage.setItem(\"ycloud_totp_attempted\", \"1\");\n    generateTOTP(TOTP_SECRET).then(code => {\n        console.log(\"[TOTP] Generated code:\", code);\n        setter.call(o, code);\n        o.dispatchEvent(new Event(\"input\", { bubbles: true }));\n        o.dispatchEvent(new Event(\"change\", { bubbles: true }));\n        setTimeout(() => clickSubmit(), 500);\n    });\n}, 300);",
+        "taskSummary": "give script in output for me to copy",
+        "lastExchange": "give script in output for me to copy",
         "sessionId": "bin"
       },
       {
         "pid": 13996,
         "cwd": "c:\\windows",
-        "ageSeconds": 8599,
+        "ageSeconds": 8637,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -751,7 +751,7 @@
       {
         "pid": 21988,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 6781,
+        "ageSeconds": 6819,
         "status": "running",
         "isChild": false,
         "taskSummary": "I always need to set the jira and kibna tabs to refresh every 30seconds manually. because I dont ...",
@@ -3544,7 +3544,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-28T11:52:42.695Z",
-      "ageMs": 4516122
+      "ageMs": 4554528
     },
     "watchdogLogTail": "[2026-09-28T10:54:18.311Z] Killed bridge PID 4124\n[2026-09-28T10:54:25.466Z] DASHBOARD RESTART NEEDED: Dashboard heartbeat is stale (98s old)\n[2026-09-28T10:54:27.239Z] Killed dashboard PID 19784\n[2026-09-28T10:54:27.246Z] Starting bridge.js...\n[2026-09-28T10:54:27.408Z] Bridge started with PID 14040 (restart #2, 2 in last hour)\n[2026-09-28T10:54:32.252Z] Starting jira-dashboard-server.js...\n[2026-09-28T10:54:32.413Z] Dashboard started with PID 20460 (restart #2, 2 in last hour)\n[2026-09-28T10:57:40.930Z] DUPLICATE watchdog detected: PID 11712 — killing\n[2026-09-28T11:12:49.775Z] DUPLICATE watchdog detected: PID 22616 — killing\n[2026-09-28T11:52:42.751Z] DUPLICATE watchdog detected: PID 30104 — killing"
   },
@@ -3553,7 +3553,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-28T13:07:13.150Z",
+      "lastCheck": "2026-09-28T13:08:13.157Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3562,18 +3562,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-28T13:07:13.150Z",
+      "lastCheck": "2026-09-28T13:08:13.157Z",
       "downSince": "2026-09-28T12:57:14.218Z",
-      "downDuration": 598932,
+      "downDuration": 658939,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-28T13:07:13.150Z",
+      "lastCheck": "2026-09-28T13:08:13.157Z",
       "downSince": "2026-09-28T10:54:33.843Z",
-      "downDuration": 7959307,
+      "downDuration": 8019314,
       "alert": true
     }
   ],
