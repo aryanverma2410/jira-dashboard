@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-28T14:22:04.805Z",
+  "generatedAt": "2026-09-28T14:22:42.663Z",
   "totalTickets": 12,
   "tickets": [
     {
@@ -709,7 +709,7 @@
       }
     ],
     "pid": 14040,
-    "uptime": 12553,
+    "uptime": 12593,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -721,7 +721,7 @@
       {
         "pid": 17308,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 13074,
+        "ageSeconds": 13112,
         "status": "running",
         "isChild": false,
         "taskSummary": "its working now. add the #auto30 to kibana url in startup script as well. and the sequence should...",
@@ -731,17 +731,17 @@
       {
         "pid": 13516,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 13068,
+        "ageSeconds": 13106,
         "status": "running",
         "isChild": false,
-        "taskSummary": "its not filling the totp",
-        "lastExchange": "its not filling the totp",
+        "taskSummary": "it is not clicking on totp two factor auth button after its logged out and refreshes. remove the ...",
+        "lastExchange": "it is not clicking on totp two factor auth button after its logged out and refreshes. remove the 1 sign on clicking thing if its the issue as the totp would be correct now that we have dynamic time drift correction: make changes to this script: \n// ==UserScript==\n// @name         YCloud Auto Login (TOTP)\n// @match        https://ycloud.accounts.ondemand.com/*\n// @run-at       document-idle\n// ==/UserScript==\n\nif (window.__ycloud_totp) return;\nwindow.__ycloud_totp = true;\n\n// Only attempt TOTP once per browser session — multiple wrong retries lock the account\nif (sessionStorage.getItem(\"ycloud_totp_attempted\")) {\n    console.log(\"[TOTP] Already attempted this session — skipping to avoid account lock\");\n    return;\n}\n\nconst TOTP_SECRET = \"4RFNRCG5TQZTVYAOC5BASYYO46OAFWFV\";\nconst setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, \"value\").set;\n\nfunction base32Decode(str) {\n    const alphabet = \"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567\";\n    str = str.toUpperCase().replace(/[^A-Z2-7]/g, \"\");\n    const bytes = [];\n    let buffer = 0, bits = 0;\n    for (const c of str) {\n        const val = alphabet.indexOf(c);\n        if (val < 0) continue;\n        buffer = (buffer << 5) | val;\n        bits += 5;\n        if (bits >= 8) {\n            bytes.push((buffer >> (bits - 8)) & 0xFF);\n            bits -= 8;\n        }\n    }\n    return new Uint8Array(bytes);\n}\n\nasync function getClockOffsetMs() {\n    try {\n        const t1 = Date.now();\n        const resp = await fetch(window.location.origin, { method: 'HEAD', cache: 'no-store', credentials: 'omit' });\n        const t2 = Date.now();\n        const serverTime = new Date(resp.headers.get('Date')).getTime();\n        const offset = serverTime - (t1 + t2) / 2;\n        console.log(\"[TOTP] Clock offset: \" + offset + \"ms (RTT: \" + (t2 - t1) + \"ms)\");\n        return offset;\n    } catch (e) {\n        console.warn(\"[TOTP] Offset detection failed, using 0:\", e.message);\n        return 0;\n    }\n}\n\nasync function generateTOTP(secret, offsetMs) {\n    const key = base32Decode(secret);\n    const counter = Math.floor((Date.now() + offsetMs) / 1000 / 30);\n    console.log(\"[TOTP] counter:\", counter);\n    const msg = new ArrayBuffer(8);\n    new DataView(msg).setUint32(4, counter);\n    const cryptoKey = await crypto.subtle.importKey(\"raw\", key, {name: \"HMAC\", hash: \"SHA-1\"}, false, [\"sign\"]);\n    const hmac = await crypto.subtle.sign(\"HMAC\", cryptoKey, msg);\n    const hb = new Uint8Array(hmac);\n    const offset = hb[hb.length - 1] & 0xf;\n    const code = ((hb[offset] & 0x7f) << 24) | (hb[offset + 1] << 16) | (hb[offset + 2] << 8) | hb[offset + 3];\n    return (code % 1000000).toString().padStart(6, \"0\");\n}\n\nfunction clickSubmit() {\n    const btn = document.querySelector(\"button[type='submit'], input[type='submit'], button.fn-button--primary, .ids-button--primary\");\n    if (btn) { btn.click(); return true; }\n    const form = document.querySelector(\"form\");\n    if (form) { form.submit(); return true; }\n    return false;\n}\n\n// Phase 1: Fill username if present\nconst i = setInterval(() => {\n    const u = document.querySelector(\"input[name='j_username']\");\n    if (!u) return;\n    clearInterval(i);\n    setter.call(u, \"aryan.v1 @samsung.com\");\n    u.dispatchEvent(new Event(\"input\", { bubbles: true }));\n    u.dispatchEvent(new Event(\"change\", { bubbles: true }));\n    setTimeout(() => {\n        if (document.querySelector(\"input[name='j_username']\") && !document.querySelector(\"input[name='j_otpcode']\")) {\n            clickSubmit();\n        }\n    }, 500);\n}, 300);\n\n// Phase 1.5: Click the \"TOTP Two-Factor Authentication\" option button\nconst k = setInterval(() => {\n    const totpDiv = [...document.querySelectorAll(\"div\")].find(\n        d => d.textContent.includes(\"TOTP Two-Factor Authentication\")\n    );\n    if (!totpDiv) return;\n    clearInterval(k);\n    console.log(\"[TOTP] Clicking TOTP option button\");\n    const clickTarget = totpDiv.closest(\"button, a, [role='button'], .fn-button, .ids-button\") || totpDiv;\n    clickTarget.click();\n}, 300);\n\n// Phase 2: Fill TOTP once, then mark session as attempted\nconst j = setInterval(() => {\n    const o = document.querySelector(\"input[name='j_otpcode']\");\n    if (!o) return;\n    clearInterval(j);\n    sessionStorage.setItem(\"ycloud_totp_attempted\", \"1\");\n    getClockOffsetMs().then(offsetMs =>\n        generateTOTP(TOTP_SECRET, offsetMs).then(code => {\n            console.log(\"[TOTP] Generated code:\", code);\n            setter.call(o, code);\n            o.dispatchEvent(new Event(\"input\", { bubbles: true }));\n            o.dispatchEvent(new Event(\"change\", { bubbles: true }));\n            setTimeout(() => clickSubmit(), 500);\n        })\n    );\n}, 300);",
         "sessionId": "bin"
       },
       {
         "pid": 13996,
         "cwd": "c:\\windows",
-        "ageSeconds": 13048,
+        "ageSeconds": 13086,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -751,7 +751,7 @@
       {
         "pid": 21988,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 11230,
+        "ageSeconds": 11268,
         "status": "running",
         "isChild": false,
         "taskSummary": "its working now. add the #auto30 to kibana url in startup script as well. and the sequence should...",
@@ -3542,18 +3542,18 @@
     },
     "bridgeLogTail": "[2026-09-28T10:37:59.452Z] ==========================================\n[2026-09-28T10:37:59.454Z] === Hardened GitHub Bridge v3 Started ===\n[2026-09-28T10:37:59.455Z] === with Aipro Auto-Launch ===\n[2026-09-28T10:37:59.456Z] ==========================================\n[2026-09-28T10:37:59.457Z] PID: 4124\n[2026-09-28T10:37:59.457Z] Repo: aryanverma2410/agent-bridge\n[2026-09-28T10:37:59.458Z] Poll interval: 10000ms\n[2026-09-28T10:37:59.458Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-09-28T10:37:59.459Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-09-28T10:37:59.460Z] Waiting for messages...\n[2026-09-28T10:54:27.724Z] ==========================================\n[2026-09-28T10:54:27.726Z] === Hardened GitHub Bridge v3 Started ===\n[2026-09-28T10:54:27.727Z] === with Aipro Auto-Launch ===\n[2026-09-28T10:54:27.728Z] ==========================================\n[2026-09-28T10:54:27.729Z] PID: 14040\n[2026-09-28T10:54:27.730Z] Repo: aryanverma2410/agent-bridge\n[2026-09-28T10:54:27.731Z] Poll interval: 10000ms\n[2026-09-28T10:54:27.732Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-09-28T10:54:27.733Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-09-28T10:54:27.734Z] Waiting for messages...",
     "watchdog": {
-      "alive": false,
-      "lastWrite": "2026-09-28T14:02:40.529Z",
-      "ageMs": 1166289
+      "alive": true,
+      "lastWrite": "2026-09-28T14:22:40.659Z",
+      "ageMs": 5087
     },
-    "watchdogLogTail": "[2026-09-28T10:57:40.930Z] DUPLICATE watchdog detected: PID 11712 — killing\n[2026-09-28T11:12:49.775Z] DUPLICATE watchdog detected: PID 22616 — killing\n[2026-09-28T11:52:42.751Z] DUPLICATE watchdog detected: PID 30104 — killing\n[2026-09-28T13:17:40.494Z] DUPLICATE watchdog detected: PID 33544 — killing\n[2026-09-28T13:22:41.497Z] DUPLICATE watchdog detected: PID 21820 — killing\n[2026-09-28T13:27:40.651Z] DUPLICATE watchdog detected: PID 15760 — killing\n[2026-09-28T13:32:40.854Z] DUPLICATE watchdog detected: PID 33272 — killing\n[2026-09-28T13:37:40.603Z] DUPLICATE watchdog detected: PID 31556 — killing\n[2026-09-28T13:57:40.396Z] DUPLICATE watchdog detected: PID 14444 — killing\n[2026-09-28T14:02:40.534Z] DUPLICATE watchdog detected: PID 10644 — killing"
+    "watchdogLogTail": "[2026-09-28T11:12:49.775Z] DUPLICATE watchdog detected: PID 22616 — killing\n[2026-09-28T11:52:42.751Z] DUPLICATE watchdog detected: PID 30104 — killing\n[2026-09-28T13:17:40.494Z] DUPLICATE watchdog detected: PID 33544 — killing\n[2026-09-28T13:22:41.497Z] DUPLICATE watchdog detected: PID 21820 — killing\n[2026-09-28T13:27:40.651Z] DUPLICATE watchdog detected: PID 15760 — killing\n[2026-09-28T13:32:40.854Z] DUPLICATE watchdog detected: PID 33272 — killing\n[2026-09-28T13:37:40.603Z] DUPLICATE watchdog detected: PID 31556 — killing\n[2026-09-28T13:57:40.396Z] DUPLICATE watchdog detected: PID 14444 — killing\n[2026-09-28T14:02:40.534Z] DUPLICATE watchdog detected: PID 10644 — killing\n[2026-09-28T14:22:40.633Z] DUPLICATE watchdog detected: PID 37296 — killing"
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-28T14:21:21.233Z",
+      "lastCheck": "2026-09-28T14:22:21.192Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3562,18 +3562,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-28T14:21:21.233Z",
+      "lastCheck": "2026-09-28T14:22:21.192Z",
       "downSince": "2026-09-28T14:20:20.728Z",
-      "downDuration": 60505,
+      "downDuration": 120464,
       "alert": false
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-28T14:21:21.233Z",
+      "lastCheck": "2026-09-28T14:22:21.192Z",
       "downSince": "2026-09-28T10:54:33.843Z",
-      "downDuration": 12407390,
+      "downDuration": 12467349,
       "alert": true
     }
   ],
