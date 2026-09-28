@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-28T10:51:20.991Z",
+  "generatedAt": "2026-09-28T10:51:57.512Z",
   "totalTickets": 15,
   "tickets": [
     {
@@ -816,7 +816,7 @@
       }
     ],
     "pid": 4124,
-    "uptime": 801,
+    "uptime": 836,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -828,27 +828,27 @@
       {
         "pid": 1416,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 606,
+        "ageSeconds": 642,
         "status": "running",
         "isChild": false,
-        "taskSummary": "check the difference in seconds in actual time and the time of this VDI",
-        "lastExchange": "check the difference in seconds in actual time and the time of this VDI",
+        "taskSummary": "how can I fix this 101 sec delay",
+        "lastExchange": "how can I fix this 101 sec delay",
         "sessionId": "aryan-v1"
       },
       {
         "pid": 17308,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 430,
+        "ageSeconds": 467,
         "status": "running",
         "isChild": false,
-        "taskSummary": "edit this script to only try the TOTP once and not keep trying as it locks the account on multipl...",
-        "lastExchange": "edit this script to only try the TOTP once and not keep trying as it locks the account on multiple wrong retries: // ==UserScript==\n// @name         YCloud Auto Login (TOTP)\n// @namespace    https://ycloud.accounts.ondemand.com/*\n// @match        https://ycloud.accounts.ondemand.com/*\n// @run-at       document-idle\n// @grant        none\n// ==/UserScript==\n\nif (window.__ycloud_totp) return;\nwindow.__ycloud_totp = true;\n\nconst TOTP_SECRET = \"4RFNRCG5TQZTVYAOC5BASYYO46OAFWFV\";\nconst CLOCK_OFFSET_MS = 0 * 1000; // VDI clock is 2m22s behind server\n\nconst setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, \"value\").set;\n\nfunction base32Decode(str) {\n    const alphabet = \"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567\";\n    str = str.toUpperCase().replace(/[^A-Z2-7]/g, \"\");\n    const bytes = [];\n    let buffer = 0, bits = 0;\n    for (const c of str) {\n        const val = alphabet.indexOf(c);\n        if (val < 0) continue;\n        buffer = (buffer << 5) | val;\n        bits += 5;\n        if (bits >= 8) {\n            bytes.push((buffer >> (bits - 8)) & 0xFF);\n            bits -= 8;\n        }\n    }\n    return new Uint8Array(bytes);\n}\n\nasync function generateTOTP(secret) {\n    const key = base32Decode(secret);\n    const counter = Math.floor((Date.now() + CLOCK_OFFSET_MS) / 1000 / 30);\n    console.log(\"[TOTP] counter:\", counter);\n    const msg = new ArrayBuffer(8);\n    new DataView(msg).setUint32(4, counter);\n    const cryptoKey = await crypto.subtle.importKey(\"raw\", key, {name: \"HMAC\", hash: \"SHA-1\"}, false, [\"sign\"]);\n    const hmac = await crypto.subtle.sign(\"HMAC\", cryptoKey, msg);\n    const hb = new Uint8Array(hmac);\n    const offset = hb[hb.length - 1] & 0xf;\n    const code = ((hb[offset] & 0x7f) << 24) | (hb[offset + 1] << 16) | (hb[offset + 2] << 8) | hb[offset + 3];\n    return (code % 1000000).toString().padStart(6, \"0\");\n}\n\nfunction clickSubmit() {\n    const btn = document.querySelector(\"button[type='submit'], input[type='submit'], button.fn-button--primary, .ids-button--primary\");\n    if (btn) { btn.click(); return true; }\n    const form = document.querySelector(\"form\");\n    if (form) { form.submit(); return true; }\n    return false;\n}\n\n// Phase 1: Fill username if present\nconst i = setInterval(() => {\n    const u = document.querySelector(\"input[name='j_username']\");\n    if (!u) return;\n    clearInterval(i);\n    setter.call(u, \"aryan.v1@samsung.com\");\n    u.dispatchEvent(new Event(\"input\", { bubbles: true }));\n    u.dispatchEvent(new Event(\"change\", { bubbles: true }));\n    setTimeout(() => {\n        if (document.querySelector(\"input[name='j_username']\") && !document.querySelector(\"input[name='j_otpcode']\")) {\n            clickSubmit();\n        }\n    }, 500);\n}, 300);\n\n// Phase 2: Fill TOTP if present\nconst j = setInterval(() => {\n    const o = document.querySelector(\"input[name='j_otpcode']\");\n    if (!o) return;\n    clearInterval(j);\n    generateTOTP(TOTP_SECRET).then(code => {\n        console.log(\"[TOTP] Generated code:\", code);\n        setter.call(o, code);\n        o.dispatchEvent(new Event(\"input\", { bubbles: true }));\n        o.dispatchEvent(new Event(\"change\", { bubbles: true }));\n        setTimeout(() => clickSubmit(), 500);\n    });\n}, 300);",
+        "taskSummary": "would it reattempt after reloading?",
+        "lastExchange": "would it reattempt after reloading?",
         "sessionId": "bin"
       },
       {
         "pid": 13516,
         "cwd": "c:\\windows",
-        "ageSeconds": 424,
+        "ageSeconds": 461,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -858,11 +858,11 @@
       {
         "pid": 13996,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 404,
+        "ageSeconds": 441,
         "status": "running",
         "isChild": false,
-        "taskSummary": "check the difference in seconds in actual time and the time of this VDI",
-        "lastExchange": "check the difference in seconds in actual time and the time of this VDI",
+        "taskSummary": "how can I fix this 101 sec delay",
+        "lastExchange": "how can I fix this 101 sec delay",
         "sessionId": "aryan-v1-1"
       }
     ],
@@ -3651,7 +3651,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-28T10:38:03.601Z",
-      "ageMs": 799946
+      "ageMs": 836635
     },
     "watchdogLogTail": "[2026-09-28T10:37:32.378Z] Dashboard already running (PID 15280). Adopting.\n[2026-09-28T10:37:35.171Z] DUPLICATE watchdog detected: PID 14724 — killing\n[2026-09-28T10:37:52.112Z] RESTART NEEDED: Bridge process (PID 15236) not found\n[2026-09-28T10:37:53.946Z] Could not kill PID 15236: Command failed: taskkill /PID 15236 /F /T\n[2026-09-28T10:37:56.371Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 15280) not found\n[2026-09-28T10:37:58.405Z] Could not kill dashboard PID 15280: Command failed: taskkill /PID 15280 /F /T\n[2026-09-28T10:37:58.949Z] Starting bridge.js...\n[2026-09-28T10:37:59.118Z] Bridge started with PID 4124 (restart #1, 1 in last hour)\n[2026-09-28T10:38:03.409Z] Starting jira-dashboard-server.js...\n[2026-09-28T10:38:03.589Z] Dashboard started with PID 19784 (restart #1, 1 in last hour)"
   },
