@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-28T17:52:08.322Z",
-  "totalTickets": 14,
+  "generatedAt": "2026-09-28T17:52:47.223Z",
+  "totalTickets": 13,
   "tickets": [
     {
       "key": "PC-54713",
@@ -107,45 +107,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-14T12:18:37.301Z"
-      }
-    },
-    {
-      "key": "SAHME-3448",
-      "summary": "Request to trigger a refund on the cancelled order.",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "South Africa Maintenance & Enhancements",
-      "projectKey": "SAHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-28T23:28:00.000+0900",
-      "created": "2026-09-28T23:26:58.000+0900",
-      "statusChangedAt": "2026-09-28T23:27:50.281+0900",
-      "assignedToMeAt": "",
-      "description": "Good day,\n\nThe refund did not trigger on the cancelled order. Please trigger the refund.\n\nZA260822-65631545\n\n!image-2026-09-28-16-26-25-478.png!\n\nKind regards,\n\nLerato",
-      "commentsCount": 1,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-29T02:53:46.078+0900",
-          "snippet": "Hi Lerato,\n\nWe have checked order ZA260822-65631545 and found that the order is cancelled but the consignment is stuck in WAITING_FOR_TRANSFER_CANCELLING since 21 September. The consignment process has been looping on a warehouse transfer check every 30 minutes for the past 7 days without progressin"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Lerato,\n\nWe have checked order ZA260822-65631545 and found that the order is cancelled but the consignment is stuck in WAITING_FOR_TRANSFER_CANCELLING since 21 September. The consignment process has been looping on a warehouse transfer check every 30 minutes for the past 7 days without progressin",
-      "lastCommentDate": "2026-09-29T02:53:46.078+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAHME-3448",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: SAHME-3448\nSummary: Request to trigger a refund on the cancelled order.\nGenerated: 2026-09-28T14:30:00Z\n\nIssue:\nOrder ZA260822-65631545 was cancelled but the refund of R8,999.10 was never triggered. The payment was successfully captured on 2026-08-24 at 09:11:20, the order was moved to CANCELLED status with fullyCancelled=true, and the cancel-related email notifications were sent. However, no refund payment transaction entry was ever created. The order process (order-process-v25-69) and consignment process (consignment-process-v11-36) are both stuck in RUNNING state, and the consignment remains in WAITING_FOR_TRANSFER_CANCELLING.\n\nRCA:\nThe order was created on 2026-08-24 at 09:00:51 with a total value of R8,999.10 (subtotal R10,999.00 + tax R1,173.80) using the za-floatPaymentMode. Payment was authorized and captured successfully at 09:11:20. The order was subsequently cancelled and moved to CANCELLED status with fullyCancelled=true. All price fields were zeroed out as expected after cancellation.\n\nThree email processes completed successfully: sendOrderAcknowledgementEmailProcess, sendOrderCancelRequestEmailProcess, and sendOrderCancelledEmailProcess. However, the main order process (order-process-v25-69) is still in RUNNING state with its last executed action being isCancelledBeforeFinancialUpdateV1. This action evaluates whether the order was cancelled before the financial update was sent. Since fiPosted=false and the order is CANCELLED, this condition should evaluate to true and route the process to the refund path (refundCancelOrder). The process has not progressed past this decision point.\n\nThe consignment (ZA260822-65631545) is in WAITING_FOR_TRANSFER_CANCELLING status with warehouse WC11, and its consignment process (consignment-process-v11-36) is also stuck in RUNNING. The cancelRequestSentToLogistics flag is false, meaning the cancel request was never sent to the logistics system. The order process is likely blocked waiting for the consignment cancellation to complete before it can proceed to the refund step. Since the consignment cancellation never finalized, the order process never reached refundCancelOrder, and no refund payment transaction entry was created.\n\nNo return requests exist for this order, and no external service entries were found. There are no BusinessProcessParameter error entries (no stack traces stored) since the process is in RUNNING, not ERROR state.\n\nThis is the same pattern observed in SAHME-3376 (order ZA260521-83842685, same reporter Lerato) where a ZA-region order was cancelled before DO creation but the refund did not trigger. In that case, the payment team processed a manual refund because the order process had already completed without triggering the refund.\n\nPossible remediation:\nTwo approaches are available:\n\nApproach 1 — Process restart: Restart the order process from the refundCancelOrder action using the refund retrigger script (adapted from script-SAME-3941-refund-retrigger.groovy under PC-52765). The script needs to be modified to recognize isCancelledBeforeFinancialUpdateV1 as a valid restart point and use forceRetrigger=true since the process is in RUNNING state, not ERROR. This would attempt to re-trigger the automated refund flow.\n\nApproach 2 — Manual refund: If the automated process restart does not succeed (as was the case with SAHME-3376), the payment team can process a manual refund of R8,999.10 to the customer. The capture transaction (ZA260822-65631545_8b5ca128-52c7-4684-bc86-54832dbd29c8, CAPTURE, ACCEPTED, R8,999.10) provides the reference for the manual refund.\n\nKibana logs were not available during this investigation (cookie bridge rate-limited). The DB state is conclusive, but log analysis would provide additional confirmation of the exact blocking condition at isCancelledBeforeFinancialUpdateV1.",
-        "sections": {
-          "issue": "Order ZA260822-65631545 was cancelled but the refund of R8,999.10 was never triggered. The payment was successfully captured on 2026-08-24 at 09:11:20, the order was moved to CANCELLED status with fullyCancelled=true, and the cancel-related email notifications were sent. However, no refund payment transaction entry was ever created. The order process (order-process-v25-69) and consignment process (consignment-process-v11-36) are both stuck in RUNNING state, and the consignment remains in WAITING_FOR_TRANSFER_CANCELLING.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-28T14:37:28.150Z"
       }
     },
     {
@@ -798,7 +759,7 @@
       }
     ],
     "pid": 14040,
-    "uptime": 25156,
+    "uptime": 25196,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -810,7 +771,7 @@
       {
         "pid": 17308,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 25678,
+        "ageSeconds": 25717,
         "status": "running",
         "isChild": false,
         "taskSummary": "we planned to add features to the github dashboard, you maintained a state file for it. resume wo...",
@@ -820,17 +781,17 @@
       {
         "pid": 13516,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 25672,
+        "ageSeconds": 25711,
         "status": "running",
         "isChild": false,
-        "taskSummary": "post this with 45m logs, assign back, update labels",
-        "lastExchange": "post this with 45m logs, assign back, update labels",
+        "taskSummary": "yes",
+        "lastExchange": "yes",
         "sessionId": "bin"
       },
       {
         "pid": 13996,
         "cwd": "c:\\windows",
-        "ageSeconds": 25652,
+        "ageSeconds": 25691,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -840,7 +801,7 @@
       {
         "pid": 21988,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 23833,
+        "ageSeconds": 23873,
         "status": "running",
         "isChild": false,
         "taskSummary": "we planned to add features to the github dashboard, you maintained a state file for it. resume wo...",
@@ -3723,7 +3684,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-28T16:39:32.759Z",
-      "ageMs": 4358547
+      "ageMs": 4398343
     },
     "watchdogLogTail": "[2026-09-28T14:22:40.633Z] DUPLICATE watchdog detected: PID 37296 — killing\n[2026-09-28T15:07:41.194Z] DUPLICATE watchdog detected: PID 25548 — killing\n[2026-09-28T15:32:41.430Z] DUPLICATE watchdog detected: PID 18928 — killing\n[2026-09-28T15:37:41.417Z] DUPLICATE watchdog detected: PID 21216 — killing\n[2026-09-28T15:42:40.887Z] DUPLICATE watchdog detected: PID 36380 — killing\n[2026-09-28T15:52:41.286Z] DUPLICATE watchdog detected: PID 1064 — killing\n[2026-09-28T16:07:41.882Z] DUPLICATE watchdog detected: PID 29272 — killing\n[2026-09-28T16:22:44.034Z] DUPLICATE watchdog detected: PID 24536 — killing\n[2026-09-28T16:39:07.799Z] Dashboard is degraded (failures: 1). Will not restart yet.\n[2026-09-28T16:39:32.786Z] DUPLICATE jira-dashboard-server detected: PID 28016 — killing"
   },
@@ -3732,7 +3693,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-28T17:51:12.750Z",
+      "lastCheck": "2026-09-28T17:52:13.005Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3741,18 +3702,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-28T17:51:12.750Z",
+      "lastCheck": "2026-09-28T17:52:13.005Z",
       "downSince": "2026-09-28T17:49:10.929Z",
-      "downDuration": 121821,
+      "downDuration": 182076,
       "alert": false
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-28T17:51:12.750Z",
+      "lastCheck": "2026-09-28T17:52:13.005Z",
       "downSince": "2026-09-28T10:54:33.843Z",
-      "downDuration": 24998907,
+      "downDuration": 25059162,
       "alert": true
     }
   ],
