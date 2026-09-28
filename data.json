@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-28T15:09:26.661Z",
+  "generatedAt": "2026-09-28T15:10:05.982Z",
   "totalTickets": 14,
   "tickets": [
     {
@@ -57,9 +57,15 @@
       "url": "https://jira.secext.samsung.net/browse/SAME-4004",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-09-28T14:25:19.517Z"
+        "status": "found",
+        "excerpt": "Orders - Adv FI Not Received\r\nGenerated: 2026-09-28T14:25:19.517Z\r\n\r\nHi [~arjenelle.a@samsung.com] ,\r\n\r\nWe checked the 14 SA-region orders reported in this ticket. All orders are in COMPLETED status with order processes in SUCCEEDED state, and all have gerpFinancialNumber populated, confirming the initial FI (Financial Information) was successfully posted to NERP.\r\n\r\nThe \"ADV FI\" refers to the advance invoice financial posting controlled by the `advanceInvoice.enabled` config property in TokoConfigProperty. When enabled, `TokoNerpConsignmentFinancialsServiceImpl.sendInitialFinancialUpdate()` sends an additional FI request with `advanceInvoiceFI=true` and `positiveAdvanceInvoiceFI=true` after the initial FI. Similarly, `sendFinancialCompletion()` sends a completion FI with `advanceInvoiceFI=true` and `positiveAdvanceInvoiceFI=false`.\r\n\r\nThe order process (order-process-v25-58 for older orders like SA250812-95030717, order-process-v25-69 for newer orders like SA260909-79355526) has the financial update flow: `sendFinancialUpdate` -> `isInitialFISuccess` -> (fulfillment steps) -> `isWaitForFinancialCompletionRequired` -> `waitForFinancialCompletion` -> `completeFinancialUpdate` -> `sendOrderCompleteFinancialUpdate` -> `isOrderCompleteFIStatus`. All 14 orders completed this flow successfully with all processes SUCCEEDED.\r\n\r\nSince the initial FI was posted and the process completed without errors, the ADV FI posting would have been sent as part of the `sendInitialFinancialUpdate` call if `advanceInvoice.enabled` was true for the SA store at the time. The NERP team confirmed receipt of the initial FI but reports ADV FI not received. This indicates either:\r\n1. The `advanceInvoice.enabled` config was not set to true for the SA store when these orders were processed, causing the ADV FI portion to be skipped\r\n2. The ADV FI request was sent to NERP but was not processed/received on the NERP side\r\n\r\nWithout Kibana logs access (Kibana was unavailable during this investigation), we cannot confirm which scenario applies. The `fiPosted` field is NULL on the 7 older orders (SA250812, SA260130, SA260423, SA260427, SA260430, SA260501, SA260510) and `0` (false) on the 7 newer orders (SA260901, SA260909, SA260910, SA260913, SA260913, SA260914, SA260914), which is expected if the `toko.fi.posting.result.update.required` config was not enabled.\r\n\r\nThe same pattern was seen in the reference ticket SAME-3942 where NERP confirmed \"the FI payment was successfully posted to NERP, and a successful response was received\" — suggesting the Hybris side completed its responsibilities and the issue may be on the NERP/FI team's side.\r\n\r\nIf the `advanceInvoice.enabled` config was not set when these orders were processed, the ADV FI requests need to be retriggered. The approach used in PC-26980 (for SAME-2857) and PC-27644 (for AEME-5097) was to retrigger the `sendFinancialUpdateAction` on the order process to resend the ADV FI. Before running any script, the NERP/FI team should confirm whether they received the initial FI documents and verify on their side whether the ADV FI document was actually missing or just not processed.\r\n\r\nKindly confirm if we should retrigger the ADV FI posting for these orders, and we will proceed with the remediation.\r\n\r\nThanks,\r\n\r\nAryan\r\n\r\n## Remediation\r\n\r\n**Approach**: Retrigger ADV FI posting by calling `sendFinancialUpdateAction.executeAction(orderProcessModel)` for each order, following the pattern from PC-26980 and PC-27644.\r\n\r\n**Reusable PC Tickets**: PC-26980 (Closed, for SAME-2857 - Adv FI is Not Posted), PC-27644 (Closed, for AEME-5097 - Adv FI posting)\r\n\r\n**Script Pattern** (from PC-26980):\r\n```\r\nsfu = spring.getBean(\"sendFinancialUpdateAction\")\r\nfor (order in orders) {\r\n    op = fss.search(\"select {pk} from {orderprocess} where {code} like '%\"+order+\"%'\").result.get(0)\r\n    sfu.executeAction(op)\r\n}\r\n```\r\n\r\n**Prerequisites**:\r\n1. Verify `advanceInvoice.enabled` is set to true for the SA store in TokoConfigProperty\r\n2. Confirm with NERP/FI team that they are ready to receive the ADV FI requests\r\n3. Check Kibana logs (when available) to confirm whether ADV FI was sent during original processing\r\n\r\n**Gaps (Uninvestigated)**:\r\n- Kibana MCP was DOWN — no log analysis performed. Re-investigation should run order_timeline for each order to check if ADV FI request was sent and what response was received from NERP\r\n- TokoConfigProperty queries for `advanceInvoice.enabled` failed due to HAC query syntax issues — need to verify this config is set for the SA store",
+        "sections": {
+          "issue": "",
+          "rca": "Orders - Adv FI Not Received\r\nGenerated: 2026-09-28T14:25:19.517Z\r\n\r\nHi [~arjenelle.a@samsung.com] ,\r\n\r\nWe checked the 14 SA-region orders reported in this ticket. All orders are in COMPLETED status with order processes in SUCCEEDED state, and all have gerpFinancialNumber populated, confirming the initial FI (Financial Information) was successfully posted to NERP.\r\n\r\nThe \"ADV FI\" refers to the advance invoice financial posting controlled by the `advanceInvoice.enabled` config property in TokoConfigProperty. When enabled, `TokoNerpConsignmentFinancialsServiceImpl.sendInitialFinancialUpdate()` sends an additional FI request with `advanceInvoiceFI=true` and `positiveAdvanceInvoiceFI=true` after the initial FI. Similarly, `sendFinancialCompletion()` sends a completion FI with `advanceInvoiceFI=true` and `positiveAdvanceInvoiceFI=false`.\r\n\r\nThe order process (order-process-v25-58 for older orders like SA250812-95030717, order-process-v25-69 for newer orders like SA260909-79355526) has the financial update flow: `sendFinancialUpdate` -> `isInitialFISuccess` -> (fulfillment steps) -> `isWaitForFinancialCompletionRequired` -> `waitForFinancialCompletion` -> `completeFinancialUpdate` -> `sendOrderCompleteFinancialUpdate` -> `isOrderCompleteFIStatus`. All 14 orders completed this flow successfully with all processes SUCCEEDED.\r\n\r\nSince the initial FI was posted and the process completed without errors, the ADV FI posting would have been sent as part of the `sendInitialFinancialUpdate` call if `advanceInvoice.enabled` was true for the SA store at the time. The NERP team confirmed receipt of the initial FI but reports ADV FI not received. This indicates either:\r\n1. The `advanceInvoice.enabled` config was not set to true for the SA store when these orders were processed, causing the ADV FI portion to be skipped\r\n2. The ADV FI request was sent to NERP but was not processed/received on the NERP side\r\n\r\nWithout Kibana logs access (Kibana was unavailable during this investigation), we cannot confirm which scenario applies. The `fiPosted` field is NULL on the 7 older orders (SA250812, SA260130, SA260423, SA260427, SA260430, SA260501, SA260510) and `0` (false) on the 7 newer orders (SA260901, SA260909, SA260910, SA260913, SA260913, SA260914, SA260914), which is expected if the `toko.fi.posting.result.update.required` config was not enabled.\r\n\r\nThe same pattern was seen in the reference ticket SAME-3942 where NERP confirmed \"the FI payment was successfully posted to NERP, and a successful response was received\" — suggesting the Hybris side completed its responsibilities and the issue may be on the NERP/FI team's side.\r\n\r\nIf the `advanceInvoice.enabled` config was not set when these orders were processed, the ADV FI requests need to be retriggered. The approach used in PC-26980 (for SAME-2857) and PC-27644 (for AEME-5097) was to retrigger the `sendFinancialUpdateAction` on the order process to resend the ADV FI. Before running any script, the NERP/FI team should confirm whether they received the initial FI documents and verify on their side whether the ADV FI document was actually missing or just not processed.\r\n\r\nKindly confirm if we should retrigger the ADV FI posting for these orders, and we will proceed with the remediation.\r\n\r\nThanks,\r\n\r\nAryan\r\n\r\n## Remediation\r\n\r\n**Approach**: Retrigger ADV FI posting by calling `sendFinancialUpdateAction.executeAction(orderProcessModel)` for each order, following the pattern from PC-26980 and PC-27644.\r\n\r\n**Reusable PC Tickets**: PC-26980 (Closed, for SAME-2857 - Adv FI is Not Posted), PC-27644 (Closed, for AEME-5097 - Adv FI posting)\r\n\r\n**Script Pattern** (from PC-26980):\r\n```\r\nsfu = spring.getBean(\"sendFinancialUpdateAction\")\r\nfor (order in orders) {\r\n    op = fss.search(\"select {pk} from {orderprocess} where {code} like '%\"+order+\"%'\").result.get(0)\r\n    sfu.executeAction(op)\r\n}\r\n```\r\n\r\n**Prerequisites**:\r\n1. Verify `advanceInvoice.enabled` is set to true for the SA store in TokoConfigProperty\r\n2. Confirm with NERP/FI team that they are ready to receive the ADV FI requests\r\n3. Check Kibana logs (when available) to confirm whether ADV FI was sent during original processing\r\n\r\n**Gaps (Uninvestigated)**:\r\n- Kibana MCP was DOWN — no log analysis performed. Re-investigation should run order_timeline for each order to check if ADV FI request was sent and what response was received from NERP\r\n- TokoConfigProperty queries for `advanceInvoice.enabled` failed due to HAC query syntax issues — need to verify this config is set for the SA store",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-28T15:10:04.425Z"
       }
     },
     {
@@ -769,7 +775,7 @@
       }
     ],
     "pid": 14040,
-    "uptime": 15398,
+    "uptime": 15433,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -778,7 +784,7 @@
         "issueTitle": "Investigate ticket SAME-4004",
         "snippet": "Auto-triggered investigation for new ticket SAME-4004.\n\nTicket: SAME-4004\nSummary: Orders - Adv FI Not Received\n\nUse the",
         "pid": 35792,
-        "elapsed": 2636
+        "elapsed": 2671
       }
     ],
     "startTime": "2026-09-28T10:54:27.736Z",
@@ -789,7 +795,7 @@
       {
         "pid": 17308,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 15916,
+        "ageSeconds": 15956,
         "status": "running",
         "isChild": false,
         "taskSummary": "its working now. add the #auto30 to kibana url in startup script as well. and the sequence should...",
@@ -799,7 +805,7 @@
       {
         "pid": 13516,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 15910,
+        "ageSeconds": 15950,
         "status": "running",
         "isChild": false,
         "taskSummary": "First question every thing then craete an order timeline then write an RCA. cross reference logs ...",
@@ -809,7 +815,7 @@
       {
         "pid": 13996,
         "cwd": "c:\\windows",
-        "ageSeconds": 15890,
+        "ageSeconds": 15930,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -819,7 +825,7 @@
       {
         "pid": 21988,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 14072,
+        "ageSeconds": 14111,
         "status": "running",
         "isChild": false,
         "taskSummary": "its working now. add the #auto30 to kibana url in startup script as well. and the sequence should...",
@@ -3636,11 +3642,11 @@
         "lastOutput": "Let me start the investigation. I'll read past learnings, check for existing RCA/cache files, and look at available scripts in parallel.No cache file exists yet — this is a fresh investigation. The lock file confirms a prior auto-trigger didn't complete. Let me fetch the Jira ticket and read the Aryantone style guide in parallel.Now launching parallel investigations. I'll run Kibana log search, DB state query via HAC, Jira cross-reference search, and PC reuse search simultaneously.Good results f"
       }
     },
-    "bridgeLogTail": "[2026-09-28T15:09:10.811Z] STDOUT data for #436: 108 bytes\n[2026-09-28T15:09:10.815Z] LIVE write for #436: 9871 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_436.txt\n[2026-09-28T15:09:10.833Z] STDOUT data for #436: 113 bytes\n[2026-09-28T15:09:10.838Z] LIVE write for #436: 9881 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_436.txt\n[2026-09-28T15:09:10.851Z] STDOUT data for #436: 112 bytes\n[2026-09-28T15:09:10.855Z] LIVE write for #436: 9890 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_436.txt\n[2026-09-28T15:09:10.873Z] STDOUT data for #436: 116 bytes\n[2026-09-28T15:09:10.877Z] LIVE write for #436: 9903 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_436.txt\n[2026-09-28T15:09:10.893Z] STDOUT data for #436: 107 bytes\n[2026-09-28T15:09:10.897Z] LIVE write for #436: 9907 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_436.txt\n[2026-09-28T15:09:10.914Z] STDOUT data for #436: 110 bytes\n[2026-09-28T15:09:10.918Z] LIVE write for #436: 9914 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_436.txt\n[2026-09-28T15:09:10.933Z] STDOUT data for #436: 106 bytes\n[2026-09-28T15:09:10.937Z] LIVE write for #436: 9917 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_436.txt\n[2026-09-28T15:09:10.955Z] STDOUT data for #436: 118 bytes\n[2026-09-28T15:09:10.959Z] LIVE write for #436: 9932 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_436.txt\n[2026-09-28T15:09:10.975Z] STDOUT data for #436: 104 bytes\n[2026-09-28T15:09:10.979Z] LIVE write for #436: 9933 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_436.txt\n[2026-09-28T15:09:12.162Z] STDOUT data for #436: 961 bytes\n[2026-09-28T15:09:12.167Z] LIVE write for #436: 9933 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_436.txt",
+    "bridgeLogTail": "[2026-09-28T15:09:58.263Z] STDOUT data for #436: 115 bytes\n[2026-09-28T15:09:58.267Z] LIVE write for #436: 14191 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_436.txt\n[2026-09-28T15:09:58.279Z] STDOUT data for #436: 107 bytes\n[2026-09-28T15:09:58.283Z] LIVE write for #436: 14195 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_436.txt\n[2026-09-28T15:09:58.298Z] STDOUT data for #436: 117 bytes\n[2026-09-28T15:09:58.303Z] LIVE write for #436: 14209 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_436.txt\n[2026-09-28T15:09:58.315Z] STDOUT data for #436: 107 bytes\n[2026-09-28T15:09:58.322Z] LIVE write for #436: 14213 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_436.txt\n[2026-09-28T15:10:04.400Z] STDOUT data for #436: 4807 bytes\n[2026-09-28T15:10:04.404Z] LIVE write for #436: 14213 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_436.txt\n[2026-09-28T15:10:04.466Z] STDOUT data for #436: 124 bytes\n[2026-09-28T15:10:04.470Z] LIVE write for #436: 14213 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_436.txt\n[2026-09-28T15:10:05.888Z] STDOUT data for #436: 138 bytes\n[2026-09-28T15:10:05.892Z] LIVE write for #436: 14248 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_436.txt\n[2026-09-28T15:10:05.893Z] STDOUT data for #436: 124 bytes\n[2026-09-28T15:10:05.896Z] LIVE write for #436: 14269 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_436.txt\n[2026-09-28T15:10:05.911Z] STDOUT data for #436: 104 bytes\n[2026-09-28T15:10:05.916Z] LIVE write for #436: 14270 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_436.txt\n[2026-09-28T15:10:06.504Z] STDOUT data for #436: 456 bytes\n[2026-09-28T15:10:06.508Z] LIVE write for #436: 14270 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_436.txt",
     "watchdog": {
       "alive": true,
       "lastWrite": "2026-09-28T15:07:41.191Z",
-      "ageMs": 109000
+      "ageMs": 148381
     },
     "watchdogLogTail": "[2026-09-28T11:52:42.751Z] DUPLICATE watchdog detected: PID 30104 — killing\n[2026-09-28T13:17:40.494Z] DUPLICATE watchdog detected: PID 33544 — killing\n[2026-09-28T13:22:41.497Z] DUPLICATE watchdog detected: PID 21820 — killing\n[2026-09-28T13:27:40.651Z] DUPLICATE watchdog detected: PID 15760 — killing\n[2026-09-28T13:32:40.854Z] DUPLICATE watchdog detected: PID 33272 — killing\n[2026-09-28T13:37:40.603Z] DUPLICATE watchdog detected: PID 31556 — killing\n[2026-09-28T13:57:40.396Z] DUPLICATE watchdog detected: PID 14444 — killing\n[2026-09-28T14:02:40.534Z] DUPLICATE watchdog detected: PID 10644 — killing\n[2026-09-28T14:22:40.633Z] DUPLICATE watchdog detected: PID 37296 — killing\n[2026-09-28T15:07:41.194Z] DUPLICATE watchdog detected: PID 25548 — killing",
     "jobOutputs": {}
@@ -3650,7 +3656,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-28T15:08:26.688Z",
+      "lastCheck": "2026-09-28T15:09:30.237Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3659,7 +3665,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-28T15:08:26.689Z",
+      "lastCheck": "2026-09-28T15:09:30.237Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3668,9 +3674,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-28T15:08:26.689Z",
+      "lastCheck": "2026-09-28T15:09:30.237Z",
       "downSince": "2026-09-28T10:54:33.843Z",
-      "downDuration": 15232846,
+      "downDuration": 15296394,
       "alert": true
     }
   ],
