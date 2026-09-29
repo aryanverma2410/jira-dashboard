@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-29T17:46:07.783Z",
+  "generatedAt": "2026-09-29T17:46:46.261Z",
   "totalTickets": 15,
   "tickets": [
     {
@@ -100,9 +100,15 @@
         }
       ],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-09-29T17:25:41.523Z"
+        "status": "found",
+        "excerpt": "RSIT for AVO - fix for incorrect messages\r\nGenerated: 2026-09-29T18:05:00.000Z\r\n\r\nIssue:\r\nDuring RSIT (Return Start in Transit) testing for Nedbank AVO marketplace integration, incorrect messages are being sent to the AVO (Nedbank marketplace) system for return scenarios. The ticket SAHME-3333 addressed the initial RSIT issues (NERP config on SoldTo, oAuth blockers) and was closed, but SAHME-3453 was created as a follow-up to fix remaining incorrect messages being sent to AVO for RSIT returns.\r\n\r\nRCA:\r\nThe root cause is an inconsistency in how SIT (Start in Transit) returns are detected across two components in the AVO marketplace message pipeline, combined with a dual-message issue.\r\n\r\n1. AvoOutboundShipmentUpdatePopulator.populate() builds the shipment update DTO sent to AVO. Originally, it checked ConsignmentEntryModel::getIsSitReturn on consignment entries to decide whether to override the newState to DELIVERY_FAILED. The SAHME-3333 fix (commit bff309ace588) changed this to check consignmentModel.getAdditionalConsignmentStatus() == ConsignmentStatus.SIT_RETURN_COMPLETED instead, which is the correct approach because the additionalConsignmentStatus field is set by the RSIT process at the consignment level, whereas the isSitReturn flag on entries is a per-entry attribute that can be unreliable for multi-entry consignments.\r\n\r\n2. However, AvoMarketplaceFulfilmentHook.hasValidStatus() still uses the old check: consignmentModel.getConsignmentEntries().stream().anyMatch(ConsignmentEntryModel::getIsSitReturn). This method gates whether updateShipmentStatusForOrder() sends an UPDATE_ORDER_SHIPPMENT_STATUS message to AVO at all. When the populator was updated to use additionalConsignmentStatus but the hook's gate check was not updated, the two components became inconsistent. A consignment could have SIT_RETURN_COMPLETED as additionalConsignmentStatus but NOT have isSitReturn=true on its entries, causing the hook to skip sending the shipment update message entirely while the populator would have correctly set DELIVERY_FAILED.\r\n\r\n3. Additionally, AvoMarketplaceFulfilmentHook.afterReturnCompleted() sends an ORDER_DECLINED message to AVO when returnRequestModel.isSitReturn() is true, but the afterSitReturn() hook (called earlier in the flow) also sends an UPDATE_ORDER_SHIPPMENT_STATUS message with DELIVERY_FAILED state. For RSIT returns, AVO receives both a shipment status update (DELIVERY_FAILED) and an order decline message, which is contradictory -- DELIVERY_FAILED indicates the delivery failed, while ORDER_DECLINED indicates the order is being declined/cancelled. AVO expects only one definitive message for the RSIT return scenario, not two conflicting ones.\r\n\r\nThe SAHME-3333 fix (merged as commit bff309ace588 to the 92rc1oct branch) partially addressed the populator but did not fix the hook's hasValidStatus() method or the dual-message issue. SAHME-3453 is the follow-up to complete the fix.\r\n\r\nKey files:\r\n- AvoOutboundShipmentUpdatePopulator.java (fixed in SAHME-3333 but not yet deployed to this branch)\r\n- AvoMarketplaceFulfilmentHook.java (hasValidStatus and afterReturnCompleted methods still need fixing)\r\n- AvoMarketplaceMessageTypeHandlerStrategy.java (handles sending messages to AVO REST endpoints)\r\n\r\nPossible remediation:\r\n1. Update AvoMarketplaceFulfilmentHook.hasValidStatus() to check consignmentModel.getAdditionalConsignmentStatus() == ConsignmentStatus.SIT_RETURN_COMPLETED instead of iterating consignment entries for getIsSitReturn. This aligns the hook's gate check with the populator's state-setting logic that was already fixed in SAHME-3333.\r\n\r\n2. Review the dual-message flow for RSIT returns: afterSitReturn() sends UPDATE_ORDER_SHIPPMENT_STATUS with DELIVERY_FAILED, and afterReturnCompleted() sends ORDER_DECLINED. Determine which message AVO expects for RSIT returns and suppress the other. Based on the AVO marketplace contract, RSIT returns should likely send only the ORDER_DECLINED message (since the order is being returned/declined), not the shipment status update. Alternatively, if DELIVERY_FAILED is the expected message, suppress ORDER_DECLINED for SIT returns.\r\n\r\n3. Add/update unit tests in AvoMarketplaceFulfilmentHookTest.java to cover: (a) consignment with SIT_RETURN_COMPLETED additionalConsignmentStatus but no isSitReturn entries should still trigger the shipment update, (b) RSIT return should not send conflicting messages to AVO.\r\n\r\n4. Deploy the fix to the 92rc1oct release or defer to Release 93rc as per Dawid Siemienski's comment on SAHME-3453.\r\n\r\nNo Hybris-side data remediation or HAC script is needed for this issue -- it is a code-level fix in the AVO marketplace integration layer.",
+        "sections": {
+          "issue": "During RSIT (Return Start in Transit) testing for Nedbank AVO marketplace integration, incorrect messages are being sent to the AVO (Nedbank marketplace) system for return scenarios. The ticket SAHME-3333 addressed the initial RSIT issues (NERP config on SoldTo, oAuth blockers) and was closed, but SAHME-3453 was created as a follow-up to fix remaining incorrect messages being sent to AVO for RSIT returns.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-29T17:46:44.561Z"
       }
     },
     {
@@ -870,7 +876,7 @@
       }
     ],
     "pid": 19768,
-    "uptime": 22408,
+    "uptime": 22448,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -879,7 +885,7 @@
         "issueTitle": "Investigate ticket SAHME-3453",
         "snippet": "Auto-triggered investigation for new ticket SAHME-3453.\n\nTicket: SAHME-3453\nSummary: RSIT for AVO - fix for incorrect me",
         "pid": 32580,
-        "elapsed": 1205
+        "elapsed": 1245
       }
     ],
     "startTime": "2026-09-29T11:32:32.880Z",
@@ -890,7 +896,7 @@
       {
         "pid": 31828,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 11797,
+        "ageSeconds": 11836,
         "status": "running",
         "isChild": false,
         "taskSummary": "can you also integrate the \"action-item\" skill also somehow so I am always up to date what I can ...",
@@ -900,7 +906,7 @@
       {
         "pid": 29716,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 10099,
+        "ageSeconds": 10138,
         "status": "running",
         "isChild": false,
         "taskSummary": "cross check eachthing with the code, db and logs",
@@ -910,7 +916,7 @@
       {
         "pid": 19584,
         "cwd": "c:\\windows",
-        "ageSeconds": 10093,
+        "ageSeconds": 10131,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -920,7 +926,7 @@
       {
         "pid": 6788,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 9987,
+        "ageSeconds": 10026,
         "status": "running",
         "isChild": false,
         "taskSummary": "can you also integrate the \"action-item\" skill also somehow so I am always up to date what I can ...",
@@ -3909,11 +3915,11 @@
         "lastOutput": "**Kibana MCP Alert — HTTP 401 (Unauthorized)**\n\nThis is an authentication failure, not a service outage. HTTP 401 means the Kibana MCP server is reachable but rejecting credentials — likely a session/token expiry or cookie refresh issue.\n\n**Likely causes:**\n- Kibana session cookie expired (Samsung Kibana sessions time out periodically)\n- API token or SSO credential rotated without updating the MCP server config\n- Proxy/gateway auth layer changed\n\n**What to do:**\n1. Open Kibana in a browser and r"
       }
     },
-    "bridgeLogTail": "Node.js v22.22.0\n[2026-09-29T17:46:02.237Z] STDOUT data for #460: 248 bytes\n[2026-09-29T17:46:02.239Z] LIVE write for #460: 1307 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_460.txt\n[2026-09-29T17:46:02.589Z] aipro stderr for #460: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\n[2026-09-29T17:46:05.526Z] STDOUT data for #460: 376 bytes\n[2026-09-29T17:46:05.528Z] LIVE write for #460: 1307 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_460.txt\n[2026-09-29T17:46:05.529Z] STDOUT data for #460: 796 bytes\n[2026-09-29T17:46:05.531Z] LIVE write for #460: 1307 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_460.txt",
+    "bridgeLogTail": "[2026-09-29T17:46:33.038Z] STDOUT data for #460: 120 bytes\n[2026-09-29T17:46:33.040Z] LIVE write for #460: 1371 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_460.txt\n[2026-09-29T17:46:33.057Z] STDOUT data for #460: 119 bytes\n[2026-09-29T17:46:33.059Z] LIVE write for #460: 1387 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_460.txt\n[2026-09-29T17:46:33.078Z] STDOUT data for #460: 104 bytes\n[2026-09-29T17:46:33.080Z] LIVE write for #460: 1388 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_460.txt\n[2026-09-29T17:46:34.265Z] STDOUT data for #460: 871 bytes\n[2026-09-29T17:46:34.268Z] LIVE write for #460: 1388 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_460.txt\n[2026-09-29T17:46:34.276Z] STDOUT data for #460: 860 bytes\n[2026-09-29T17:46:34.279Z] LIVE write for #460: 1388 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_460.txt\n[2026-09-29T17:46:44.539Z] STDOUT data for #460: 4949 bytes\n[2026-09-29T17:46:44.541Z] LIVE write for #460: 1388 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_460.txt\n[2026-09-29T17:46:44.572Z] STDOUT data for #460: 124 bytes\n[2026-09-29T17:46:44.575Z] LIVE write for #460: 1388 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_460.txt\n[2026-09-29T17:46:46.528Z] STDOUT data for #460: 131 bytes\n[2026-09-29T17:46:46.531Z] LIVE write for #460: 1416 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_460.txt\n[2026-09-29T17:46:46.536Z] STDOUT data for #460: 124 bytes\n[2026-09-29T17:46:46.538Z] LIVE write for #460: 1437 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_460.txt\n[2026-09-29T17:46:46.556Z] STDOUT data for #460: 118 bytes\n[2026-09-29T17:46:46.558Z] LIVE write for #460: 1452 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_460.txt",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-29T15:06:34.155Z",
-      "ageMs": 9576709
+      "ageMs": 9615024
     },
     "watchdogLogTail": "[2026-09-29T11:32:32.703Z] Dashboard started with PID 29980 (restart #1, 1 in last hour)\n[2026-09-29T11:32:35.534Z] Clock sync: Checking drift against Jira server...\n[2026-09-29T11:32:35.918Z] Clock sync: VDI hw=2026-09-29T17:02:35.918Z Jira=2026-09-29T11:34:17.000Z drift=-19699s\n[2026-09-29T06:04:18.423Z] Clock sync: ADJUSTED by -19699s. Clock set to 2026-09-29 11:34:17\n[2026-09-29T06:07:40.558Z] DUPLICATE watchdog detected: PID 29624 — killing\n[2026-09-29T06:12:45.418Z] DUPLICATE watchdog detected: PID 19764 — killing\n[2026-09-29T08:52:47.251Z] DUPLICATE watchdog detected: PID 36004 — killing\n[2026-09-29T08:56:55.432Z] Dashboard is degraded (failures: 6). Will not restart yet.\n[2026-09-29T14:57:44.063Z] DUPLICATE watchdog detected: PID 13212 — killing\n[2026-09-29T15:06:34.158Z] DUPLICATE jira-dashboard-server detected: PID 22756 — killing",
     "jobOutputs": {}
@@ -3923,7 +3929,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-29T17:45:34.376Z",
+      "lastCheck": "2026-09-29T17:46:33.747Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3932,18 +3938,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-29T17:45:34.376Z",
+      "lastCheck": "2026-09-29T17:46:33.747Z",
       "downSince": "2026-09-29T17:22:31.942Z",
-      "downDuration": 1382434,
+      "downDuration": 1441805,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-29T17:45:34.376Z",
+      "lastCheck": "2026-09-29T17:46:33.747Z",
       "downSince": "2026-09-29T08:58:22.163Z",
-      "downDuration": 31632213,
+      "downDuration": 31691584,
       "alert": true
     }
   ],
