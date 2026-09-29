@@ -559,6 +559,35 @@ body.has-status-bar .scroll{padding-top:28px}
 .tpl-delete{float:right;color:var(--danger);font-size:10px}
 .tpl-btn{background:var(--card);border:1px solid var(--border);color:var(--text-dim);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;margin-bottom:6px}
 
+/* ACTION ITEMS VIEW */
+.ai-stats-bar{display:flex;gap:8px;padding:12px 16px}
+.ai-stat{flex:1;text-align:center;border-radius:10px;padding:10px 6px;border:1px solid var(--border)}
+.ai-stat-zero{background:rgba(63,185,80,0.08);border-color:rgba(63,185,80,0.2)}
+.ai-stat-actionable{background:rgba(210,153,34,0.08);border-color:rgba(210,153,34,0.2)}
+.ai-stat-blocked{background:rgba(248,81,73,0.08);border-color:rgba(248,81,73,0.2)}
+.ai-stat-queued{background:rgba(88,166,255,0.08);border-color:rgba(88,166,255,0.2)}
+.ai-stat-count{font-size:22px;font-weight:700}
+.ai-stat-label{font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-top:2px}
+.ai-section{margin:0 16px 16px;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.ai-section-header{padding:10px 14px;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:space-between}
+.ai-section.zero .ai-section-header{background:rgba(63,185,80,0.1);color:var(--success)}
+.ai-section.actionable .ai-section-header{background:rgba(210,153,34,0.1);color:#d29922}
+.ai-section.blocked .ai-section-header{background:rgba(248,81,73,0.1);color:var(--danger)}
+.ai-section.queued .ai-section-header{background:rgba(88,166,255,0.1);color:var(--accent)}
+.ai-row{padding:10px 14px;border-top:1px solid var(--border);cursor:pointer}
+.ai-row:active{background:var(--card)}
+.ai-row-top{display:flex;align-items:center;gap:6px}
+.ai-row-key{font-family:monospace;font-size:12px;font-weight:700;color:var(--accent)}
+.ai-row-summary{font-size:12px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ai-row-detail{font-size:11px;color:var(--text-dim);margin-top:3px;display:flex;align-items:center;gap:6px}
+.ai-priority-badge{font-size:9px;font-weight:700;border-radius:3px;padding:1px 5px;text-transform:uppercase}
+.ai-pri-highest,.ai-pri-critical{background:rgba(248,81,73,0.15);color:var(--danger)}
+.ai-pri-high{background:rgba(210,153,34,0.15);color:#d29922}
+.ai-pri-medium{background:rgba(88,166,255,0.15);color:var(--accent)}
+.ai-pri-low,.ai-pri-lowest{background:rgba(139,148,158,0.15);color:var(--text-dim)}
+.ai-row-status{font-size:10px;color:var(--text-dim);margin-left:auto}
+.ai-empty{text-align:center;padding:20px;color:var(--text-dim);font-size:12px}
+
 /* F8/F10/F11 Section wrappers */
 .qol-section{padding:12px 16px}
 .qol-section-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:6px}
@@ -720,6 +749,21 @@ body.has-status-bar .scroll{padding-top:28px}
   </div>
 </div>
 
+<!-- VIEW: ACTION ITEMS -->
+<div class="view" id="view-action">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="pulse-dot" id="actionPulseDot"></div>
+      <h1>Action Items</h1>
+    </div>
+    <div class="refresh-time" id="actionRefreshTime">...</div>
+  </div>
+  <div class="scroll" id="actionScroll">
+    <div class="ai-stats-bar" id="actionStatsBar"></div>
+    <div id="actionItemsContent"><div class="loading-state">Loading...</div></div>
+  </div>
+</div>
+
 <!-- VIEW: RCA MATRIX -->
 <div class="view" id="view-rca">
   <div class="topbar">
@@ -818,6 +862,11 @@ body.has-status-bar .scroll{padding-top:28px}
     <div class="nav-icon">&#128268;</div>
     <span>MCPs</span>
     <div class="nav-badge" id="navBadgeMcps"></div>
+  </div>
+  <div class="nav-item" data-nav="view-action" onclick="switchView('view-action')">
+    <div class="nav-icon">&#9989;</div>
+    <span>Action</span>
+    <div class="nav-badge" id="navBadgeAction"></div>
   </div>
   <div class="nav-item" data-nav="view-rca" onclick="switchView('view-rca')">
     <div class="nav-icon">&#128269;</div>
@@ -1081,7 +1130,7 @@ function onData(data){
   ticketState=newState;
   rawData=data;
   renderFilters(data);renderTickets(data,changedKeys);
-  renderRcaMatrix(data);renderDayStarter(data);
+  renderRcaMatrix(data);renderDayStarter(data);renderActionItems(data);
   renderSessions(data);renderActivity(data);renderMcps(data);renderCmdHistory();
   pollCmdResponses(data);updateNavBadges(data);
 }
@@ -2855,7 +2904,86 @@ switchView=function(id){
   if(id==='view-hac')loadHacReport();
   if(id==='view-tasks'){loadTasks();renderActionQueue();}
   if(id==='view-rca'&&rawData)renderRcaMatrix(rawData);
+  if(id==='view-action'&&rawData)renderActionItems(rawData);
 };
+
+// ===== ACTION ITEMS VIEW =====
+function renderActionItems(data){
+  var el=document.getElementById('actionItemsContent');
+  if(!el)return;
+  if(!data||!data.actionItems){
+    el.innerHTML='<div class="loading-state">Loading...</div>';
+    return;
+  }
+  var ai=data.actionItems;
+  var totals=ai.totals||{};
+  // Stats bar
+  var sb=document.getElementById('actionStatsBar');
+  if(sb){
+    sb.innerHTML=
+      '<div class="ai-stat ai-stat-zero"><div class="ai-stat-count" style="color:var(--success)">'+totals.zero+'</div><div class="ai-stat-label">Zero Dep</div></div>'+
+      '<div class="ai-stat ai-stat-actionable"><div class="ai-stat-count" style="color:#d29922">'+totals.actionable+'</div><div class="ai-stat-label">With Deps</div></div>'+
+      '<div class="ai-stat ai-stat-blocked"><div class="ai-stat-count" style="color:var(--danger)">'+totals.blocked+'</div><div class="ai-stat-label">Blocked</div></div>'+
+      '<div class="ai-stat ai-stat-queued"><div class="ai-stat-count" style="color:var(--accent)">'+totals.queued+'</div><div class="ai-stat-label">Queued</div></div>';
+  }
+  // Build sections
+  var html='';
+  // Zero Dependency
+  html+='<div class="ai-section zero"><div class="ai-section-header">&#129001; ZERO DEPENDENCY — Start Right Now ('+ai.zero.length+')</div>';
+  if(ai.zero.length===0)html+='<div class="ai-empty">Nothing to do right now — all caught up!</div>';
+  else html+=ai.zero.map(function(t){return aiRow(t)}).join('');
+  html+='</div>';
+  // Actionable with Dependencies
+  html+='<div class="ai-section actionable"><div class="ai-section-header">&#129000; ACTIONABLE WITH DEPENDENCIES ('+ai.actionable.length+')</div>';
+  if(ai.actionable.length===0)html+='<div class="ai-empty">No partially actionable tickets.</div>';
+  else html+=ai.actionable.map(function(t){return aiRow(t)}).join('');
+  html+='</div>';
+  // Blocked / Waiting
+  html+='<div class="ai-section blocked"><div class="ai-section-header">&#128308; BLOCKED / WAITING ('+ai.blocked.length+')</div>';
+  if(ai.blocked.length===0)html+='<div class="ai-empty">Nothing blocked — great!</div>';
+  else html+=ai.blocked.map(function(t){return aiRow(t)}).join('');
+  html+='</div>';
+  // Queued (Solved / Queued)
+  if(ai.queued.length>0){
+    html+='<div class="ai-section queued"><div class="ai-section-header">&#128230; SOLVED / QUEUED ('+ai.queued.length+')</div>';
+    html+=ai.queued.map(function(t){
+      return '<div class="ai-row" onclick="openTicketDetail(\''+escapeHtml(t.key)+'\')">'+
+        '<div class="ai-row-top"><span class="ai-row-key">'+escapeHtml(t.key)+'</span>'+
+        '<span class="ai-row-summary">'+escapeHtml(t.summary||'')+'</span>'+
+        '</div><div class="ai-row-detail">'+
+        aiPriBadge(t.priority)+
+        '<span>'+escapeHtml(t.queueActions||'')+'</span>'+
+        '<span class="ai-row-status">'+escapeHtml(t.status||'')+'</span></div></div>';
+    }).join('');
+    html+='</div>';
+  }
+  el.innerHTML=html;
+  // Update nav badge with zero-dependency count
+  var badge=document.getElementById('navBadgeAction');
+  if(badge){badge.textContent=totals.zero>0?totals.zero:'';badge.classList.toggle('show',totals.zero>0)}
+  // Update refresh time
+  var rt=document.getElementById('actionRefreshTime');
+  if(rt)rt.textContent=formatTime(new Date());
+  var pd=document.getElementById('actionPulseDot');
+  if(pd){pd.classList.toggle('offline',!(data.agent&&data.agent.online))}
+}
+function aiRow(t){
+  var detail=(t.category==='blocked')?(t.reason||''):(t.whatToDo||'');
+  return '<div class="ai-row" onclick="openTicketDetail(\''+escapeHtml(t.key)+'\')">'+
+    '<div class="ai-row-top"><span class="ai-row-key">'+escapeHtml(t.key)+'</span>'+
+    '<span class="ai-row-summary">'+escapeHtml(t.summary||'')+'</span></div>'+
+    '<div class="ai-row-detail">'+aiPriBadge(t.priority)+
+    '<span>'+escapeHtml(detail)+'</span>'+
+    '<span class="ai-row-status">'+escapeHtml(t.status||'')+'</span></div></div>';
+}
+function aiPriBadge(pri){
+  var p=(pri||'').toLowerCase();
+  var cls='ai-pri-medium';
+  if(p==='highest'||p==='critical')cls='ai-pri-highest';
+  else if(p==='high')cls='ai-pri-high';
+  else if(p==='low'||p==='lowest')cls='ai-pri-low';
+  return '<span class="ai-priority-badge '+cls+'">'+escapeHtml(pri||'')+'</span>';
+}
 
 // ===== NEW FEATURE FUNCTIONS =====
 
