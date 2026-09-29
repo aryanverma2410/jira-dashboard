@@ -1,7 +1,68 @@
 {
-  "generatedAt": "2026-09-29T17:35:41.031Z",
-  "totalTickets": 14,
+  "generatedAt": "2026-09-29T17:36:21.170Z",
+  "totalTickets": 15,
   "tickets": [
+    {
+      "key": "SAHME-3357",
+      "summary": "SMC Errors-ProcessExternalServices",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "South Africa Maintenance & Enhancements",
+      "projectKey": "SAHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-09-30T02:37:39.000+0900",
+      "created": "2026-08-03T20:40:04.000+0900",
+      "statusChangedAt": "2026-08-03T20:40:12.579+0900",
+      "assignedToMeAt": "",
+      "description": "Hi ~@email \n\nCan you please help to check below orders that were errored at processExternalServices\n\n \n\nZA260730-45028831\n\nError Code: 400 HTTP Response : \\{\\n  \\\"message\\\" : \\\"UNSUPPORTED_DEVICE_MODEL\\\",\\n  \\\"code\\\" : \\\"USR-B1008\\\"\\n}\n\n \n\nZA260729-43785340\n\nError Code: 400 HTTP Response : \\{\\n  \\\"d",
+      "commentsCount": 21,
+      "recentComments": [
+        {
+          "author": "Nosipho Mkhungo",
+          "date": "2026-09-29T22:25:28.783+0900",
+          "snippet": "ZA260730-45028831- policy created"
+        },
+        {
+          "author": "Suresh Ganesula",
+          "date": "2026-09-24T17:43:38.652+0900",
+          "snippet": "Hi ~@email Kindly check the latest comment which was added by Aryan for the order which is ending with ZA260730-45028831 in below link.\n\n[Jira Link] \n\nKindly please check and let us know.\n\ncc: ~@email ~@email"
+        }
+      ],
+      "lastCommentBy": "Nosipho Mkhungo",
+      "lastCommentSnippet": "ZA260730-45028831- policy created",
+      "lastCommentDate": "2026-09-29T22:25:28.783+0900",
+      "url": "https://jira.secext.samsung.net/browse/SAHME-3357",
+      "linkedTickets": [
+        {
+          "key": "SAHME-3408",
+          "summary": "SMC Errors-ProcessExternalServices",
+          "status": "Launch Verification",
+          "statusCategory": "Done",
+          "relation": "is cloned by",
+          "assignee": null
+        },
+        {
+          "key": "GMT-18732",
+          "summary": "SMI - ZA | Samsung care + Orders in error status",
+          "status": "On-Hold",
+          "statusCategory": "Done",
+          "relation": "relates to",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "SMC Errors-ProcessExternalServices\r\nGenerated: 2026-09-03T22:45:00Z\r\n\r\nHi [~irish.o.antony.rajan@accenture.com] ,\r\n\r\nWe investigated the 14 orders reported with SMC (Samsung Care+) errors at the processExternalServices stage. 11 of the 14 ExternalService records are now in UPDATED status with statusMessage \"OK\", confirming that the SC+ policies are active for those orders. These were remediated after the Subs/SMC team completed the required device and product mappings.\r\n\r\nThree orders still have ExternalService in ERROR status:\r\n\r\nZA260730-45028831 (UNSUPPORTED_DEVICE_MODEL, USR-B1008):\r\nThe device model SM-A366BZKVAFA (Galaxy A36) is not yet mapped in the SMC system. The consignment process invokes ProcessExternalServicesOnConsignmentAction which calls SMCExternalServicesActivationImpl.processService(). This in turn calls SMCWebClient.executeRESTExchangeRequest() to POST the device activation request to the SMC API. The SMC API returns HTTP 400 with \"UNSUPPORTED_DEVICE_MODEL\", causing SMCWebClientResultFailedException. The exception is caught by callDeviceService() which returns false, and the ExternalService is moved to ERROR status. Kibana logs confirm 4 failed retry attempts between August 7 and August 21, all failing with the same error. Kindly confirm with the Subs/SMC team once the A36 device mapping is completed so we can reset and retrigger.\r\n\r\nZA260720-34285353 (INVALID_REQUEST_PARAMETERS, USR-A0002):\r\nThe SMC API rejected the request with \"South Africa Identity Book is invalid\". The ExternalService statusMessage was not persisted in this case. The same code path applies: processService() -> callDeviceService() -> SMCWebClientResultFailedException on HTTP 400. The root cause is an invalid identity document or request parameter submitted during checkout. Kindly confirm with the Subs/SMC team whether the identity document or request parameter issue has been resolved so we can reset and retrigger.\r\n\r\nZA260818-62782020 (NOT_EXISTS_PRODUCT_ID, USR-A1002):\r\nThe product ID SMC-ZA-MOB-24-1-35 was not valid in the SMC system. Kibana logs show the ExternalService was created at checkout on 2026-08-18 and the SMC API returned HTTP 400 with \"the product id is not valid\". The ExternalService was moved to ERROR status via the same SMCWebClientResultFailedException path. Kindly confirm with the Subs/SMC team once this product ID is mapped so we can reset and retrigger.\r\n\r\nThis is not a Hybris platform issue. The root cause is on the SMC/Subs side for all three remaining orders -- device model mapping (A36), identity document validation, and product ID mapping respectively. The Hybris code correctly handles these rejections: ProcessExternalServicesOnConsignmentAction invokes the SMC API via SMCExternalServicesActivationImpl, and when the API returns a non-200 response, SMCWebClientResultFailedException is thrown and ExternalService is set to ERROR.\r\n\r\nThis is the same cluster of orders tracked under GMT-18732 (SMI - ZA | Samsung care+ Orders in error status).\r\n\r\nRegards\r\n\r\nAryan\r\n\r\n## Remediation\r\nReuse PC-52678 (Closed, REUSABLE) for SC+ reset. Once the Subs/SMC team confirms the required mappings are completed:\r\n1. Reset ExternalService status from ERROR to NEW for each affected order\r\n2. Re-invoke processExternalServicesOnConsignmentAction.executeAction(consignmentProcess) to retrigger the SMC API call\r\n3. The existing script script-AEME-6495-scplus-remediation.groovy under PC-52678 can be copied and updated with the new order list\r\n\r\nPre-conditions: secondGI must be valid (non-blank) for each consignment before retrigger. The 11 already-resolved orders do not need any further action.",
+        "sections": {
+          "issue": "",
+          "rca": "SMC Errors-ProcessExternalServices\r\nGenerated: 2026-09-03T22:45:00Z\r\n\r\nHi [~irish.o.antony.rajan@accenture.com] ,\r\n\r\nWe investigated the 14 orders reported with SMC (Samsung Care+) errors at the processExternalServices stage. 11 of the 14 ExternalService records are now in UPDATED status with statusMessage \"OK\", confirming that the SC+ policies are active for those orders. These were remediated after the Subs/SMC team completed the required device and product mappings.\r\n\r\nThree orders still have ExternalService in ERROR status:\r\n\r\nZA260730-45028831 (UNSUPPORTED_DEVICE_MODEL, USR-B1008):\r\nThe device model SM-A366BZKVAFA (Galaxy A36) is not yet mapped in the SMC system. The consignment process invokes ProcessExternalServicesOnConsignmentAction which calls SMCExternalServicesActivationImpl.processService(). This in turn calls SMCWebClient.executeRESTExchangeRequest() to POST the device activation request to the SMC API. The SMC API returns HTTP 400 with \"UNSUPPORTED_DEVICE_MODEL\", causing SMCWebClientResultFailedException. The exception is caught by callDeviceService() which returns false, and the ExternalService is moved to ERROR status. Kibana logs confirm 4 failed retry attempts between August 7 and August 21, all failing with the same error. Kindly confirm with the Subs/SMC team once the A36 device mapping is completed so we can reset and retrigger.\r\n\r\nZA260720-34285353 (INVALID_REQUEST_PARAMETERS, USR-A0002):\r\nThe SMC API rejected the request with \"South Africa Identity Book is invalid\". The ExternalService statusMessage was not persisted in this case. The same code path applies: processService() -> callDeviceService() -> SMCWebClientResultFailedException on HTTP 400. The root cause is an invalid identity document or request parameter submitted during checkout. Kindly confirm with the Subs/SMC team whether the identity document or request parameter issue has been resolved so we can reset and retrigger.\r\n\r\nZA260818-62782020 (NOT_EXISTS_PRODUCT_ID, USR-A1002):\r\nThe product ID SMC-ZA-MOB-24-1-35 was not valid in the SMC system. Kibana logs show the ExternalService was created at checkout on 2026-08-18 and the SMC API returned HTTP 400 with \"the product id is not valid\". The ExternalService was moved to ERROR status via the same SMCWebClientResultFailedException path. Kindly confirm with the Subs/SMC team once this product ID is mapped so we can reset and retrigger.\r\n\r\nThis is not a Hybris platform issue. The root cause is on the SMC/Subs side for all three remaining orders -- device model mapping (A36), identity document validation, and product ID mapping respectively. The Hybris code correctly handles these rejections: ProcessExternalServicesOnConsignmentAction invokes the SMC API via SMCExternalServicesActivationImpl, and when the API returns a non-200 response, SMCWebClientResultFailedException is thrown and ExternalService is set to ERROR.\r\n\r\nThis is the same cluster of orders tracked under GMT-18732 (SMI - ZA | Samsung care+ Orders in error status).\r\n\r\nRegards\r\n\r\nAryan\r\n\r\n## Remediation\r\nReuse PC-52678 (Closed, REUSABLE) for SC+ reset. Once the Subs/SMC team confirms the required mappings are completed:\r\n1. Reset ExternalService status from ERROR to NEW for each affected order\r\n2. Re-invoke processExternalServicesOnConsignmentAction.executeAction(consignmentProcess) to retrigger the SMC API call\r\n3. The existing script script-AEME-6495-scplus-remediation.groovy under PC-52678 can be copied and updated with the new order list\r\n\r\nPre-conditions: secondGI must be valid (non-blank) for each consignment before retrigger. The 11 already-resolved orders do not need any further action.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-03T13:45:10.016Z"
+      }
+    },
     {
       "key": "SAHME-3453",
       "summary": "RSIT for AVO - fix for incorrect messages",
@@ -803,7 +864,7 @@
       }
     ],
     "pid": 19768,
-    "uptime": 21785,
+    "uptime": 21825,
     "failures": 0,
     "activeJobCount": 2,
     "jobs": [
@@ -812,14 +873,14 @@
         "issueTitle": "Investigate ticket AEME-6595",
         "snippet": "Auto-triggered investigation for new ticket AEME-6595.\n\nTicket: AEME-6595\nSummary: Incomplete NorthLadder Orders || 29-S",
         "pid": 36000,
-        "elapsed": 700
+        "elapsed": 740
       },
       {
         "issueNum": 460,
         "issueTitle": "Investigate ticket SAHME-3453",
         "snippet": "Auto-triggered investigation for new ticket SAHME-3453.\n\nTicket: SAHME-3453\nSummary: RSIT for AVO - fix for incorrect me",
         "pid": 32580,
-        "elapsed": 582
+        "elapsed": 622
       }
     ],
     "startTime": "2026-09-29T11:32:32.880Z",
@@ -830,7 +891,7 @@
       {
         "pid": 31828,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 11172,
+        "ageSeconds": 11211,
         "status": "running",
         "isChild": false,
         "taskSummary": "can you also integrate the \"action-item\" skill also somehow so I am always up to date what I can ...",
@@ -840,7 +901,7 @@
       {
         "pid": 29716,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 9473,
+        "ageSeconds": 9513,
         "status": "running",
         "isChild": false,
         "taskSummary": "cross check eachthing with the code, db and logs",
@@ -850,7 +911,7 @@
       {
         "pid": 19584,
         "cwd": "c:\\windows",
-        "ageSeconds": 9467,
+        "ageSeconds": 9507,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -860,7 +921,7 @@
       {
         "pid": 6788,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 9362,
+        "ageSeconds": 9401,
         "status": "running",
         "isChild": false,
         "taskSummary": "can you also integrate the \"action-item\" skill also somehow so I am always up to date what I can ...",
@@ -3847,11 +3908,11 @@
         "lastOutput": "**Kibana MCP Alert — HTTP 401 (Unauthorized)**\n\nThis is an authentication failure, not a service outage. HTTP 401 means the Kibana MCP server is reachable but rejecting credentials — likely a session/token expiry or cookie refresh issue.\n\n**Likely causes:**\n- Kibana session cookie expired (Samsung Kibana sessions time out periodically)\n- API token or SSO credential rotated without updating the MCP server config\n- Proxy/gateway auth layer changed\n\n**What to do:**\n1. Open Kibana in a browser and r"
       }
     },
-    "bridgeLogTail": "    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-09-29T17:35:35.280Z] STDOUT data for #460: 307 bytes\n[2026-09-29T17:35:35.282Z] LIVE write for #460: 858 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_460.txt\n[2026-09-29T17:35:45.134Z] aipro stderr for #459: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-09-29T17:35:45.344Z] STDOUT data for #459: 372 bytes\n[2026-09-29T17:35:45.346Z] LIVE write for #459: 466 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_459.txt",
+    "bridgeLogTail": "    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-09-29T17:36:19.904Z] aipro stderr for #460: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-29T15:06:34.155Z",
-      "ageMs": 8951352
+      "ageMs": 8990517
     },
     "watchdogLogTail": "[2026-09-29T11:32:32.703Z] Dashboard started with PID 29980 (restart #1, 1 in last hour)\n[2026-09-29T11:32:35.534Z] Clock sync: Checking drift against Jira server...\n[2026-09-29T11:32:35.918Z] Clock sync: VDI hw=2026-09-29T17:02:35.918Z Jira=2026-09-29T11:34:17.000Z drift=-19699s\n[2026-09-29T06:04:18.423Z] Clock sync: ADJUSTED by -19699s. Clock set to 2026-09-29 11:34:17\n[2026-09-29T06:07:40.558Z] DUPLICATE watchdog detected: PID 29624 — killing\n[2026-09-29T06:12:45.418Z] DUPLICATE watchdog detected: PID 19764 — killing\n[2026-09-29T08:52:47.251Z] DUPLICATE watchdog detected: PID 36004 — killing\n[2026-09-29T08:56:55.432Z] Dashboard is degraded (failures: 6). Will not restart yet.\n[2026-09-29T14:57:44.063Z] DUPLICATE watchdog detected: PID 13212 — killing\n[2026-09-29T15:06:34.158Z] DUPLICATE jira-dashboard-server detected: PID 22756 — killing",
     "jobOutputs": {}
@@ -4018,6 +4079,18 @@
         "statusChangedAt": "2026-09-28T15:10:33.048+0900"
       },
       {
+        "key": "SAHME-3357",
+        "summary": "SMC Errors-ProcessExternalServices",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/SAHME-3357",
+        "updated": "2026-09-30T02:37:39.000+0900",
+        "statusChangedAt": "2026-08-03T20:40:12.579+0900"
+      },
+      {
         "key": "SAHME-3453",
         "summary": "RSIT for AVO - fix for incorrect messages",
         "priority": "None",
@@ -4177,7 +4250,7 @@
       }
     ],
     "totals": {
-      "zero": 8,
+      "zero": 9,
       "actionable": 2,
       "blocked": 3,
       "queued": 1
