@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-29T06:43:12.961Z",
-  "totalTickets": 18,
+  "generatedAt": "2026-09-29T06:43:53.594Z",
+  "totalTickets": 17,
   "tickets": [
     {
       "key": "PC-54713",
@@ -375,50 +375,6 @@
         "status": "investigating",
         "issueNumber": null,
         "lockedAt": "2026-09-29T10:45:57.890Z"
-      }
-    },
-    {
-      "key": "SAME-4005",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Kingdom of Saudi Arabia Maintenance & Enhancements",
-      "projectKey": "SAME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-29T14:31:47.000+0900",
-      "created": "2026-09-29T01:09:01.000+0900",
-      "statusChangedAt": "2026-09-29T01:09:03.411+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n||Order Number||Order Date||Order Status||Issue||\n|SA260925-93816359|2026/09/28|FRAUD_CHECKED|Order process ERROR at fraudCheckExternal - billingAddress is null (NPE on getVatNumber)|\n|SA260926-9545580",
-      "commentsCount": 2,
-      "recentComments": [
-        {
-          "author": "Arjenelle Acabado",
-          "date": "2026-09-29T14:31:38.360+0900",
-          "snippet": "Hi ~@email \n\nPlease find below remarks for each order.\n|h6. Order Number|h6. Order Date|h6. Order Status|h6. Issue|h6. Remarks|\n|h6. SA260925-93816359|h6. 9/28/2026|h6. FRAUD_CHECKED|h6. Order process ERROR at fraudCheckExternal - billingAddress is null (NPE on getVatNumber)|h6. Order is now in SHIP"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-29T01:12:26.211+0900",
-          "snippet": "Hi Team,\n\nKindly check if remediation is required for these orders.\n\nSA260925-93816359 is stuck at fraudCheckExternal with billingAddress null (NPE on getVatNumber).\nSA260926-95455804 has payment status CAPTURE:REJECTED.\nSA260925-94766480 is stuck at sendConsignmentToWarehouse with Connection reset "
-        }
-      ],
-      "lastCommentBy": "Arjenelle Acabado",
-      "lastCommentSnippet": "Hi ~@email \n\nPlease find below remarks for each order.\n|h6. Order Number|h6. Order Date|h6. Order Status|h6. Issue|h6. Remarks|\n|h6. SA260925-93816359|h6. 9/28/2026|h6. FRAUD_CHECKED|h6. Order process ERROR at fraudCheckExternal - billingAddress is null (NPE on getVatNumber)|h6. Order is now in SHIP",
-      "lastCommentDate": "2026-09-29T14:31:38.360+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAME-4005",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Stuck order on Hybris\r\nGenerated: 2026-09-28T16:45:00.000Z\r\n\r\n## Issue\r\n\r\nTicket SAME-4005 reports 4 SA-region orders stuck on Hybris with different error conditions. DB verification against the live Hybris instance (via FlexibleSearch) was performed for all 4 orders. Kibana log analysis was not available during this investigation (Kibana MCP tools unreachable), so the RCA is based on DB state, task logs, codebase trace, and Jira cross-reference of 800+ similar resolved tickets.\r\n\r\nOrder SA260925-93816359 (FRAUD_CHECKED / fraudCheckExternal NPE on getVatNumber): The ticket description is stale. DB shows the order has progressed to SHIPPING_PREPARATION status with the order process in RUNNING state. Task logs confirm the process executed fraudCheckExternal and continued through reserveVirtualStock, takePayment, splitOrder, and onward to shipping preparation. The fraudCheckExternal error was transient and the process self-recovered. No remediation needed for this order.\r\n\r\nOrder SA260926-95455804 (PAYMENT_NOT_CAPTURED / CAPTURE:REJECTED, stagnant 48h): DB confirms the order is in PAYMENT_NOT_CAPTURED status with the order process in FAILED state. Payment mode is Tabby (sa-TabbyPaymentMode). The payment transaction has 4 entries: two AUTHORIZATION entries both ACCEPTED for 4199.00 SAR (timestamps 11:25:26 and 11:25:27 on Sep 26), a NOTIFICATION entry in CREATED status for 1399.66 SAR (never processed), and a CAPTURE entry REJECTED with null amount at 11:33:30. The capture was rejected by the Tabby payment gateway approximately 8 minutes after authorization. The null capture amount suggests the capture request may have been malformed or the authorization had expired been invalidated by the time capture was attempted.\r\n\r\nOrder SA260925-94766480 (ORDER_SPLIT / sendConsignmentToWarehouse I/O error, stagnant 66h): DB confirms ORDER_SPLIT status. The order process is RUNNING but the consignment process (consignment-process-v11-36) is in ERROR state. The consignment (SA260925-94766480) is in WAITING_FOR_TRANSFER status at warehouse WC05. Payment mode is CheckoutDotComFlow (sa-CheckoutDotComFlowPaymentMode). The consignment process errored at the sendConsignmentToWarehouse action due to an I/O Connection reset error during the HTTP call to the warehouse system (NERP/GERP). This is a transient network connectivity issue between Hybris and the warehouse integration layer.\r\n\r\nOrder SA260924-93541416 (FRAUD_CHECKED / reserveVirtualStock \"amount must be greater than zero\", stagnant 91h): DB confirms FRAUD_CHECKED status with the order process in ERROR state. Payment mode is Moyasar Samsung Pay (sa-moyasarSamsungPay). The order has TWO payment transactions: PT1 with a valid AUTHORIZATION ACCEPTED for 7079.10 SAR (Sep 24 16:32:31), and PT2 with an AUTHORIZATION ACCEPTED for amount 0E-8 (scientific notation for zero). PT2 is a phantom/duplicate zero-amount payment transaction that was incorrectly created during the checkout flow. The process task logs show the last executed action was reserveVirtualStock, which failed with \"amount must be greater than zero\". The stock reservation validation rejected the order because the effective payment amount evaluated to zero (from the phantom PT2), despite PT1 holding a valid 7079.10 SAR authorization. Five external service entries exist (including NORTHLADDER and SMC both in NEW status), confirming the order was partially processed before the stock reservation failure.\r\n\r\n## RCA\r\n\r\nSA260925-93816359: Transient NPE at fraudCheckExternal. The billingAddress was null when the fraud check external service attempted to read getVatNumber for the Riskified fraud check request. The process retried (fraudCheckExternal appears twice in task logs) and succeeded on the second attempt. The order has since progressed to SHIPPING_PREPARATION. This is not a stuck order. The NPE is a known pattern: TokoFraudServiceClientJPImpl builds a FraudCheckExternalOrderRequestDTO from the order, and if billingAddress is null, accessing getVatNumber throws NPE. The process engine retried the action, and on retry the billingAddress was populated (possibly by a preceding async step). Jira cross-reference shows 821 similar tickets across all regions (SAME-2452, SAME-2149, NUKE-9044, etc.) all resolved by retriggering fraudCheckExternal.\r\n\r\nSA260926-95455804: Tabby payment capture rejection. The order process reached takePayment, which initiated a capture request to the Tabby payment gateway. The capture was rejected (CAPTURE entry status REJECTED) with a null capture amount. The presence of two AUTHORIZATION entries (both ACCEPTED within 1 second of each other) suggests a double-authorization may have occurred, potentially invalidating the first authorization when the second was created. The NOTIFICATION entry (CREATED, never processed, amount 1399.66 which differs from the order total of 4199.00) indicates a Tabby webhook notification was received but not processed. The order process moved to FAILED state after the capture rejection, passing through shouldReauthorize and releaseVirtualStockWhenFailed actions. This is a payment gateway-side rejection, not a Hybris platform bug. The process correctly identified the capture failure and transitioned the order to PAYMENT_NOT_CAPTURED.\r\n\r\nSA260925-94766480: Transient I/O error at sendConsignmentToWarehouse. The consignment process (consignment-process-v11-36) called sendConsignmentToWarehouse to push the consignment to the warehouse system (WC05 via NERP/Bifrost integration). The HTTP connection was reset during the call, causing the consignment process to enter ERROR state. The order process remains RUNNING, waiting for the consignment process to complete. Jira cross-reference found 2748 similar tickets across all regions and PC-54582 (Closed, aryan.v1) \"Retrigger consignment processes stuck at sendConsignmentToWarehouse from waitForSendToWarehouse\" with a reusable batch remediation script. The consignment is in WAITING_FOR_TRANSFER status, which is the correct state for retriggering from waitForSendToWarehouse.\r\n\r\nSA260924-93541416: Phantom zero-amount payment transaction causing reserveVirtualStock validation failure. During the Moyasar Samsung Pay checkout flow, two payment transactions were created: PT1 (valid, 7079.10 SAR) and PT2 (phantom, zero-amount with 0E-8 notation). When the order process reached reserveVirtualStock, the stock reservation logic evaluated the payment amount and encountered the zero-amount authorization from PT2. The validation \"amount must be greater than zero\" rejected the stock reservation, causing the process to enter ERROR state. The order remains at FRAUD_CHECKED with no consignments created. Jira cross-reference found 445 similar tickets for reserveVirtualStock errors, including SAME-2841 (SA region, Closed) and PC-18110 \"Re-trigger reserveVirtualStock\" (Closed). The zero-amount payment transaction is the root cause; deleting PT2 and restarting the process from reserveVirtualStock should resolve the issue.\r\n\r\n## Possible Remediation\r\n\r\nSA260925-93816359: No remediation needed. The order has progressed to SHIPPING_PREPARATION and the process is RUNNING. The transient fraudCheckExternal NPE self-resolved. Recommend removing this order from the ticket.\r\n\r\nSA260926-95455804: The order process is in FAILED state (terminal). Options: (1) Cancel the order and release the Tabby authorization hold. The customer will need to place a new order. (2) If the merchant wants to recover the order, re-authorize the payment with Tabby and manually create a new CAPTURE entry, then restart the order process. Option 1 is recommended since the process is FAILED and the capture was rejected 48 hours ago. A manual order cancellation via HAC (set order status to CANCELLED, release virtual stock, trigger refund of the authorization hold) is the cleanest path. Reuse pattern from PC-8735 \"Order stuck in PAYMENT_NOT_CAPTURED\" (Closed).\r\n\r\nSA260925-94766480: Restart the consignment process from waitForSendToWarehouse. The consignment is in WAITING_FOR_TRANSFER, which is the prerequisite state for this retrigger. Reuse the existing approved script from PC-54582 (script-batch-retrigger-consignment-sendToWarehouse.groovy). Adapt the script to target only this consignment: query the consignment process by consignment code, check if state is ERROR, remove current tasks, and call businessProcessService.restartProcess(cp, \"waitForSendToWarehouse\"). This is a well-established remediation pattern used across 2748+ similar tickets globally.\r\n\r\nSA260924-93541416: Delete the phantom zero-amount payment transaction (PT2: SA260924-93541416_e0f1bcce-4e0f-4b20-bd40-cd1e82a192df) and restart the order process from reserveVirtualStock. Steps: (1) Query for PT2 by code, (2) Remove PT2 and its zero-amount AUTHORIZATION entry, (3) Restart the order process (order-process-v25-69-SA260924-93541416-1790267551400) from reserveVirtualStock action. The valid PT1 with 7079.10 SAR authorization remains intact. The process should then proceed to create consignments and continue through fulfilment. Reuse pattern from PC-18110 \"Re-trigger reserveVirtualStock\" (Closed) and SAME-2841 (SA region, Closed).",
-        "sections": {
-          "issue": "Ticket SAME-4005 reports 4 SA-region orders stuck on Hybris with different error conditions. DB verification against the live Hybris instance (via FlexibleSearch) was performed for all 4 orders. Kibana log analysis was not available during this investigation (Kibana MCP tools unreachable), so the RCA is based on DB state, task logs, codebase trace, and Jira cross-reference of 800+ similar resolved tickets.\r\n\r\nOrder SA260925-93816359 (FRAUD_CHECKED / fraudCheckExternal NPE on getVatNumber): The ticket description is stale. DB shows the order has progressed to SHIPPING_PREPARATION status with the order process in RUNNING state. Task logs confirm the process executed fraudCheckExternal and continued through reserveVirtualStock, takePayment, splitOrder, and onward to shipping preparation. The fraudCheckExternal error was transient and the process self-recovered. No remediation needed for this order.\r\n\r\nOrder SA260926-95455804 (PAYMENT_NOT_CAPTURED / CAPTURE:REJECTED, stagnant 48h): DB confirms the order is in PAYMENT_NOT_CAPTURED status with the order process in FAILED state. Payment mode is Tabby (sa-TabbyPaymentMode). The payment transaction has 4 entries: two AUTHORIZATION entries both ACCEPTED for 4199.00 SAR (timestamps 11:25:26 and 11:25:27 on Sep 26), a NOTIFICATION entry in CREATED status for 1399.66 SAR (never processed), and a CAPTURE entry REJECTED with null amount at 11:33:30. The capture was rejected by the Tabby payment gateway approximately 8 minutes after authorization. The null capture amount suggests the capture request may have been malformed or the authorization had expired been invalidated by the time capture was attempted.\r\n\r\nOrder SA260925-94766480 (ORDER_SPLIT / sendConsignmentToWarehouse I/O error, stagnant 66h): DB confirms ORDER_SPLIT status. The order process is RUNNING but the consignment process (consignment-process-v11-36) is in ERROR state. The consignment (SA260925-94766480) is in WAITING_FOR_TRANSFER status at warehouse WC05. Payment mode is CheckoutDotComFlow (sa-CheckoutDotComFlowPaymentMode). The consignment process errored at the sendConsignmentToWarehouse action due to an I/O Connection reset error during the HTTP call to the warehouse system (NERP/GERP). This is a transient network connectivity issue between Hybris and the warehouse integration layer.\r\n\r\nOrder SA260924-93541416 (FRAUD_CHECKED / reserveVirtualStock \"amount must be greater than zero\", stagnant 91h): DB confirms FRAUD_CHECKED status with the order process in ERROR state. Payment mode is Moyasar Samsung Pay (sa-moyasarSamsungPay). The order has TWO payment transactions: PT1 with a valid AUTHORIZATION ACCEPTED for 7079.10 SAR (Sep 24 16:32:31), and PT2 with an AUTHORIZATION ACCEPTED for amount 0E-8 (scientific notation for zero). PT2 is a phantom/duplicate zero-amount payment transaction that was incorrectly created during the checkout flow. The process task logs show the last executed action was reserveVirtualStock, which failed with \"amount must be greater than zero\". The stock reservation validation rejected the order because the effective payment amount evaluated to zero (from the phantom PT2), despite PT1 holding a valid 7079.10 SAR authorization. Five external service entries exist (including NORTHLADDER and SMC both in NEW status), confirming the order was partially processed before the stock reservation failure.",
-          "rca": "SA260925-93816359: Transient NPE at fraudCheckExternal. The billingAddress was null when the fraud check external service attempted to read getVatNumber for the Riskified fraud check request. The process retried (fraudCheckExternal appears twice in task logs) and succeeded on the second attempt. The order has since progressed to SHIPPING_PREPARATION. This is not a stuck order. The NPE is a known pattern: TokoFraudServiceClientJPImpl builds a FraudCheckExternalOrderRequestDTO from the order, and if billingAddress is null, accessing getVatNumber throws NPE. The process engine retried the action, and on retry the billingAddress was populated (possibly by a preceding async step). Jira cross-reference shows 821 similar tickets across all regions (SAME-2452, SAME-2149, NUKE-9044, etc.) all resolved by retriggering fraudCheckExternal.\r\n\r\nSA260926-95455804: Tabby payment capture rejection. The order process reached takePayment, which initiated a capture request to the Tabby payment gateway. The capture was rejected (CAPTURE entry status REJECTED) with a null capture amount. The presence of two AUTHORIZATION entries (both ACCEPTED within 1 second of each other) suggests a double-authorization may have occurred, potentially invalidating the first authorization when the second was created. The NOTIFICATION entry (CREATED, never processed, amount 1399.66 which differs from the order total of 4199.00) indicates a Tabby webhook notification was received but not processed. The order process moved to FAILED state after the capture rejection, passing through shouldReauthorize and releaseVirtualStockWhenFailed actions. This is a payment gateway-side rejection, not a Hybris platform bug. The process correctly identified the capture failure and transitioned the order to PAYMENT_NOT_CAPTURED.\r\n\r\nSA260925-94766480: Transient I/O error at sendConsignmentToWarehouse. The consignment process (consignment-process-v11-36) called sendConsignmentToWarehouse to push the consignment to the warehouse system (WC05 via NERP/Bifrost integration). The HTTP connection was reset during the call, causing the consignment process to enter ERROR state. The order process remains RUNNING, waiting for the consignment process to complete. Jira cross-reference found 2748 similar tickets across all regions and PC-54582 (Closed, aryan.v1) \"Retrigger consignment processes stuck at sendConsignmentToWarehouse from waitForSendToWarehouse\" with a reusable batch remediation script. The consignment is in WAITING_FOR_TRANSFER status, which is the correct state for retriggering from waitForSendToWarehouse.\r\n\r\nSA260924-93541416: Phantom zero-amount payment transaction causing reserveVirtualStock validation failure. During the Moyasar Samsung Pay checkout flow, two payment transactions were created: PT1 (valid, 7079.10 SAR) and PT2 (phantom, zero-amount with 0E-8 notation). When the order process reached reserveVirtualStock, the stock reservation logic evaluated the payment amount and encountered the zero-amount authorization from PT2. The validation \"amount must be greater than zero\" rejected the stock reservation, causing the process to enter ERROR state. The order remains at FRAUD_CHECKED with no consignments created. Jira cross-reference found 445 similar tickets for reserveVirtualStock errors, including SAME-2841 (SA region, Closed) and PC-18110 \"Re-trigger reserveVirtualStock\" (Closed). The zero-amount payment transaction is the root cause; deleting PT2 and restarting the process from reserveVirtualStock should resolve the issue.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-28T16:26:48.409Z"
       }
     },
     {
@@ -969,7 +925,7 @@
       }
     ],
     "pid": 19768,
-    "uptime": 2337,
+    "uptime": 2377,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -994,8 +950,8 @@
         "ageSeconds": 0,
         "status": "running",
         "isChild": false,
-        "taskSummary": "post this with 1 hr logs, assign back and update labels",
-        "lastExchange": "post this with 1 hr logs, assign back and update labels",
+        "taskSummary": "check error on kibanz",
+        "lastExchange": "check error on kibanz",
         "sessionId": "bin"
       },
       {
@@ -3936,7 +3892,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-09-29T06:12:45.433Z",
-      "ageMs": 1832546
+      "ageMs": 1872311
     },
     "watchdogLogTail": "[2026-09-29T11:32:32.334Z] Starting bridge.js...\n[2026-09-29T11:32:32.509Z] Bridge started with PID 19768 (restart #1, 1 in last hour)\n[2026-09-29T11:32:32.515Z] Dashboard not running. Starting fresh.\n[2026-09-29T11:32:32.516Z] Starting jira-dashboard-server.js...\n[2026-09-29T11:32:32.703Z] Dashboard started with PID 29980 (restart #1, 1 in last hour)\n[2026-09-29T11:32:35.534Z] Clock sync: Checking drift against Jira server...\n[2026-09-29T11:32:35.918Z] Clock sync: VDI hw=2026-09-29T17:02:35.918Z Jira=2026-09-29T11:34:17.000Z drift=-19699s\n[2026-09-29T06:04:18.423Z] Clock sync: ADJUSTED by -19699s. Clock set to 2026-09-29 11:34:17\n[2026-09-29T06:07:40.558Z] DUPLICATE watchdog detected: PID 29624 — killing\n[2026-09-29T06:12:45.418Z] DUPLICATE watchdog detected: PID 19764 — killing"
   },
@@ -3945,7 +3901,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-29T06:42:21.661Z",
+      "lastCheck": "2026-09-29T06:43:21.612Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3954,7 +3910,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-29T06:42:21.661Z",
+      "lastCheck": "2026-09-29T06:43:21.612Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -3963,9 +3919,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-29T06:42:21.661Z",
+      "lastCheck": "2026-09-29T06:43:21.612Z",
       "downSince": "2026-09-29T06:13:15.166Z",
-      "downDuration": 1746495,
+      "downDuration": 1806446,
       "alert": true
     }
   ],
@@ -4150,18 +4106,6 @@
         "statusChangedAt": "2026-09-29T15:14:45.613+0900"
       },
       {
-        "key": "SAME-4005",
-        "summary": "Stuck order on Hybris",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/SAME-4005",
-        "updated": "2026-09-29T14:31:47.000+0900",
-        "statusChangedAt": "2026-09-29T01:09:03.411+0900"
-      },
-      {
         "key": "GMT-21163",
         "summary": "Update or create Cronjob for autocleanup",
         "priority": "None",
@@ -4309,7 +4253,7 @@
       }
     ],
     "totals": {
-      "zero": 10,
+      "zero": 9,
       "actionable": 2,
       "blocked": 5,
       "queued": 1
