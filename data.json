@@ -1,7 +1,51 @@
 {
-  "generatedAt": "2026-09-30T06:52:05.684Z",
-  "totalTickets": 15,
+  "generatedAt": "2026-09-30T06:52:43.616Z",
+  "totalTickets": 16,
   "tickets": [
+    {
+      "key": "PKHME-942",
+      "summary": "Stuck order on Hybris",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Pakistan Maintenance & Enhancements",
+      "projectKey": "PKHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-09-30T15:53:47.000+0900",
+      "created": "2026-09-29T01:08:53.000+0900",
+      "statusChangedAt": "2026-09-29T01:08:55.380+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n||Order Number||Order Date||Order Status||Issue||\n|PK260926-95338783|2026/09/26|ORDER_SPLIT|Consignment process ERROR at sendConsignmentToWarehouse - null|\n|PK260925-94057775|2026/09/25|ORDER_SPLIT|Con",
+      "commentsCount": 2,
+      "recentComments": [
+        {
+          "author": "Sai Ram Kosuru",
+          "date": "2026-09-30T15:51:53.907+0900",
+          "snippet": "Hi ~@email,\n\nPlease proceed with the remediation.\n\nPK260926-95338783, PK260925-94057775, PK260924-93115047\n\n \n\nRegards,\n\nSairam K.\n\ncc ~@email"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-09-29T01:12:25.258+0900",
+          "snippet": "Hi Team,\n\nKindly check if remediation is required for these orders.\n\n3 orders are stuck at sendConsignmentToWarehouse with null error:\nPK260926-95338783, PK260925-94057775, PK260924-93115047\n\n1 order is stuck at splitOrder with missing warehouse:\nPK260923-92678345\n\nPlease confirm if we can retrigger"
+        }
+      ],
+      "lastCommentBy": "Sai Ram Kosuru",
+      "lastCommentSnippet": "Hi ~@email,\n\nPlease proceed with the remediation.\n\nPK260926-95338783, PK260925-94057775, PK260924-93115047\n\n \n\nRegards,\n\nSairam K.\n\ncc ~@email",
+      "lastCommentDate": "2026-09-30T15:51:53.907+0900",
+      "url": "https://jira.secext.samsung.net/browse/PKHME-942",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "# RCA: PKHME-942\nStuck order on Hybris\nGenerated: 2026-09-28T16:30:00Z\n\nHi shop.sds@samsung.com ,\n\nFour PK-region COD orders are stuck in the fulfilment pipeline. Two distinct failure modes were identified after checking DB state and tracing the codebase.\n\nPK260926-95338783, PK260925-94057775, PK260924-93115047:\nAll three orders reached ORDER_SPLIT successfully. Consignments were created with warehouse pkOnline assigned and delivery modes set. Payment authorisation and capture both completed (ACCEPTED). The consignment process (consignment-process-v11-36) started but failed at the sendConsignmentToWarehouse action with a NullPointerException.\n\nThe sendConsignmentToWarehouse action in consignment-process-v11-36 uses the bean sendConsignmentToWarehouseActionV2 (SendConsignmentToWarehouseActionV2). This action calls tokoWarehouseAdapter.sendConsignmentToWarehouse(process.getConsignment()), which delegates to the configured warehouse adapter for the PK region. For PK (Samsung Pakistan), the GERP warehouse adapter (TokoGerpWarehouseAdapterImpl) handles the consignment by creating a sales order in GERP via tokoGerpSdClient. The NullPointerException occurs inside this GERP integration call. The V2 action catches IntegrationException, WebServiceIOException, and several custom exceptions, but a raw NullPointerException is not caught by any of these handlers. It propagates up to the process engine, which places the process in ERROR state.\n\nThe consignment status remains WAITING_FOR_TRANSFER. No external service entries were created, no GERP sales order number was assigned, and no tracking information exists. The order process (order-process-v25-69) is still RUNNING and waiting on the consignment subprocess to complete.\n\nPK260923-92678345:\nThis order is stuck at PAYMENT_CAPTURED, which means it never reached the splitOrder step. The order process (order-process-v25-69) is in ERROR state. The task logs show splitOrder was retried 50 times in a loop without success.\n\nThe SplitOrderAction calls orderSplittingService.splitOrderForConsignment(order, entriesToSplit). The splitting service assigns warehouses to consignments based on the BaseStore warehouse configuration. The error \"missing values for [warehouse] in ConsignmentModel\" indicates that the order splitting service created a ConsignmentModel but could not assign a warehouse to it. This happens when the warehouse resolution strategy fails to find a valid warehouse for the product on the PK base store.\n\nThe key difference from the other three orders is that PK260923-92678345 failed during consignment creation (splitOrder), while the other three failed after consignment creation (sendConsignmentToWarehouse). No consignments exist for this order in the database, confirming splitOrder never succeeded.\n\nRoot cause for orders 1-3: NullPointerException thrown inside the GERP warehouse adapter during the sendConsignmentToWarehouse action of the consignment process. The GERP integration call to create a sales order failed with an uncaught NPE, which the V2 action does not handle. The process went to ERROR state.\n\nRoot cause for order 4: The splitOrder action failed because the order splitting service could not resolve a warehouse for the product during consignment creation on the PK base store. The process retried splitOrder 50 times but the warehouse resolution failure is deterministic, so each retry produced the same failure.\n\nPossible remediation:\nFor orders 1-3 (consignment process ERROR): Restart the consignment process from the sendConsignmentToWarehouse action. The GERP integration NPE is likely transient (could be a timeout, connection issue, or null response from GERP). Restarting the consignment process will re-attempt the GERP sales order creation. Use the process-restart pattern from PC-52605 (script-TKME-2279-retrigger-business-process.groovy), adapting it to target the consignment process instead of the order process.\n\nFor order 4 (order process ERROR at splitOrder): The order process needs to be restarted from the splitOrder action. Since the warehouse resolution failure appears deterministic, check if the BaseStore warehouse configuration for PK has been updated recently or if the product (SM-A576BLBVPKD) has a valid warehouse assignment. If the warehouse config is now correct, restarting the order process from splitOrder should create the consignment and proceed. If the config is still broken, fix the warehouse assignment first, then restart.\n\nBoth remediation types can use the process-restart reusable PC ticket PC-52605 (script-TKME-2279-retrigger-business-process.groovy), adapting the script for PKHME-942 with the four order codes.\n\nThanks,\n\nAryan",
+        "sections": {
+          "issue": "",
+          "rca": "# RCA: PKHME-942\nStuck order on Hybris\nGenerated: 2026-09-28T16:30:00Z\n\nHi shop.sds@samsung.com ,\n\nFour PK-region COD orders are stuck in the fulfilment pipeline. Two distinct failure modes were identified after checking DB state and tracing the codebase.\n\nPK260926-95338783, PK260925-94057775, PK260924-93115047:\nAll three orders reached ORDER_SPLIT successfully. Consignments were created with warehouse pkOnline assigned and delivery modes set. Payment authorisation and capture both completed (ACCEPTED). The consignment process (consignment-process-v11-36) started but failed at the sendConsignmentToWarehouse action with a NullPointerException.\n\nThe sendConsignmentToWarehouse action in consignment-process-v11-36 uses the bean sendConsignmentToWarehouseActionV2 (SendConsignmentToWarehouseActionV2). This action calls tokoWarehouseAdapter.sendConsignmentToWarehouse(process.getConsignment()), which delegates to the configured warehouse adapter for the PK region. For PK (Samsung Pakistan), the GERP warehouse adapter (TokoGerpWarehouseAdapterImpl) handles the consignment by creating a sales order in GERP via tokoGerpSdClient. The NullPointerException occurs inside this GERP integration call. The V2 action catches IntegrationException, WebServiceIOException, and several custom exceptions, but a raw NullPointerException is not caught by any of these handlers. It propagates up to the process engine, which places the process in ERROR state.\n\nThe consignment status remains WAITING_FOR_TRANSFER. No external service entries were created, no GERP sales order number was assigned, and no tracking information exists. The order process (order-process-v25-69) is still RUNNING and waiting on the consignment subprocess to complete.\n\nPK260923-92678345:\nThis order is stuck at PAYMENT_CAPTURED, which means it never reached the splitOrder step. The order process (order-process-v25-69) is in ERROR state. The task logs show splitOrder was retried 50 times in a loop without success.\n\nThe SplitOrderAction calls orderSplittingService.splitOrderForConsignment(order, entriesToSplit). The splitting service assigns warehouses to consignments based on the BaseStore warehouse configuration. The error \"missing values for [warehouse] in ConsignmentModel\" indicates that the order splitting service created a ConsignmentModel but could not assign a warehouse to it. This happens when the warehouse resolution strategy fails to find a valid warehouse for the product on the PK base store.\n\nThe key difference from the other three orders is that PK260923-92678345 failed during consignment creation (splitOrder), while the other three failed after consignment creation (sendConsignmentToWarehouse). No consignments exist for this order in the database, confirming splitOrder never succeeded.\n\nRoot cause for orders 1-3: NullPointerException thrown inside the GERP warehouse adapter during the sendConsignmentToWarehouse action of the consignment process. The GERP integration call to create a sales order failed with an uncaught NPE, which the V2 action does not handle. The process went to ERROR state.\n\nRoot cause for order 4: The splitOrder action failed because the order splitting service could not resolve a warehouse for the product during consignment creation on the PK base store. The process retried splitOrder 50 times but the warehouse resolution failure is deterministic, so each retry produced the same failure.\n\nPossible remediation:\nFor orders 1-3 (consignment process ERROR): Restart the consignment process from the sendConsignmentToWarehouse action. The GERP integration NPE is likely transient (could be a timeout, connection issue, or null response from GERP). Restarting the consignment process will re-attempt the GERP sales order creation. Use the process-restart pattern from PC-52605 (script-TKME-2279-retrigger-business-process.groovy), adapting it to target the consignment process instead of the order process.\n\nFor order 4 (order process ERROR at splitOrder): The order process needs to be restarted from the splitOrder action. Since the warehouse resolution failure appears deterministic, check if the BaseStore warehouse configuration for PK has been updated recently or if the product (SM-A576BLBVPKD) has a valid warehouse assignment. If the warehouse config is now correct, restarting the order process from splitOrder should create the consignment and proceed. If the config is still broken, fix the warehouse assignment first, then restart.\n\nBoth remediation types can use the process-restart reusable PC ticket PC-52605 (script-TKME-2279-retrigger-business-process.groovy), adapting the script for PKHME-942 with the four order codes.\n\nThanks,\n\nAryan",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-28T16:44:25.295Z"
+      }
+    },
     {
       "key": "SAHME-3435",
       "summary": "SC+ Policy Creation 16.09.2026",
@@ -881,7 +925,7 @@
       }
     ],
     "pid": 20012,
-    "uptime": 23609,
+    "uptime": 23649,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -893,7 +937,7 @@
       {
         "pid": 31828,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 58955,
+        "ageSeconds": 58993,
         "status": "running",
         "isChild": false,
         "taskSummary": "can you also integrate the \"action-item\" skill also somehow so I am always up to date what I can ...",
@@ -903,7 +947,7 @@
       {
         "pid": 29716,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 57257,
+        "ageSeconds": 57295,
         "status": "running",
         "isChild": false,
         "taskSummary": "sure",
@@ -913,7 +957,7 @@
       {
         "pid": 19584,
         "cwd": "c:\\windows",
-        "ageSeconds": 57251,
+        "ageSeconds": 57289,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -923,7 +967,7 @@
       {
         "pid": 6788,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 57145,
+        "ageSeconds": 57183,
         "status": "running",
         "isChild": false,
         "taskSummary": "can you also integrate the \"action-item\" skill also somehow so I am always up to date what I can ...",
@@ -3917,10 +3961,10 @@
     "bridgeLogTail": "[2026-09-29T17:47:23.535Z] LIVE write for #460: 3082 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_460.txt\n[2026-09-29T17:47:23.539Z] STDOUT data for #460: 108 bytes\n[2026-09-29T17:47:23.541Z] LIVE write for #460: 3087 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_460.txt\n[2026-09-29T17:47:23.556Z] STDOUT data for #460: 106 bytes\n[2026-09-29T17:47:23.559Z] LIVE write for #460: 3090 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_460.txt\n[2026-09-29T17:47:23.565Z] STDOUT data for #460: 345 bytes\n[2026-09-29T17:47:23.568Z] LIVE write for #460: 3090 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_460.txt\n[2026-09-29T17:47:25.332Z] aipro completed for #460 (3090 chars)\n[2026-09-29T17:47:26.407Z] Comment posted on #460\n[2026-09-29T18:19:02.604Z] ERROR poll #1: API returned 502 - backing off 10000ms\n[2026-09-30T00:18:34.117Z] ==========================================\n[2026-09-30T00:18:34.119Z] === Hardened GitHub Bridge v3 Started ===\n[2026-09-30T00:18:34.120Z] === with Aipro Auto-Launch ===\n[2026-09-30T00:18:34.121Z] ==========================================\n[2026-09-30T00:18:34.122Z] PID: 20012\n[2026-09-30T00:18:34.123Z] Repo: aryanverma2410/agent-bridge\n[2026-09-30T00:18:34.124Z] Poll interval: 10000ms\n[2026-09-30T00:18:34.125Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-09-30T00:18:34.126Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-09-30T00:18:34.128Z] Waiting for messages...",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-09-30T06:51:54.961Z",
-      "ageMs": 12927
+      "lastWrite": "2026-09-30T06:52:39.985Z",
+      "ageMs": 6633
     },
-    "watchdogLogTail": "[2026-09-30T06:49:39.915Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T06:49:54.919Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T06:50:09.927Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T06:50:24.928Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T06:50:39.937Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T06:50:54.945Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T06:51:09.952Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T06:51:24.957Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T06:51:39.954Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T06:51:54.962Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-09-30T06:50:24.928Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T06:50:39.937Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T06:50:54.945Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T06:51:09.952Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T06:51:24.957Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T06:51:39.954Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T06:51:54.962Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T06:52:09.978Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T06:52:24.977Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T06:52:39.984Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
@@ -4104,6 +4148,18 @@
         "statusChangedAt": "2026-09-28T15:10:33.048+0900"
       },
       {
+        "key": "PKHME-942",
+        "summary": "Stuck order on Hybris",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/PKHME-942",
+        "updated": "2026-09-30T15:53:47.000+0900",
+        "statusChangedAt": "2026-09-29T01:08:55.380+0900"
+      },
+      {
         "key": "SAHME-3435",
         "summary": "SC+ Policy Creation 16.09.2026",
         "priority": "None",
@@ -4271,7 +4327,7 @@
       }
     ],
     "totals": {
-      "zero": 8,
+      "zero": 9,
       "actionable": 2,
       "blocked": 3,
       "queued": 2
