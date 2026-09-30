@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-30T09:42:41.347Z",
+  "generatedAt": "2026-09-30T09:43:19.765Z",
   "totalTickets": 19,
   "tickets": [
     {
@@ -24,9 +24,15 @@
       "url": "https://jira.secext.samsung.net/browse/AEME-6602",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-09-30T09:11:22.533Z"
+        "status": "found",
+        "excerpt": "[PROD] | Manual Chargeback | 30th Sept\r\nGenerated: 2026-09-30T09:11:22Z\r\n\r\nIssue:\r\n\r\nTwo distinct issues are reported in this ticket.\r\n\r\nPart 1 - Manual Chargeback for Trade-In Rejected Orders:\r\nOrders AE260814-59413370 (chargeback amount 270 AED) and AE260803-49001795 (chargeback amount 3035 AED) have completed delivery, but their trade-in devices were rejected by Northladder (ExternalService status = CANCELLED). The automated clawback/chargeback process should debit the trade-in discount amount back from the customer's card approximately 19 days after consignment completion. The automated clawback was attempted but failed, requiring manual intervention to retrigger.\r\n\r\nPart 2 - Order Stuck at CHECKED_INVALID:\r\nOrder AE260928-97453028 (created 28th Sept, total 186.01 AED, Checkout.com payment) is stuck at CHECKED_INVALID status. No consignments were created, order processes are in FAILED state looping at the checkOrder action (50+ retries), and the order cannot progress to fulfilment.\r\n\r\nRCA:\r\n\r\nPart 1 - Chargeback Failure (AE260814-59413370, AE260803-49001795):\r\n\r\nBoth orders are COMPLETED with consignments delivered and GERP billing completed. The NORTHLADDER trade-in ExternalService is CANCELLED on both, confirming trade-in rejection. The field isChargeBackRefundDone is false (0) on both orders, and paymentStatus is NULL.\r\n\r\nDB evidence shows a second PaymentTransaction on each order with an AUTHORIZATION entry in ERROR state:\r\n- AE260814-59413370: AUTHORIZATION ERROR at 2026-09-18 02:01:46 (consignment completed 2026-08-29, ~19 day clawback trigger aligns)\r\n- AE260803-49001795: AUTHORIZATION ERROR at 2026-09-13 02:01:52 (consignment completed 2026-08-20, ~19 day clawback trigger aligns)\r\n\r\nThis matches the pattern documented in the prior chargeback ticket AEME-6540 (closed, PC-53902). The RCA from that ticket states: \"Clawback PaymentTransaction records lacked paymentInfo and requestId, causing the automated re-authorization to fail and requiring manual chargeback.\" The clawback process creates a new PaymentTransaction to perform an unscheduled MIT (Merchant Initiated Transaction) payment using the saved card credentials. When the paymentInfo or requestId is missing on the clawback PaymentTransaction, the re-authorization call to Checkout.com fails with PROCESSOR_DECLINE, and the clawback BusinessProcess enters ERROR state.\r\n\r\nRoot cause: The clawback PaymentTransaction for both orders lacks the required paymentInfo reference and requestId needed for the unscheduled MIT re-authorization. The automated clawback attempted after the 19-day window, but Checkout.com declined the payment because the card tokenization data was incomplete on the clawback PaymentTransaction. This is the same platform issue seen in AEME-6540, AEME-6362, and AEME-6286.\r\n\r\nPart 2 - CHECKED_INVALID (AE260928-97453028):\r\n\r\nThe order was created on 2026-09-28 at 10:20:28 with payment mode ae-CheckoutDotComFlowPaymentMode. Two PaymentTransactions exist with AUTHORIZATION ACCEPTED entries (64.00 AED and 186.01 AED), confirming payment was authorized successfully. However, the order status is CHECKED_INVALID, zero consignments exist, and both order-process-v25-69 instances are in FAILED state.\r\n\r\nTask logs show the checkOrder action executing 50+ times, indicating the order validation at the checkOrder action node is repeatedly failing. The order has an ExternalService for GCIC_EXPERT_CARE_STANDALONE in NEW status, suggesting the order contains a standalone service product that may be contributing to the validation failure.\r\n\r\nThe paymentStatus field is NULL on this order, and deliveryMode is also NULL, which are required fields for order validation. The checkOrder action in the order-process-v25-69 workflow validates order integrity (payment info, delivery mode, consignment creation prerequisites) before allowing the order to proceed to fulfilment. When this validation fails, the order is set to CHECKED_INVALID and the process enters FAILED state.\r\n\r\nRoot cause: The order failed validation at the checkOrder action node during the order-process-v25-69 workflow. The missing paymentStatus and deliveryMode fields, combined with the standalone Expert Care service (GCIC_EXPERT_CARE_STANDALONE) in NEW state, likely caused the checkOrder validation to reject the order and mark it CHECKED_INVALID. The process then entered a retry loop at checkOrder but cannot self-remediate because the underlying field gaps persist.\r\n\r\nPossible remediation:\r\n\r\nPart 1 - Chargeback Retrigger:\r\n\r\nReuse the existing approved script from AEME-6540 (PC-53902): script-AEME-6540-clawback-retrigger.groovy. This script:\r\n1. Finds the clawback BusinessProcess for each order (WHERE code LIKE '%{orderCode}%Clawback%')\r\n2. Sets the ERROR state process to CREATED (Hybris restartProcess fails on ERROR state)\r\n3. Calls businessProcessService.restartProcess(bp, \"reAuthorizeIfNeeded\") to retrigger the clawback authorization\r\n\r\nThe script needs to be copied and updated with the new order codes (AE260814-59413370, AE260803-49001795) and the new ticket reference (AEME-6602). If the clawback fails again with PROCESSOR_DECLINE (as happened in AEME-6540), the paymentInfo and requestId on the clawback PaymentTransaction may need to be populated from the original order's PaymentTransaction before retriggering.\r\n\r\nNote: The chargeback amounts (270 AED and 3035 AED) specified in the ticket should be verified against the trade-in discount amounts on the orders to ensure the clawback charges the correct amount.\r\n\r\nPart 2 - CHECKED_INVALID Remediation:\r\n\r\nReuse the existing pattern from AEME-6548 (PC-52605): script-AEME-6548-order1-checked-invalid-retrigger.groovy. This script:\r\n1. Sets order status from CHECKED_INVALID to CREATED\r\n2. Restarts the FAILED order-process-v25-69 processes from the checkOrder action (last failed action)\r\n3. Clears current tasks and forces process state to ERROR before restartProcess\r\n\r\nBefore running this, verify:\r\n- That paymentStatus can be set (it is currently NULL — may need to set to PAID since AUTHORIZATION was ACCEPTED)\r\n- That deliveryMode is available for this order's delivery address and can be set\r\n- That the GCIC_EXPERT_CARE_STANDALONE external service in NEW status is not blocking order progression\r\n\r\nIf the checkOrder action fails again after restart (because the underlying field gaps are not fixed), a deeper investigation into the specific validation failure at checkOrder is needed. Kibana logs for AE260928-97453028 would reveal the exact exception message from the checkOrder action, but Kibana MCP was unavailable during this investigation.\r\n\r\nReferences:\r\n- AEME-6540 (Closed): Previous manual chargeback ticket with same root cause. Script: script-AEME-6540-clawback-retrigger.groovy (PC-53902)\r\n- AEME-6362 (Closed): First manual chargeback ticket. Documented that the 19-day chargeback trigger cannot be overridden.\r\n- AEME-6286 (Closed): Trade-in re-trigger chargeback ticket.\r\n- AEME-6548 (Closed): CHECKED_INVALID remediation. Script: script-AEME-6548-order1-checked-invalid-retrigger.groovy (PC-52605 pattern)\r\n- PC-53902: Approved PC ticket for clawback retrigger (AEME-6540)\r\n- PC-52605: Approved PC ticket for CHECKED_INVALID retrigger (AEME-6548 pattern)\r\n\r\nLimitations:\r\n- Kibana MCP was unavailable during this investigation. Log analysis could not be performed. Root cause for Part 2 (CHECKED_INVALID) is based on DB state analysis and code pattern correlation only.\r\n- Clawback BusinessProcess could not be queried directly via HAC (timeout). The clawback process existence is inferred from the ERROR-state PaymentTransactionEntry on both chargeback orders.",
+        "sections": {
+          "issue": "Two distinct issues are reported in this ticket.\r\n\r\nPart 1 - Manual Chargeback for Trade-In Rejected Orders:\r\nOrders AE260814-59413370 (chargeback amount 270 AED) and AE260803-49001795 (chargeback amount 3035 AED) have completed delivery, but their trade-in devices were rejected by Northladder (ExternalService status = CANCELLED). The automated clawback/chargeback process should debit the trade-in discount amount back from the customer's card approximately 19 days after consignment completion. The automated clawback was attempted but failed, requiring manual intervention to retrigger.\r\n\r\nPart 2 - Order Stuck at CHECKED_INVALID:\r\nOrder AE260928-97453028 (created 28th Sept, total 186.01 AED, Checkout.com payment) is stuck at CHECKED_INVALID status. No consignments were created, order processes are in FAILED state looping at the checkOrder action (50+ retries), and the order cannot progress to fulfilment.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-30T09:42:58.547Z"
       }
     },
     {
@@ -1076,7 +1082,7 @@
       }
     ],
     "pid": 20012,
-    "uptime": 33846,
+    "uptime": 33886,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -1085,7 +1091,7 @@
         "issueTitle": "Investigate ticket AEME-6602",
         "snippet": "Auto-triggered investigation for new ticket AEME-6602.\n\nTicket: AEME-6602\nSummary: [PROD] | Manual Chargeback | 30th Sep",
         "pid": 36936,
-        "elapsed": 1864
+        "elapsed": 1904
       }
     ],
     "startTime": "2026-09-30T00:18:34.130Z",
@@ -1096,7 +1102,7 @@
       {
         "pid": 31828,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 69191,
+        "ageSeconds": 69230,
         "status": "running",
         "isChild": false,
         "taskSummary": "how many times is the action-items skill working on bg? it should only fire once every 2 hours as...",
@@ -1106,7 +1112,7 @@
       {
         "pid": 29716,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 67493,
+        "ageSeconds": 67531,
         "status": "running",
         "isChild": false,
         "taskSummary": "comment that the PC is raised on the main ticket",
@@ -1116,7 +1122,7 @@
       {
         "pid": 19584,
         "cwd": "c:\\windows",
-        "ageSeconds": 67487,
+        "ageSeconds": 67525,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1126,7 +1132,7 @@
       {
         "pid": 6788,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 67381,
+        "ageSeconds": 67419,
         "status": "running",
         "isChild": false,
         "taskSummary": "how many times is the action-items skill working on bg? it should only fire once every 2 hours as...",
@@ -1136,7 +1142,7 @@
       {
         "pid": 26752,
         "cwd": "unknown",
-        "ageSeconds": 7695,
+        "ageSeconds": 7733,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -1146,7 +1152,7 @@
       {
         "pid": 39608,
         "cwd": "unknown",
-        "ageSeconds": 6937,
+        "ageSeconds": 6975,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -4150,13 +4156,13 @@
         ]
       }
     },
-    "bridgeLogTail": "[2026-09-30T09:42:23.337Z] STDOUT data for #472: 113 bytes\n[2026-09-30T09:42:23.340Z] LIVE write for #472: 1559 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_472.txt\n[2026-09-30T09:42:23.379Z] STDOUT data for #472: 106 bytes\n[2026-09-30T09:42:23.381Z] LIVE write for #472: 1562 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_472.txt\n[2026-09-30T09:42:23.597Z] STDOUT data for #472: 117 bytes\n[2026-09-30T09:42:23.600Z] LIVE write for #472: 1576 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_472.txt\n[2026-09-30T09:42:23.600Z] STDOUT data for #472: 580 bytes\n[2026-09-30T09:42:23.602Z] LIVE write for #472: 1641 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_472.txt\n[2026-09-30T09:42:23.627Z] STDOUT data for #472: 126 bytes\n[2026-09-30T09:42:23.630Z] LIVE write for #472: 1664 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_472.txt\n[2026-09-30T09:42:23.664Z] STDOUT data for #472: 128 bytes\n[2026-09-30T09:42:23.666Z] LIVE write for #472: 1689 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_472.txt\n[2026-09-30T09:42:23.700Z] STDOUT data for #472: 118 bytes\n[2026-09-30T09:42:23.703Z] LIVE write for #472: 1702 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_472.txt\n[2026-09-30T09:42:23.736Z] STDOUT data for #472: 109 bytes\n[2026-09-30T09:42:23.739Z] LIVE write for #472: 1708 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_472.txt\n[2026-09-30T09:42:23.773Z] STDOUT data for #472: 120 bytes\n[2026-09-30T09:42:23.775Z] LIVE write for #472: 1725 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_472.txt\n[2026-09-30T09:42:23.811Z] STDOUT data for #472: 107 bytes\n[2026-09-30T09:42:23.813Z] LIVE write for #472: 1729 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_472.txt",
+    "bridgeLogTail": "[2026-09-30T09:42:23.664Z] STDOUT data for #472: 128 bytes\n[2026-09-30T09:42:23.666Z] LIVE write for #472: 1689 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_472.txt\n[2026-09-30T09:42:23.700Z] STDOUT data for #472: 118 bytes\n[2026-09-30T09:42:23.703Z] LIVE write for #472: 1702 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_472.txt\n[2026-09-30T09:42:23.736Z] STDOUT data for #472: 109 bytes\n[2026-09-30T09:42:23.739Z] LIVE write for #472: 1708 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_472.txt\n[2026-09-30T09:42:23.773Z] STDOUT data for #472: 120 bytes\n[2026-09-30T09:42:23.775Z] LIVE write for #472: 1725 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_472.txt\n[2026-09-30T09:42:23.811Z] STDOUT data for #472: 107 bytes\n[2026-09-30T09:42:23.813Z] LIVE write for #472: 1729 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_472.txt\n[2026-09-30T09:42:58.523Z] STDOUT data for #472: 7919 bytes\n[2026-09-30T09:42:58.526Z] LIVE write for #472: 1729 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_472.txt\n[2026-09-30T09:42:58.561Z] STDOUT data for #472: 124 bytes\n[2026-09-30T09:42:58.564Z] LIVE write for #472: 1729 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_472.txt\n[2026-09-30T09:43:00.645Z] STDOUT data for #472: 120 bytes\n[2026-09-30T09:43:00.648Z] LIVE write for #472: 1746 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_472.txt\n[2026-09-30T09:43:00.649Z] STDOUT data for #472: 245 bytes\n[2026-09-30T09:43:00.651Z] LIVE write for #472: 1785 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_472.txt\n[2026-09-30T09:43:00.677Z] STDOUT data for #472: 104 bytes\n[2026-09-30T09:43:00.680Z] LIVE write for #472: 1786 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_472.txt",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-09-30T09:42:40.065Z",
-      "ageMs": 4896
+      "lastWrite": "2026-09-30T09:43:10.088Z",
+      "ageMs": 12243
     },
-    "watchdogLogTail": "[2026-09-30T09:40:25.017Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T09:40:40.022Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T09:40:55.031Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T09:41:10.033Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T09:41:25.041Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T09:41:40.050Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T09:41:55.045Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T09:42:10.051Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T09:42:25.050Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T09:42:40.065Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.",
+    "watchdogLogTail": "[2026-09-30T09:40:55.031Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T09:41:10.033Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T09:41:25.041Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T09:41:40.050Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T09:41:55.045Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T09:42:10.051Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T09:42:25.050Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T09:42:40.065Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T09:42:55.076Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T09:43:10.088Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.",
     "jobOutputs": {}
   },
   "mcps": [
@@ -4164,7 +4170,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-30T09:42:03.828Z",
+      "lastCheck": "2026-09-30T09:43:03.223Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4173,18 +4179,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-30T09:42:03.828Z",
+      "lastCheck": "2026-09-30T09:43:03.223Z",
       "downSince": "2026-09-30T07:44:08.962Z",
-      "downDuration": 7074866,
+      "downDuration": 7134261,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-30T09:42:03.828Z",
+      "lastCheck": "2026-09-30T09:43:03.223Z",
       "downSince": "2026-09-30T00:44:33.228Z",
-      "downDuration": 32250600,
+      "downDuration": 32309995,
       "alert": true
     }
   ],
