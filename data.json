@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-30T03:29:47.034Z",
-  "totalTickets": 15,
+  "generatedAt": "2026-09-30T05:45:46.434Z",
+  "totalTickets": 14,
   "tickets": [
     {
       "key": "SAHME-3357",
@@ -61,54 +61,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-03T13:45:10.016Z"
-      }
-    },
-    {
-      "key": "SAHME-3453",
-      "summary": "RSIT for AVO - fix for incorrect messages",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "South Africa Maintenance & Enhancements",
-      "projectKey": "SAHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-30T02:26:47.000+0900",
-      "created": "2026-09-30T00:28:24.000+0900",
-      "statusChangedAt": "2026-09-30T01:06:37.574+0900",
-      "assignedToMeAt": "",
-      "description": "Currently during testing specific scenarios for Nedbank Avo for RSIT returns we face some issues that this returns are not working properly form NERP perspective - needs to be adjusted",
-      "commentsCount": 1,
-      "recentComments": [
-        {
-          "author": "Dawid Siemienski",
-          "date": "2026-09-30T00:33:30.924+0900",
-          "snippet": "It was already merged to 92rc1oct please approve to have it deploy within this release or if not possible move to Release 93rc ~@email"
-        }
-      ],
-      "lastCommentBy": "Dawid Siemienski",
-      "lastCommentSnippet": "It was already merged to 92rc1oct please approve to have it deploy within this release or if not possible move to Release 93rc ~@email",
-      "lastCommentDate": "2026-09-30T00:33:30.924+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAHME-3453",
-      "linkedTickets": [
-        {
-          "key": "SAHME-3333",
-          "summary": "RSIT for AVO",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "clones",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "RSIT for AVO - fix for incorrect messages\r\nGenerated: 2026-09-29T18:05:00.000Z\r\n\r\nIssue:\r\nDuring RSIT (Return Start in Transit) testing for Nedbank AVO marketplace integration, incorrect messages are being sent to the AVO (Nedbank marketplace) system for return scenarios. The ticket SAHME-3333 addressed the initial RSIT issues (NERP config on SoldTo, oAuth blockers) and was closed, but SAHME-3453 was created as a follow-up to fix remaining incorrect messages being sent to AVO for RSIT returns.\r\n\r\nRCA:\r\nThe root cause is an inconsistency in how SIT (Start in Transit) returns are detected across two components in the AVO marketplace message pipeline, combined with a dual-message issue.\r\n\r\n1. AvoOutboundShipmentUpdatePopulator.populate() builds the shipment update DTO sent to AVO. Originally, it checked ConsignmentEntryModel::getIsSitReturn on consignment entries to decide whether to override the newState to DELIVERY_FAILED. The SAHME-3333 fix (commit bff309ace588) changed this to check consignmentModel.getAdditionalConsignmentStatus() == ConsignmentStatus.SIT_RETURN_COMPLETED instead, which is the correct approach because the additionalConsignmentStatus field is set by the RSIT process at the consignment level, whereas the isSitReturn flag on entries is a per-entry attribute that can be unreliable for multi-entry consignments.\r\n\r\n2. However, AvoMarketplaceFulfilmentHook.hasValidStatus() still uses the old check: consignmentModel.getConsignmentEntries().stream().anyMatch(ConsignmentEntryModel::getIsSitReturn). This method gates whether updateShipmentStatusForOrder() sends an UPDATE_ORDER_SHIPPMENT_STATUS message to AVO at all. When the populator was updated to use additionalConsignmentStatus but the hook's gate check was not updated, the two components became inconsistent. A consignment could have SIT_RETURN_COMPLETED as additionalConsignmentStatus but NOT have isSitReturn=true on its entries, causing the hook to skip sending the shipment update message entirely while the populator would have correctly set DELIVERY_FAILED.\r\n\r\n3. Additionally, AvoMarketplaceFulfilmentHook.afterReturnCompleted() sends an ORDER_DECLINED message to AVO when returnRequestModel.isSitReturn() is true, but the afterSitReturn() hook (called earlier in the flow) also sends an UPDATE_ORDER_SHIPPMENT_STATUS message with DELIVERY_FAILED state. For RSIT returns, AVO receives both a shipment status update (DELIVERY_FAILED) and an order decline message, which is contradictory -- DELIVERY_FAILED indicates the delivery failed, while ORDER_DECLINED indicates the order is being declined/cancelled. AVO expects only one definitive message for the RSIT return scenario, not two conflicting ones.\r\n\r\nThe SAHME-3333 fix (merged as commit bff309ace588 to the 92rc1oct branch) partially addressed the populator but did not fix the hook's hasValidStatus() method or the dual-message issue. SAHME-3453 is the follow-up to complete the fix.\r\n\r\nKey files:\r\n- AvoOutboundShipmentUpdatePopulator.java (fixed in SAHME-3333 but not yet deployed to this branch)\r\n- AvoMarketplaceFulfilmentHook.java (hasValidStatus and afterReturnCompleted methods still need fixing)\r\n- AvoMarketplaceMessageTypeHandlerStrategy.java (handles sending messages to AVO REST endpoints)\r\n\r\nPossible remediation:\r\n1. Update AvoMarketplaceFulfilmentHook.hasValidStatus() to check consignmentModel.getAdditionalConsignmentStatus() == ConsignmentStatus.SIT_RETURN_COMPLETED instead of iterating consignment entries for getIsSitReturn. This aligns the hook's gate check with the populator's state-setting logic that was already fixed in SAHME-3333.\r\n\r\n2. Review the dual-message flow for RSIT returns: afterSitReturn() sends UPDATE_ORDER_SHIPPMENT_STATUS with DELIVERY_FAILED, and afterReturnCompleted() sends ORDER_DECLINED. Determine which message AVO expects for RSIT returns and suppress the other. Based on the AVO marketplace contract, RSIT returns should likely send only the ORDER_DECLINED message (since the order is being returned/declined), not the shipment status update. Alternatively, if DELIVERY_FAILED is the expected message, suppress ORDER_DECLINED for SIT returns.\r\n\r\n3. Add/update unit tests in AvoMarketplaceFulfilmentHookTest.java to cover: (a) consignment with SIT_RETURN_COMPLETED additionalConsignmentStatus but no isSitReturn entries should still trigger the shipment update, (b) RSIT return should not send conflicting messages to AVO.\r\n\r\n4. Deploy the fix to the 92rc1oct release or defer to Release 93rc as per Dawid Siemienski's comment on SAHME-3453.\r\n\r\nNo Hybris-side data remediation or HAC script is needed for this issue -- it is a code-level fix in the AVO marketplace integration layer.",
-        "sections": {
-          "issue": "During RSIT (Return Start in Transit) testing for Nedbank AVO marketplace integration, incorrect messages are being sent to the AVO (Nedbank marketplace) system for return scenarios. The ticket SAHME-3333 addressed the initial RSIT issues (NERP config on SoldTo, oAuth blockers) and was closed, but SAHME-3453 was created as a follow-up to fix remaining incorrect messages being sent to AVO for RSIT returns.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-29T17:46:44.561Z"
       }
     },
     {
@@ -185,8 +137,8 @@
         {
           "key": "PC-54773",
           "summary": "Reset GCIC Expert Care ExternalService from ERROR to NEW and restart order process",
-          "status": "To do",
-          "statusCategory": "To Do",
+          "status": "Reviewed",
+          "statusCategory": "In Progress",
           "relation": "blocks",
           "assignee": null
         }
@@ -876,7 +828,7 @@
       }
     ],
     "pid": 20012,
-    "uptime": 11472,
+    "uptime": 19630,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -888,7 +840,7 @@
       {
         "pid": 31828,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 46817,
+        "ageSeconds": 54976,
         "status": "running",
         "isChild": false,
         "taskSummary": "can you also integrate the \"action-item\" skill also somehow so I am always up to date what I can ...",
@@ -898,17 +850,17 @@
       {
         "pid": 29716,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 45118,
+        "ageSeconds": 53278,
         "status": "running",
         "isChild": false,
-        "taskSummary": "sahme-3357",
-        "lastExchange": "sahme-3357",
+        "taskSummary": "take confirmation",
+        "lastExchange": "take confirmation",
         "sessionId": "bin"
       },
       {
         "pid": 19584,
         "cwd": "c:\\windows",
-        "ageSeconds": 45112,
+        "ageSeconds": 53272,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -918,7 +870,7 @@
       {
         "pid": 6788,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 45006,
+        "ageSeconds": 53166,
         "status": "running",
         "isChild": false,
         "taskSummary": "can you also integrate the \"action-item\" skill also somehow so I am always up to date what I can ...",
@@ -3912,44 +3864,44 @@
     "bridgeLogTail": "[2026-09-29T17:47:23.535Z] LIVE write for #460: 3082 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_460.txt\n[2026-09-29T17:47:23.539Z] STDOUT data for #460: 108 bytes\n[2026-09-29T17:47:23.541Z] LIVE write for #460: 3087 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_460.txt\n[2026-09-29T17:47:23.556Z] STDOUT data for #460: 106 bytes\n[2026-09-29T17:47:23.559Z] LIVE write for #460: 3090 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_460.txt\n[2026-09-29T17:47:23.565Z] STDOUT data for #460: 345 bytes\n[2026-09-29T17:47:23.568Z] LIVE write for #460: 3090 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_460.txt\n[2026-09-29T17:47:25.332Z] aipro completed for #460 (3090 chars)\n[2026-09-29T17:47:26.407Z] Comment posted on #460\n[2026-09-29T18:19:02.604Z] ERROR poll #1: API returned 502 - backing off 10000ms\n[2026-09-30T00:18:34.117Z] ==========================================\n[2026-09-30T00:18:34.119Z] === Hardened GitHub Bridge v3 Started ===\n[2026-09-30T00:18:34.120Z] === with Aipro Auto-Launch ===\n[2026-09-30T00:18:34.121Z] ==========================================\n[2026-09-30T00:18:34.122Z] PID: 20012\n[2026-09-30T00:18:34.123Z] Repo: aryanverma2410/agent-bridge\n[2026-09-30T00:18:34.124Z] Poll interval: 10000ms\n[2026-09-30T00:18:34.125Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-09-30T00:18:34.126Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-09-30T00:18:34.128Z] Waiting for messages...",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-09-30T03:29:43.745Z",
-      "ageMs": 6256
+      "lastWrite": "2026-09-30T05:45:36.358Z",
+      "ageMs": 12548
     },
-    "watchdogLogTail": "[2026-09-30T03:27:28.659Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T03:27:43.669Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T03:27:58.671Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T03:28:13.679Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T03:28:28.692Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T03:28:43.697Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T03:28:58.707Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T03:29:13.716Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T03:29:28.732Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T03:29:43.744Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-09-30T05:43:36.327Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T05:43:45.082Z] Dashboard is degraded (failures: 134). Will not restart yet.\n[2026-09-30T05:43:51.336Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T05:44:06.336Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T05:44:21.339Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T05:44:36.340Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T05:44:51.344Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T05:45:06.350Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T05:45:21.353Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T05:45:36.357Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
+      "status": "down",
+      "httpStatus": 401,
+      "lastCheck": "2026-09-30T05:44:58.601Z",
+      "downSince": "2026-09-30T03:30:57.867Z",
+      "downDuration": 8040734,
+      "alert": true
+    },
+    {
+      "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-30T03:28:57.556Z",
+      "lastCheck": "2026-09-30T05:44:58.601Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
     },
     {
-      "name": "Kibana",
-      "status": "down",
-      "httpStatus": 401,
-      "lastCheck": "2026-09-30T03:28:57.556Z",
-      "downSince": "2026-09-29T17:22:31.942Z",
-      "downDuration": 36385614,
-      "alert": true
-    },
-    {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-30T03:28:57.556Z",
+      "lastCheck": "2026-09-30T05:44:58.601Z",
       "downSince": "2026-09-30T00:44:33.228Z",
-      "downDuration": 9864328,
+      "downDuration": 18025373,
       "alert": true
     }
   ],
   "hacReport": {
-    "generatedAt": "2026-09-29T03:31:22.198Z",
-    "generatedAtLocal": "Sep 29, 2026, 09:01:22 AM",
-    "queryDate": "2026-09-28",
+    "generatedAt": "2026-09-30T03:31:24.674Z",
+    "generatedAtLocal": "Sep 30, 2026, 09:01:24 AM",
+    "queryDate": "2026-09-29",
     "modified": {
       "headers": [
         "CLUSTER",
@@ -3964,8 +3916,8 @@
           "CLUSTER": "SMI",
           "YEAR": "2026",
           "MONTH": "Sep",
-          "DAY": "28",
-          "COUNT": "899",
+          "DAY": "29",
+          "COUNT": "778",
           "TYPE": "MODIFIED"
         }
       ],
@@ -3985,14 +3937,14 @@
           "CLUSTER": "SMI",
           "YEAR": "2026",
           "MONTH": "Sep",
-          "DAY": "28",
-          "COUNT": "311",
+          "DAY": "29",
+          "COUNT": "301",
           "TYPE": "CREATED"
         }
       ],
       "error": null
     },
-    "textReport": "Hi Reglo, Tin,\nPFA the results for SMI\n\nCLUSTER\tYEAR\tMONTH\tDAY\tCOUNT\tTYPE\nSMI\t2026\tSep\t28\t899\tMODIFIED\n\nCLUSTER\tYEAR\tMONTH\tDAY\tCOUNT\tTYPE\nSMI\t2026\tSep\t28\t311\tCREATED"
+    "textReport": "Hi Reglo, Tin,\nPFA the results for SMI\n\nCLUSTER\tYEAR\tMONTH\tDAY\tCOUNT\tTYPE\nSMI\t2026\tSep\t29\t778\tMODIFIED\n\nCLUSTER\tYEAR\tMONTH\tDAY\tCOUNT\tTYPE\nSMI\t2026\tSep\t29\t301\tCREATED"
   },
   "scheduledJobs": {
     "jobs": [
@@ -4008,11 +3960,11 @@
         },
         "enabled": true,
         "createdAt": "2026-09-03T05:31:01.816Z",
-        "lastRunAt": "2026-09-29T03:31:32.482Z",
-        "lastOutput": "Warning: Ignoring extra certs from `C:\\SDSI_GDC.crt`, load failed: error:80000002:system library::No such file or directory\r\nWarning: 256-color support not detected. Using a terminal with at least 256-color support is recommended for a better visual experience.\nYOLO mode is enabled. All tool calls will be automatically approved.\nYOLO mode is enabled. All tool calls will be automatically approved.\n(node:34100) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.\n(Use `node --trace-warnings ...` to show where the warning was created)\nRipgrep is not available. Falling back to GrepTool.\nRunning the HAC daily report script.\nC:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\n\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\n\r\nNode.js v22.22.0\r\nScript completed successfully. Here's a summary:\n\n**Authentication**: Connected to HAC backoffice (TLS cert warnings are benign — cert file path issue, connection proceeded fine).\n\n**Results for cluster SMI (Sep 28, 2026):**\n\n| Metric | Count |\n|--------|-------|\n| Modified Orders | 899 |\n| Created Orders | 311 |\n\nReport saved to: `C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\hac-report.json`\n",
-        "lastOutputAt": "2026-09-29T03:31:32.482Z",
+        "lastRunAt": "2026-09-30T03:31:34.235Z",
+        "lastOutput": "Warning: Ignoring extra certs from `C:\\SDSI_GDC.crt`, load failed: error:80000002:system library::No such file or directory\r\nWarning: 256-color support not detected. Using a terminal with at least 256-color support is recommended for a better visual experience.\nYOLO mode is enabled. All tool calls will be automatically approved.\nYOLO mode is enabled. All tool calls will be automatically approved.\n(node:16456) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.\n(Use `node --trace-warnings ...` to show where the warning was created)\nRipgrep is not available. Falling back to GrepTool.\nRunning the HAC daily report script that authenticates to the backoffice and queries the samsungRewardPoints payment provider.\nC:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\n\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\n\r\nNode.js v22.22.0\r\nScript completed successfully. Results:\n\n| CLUSTER | YEAR | MONTH | DAY | COUNT | TYPE |\n|---------|------|-------|-----|-------|------|\n| SMI | 2026 | Sep | 29 | 778 | MODIFIED |\n| SMI | 2026 | Sep | 29 | 301 | CREATED |\n\nReport saved to `C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\hac-report.json`.\n",
+        "lastOutputAt": "2026-09-30T03:31:34.235Z",
         "lastStatus": "success",
-        "nextRunAt": "2026-09-30T03:30:00.000Z"
+        "nextRunAt": "2026-10-01T03:30:00.000Z"
       }
     ],
     "queue": {
@@ -4089,18 +4041,6 @@
         "url": "https://jira.secext.samsung.net/browse/SAHME-3357",
         "updated": "2026-09-30T02:37:39.000+0900",
         "statusChangedAt": "2026-08-03T20:40:12.579+0900"
-      },
-      {
-        "key": "SAHME-3453",
-        "summary": "RSIT for AVO - fix for incorrect messages",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/SAHME-3453",
-        "updated": "2026-09-30T02:26:47.000+0900",
-        "statusChangedAt": "2026-09-30T01:06:37.574+0900"
       },
       {
         "key": "AEME-6595",
@@ -4250,7 +4190,7 @@
       }
     ],
     "totals": {
-      "zero": 9,
+      "zero": 8,
       "actionable": 2,
       "blocked": 3,
       "queued": 1
