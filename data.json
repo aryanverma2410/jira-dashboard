@@ -1,90 +1,7 @@
 {
-  "generatedAt": "2026-09-30T13:52:02.548Z",
-  "totalTickets": 24,
+  "generatedAt": "2026-09-30T13:52:42.813Z",
+  "totalTickets": 22,
   "tickets": [
-    {
-      "key": "SAHME-3456",
-      "summary": "Multiple orders stuck ",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "South Africa Maintenance & Enhancements",
-      "projectKey": "SAHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-30T22:51:05.000+0900",
-      "created": "2026-09-30T19:20:45.000+0900",
-      "statusChangedAt": "2026-09-30T19:21:19.622+0900",
-      "assignedToMeAt": "",
-      "description": "Good day, \n\n \n\nPlease can you urgently assist with the below orders that are stuck on Hybris. \n|Order number|Enquiry |Comment|\n|ZA260928-97498808|WAITING  FOR SEND FINANCIAL|Order is stuck on waiting for send finanacial |\n|ZA260822-65638688|WAITING  FOR SEND FINANCIAL|Order is stuck on waiting for s",
-      "commentsCount": 1,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-30T22:39:29.359+0900",
-          "snippet": "Hi Zaahier,\n\nWe have checked all 3 orders on the PROD database. Below are the findings.\n\nZA260928-97498808 (WAITING_FOR_SEND_FINANCIAL):\nPayment capture was successful via dpoPayGate (41,018.40 ZAR). The order process (order-process-v25-69) is in ERROR state with end message \"An error occurred while"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Zaahier,\n\nWe have checked all 3 orders on the PROD database. Below are the findings.\n\nZA260928-97498808 (WAITING_FOR_SEND_FINANCIAL):\nPayment capture was successful via dpoPayGate (41,018.40 ZAR). The order process (order-process-v25-69) is in ERROR state with end message \"An error occurred while",
-      "lastCommentDate": "2026-09-30T22:39:29.359+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAHME-3456",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Summary: Multiple orders stuck\r\nGenerated: 2026-09-30T10:35:00Z\r\n\r\nIssue:\r\nThree ZA-region orders are reported as stuck on Hybris.\r\n\r\nOrder 1: ZA260928-97498808 (created 2026-09-28, total 41,018.40 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at WAITING_FOR_SEND_FINANCIAL status. Payment was authorized and captured successfully (both ACCEPTED, 41,018.40 ZAR). The order process (order-process-v25-69) is in ERROR state. Zero consignments were created.\r\n\r\nOrder 2: ZA260822-65638688 (created 2026-08-22, total 5,399.10 ZAR, payment mode za-PJNPaymentMode) is stuck at WAITING_FOR_SEND_FINANCIAL status. Payment was authorized and captured successfully (both ACCEPTED, 5,399.10 ZAR). The order process (order-process-v25-69) is in ERROR state with splitOrder looping 50+ times. Zero consignments were created. The ticket notes the unit has been GR'd and stock needs to be released. This order was previously investigated in SAHME-3399 and identified as a stock allocation issue.\r\n\r\nOrder 3: ZA260924-93112936 (created 2026-09-24, total 7,448.00 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at PAYMENT_NOT_CAPTURED status. The payment capture was rejected by the gateway (CAPTURE:REJECTED). This order was previously investigated in SAHME-3449.\r\n\r\nRCA:\r\n\r\nZA260928-97498808:\r\nThe order process advanced through checkout, fraud checks, and payment capture without issues. The sendFinancialUpdate action successfully posted the financial integration to GERP — the task log shows the process continued past isInitialFISuccess to fraudCheckPostFi, isFinanceApprovalRequired, isFulfilmentRequired, and isBulkOrder, confirming the FI step completed. The process then reached the splitOrder action, which is responsible for allocating order entries to warehouse consignments. The process entered ERROR state at this point with zero consignments created.\r\n\r\nThe splitOrder action calls OrderSplittingService to assign products to warehouses based on stock availability and warehouse configuration for the za store. The failure at splitOrder with zero consignments indicates either a stock allocation failure (products not available at any configured warehouse) or an exception during the splitting logic (such as a zero-quantity entry or warehouse configuration issue). Without Kibana log access, the exact exception cannot be confirmed, but the DB state is conclusive: the FI succeeded, the process errored at splitOrder, and no consignments were created.\r\n\r\nThis is the same pattern seen in SAHME-3437 (ZA260915-85021615) where a ZA-region order errored after the financial update stage, and in SAHME-3399 where ZA260822-65638688 has the same splitOrder failure pattern.\r\n\r\nZA260822-65638688:\r\nThis order was investigated in SAHME-3399 and identified as a stock allocation issue. The order process reached splitOrder, but OrderSplittingService could not assign products to any warehouse because the product is out of stock across all configured warehouses for the za site. After splitOrder returned an empty consignment list, the process entered a loop between waitForWarehouseSubprocessEnd and isProcessCompleted (50+ splitOrder entries in task logs), and eventually transitioned to ERROR state.\r\n\r\nThe ticket now notes that the unit has been GR'd (Goods Receipt completed) and stock needs to be released. This aligns with the SAHME-3399 conclusion: the order is awaiting stock transfer to a ZA warehouse. Once stock is available, the order process can be restarted from splitOrder to create consignments and proceed to fulfillment.\r\n\r\nThe order has been stagnant for 38 days (created 2026-08-22). Payment of 5,399.10 ZAR was fully captured. The customer is waiting for either stock availability and fulfillment, or cancellation and refund.\r\n\r\nZA260924-93112936:\r\nThis order was investigated in SAHME-3449. The payment authorization was successful but the subsequent capture step was rejected by the payment gateway (PayGate/DPO). The order has been stagnant for approximately 6 days. No consignments were created. The payment authorization has likely expired by now (typically 7 days for PayGate/DPO).\r\n\r\nThis is a gateway-side rejection, not a Hybris platform issue. The capture was declined by the payment provider, not by Hybris.\r\n\r\nPossible remediation:\r\n\r\nZA260928-97498808:\r\nOption A (if stock is available): Restart the order process from the splitOrder action node via HAC Groovy script. If stock is available at a configured ZA warehouse, the order will split into consignments and proceed to fulfillment.\r\n\r\nOption B (if stock is not available): Arrange stock transfer to a ZA warehouse for the products on this order, then restart the process from splitOrder. This is the same approach as for ZA260822-65638688.\r\n\r\nOption C: If the splitOrder error is caused by a data issue (zero-quantity entry, pricing error) rather than stock, Kibana log verification is needed to identify the exact exception. Fix the underlying data issue, then restart the process.\r\n\r\nRecommendation: Verify Kibana logs for the exact exception at splitOrder before attempting remediation. If stock-related, coordinate with the regional team for stock availability, then restart the process.\r\n\r\nZA260822-65638688:\r\nAs concluded in SAHME-3399: the regional team has confirmed the unit is GR'd and stock needs to be released. Once stock is released/transferred in the system, restart the order process from splitOrder. If stock cannot be arranged, cancel the order and process a full refund (5,399.10 ZAR) via REFUND_FOLLOW_ON, similar to what was done for ZA260822-65856992 in SAHME-3399.\r\n\r\nGiven this order has been stagnant for 38 days, urgent resolution is recommended — either arrange stock and fulfill, or cancel and refund.\r\n\r\nZA260924-93112936:\r\nAs concluded in SAHME-3449: the payment capture was rejected by the gateway. Hybris-side remediation is limited. The payment authorization has likely expired after 6+ days. Recommend cancelling the order and asking the customer to place a new order. If the payment team confirms the authorization is still valid, a re-capture can be attempted by retriggering the capture payment action in the order process.",
-        "sections": {
-          "issue": "Three ZA-region orders are reported as stuck on Hybris.\r\n\r\nOrder 1: ZA260928-97498808 (created 2026-09-28, total 41,018.40 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at WAITING_FOR_SEND_FINANCIAL status. Payment was authorized and captured successfully (both ACCEPTED, 41,018.40 ZAR). The order process (order-process-v25-69) is in ERROR state. Zero consignments were created.\r\n\r\nOrder 2: ZA260822-65638688 (created 2026-08-22, total 5,399.10 ZAR, payment mode za-PJNPaymentMode) is stuck at WAITING_FOR_SEND_FINANCIAL status. Payment was authorized and captured successfully (both ACCEPTED, 5,399.10 ZAR). The order process (order-process-v25-69) is in ERROR state with splitOrder looping 50+ times. Zero consignments were created. The ticket notes the unit has been GR'd and stock needs to be released. This order was previously investigated in SAHME-3399 and identified as a stock allocation issue.\r\n\r\nOrder 3: ZA260924-93112936 (created 2026-09-24, total 7,448.00 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at PAYMENT_NOT_CAPTURED status. The payment capture was rejected by the gateway (CAPTURE:REJECTED). This order was previously investigated in SAHME-3449.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-30T10:38:47.471Z"
-      }
-    },
-    {
-      "key": "AEME-6602",
-      "summary": "[PROD] | Manual Chargeback | 30th Sept",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-30T22:50:39.000+0900",
-      "created": "2026-09-30T15:07:08.000+0900",
-      "statusChangedAt": "2026-09-30T15:44:47.243+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\n \n\nEnv: PROD Env\n\nBackground:\n\nPlease trigger the manual chargeback for the trade-in amount, as the trade-in orders were rejected.\n|Order Code|Trade-in Status|Charge Back Amount|\n|AE260814-59413370|REJECTED|270|\n|AE260803-49001795|REJECTED|3035|\n\n \n\nAlso, the below order is stuck in checke",
-      "commentsCount": 2,
-      "recentComments": [
-        {
-          "author": "Talib Raza Zaidi",
-          "date": "2026-09-30T22:47:41.959+0900",
-          "snippet": "HI ~@email,\n\n \n\nPlease proceed to chargeback for AE260814-59413370 & AE260803-49001795. Please only trigger once and let us know the request and reponse on it.\n\nFor order AE260928-97453028, will check with Finance team if the payment is captured and will let you know.\n\n \n\nRegards\n\nTalib\n\nCC: ~@email"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-30T22:40:01.069+0900",
-          "snippet": "Hi Talib,\n\nWe have checked all 3 orders on the PROD database. Below are the findings.\n\nAE260814-59413370 (COMPLETED, Chargeback=270):\nOrder is COMPLETED with consignment COMPLETED. Payment via ApplePay (6,394.00). The trade-in was rejected and isChargeBackRefundDone is false. The chargeback refund o"
-        }
-      ],
-      "lastCommentBy": "Talib Raza Zaidi",
-      "lastCommentSnippet": "HI ~@email,\n\n \n\nPlease proceed to chargeback for AE260814-59413370 & AE260803-49001795. Please only trigger once and let us know the request and reponse on it.\n\nFor order AE260928-97453028, will check with Finance team if the payment is captured and will let you know.\n\n \n\nRegards\n\nTalib\n\nCC: ~@email",
-      "lastCommentDate": "2026-09-30T22:47:41.959+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6602",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "[PROD] | Manual Chargeback | 30th Sept\r\nGenerated: 2026-09-30T09:11:22Z\r\n\r\nIssue:\r\n\r\nTwo distinct issues are reported in this ticket.\r\n\r\nPart 1 - Manual Chargeback for Trade-In Rejected Orders:\r\nOrders AE260814-59413370 (chargeback amount 270 AED) and AE260803-49001795 (chargeback amount 3035 AED) have completed delivery, but their trade-in devices were rejected by Northladder (ExternalService status = CANCELLED). The automated clawback/chargeback process should debit the trade-in discount amount back from the customer's card approximately 19 days after consignment completion. The automated clawback was attempted but failed, requiring manual intervention to retrigger.\r\n\r\nPart 2 - Order Stuck at CHECKED_INVALID:\r\nOrder AE260928-97453028 (created 28th Sept, total 186.01 AED, Checkout.com payment) is stuck at CHECKED_INVALID status. No consignments were created, order processes are in FAILED state looping at the checkOrder action (50+ retries), and the order cannot progress to fulfilment.\r\n\r\nRCA:\r\n\r\nPart 1 - Chargeback Failure (AE260814-59413370, AE260803-49001795):\r\n\r\nBoth orders are COMPLETED with consignments delivered and GERP billing completed. The NORTHLADDER trade-in ExternalService is CANCELLED on both, confirming trade-in rejection. The field isChargeBackRefundDone is false (0) on both orders, and paymentStatus is NULL.\r\n\r\nDB evidence shows a second PaymentTransaction on each order with an AUTHORIZATION entry in ERROR state:\r\n- AE260814-59413370: AUTHORIZATION ERROR at 2026-09-18 02:01:46 (consignment completed 2026-08-29, ~19 day clawback trigger aligns)\r\n- AE260803-49001795: AUTHORIZATION ERROR at 2026-09-13 02:01:52 (consignment completed 2026-08-20, ~19 day clawback trigger aligns)\r\n\r\nThis matches the pattern documented in the prior chargeback ticket AEME-6540 (closed, PC-53902). The RCA from that ticket states: \"Clawback PaymentTransaction records lacked paymentInfo and requestId, causing the automated re-authorization to fail and requiring manual chargeback.\" The clawback process creates a new PaymentTransaction to perform an unscheduled MIT (Merchant Initiated Transaction) payment using the saved card credentials. When the paymentInfo or requestId is missing on the clawback PaymentTransaction, the re-authorization call to Checkout.com fails with PROCESSOR_DECLINE, and the clawback BusinessProcess enters ERROR state.\r\n\r\nRoot cause: The clawback PaymentTransaction for both orders lacks the required paymentInfo reference and requestId needed for the unscheduled MIT re-authorization. The automated clawback attempted after the 19-day window, but Checkout.com declined the payment because the card tokenization data was incomplete on the clawback PaymentTransaction. This is the same platform issue seen in AEME-6540, AEME-6362, and AEME-6286.\r\n\r\nPart 2 - CHECKED_INVALID (AE260928-97453028):\r\n\r\nThe order was created on 2026-09-28 at 10:20:28 with payment mode ae-CheckoutDotComFlowPaymentMode. Two PaymentTransactions exist with AUTHORIZATION ACCEPTED entries (64.00 AED and 186.01 AED), confirming payment was authorized successfully. However, the order status is CHECKED_INVALID, zero consignments exist, and both order-process-v25-69 instances are in FAILED state.\r\n\r\nTask logs show the checkOrder action executing 50+ times, indicating the order validation at the checkOrder action node is repeatedly failing. The order has an ExternalService for GCIC_EXPERT_CARE_STANDALONE in NEW status, suggesting the order contains a standalone service product that may be contributing to the validation failure.\r\n\r\nThe paymentStatus field is NULL on this order, and deliveryMode is also NULL, which are required fields for order validation. The checkOrder action in the order-process-v25-69 workflow validates order integrity (payment info, delivery mode, consignment creation prerequisites) before allowing the order to proceed to fulfilment. When this validation fails, the order is set to CHECKED_INVALID and the process enters FAILED state.\r\n\r\nRoot cause: The order failed validation at the checkOrder action node during the order-process-v25-69 workflow. The missing paymentStatus and deliveryMode fields, combined with the standalone Expert Care service (GCIC_EXPERT_CARE_STANDALONE) in NEW state, likely caused the checkOrder validation to reject the order and mark it CHECKED_INVALID. The process then entered a retry loop at checkOrder but cannot self-remediate because the underlying field gaps persist.\r\n\r\nPossible remediation:\r\n\r\nPart 1 - Chargeback Retrigger:\r\n\r\nReuse the existing approved script from AEME-6540 (PC-53902): script-AEME-6540-clawback-retrigger.groovy. This script:\r\n1. Finds the clawback BusinessProcess for each order (WHERE code LIKE '%{orderCode}%Clawback%')\r\n2. Sets the ERROR state process to CREATED (Hybris restartProcess fails on ERROR state)\r\n3. Calls businessProcessService.restartProcess(bp, \"reAuthorizeIfNeeded\") to retrigger the clawback authorization\r\n\r\nThe script needs to be copied and updated with the new order codes (AE260814-59413370, AE260803-49001795) and the new ticket reference (AEME-6602). If the clawback fails again with PROCESSOR_DECLINE (as happened in AEME-6540), the paymentInfo and requestId on the clawback PaymentTransaction may need to be populated from the original order's PaymentTransaction before retriggering.\r\n\r\nNote: The chargeback amounts (270 AED and 3035 AED) specified in the ticket should be verified against the trade-in discount amounts on the orders to ensure the clawback charges the correct amount.\r\n\r\nPart 2 - CHECKED_INVALID Remediation:\r\n\r\nReuse the existing pattern from AEME-6548 (PC-52605): script-AEME-6548-order1-checked-invalid-retrigger.groovy. This script:\r\n1. Sets order status from CHECKED_INVALID to CREATED\r\n2. Restarts the FAILED order-process-v25-69 processes from the checkOrder action (last failed action)\r\n3. Clears current tasks and forces process state to ERROR before restartProcess\r\n\r\nBefore running this, verify:\r\n- That paymentStatus can be set (it is currently NULL — may need to set to PAID since AUTHORIZATION was ACCEPTED)\r\n- That deliveryMode is available for this order's delivery address and can be set\r\n- That the GCIC_EXPERT_CARE_STANDALONE external service in NEW status is not blocking order progression\r\n\r\nIf the checkOrder action fails again after restart (because the underlying field gaps are not fixed), a deeper investigation into the specific validation failure at checkOrder is needed. Kibana logs for AE260928-97453028 would reveal the exact exception message from the checkOrder action, but Kibana MCP was unavailable during this investigation.\r\n\r\nReferences:\r\n- AEME-6540 (Closed): Previous manual chargeback ticket with same root cause. Script: script-AEME-6540-clawback-retrigger.groovy (PC-53902)\r\n- AEME-6362 (Closed): First manual chargeback ticket. Documented that the 19-day chargeback trigger cannot be overridden.\r\n- AEME-6286 (Closed): Trade-in re-trigger chargeback ticket.\r\n- AEME-6548 (Closed): CHECKED_INVALID remediation. Script: script-AEME-6548-order1-checked-invalid-retrigger.groovy (PC-52605 pattern)\r\n- PC-53902: Approved PC ticket for clawback retrigger (AEME-6540)\r\n- PC-52605: Approved PC ticket for CHECKED_INVALID retrigger (AEME-6548 pattern)\r\n\r\nLimitations:\r\n- Kibana MCP was unavailable during this investigation. Log analysis could not be performed. Root cause for Part 2 (CHECKED_INVALID) is based on DB state analysis and code pattern correlation only.\r\n- Clawback BusinessProcess could not be queried directly via HAC (timeout). The clawback process existence is inferred from the ERROR-state PaymentTransactionEntry on both chargeback orders.",
-        "sections": {
-          "issue": "Two distinct issues are reported in this ticket.\r\n\r\nPart 1 - Manual Chargeback for Trade-In Rejected Orders:\r\nOrders AE260814-59413370 (chargeback amount 270 AED) and AE260803-49001795 (chargeback amount 3035 AED) have completed delivery, but their trade-in devices were rejected by Northladder (ExternalService status = CANCELLED). The automated clawback/chargeback process should debit the trade-in discount amount back from the customer's card approximately 19 days after consignment completion. The automated clawback was attempted but failed, requiring manual intervention to retrigger.\r\n\r\nPart 2 - Order Stuck at CHECKED_INVALID:\r\nOrder AE260928-97453028 (created 28th Sept, total 186.01 AED, Checkout.com payment) is stuck at CHECKED_INVALID status. No consignments were created, order processes are in FAILED state looping at the checkOrder action (50+ retries), and the order cannot progress to fulfilment.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-30T09:42:58.547Z"
-      }
-    },
     {
       "key": "SAME-4005",
       "summary": "Stuck order on Hybris",
@@ -1313,7 +1230,7 @@
       }
     ],
     "pid": 20012,
-    "uptime": 48806,
+    "uptime": 48848,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1325,7 +1242,7 @@
       {
         "pid": 31828,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 84152,
+        "ageSeconds": 84193,
         "status": "running",
         "isChild": false,
         "taskSummary": "how many times is the action-items skill working on bg? it should only fire once every 2 hours as...",
@@ -1335,7 +1252,7 @@
       {
         "pid": 29716,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 82454,
+        "ageSeconds": 82495,
         "status": "running",
         "isChild": false,
         "taskSummary": "log 45mins on both tickets we posted comments on and assign back",
@@ -1345,7 +1262,7 @@
       {
         "pid": 19584,
         "cwd": "c:\\windows",
-        "ageSeconds": 82448,
+        "ageSeconds": 82489,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1355,7 +1272,7 @@
       {
         "pid": 6788,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 82342,
+        "ageSeconds": 82383,
         "status": "running",
         "isChild": false,
         "taskSummary": "how many times is the action-items skill working on bg? it should only fire once every 2 hours as...",
@@ -1365,7 +1282,7 @@
       {
         "pid": 39608,
         "cwd": "unknown",
-        "ageSeconds": 21898,
+        "ageSeconds": 21939,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -4389,17 +4306,17 @@
     "bridgeLogTail": "[2026-09-30T10:39:20.861Z] STDOUT data for #473: 123 bytes\n[2026-09-30T10:39:20.863Z] LIVE write for #473: 3248 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:20.880Z] STDOUT data for #473: 109 bytes\n[2026-09-30T10:39:20.883Z] LIVE write for #473: 3254 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:20.895Z] STDOUT data for #473: 126 bytes\n[2026-09-30T10:39:20.897Z] LIVE write for #473: 3275 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:20.901Z] STDOUT data for #473: 114 bytes\n[2026-09-30T10:39:20.903Z] LIVE write for #473: 3286 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:20.917Z] STDOUT data for #473: 115 bytes\n[2026-09-30T10:39:20.919Z] LIVE write for #473: 3298 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:20.935Z] STDOUT data for #473: 121 bytes\n[2026-09-30T10:39:20.937Z] LIVE write for #473: 3316 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:20.958Z] STDOUT data for #473: 109 bytes\n[2026-09-30T10:39:20.960Z] LIVE write for #473: 3322 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:21.572Z] STDOUT data for #473: 107 bytes\n[2026-09-30T10:39:21.575Z] LIVE write for #473: 3326 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:21.584Z] STDOUT data for #473: 340 bytes\n[2026-09-30T10:39:21.586Z] LIVE write for #473: 3326 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:23.228Z] aipro completed for #473 (3326 chars)\n[2026-09-30T10:39:24.031Z] Comment posted on #473",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-09-30T13:51:54.051Z",
-      "ageMs": 12067
+      "lastWrite": "2026-09-30T13:52:47.087Z",
+      "ageMs": 275
     },
-    "watchdogLogTail": "[2026-09-30T13:49:37.213Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T13:49:52.217Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T13:50:07.221Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T13:50:22.231Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T13:50:37.229Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T13:50:52.235Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T13:51:07.756Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T13:51:22.497Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T13:51:39.048Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T13:51:54.050Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-09-30T13:50:37.229Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T13:50:52.235Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T13:51:07.756Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T13:51:22.497Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T13:51:39.048Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T13:51:54.050Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T13:52:09.065Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T13:52:24.095Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T13:52:39.077Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-09-30T13:52:47.088Z] DUPLICATE watchdog detected: PID 34128 — killing"
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-09-30T13:51:27.562Z",
+      "lastCheck": "2026-09-30T13:52:27.196Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4408,18 +4325,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-30T13:51:27.562Z",
+      "lastCheck": "2026-09-30T13:52:27.196Z",
       "downSince": "2026-09-30T11:56:06.629Z",
-      "downDuration": 6920933,
+      "downDuration": 6980567,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-09-30T13:51:27.562Z",
+      "lastCheck": "2026-09-30T13:52:27.196Z",
       "downSince": "2026-09-30T11:56:06.629Z",
-      "downDuration": 6920933,
+      "downDuration": 6980567,
       "alert": true
     }
   ],
@@ -4619,18 +4536,6 @@
         "statusChangedAt": "2026-09-28T15:10:33.048+0900"
       },
       {
-        "key": "SAHME-3456",
-        "summary": "Multiple orders stuck ",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/SAHME-3456",
-        "updated": "2026-09-30T22:51:05.000+0900",
-        "statusChangedAt": "2026-09-30T19:21:19.622+0900"
-      },
-      {
         "key": "SAME-4005",
         "summary": "Stuck order on Hybris",
         "priority": "None",
@@ -4739,18 +4644,6 @@
         "url": "https://jira.secext.samsung.net/browse/PC-53845",
         "updated": "2026-09-16T17:07:55.000+0900",
         "statusChangedAt": "2026-09-15T22:47:57.919+0900"
-      },
-      {
-        "key": "AEME-6602",
-        "summary": "[PROD] | Manual Chargeback | 30th Sept",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "actionable",
-        "reason": "",
-        "whatToDo": "Respond to Talib Raza Zaidi",
-        "url": "https://jira.secext.samsung.net/browse/AEME-6602",
-        "updated": "2026-09-30T22:50:39.000+0900",
-        "statusChangedAt": "2026-09-30T15:44:47.243+0900"
       }
     ],
     "blocked": [
@@ -4882,8 +4775,8 @@
       }
     ],
     "totals": {
-      "zero": 9,
-      "actionable": 3,
+      "zero": 8,
+      "actionable": 2,
       "blocked": 7,
       "queued": 5
     }
