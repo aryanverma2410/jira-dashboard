@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-02T08:07:56.634Z",
+  "generatedAt": "2026-10-02T08:08:37.449Z",
   "totalTickets": 19,
   "tickets": [
     {
@@ -62,9 +62,15 @@
       "url": "https://jira.secext.samsung.net/browse/MHME-1451",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-10-02T07:51:53.331Z"
+        "status": "found",
+        "excerpt": "Ticket: Cancellation of MA260821-64994011 order\r\nGenerated: 2026-10-02T08:15:00.000Z\r\n\r\n## Issue\r\n\r\nOrder MA260821-64994011 (Morocco, Fatourati payment mode, 12.10 MAD) is stuck at CANCEL_REQUEST status. The market is requesting to cancel the order but it has not progressed beyond this state since 21 August 2026.\r\n\r\n## RCA\r\n\r\nHi Ashwani ,\r\n\r\nThe order MA260821-64994011 is currently stuck at CANCEL_REQUEST status with the main order process (order-process-v25-69) in RUNNING state, positioned at the voidOrder action. The order has not progressed to CANCELLED despite being in CANCEL_REQUEST for over 40 days.\r\n\r\nThe DB state reveals the following payment flow. Two PaymentTransactions exist for this order. The first PT (14dab100...) had an AUTHORIZATION entry with REVIEW status at 11:05:34 on 21 Aug, which was subsequently cancelled (CANCEL entry with ACCEPTED status at 11:18:11). The second PT (9f93b452...) had an AUTHORIZATION entry with ACCEPTED status for 12.10 MAD at 12:05:48 on 21 Aug. This indicates the original payment was flagged for fraud review, the system cancelled the first authorisation, and a second authorisation was attempted and accepted.\r\n\r\nThe order process task log shows the following action sequence: checkPartialPaymentEnabled, sendOrderAcknowledgementEmail, processOrderAnalytics, checkExternalEnabled, checkOrder, compensationApprovalCheck, checkTransactionReviewStatus, sendOrderPaymentExpiredEmail, cancelExternalServiceOnWaitExternalCancel, and finally voidOrder as the latest action. The orderPaymentExpiredNotificationEmailProcess is in ERROR state, confirming the payment expired notification flow also failed.\r\n\r\nThe order has zero consignments, which means the order never reached the fulfilment stage. The order is a Fatourati (Morocco local payment gateway) order in the ma store. The process is stuck at voidOrder because the order cancellation flow cannot complete the void operation. This is the same pattern observed in SAME-3798, NUKME-8742, and IQME-400 where orders remained stuck at CANCEL_REQUEST after a fraud check failure triggered a cancel request that the process could not fully execute.\r\n\r\nThe root cause is that the order process (order-process-v25-69) reached the voidOrder action but could not complete it. The process is in RUNNING state (not ERROR), which means the voidOrder action is either waiting for an external response (e.g., payment void from the Fatourati gateway) or encountering a silent failure where the action does not return a transition result. Given that the order has an accepted AUTHORIZATION of 12.10 MAD on the second PT, the voidOrder action likely needs to void this payment authorisation with the Fatourati gateway, and this void request either failed silently or was never sent.\r\n\r\nNo BusinessProcessParameter stack traces were found for the order process, and Kibana logs were not available during this investigation to confirm the exact exception at the voidOrder action. The absence of a stack trace combined with the RUNNING state suggests the process may be waiting on an asynchronous response rather than having thrown an exception.\r\n\r\n## Possible Remediation\r\n\r\nTwo approaches are possible depending on whether the payment void can be completed externally:\r\n\r\n1. If the market confirms the order should be cancelled, the order process can be retried from the voidOrder action. This would re-attempt the payment void with the Fatourati gateway. If the gateway responds, the process will transition the order to CANCELLED.\r\n\r\n2. If the Fatourati gateway void is not required or has already been processed externally, the order status can be manually set to CANCELLED and the order process can be given an explicit DONE signal at the voidOrder action to allow the process to complete.\r\n\r\nA HAC Groovy script can be prepared to either retry the voidOrder action or manually transition the order to CANCELLED, depending on the market's confirmation regarding the payment authorisation status with Fatourati.\r\n\r\nThis is the same pattern confirmed and resolved in SAME-3798, NUKME-8742, and IQME-400 where orders stuck at CANCEL_REQUEST were moved to CANCELLED after process intervention.\r\n\r\nKindly confirm if the order should be cancelled so we can prepare the remediation script.\r\n\r\nThanks,\r\nAryan.\r\n\r\n## Remediation\r\n\r\nRemediation approach: Retry voidOrder action on the order process or manually set order to CANCELLED + signal process DONE, pending market confirmation on Fatourati payment void status.\r\nNo reusable PC ticket found for void-order-stuck scenario. A new PC ticket would be needed if remediation is confirmed.",
+        "sections": {
+          "issue": "Order MA260821-64994011 (Morocco, Fatourati payment mode, 12.10 MAD) is stuck at CANCEL_REQUEST status. The market is requesting to cancel the order but it has not progressed beyond this state since 21 August 2026.",
+          "rca": "Hi Ashwani ,\r\n\r\nThe order MA260821-64994011 is currently stuck at CANCEL_REQUEST status with the main order process (order-process-v25-69) in RUNNING state, positioned at the voidOrder action. The order has not progressed to CANCELLED despite being in CANCEL_REQUEST for over 40 days.\r\n\r\nThe DB state reveals the following payment flow. Two PaymentTransactions exist for this order. The first PT (14dab100...) had an AUTHORIZATION entry with REVIEW status at 11:05:34 on 21 Aug, which was subsequently cancelled (CANCEL entry with ACCEPTED status at 11:18:11). The second PT (9f93b452...) had an AUTHORIZATION entry with ACCEPTED status for 12.10 MAD at 12:05:48 on 21 Aug. This indicates the original payment was flagged for fraud review, the system cancelled the first authorisation, and a second authorisation was attempted and accepted.\r\n\r\nThe order process task log shows the following action sequence: checkPartialPaymentEnabled, sendOrderAcknowledgementEmail, processOrderAnalytics, checkExternalEnabled, checkOrder, compensationApprovalCheck, checkTransactionReviewStatus, sendOrderPaymentExpiredEmail, cancelExternalServiceOnWaitExternalCancel, and finally voidOrder as the latest action. The orderPaymentExpiredNotificationEmailProcess is in ERROR state, confirming the payment expired notification flow also failed.\r\n\r\nThe order has zero consignments, which means the order never reached the fulfilment stage. The order is a Fatourati (Morocco local payment gateway) order in the ma store. The process is stuck at voidOrder because the order cancellation flow cannot complete the void operation. This is the same pattern observed in SAME-3798, NUKME-8742, and IQME-400 where orders remained stuck at CANCEL_REQUEST after a fraud check failure triggered a cancel request that the process could not fully execute.\r\n\r\nThe root cause is that the order process (order-process-v25-69) reached the voidOrder action but could not complete it. The process is in RUNNING state (not ERROR), which means the voidOrder action is either waiting for an external response (e.g., payment void from the Fatourati gateway) or encountering a silent failure where the action does not return a transition result. Given that the order has an accepted AUTHORIZATION of 12.10 MAD on the second PT, the voidOrder action likely needs to void this payment authorisation with the Fatourati gateway, and this void request either failed silently or was never sent.\r\n\r\nNo BusinessProcessParameter stack traces were found for the order process, and Kibana logs were not available during this investigation to confirm the exact exception at the voidOrder action. The absence of a stack trace combined with the RUNNING state suggests the process may be waiting on an asynchronous response rather than having thrown an exception.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-02T08:08:03.116Z"
       }
     },
     {
@@ -1085,7 +1091,7 @@
       }
     ],
     "pid": 27912,
-    "uptime": 7422,
+    "uptime": 7464,
     "failures": 0,
     "activeJobCount": 2,
     "jobs": [
@@ -1094,14 +1100,14 @@
         "issueTitle": "Investigate ticket MHME-1451",
         "snippet": "Auto-triggered investigation for new ticket MHME-1451.\n\nTicket: MHME-1451\nSummary: Cancellation of MA260821-64994011 ord",
         "pid": 47884,
-        "elapsed": 949
+        "elapsed": 992
       },
       {
         "issueNum": 521,
         "issueTitle": "Investigate ticket TKME-2349",
         "snippet": "Auto-triggered investigation for new ticket TKME-2349.\n\nTicket: TKME-2349\nSummary: Return Creation Issue\n\nUse the invest",
         "pid": 42424,
-        "elapsed": 311
+        "elapsed": 354
       }
     ],
     "startTime": "2026-10-02T11:32:32.116Z",
@@ -1112,7 +1118,7 @@
       {
         "pid": 31828,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 236307,
+        "ageSeconds": 236347,
         "status": "running",
         "isChild": false,
         "taskSummary": "how many times is the action-items skill working on bg? it should only fire once every 2 hours as...",
@@ -1122,7 +1128,7 @@
       {
         "pid": 19584,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 234603,
+        "ageSeconds": 234643,
         "status": "running",
         "isChild": false,
         "taskSummary": "check consignment process as well. and no assummptions cross verify wach finding",
@@ -1132,7 +1138,7 @@
       {
         "pid": 39968,
         "cwd": "c:\\windows",
-        "ageSeconds": 131760,
+        "ageSeconds": 131801,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1142,7 +1148,7 @@
       {
         "pid": 29348,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 73458,
+        "ageSeconds": 73498,
         "status": "running",
         "isChild": false,
         "taskSummary": "how many times is the action-items skill working on bg? it should only fire once every 2 hours as...",
@@ -1152,7 +1158,7 @@
       {
         "pid": 34776,
         "cwd": "unknown",
-        "ageSeconds": 67715,
+        "ageSeconds": 67755,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -4244,11 +4250,11 @@
         ]
       }
     },
-    "bridgeLogTail": "[2026-10-02T08:07:56.558Z] STDOUT data for #520: 115 bytes\n[2026-10-02T08:07:56.561Z] LIVE write for #520: 1451 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_520.txt\n[2026-10-02T08:07:56.582Z] STDOUT data for #520: 119 bytes\n[2026-10-02T08:07:56.584Z] LIVE write for #520: 1467 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_520.txt\n[2026-10-02T08:07:56.630Z] STDOUT data for #520: 121 bytes\n[2026-10-02T08:07:56.632Z] LIVE write for #520: 1485 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_520.txt\n[2026-10-02T08:07:56.633Z] STDOUT data for #520: 231 bytes\n[2026-10-02T08:07:56.665Z] LIVE write for #520: 1510 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_520.txt\n[2026-10-02T08:07:57.399Z] STDOUT data for #520: 796 bytes\n[2026-10-02T08:07:57.401Z] LIVE write for #520: 1510 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_520.txt\n[2026-10-02T08:07:57.414Z] STDOUT data for #520: 810 bytes\n[2026-10-02T08:07:57.416Z] LIVE write for #520: 1510 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_520.txt\n[2026-10-02T08:07:59.326Z] STDOUT data for #520: 140 bytes\n[2026-10-02T08:07:59.329Z] LIVE write for #520: 1547 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_520.txt\n[2026-10-02T08:07:59.329Z] STDOUT data for #520: 115 bytes\n[2026-10-02T08:07:59.334Z] LIVE write for #520: 1559 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_520.txt\n[2026-10-02T08:07:59.337Z] STDOUT data for #520: 123 bytes\n[2026-10-02T08:07:59.339Z] LIVE write for #520: 1579 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_520.txt\n[2026-10-02T08:07:59.347Z] STDOUT data for #520: 109 bytes\n[2026-10-02T08:07:59.350Z] LIVE write for #520: 1585 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_520.txt",
+    "bridgeLogTail": "[2026-10-02T08:08:39.583Z] STDOUT data for #520: 118 bytes\n[2026-10-02T08:08:39.585Z] LIVE write for #520: 2574 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_520.txt\n[2026-10-02T08:08:39.597Z] STDOUT data for #520: 110 bytes\n[2026-10-02T08:08:39.600Z] LIVE write for #520: 2581 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_520.txt\n[2026-10-02T08:08:39.620Z] STDOUT data for #520: 125 bytes\n[2026-10-02T08:08:39.622Z] LIVE write for #520: 2601 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_520.txt\n[2026-10-02T08:08:39.625Z] STDOUT data for #520: 113 bytes\n[2026-10-02T08:08:39.627Z] LIVE write for #520: 2611 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_520.txt\n[2026-10-02T08:08:39.638Z] STDOUT data for #520: 114 bytes\n[2026-10-02T08:08:39.640Z] LIVE write for #520: 2622 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_520.txt\n[2026-10-02T08:08:39.653Z] STDOUT data for #520: 115 bytes\n[2026-10-02T08:08:39.655Z] LIVE write for #520: 2634 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_520.txt\n[2026-10-02T08:08:39.668Z] STDOUT data for #520: 122 bytes\n[2026-10-02T08:08:39.671Z] LIVE write for #520: 2653 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_520.txt\n[2026-10-02T08:08:39.683Z] STDOUT data for #520: 110 bytes\n[2026-10-02T08:08:39.685Z] LIVE write for #520: 2660 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_520.txt\n[2026-10-02T08:08:39.699Z] STDOUT data for #520: 104 bytes\n[2026-10-02T08:08:39.702Z] LIVE write for #520: 2661 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_520.txt\n[2026-10-02T08:08:39.705Z] STDOUT data for #520: 346 bytes\n[2026-10-02T08:08:39.707Z] LIVE write for #520: 2661 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_520.txt",
     "watchdog": {
       "alive": true,
       "lastWrite": "2026-10-02T08:07:40.960Z",
-      "ageMs": 20522
+      "ageMs": 60407
     },
     "watchdogLogTail": "[2026-10-02T11:32:31.558Z] Dashboard script: C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\jira-dashboard-server.js\n[2026-10-02T11:32:31.560Z] Bridge not running. Starting fresh.\n[2026-10-02T11:32:31.561Z] Starting bridge.js...\n[2026-10-02T11:32:31.729Z] Bridge started with PID 27912 (restart #1, 1 in last hour)\n[2026-10-02T11:32:31.735Z] Dashboard already running (PID 3192). Adopting.\n[2026-10-02T11:32:36.230Z] Clock sync: Checking drift against Jira server...\n[2026-10-02T11:32:36.871Z] Clock sync: VDI hw=2026-10-02T17:02:36.871Z Jira=2026-10-02T11:34:19.000Z drift=-19698s\n[2026-10-02T06:04:25.349Z] Clock sync: ADJUSTED by -19698s. Clock set to 2026-10-02 11:34:19\n[2026-10-02T07:07:41.521Z] DUPLICATE watchdog detected: PID 42652 — killing\n[2026-10-02T08:07:40.960Z] DUPLICATE watchdog detected: PID 47668 — killing",
     "jobOutputs": {}
@@ -4258,7 +4264,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-02T08:07:02.951Z",
+      "lastCheck": "2026-10-02T08:08:03.278Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4267,18 +4273,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-02T08:07:02.951Z",
+      "lastCheck": "2026-10-02T08:08:03.278Z",
       "downSince": "2026-10-02T07:10:55.421Z",
-      "downDuration": 3367530,
+      "downDuration": 3427857,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-02T08:07:02.951Z",
+      "lastCheck": "2026-10-02T08:08:03.278Z",
       "downSince": "2026-10-02T06:58:46.491Z",
-      "downDuration": 4096460,
+      "downDuration": 4156787,
       "alert": true
     }
   ],
