@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-02T06:19:50.352Z",
+  "generatedAt": "2026-10-02T06:20:30.662Z",
   "totalTickets": 17,
   "tickets": [
     {
@@ -74,9 +74,15 @@
       "url": "https://jira.secext.samsung.net/browse/GMT-21857",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-10-02T06:17:29.369Z"
+        "status": "found",
+        "excerpt": "SMI | Multiple Aborted Cron Jobs\r\nGenerated: 2026-10-02T18:10:00+09:00\r\n\r\nIssue:\r\nSix non-critical cron jobs on the SMI cluster are in ABORTED state. The affected jobs are tokoPaymentLogsCleanupJob, toko-ilProductCatalogSyncCronJob, kwMktCPICustomerOutboundSyncCronJob, ae-TokoCartRemovalJob, outboundRequestMediaCleanupCronJob, and outboundRequestCleanupCronJob. All six jobs belong to the backgroundProcessing node group and were triggered between Oct 1 22:30 and Oct 2 03:15 KST. The ticket was raised by Ganesh Kumar M via the CronJob mail monitoring dashboard.\r\n\r\nRCA:\r\nDB verification via HAC FlexibleSearch confirms all six cron jobs have status ABORTED with NULL endTime values, meaning none of them completed gracefully. Four of the six jobs (tokoPaymentLogsCleanupJob, ae-TokoCartRemovalJob, outboundRequestMediaCleanupCronJob, outboundRequestCleanupCronJob) have runningOnClusterNode set to -1, which in Hybris indicates the cluster node that was executing the job is no longer registered in the cluster. The remaining two jobs (toko-ilProductCatalogSyncCronJob, kwMktCPICustomerOutboundSyncCronJob) have NULL runningOnClusterNode, meaning they were either not yet assigned to a node or the assignment was cleared when the node went down.\r\n\r\nNone of the six jobs have requestAbort set to true, confirming they were not manually aborted. All six are assigned to the backgroundProcessing node group. The runningOnClusterNode=-1 pattern across four jobs that started at different times (00:00, 01:00, 01:03) points to a single cluster node failure or restart on the SMI background processing node during the early morning hours of Oct 2. When a Hybris cluster node crashes or is restarted, any cron jobs executing on that node are left in ABORTED state because the job execution thread is killed without a graceful shutdown sequence. The Hybris cron job engine does not automatically recover jobs from ABORTED state — they must be manually restarted.\r\n\r\nThis is a well-documented recurring pattern on the SMI cluster. A Jira search returned 931 historical tickets for aborted cron jobs on SMI, including GMT-14861 (May 2026) which had the exact same outboundRequestCleanupCronJob and outboundRequestMediaCleanupCronJob aborted, and GMT-4204 (Oct 2025) which had ae-TokoCartRemovalJob among multiple aborted jobs. All prior tickets were resolved by manually restarting the jobs from Backoffice.\r\n\r\nKibana log analysis was not possible due to the cookie bridge being down (last response Sep 30). The log attachments on the ticket could not be downloaded due to a URL parsing issue. However, the DB evidence is sufficient to confirm the root cause as cluster node failure, which is consistent with the 931 prior SMI aborted cronjob tickets that followed the same pattern and resolution.\r\n\r\nPossible remediation:\r\nRestart all six cron jobs from the Backoffice CronJob console. Navigate to Backoffice > System > Cron Jobs, search for each job by name, and click Start to re-trigger execution. Monitor each job to confirm it transitions from RUNNING to FINISHED with SUCCESS result. No HAC Groovy script or PC ticket is needed — this is a standard Backoffice operational fix.\r\n\r\nThe recurring nature of this issue (931 historical tickets) suggests the SMI cluster's background processing node is prone to intermittent restarts. A permanent fix would require infra team investigation into why the backgroundProcessing node group experiences unexpected node loss. This is outside the scope of a Hybris application fix and should be escalated to the platform infrastructure team if a trend analysis is warranted.\r\n\r\nTicket URL: https://jira.secext.samsung.net/browse/GMT-21857",
+        "sections": {
+          "issue": "Six non-critical cron jobs on the SMI cluster are in ABORTED state. The affected jobs are tokoPaymentLogsCleanupJob, toko-ilProductCatalogSyncCronJob, kwMktCPICustomerOutboundSyncCronJob, ae-TokoCartRemovalJob, outboundRequestMediaCleanupCronJob, and outboundRequestCleanupCronJob. All six jobs belong to the backgroundProcessing node group and were triggered between Oct 1 22:30 and Oct 2 03:15 KST. The ticket was raised by Ganesh Kumar M via the CronJob mail monitoring dashboard.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-02T06:20:21.460Z"
       }
     },
     {
@@ -1014,7 +1020,7 @@
       }
     ],
     "pid": 27912,
-    "uptime": 935,
+    "uptime": 978,
     "failures": 0,
     "activeJobCount": 2,
     "jobs": [
@@ -1023,14 +1029,14 @@
         "issueTitle": "Investigate ticket AEME-6596",
         "snippet": "Auto-triggered investigation for new ticket AEME-6596.\n\nTicket: AEME-6596\nSummary: Expert Care Orders Stuck || 29-Sep\n\nU",
         "pid": 47912,
-        "elapsed": -18770
+        "elapsed": -18727
       },
       {
         "issueNum": 515,
         "issueTitle": "Investigate ticket GMT-21857",
         "snippet": "Auto-triggered investigation for new ticket GMT-21857.\n\nTicket: GMT-21857\nSummary: SMI | Multiple Aborted Cron Jobs\n\nUse",
         "pid": 51028,
-        "elapsed": -18768
+        "elapsed": -18725
       }
     ],
     "startTime": "2026-10-02T11:32:32.116Z",
@@ -1041,7 +1047,7 @@
       {
         "pid": 31828,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 229820,
+        "ageSeconds": 229862,
         "status": "running",
         "isChild": false,
         "taskSummary": "how many times is the action-items skill working on bg? it should only fire once every 2 hours as...",
@@ -1051,7 +1057,7 @@
       {
         "pid": 19584,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 228116,
+        "ageSeconds": 228157,
         "status": "running",
         "isChild": false,
         "taskSummary": "check consignment process as well. and no assummptions cross verify wach finding",
@@ -1061,7 +1067,7 @@
       {
         "pid": 39968,
         "cwd": "c:\\windows",
-        "ageSeconds": 125274,
+        "ageSeconds": 125315,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1071,7 +1077,7 @@
       {
         "pid": 29348,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 66971,
+        "ageSeconds": 67013,
         "status": "running",
         "isChild": false,
         "taskSummary": "how many times is the action-items skill working on bg? it should only fire once every 2 hours as...",
@@ -1081,7 +1087,7 @@
       {
         "pid": 34776,
         "cwd": "unknown",
-        "ageSeconds": 61228,
+        "ageSeconds": 61270,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -4143,11 +4149,11 @@
         ]
       }
     },
-    "bridgeLogTail": "[2026-10-02T06:19:52.743Z] STDOUT data for #515: 227 bytes\n[2026-10-02T06:19:52.745Z] LIVE write for #515: 1201 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_515.txt\n[2026-10-02T06:19:52.754Z] STDOUT data for #515: 115 bytes\n[2026-10-02T06:19:52.756Z] LIVE write for #515: 1213 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_515.txt\n[2026-10-02T06:19:52.762Z] STDOUT data for #515: 128 bytes\n[2026-10-02T06:19:52.764Z] LIVE write for #515: 1238 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_515.txt\n[2026-10-02T06:19:52.774Z] STDOUT data for #515: 114 bytes\n[2026-10-02T06:19:52.776Z] LIVE write for #515: 1249 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_515.txt\n[2026-10-02T06:19:52.784Z] STDOUT data for #515: 113 bytes\n[2026-10-02T06:19:52.786Z] LIVE write for #515: 1259 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_515.txt\n[2026-10-02T06:19:52.793Z] STDOUT data for #515: 127 bytes\n[2026-10-02T06:19:52.796Z] LIVE write for #515: 1283 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_515.txt\n[2026-10-02T06:19:52.841Z] STDOUT data for #515: 119 bytes\n[2026-10-02T06:19:52.844Z] LIVE write for #515: 1299 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_515.txt\n[2026-10-02T06:19:52.844Z] STDOUT data for #515: 456 bytes\n[2026-10-02T06:19:52.846Z] LIVE write for #515: 1343 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_515.txt\n[2026-10-02T06:19:52.850Z] STDOUT data for #515: 104 bytes\n[2026-10-02T06:19:52.852Z] LIVE write for #515: 1344 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_515.txt\n[2026-10-02T06:19:53.580Z] STDOUT data for #515: 1171 bytes\n[2026-10-02T06:19:53.585Z] LIVE write for #515: 1344 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_515.txt",
+    "bridgeLogTail": "[2026-10-02T06:20:16.794Z] STDOUT data for #498: 563 bytes\n[2026-10-02T06:20:16.833Z] LIVE write for #498: 677 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_498.txt\n[2026-10-02T06:20:18.241Z] STDOUT data for #498: 732 bytes\n[2026-10-02T06:20:18.243Z] LIVE write for #498: 677 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_498.txt\n[2026-10-02T06:20:18.244Z] STDOUT data for #498: 748 bytes\n[2026-10-02T06:20:18.246Z] LIVE write for #498: 677 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_498.txt\n[2026-10-02T06:20:21.440Z] STDOUT data for #515: 651 bytes\n[2026-10-02T06:20:21.442Z] LIVE write for #515: 1408 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_515.txt\n[2026-10-02T06:20:21.443Z] STDOUT data for #515: 3934 bytes\n[2026-10-02T06:20:21.445Z] LIVE write for #515: 1408 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_515.txt\n[2026-10-02T06:20:21.468Z] STDOUT data for #515: 789 bytes\n[2026-10-02T06:20:21.470Z] LIVE write for #515: 1408 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_515.txt\n[2026-10-02T06:20:22.473Z] STDOUT data for #515: 112 bytes\n[2026-10-02T06:20:23.174Z] LIVE write for #515: 1417 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_515.txt\n[2026-10-02T06:20:23.175Z] STDOUT data for #515: 350 bytes\n[2026-10-02T06:20:23.178Z] LIVE write for #515: 1458 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_515.txt\n[2026-10-02T06:20:28.041Z] STDOUT data for #515: 4972 bytes\n[2026-10-02T06:20:28.043Z] LIVE write for #515: 1458 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_515.txt\n[2026-10-02T06:20:28.044Z] STDOUT data for #515: 404 bytes\n[2026-10-02T06:20:28.048Z] LIVE write for #515: 1458 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_515.txt",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-02T06:04:28.748Z",
-      "ageMs": 926393
+      "ageMs": 969319
     },
     "watchdogLogTail": "[2026-10-02T11:32:31.556Z] Max restarts: 50/hour\n[2026-10-02T11:32:31.557Z] Bridge script: C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\bridge.js\n[2026-10-02T11:32:31.558Z] Dashboard script: C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\jira-dashboard-server.js\n[2026-10-02T11:32:31.560Z] Bridge not running. Starting fresh.\n[2026-10-02T11:32:31.561Z] Starting bridge.js...\n[2026-10-02T11:32:31.729Z] Bridge started with PID 27912 (restart #1, 1 in last hour)\n[2026-10-02T11:32:31.735Z] Dashboard already running (PID 3192). Adopting.\n[2026-10-02T11:32:36.230Z] Clock sync: Checking drift against Jira server...\n[2026-10-02T11:32:36.871Z] Clock sync: VDI hw=2026-10-02T17:02:36.871Z Jira=2026-10-02T11:34:19.000Z drift=-19698s\n[2026-10-02T06:04:25.349Z] Clock sync: ADJUSTED by -19698s. Clock set to 2026-10-02 11:34:19",
     "jobOutputs": {}
