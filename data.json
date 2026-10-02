@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-02T20:50:03.633Z",
+  "generatedAt": "2026-10-02T20:50:42.568Z",
   "totalTickets": 19,
   "tickets": [
     {
@@ -1097,7 +1097,7 @@
       }
     ],
     "pid": 27912,
-    "uptime": 33451,
+    "uptime": 33491,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -1106,7 +1106,7 @@
         "issueTitle": "🔴 MCP Alert: Confluence down for 5m 0s",
         "snippet": "MCP Server: Confluence\nHTTP Status: 401\nDown for: 5m 0s\n\nThis is an automated alert from the Jira Dashboard MCP health m",
         "pid": 32120,
-        "elapsed": 9
+        "elapsed": 50
       }
     ],
     "startTime": "2026-10-02T11:32:32.116Z",
@@ -1117,7 +1117,7 @@
       {
         "pid": 31828,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 282033,
+        "ageSeconds": 282072,
         "status": "running",
         "isChild": false,
         "taskSummary": "how many times is the action-items skill working on bg? it should only fire once every 2 hours as...",
@@ -1127,7 +1127,7 @@
       {
         "pid": 19584,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 280329,
+        "ageSeconds": 280368,
         "status": "running",
         "isChild": false,
         "taskSummary": "fix logs on SAME-4004 in the latest comment",
@@ -1137,7 +1137,7 @@
       {
         "pid": 39968,
         "cwd": "c:\\windows",
-        "ageSeconds": 177487,
+        "ageSeconds": 177526,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1147,7 +1147,7 @@
       {
         "pid": 29348,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 119184,
+        "ageSeconds": 119223,
         "status": "running",
         "isChild": false,
         "taskSummary": "how many times is the action-items skill working on bg? it should only fire once every 2 hours as...",
@@ -1157,7 +1157,7 @@
       {
         "pid": 34776,
         "cwd": "unknown",
-        "ageSeconds": 113442,
+        "ageSeconds": 113480,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -1166,6 +1166,15 @@
       }
     ],
     "activityLog": [
+      {
+        "id": "1790974244793-i9wvn8",
+        "timestamp": "2026-10-02T20:50:44.793Z",
+        "type": "agent-response",
+        "source": "bridge",
+        "title": "🔴 MCP Alert: Confluence down for 5m 0s",
+        "detail": "**Confluence MCP Alert — 401 Unauthorized (Not a server outage)**\n\nThe alert reports HTTP 401, which means **authentication failure**, not a server crash. Confluence itself is likely up — the credenti",
+        "status": "success"
+      },
       {
         "id": "1790974191837-khlcn6",
         "timestamp": "2026-10-02T20:49:51.837Z",
@@ -1425,15 +1434,6 @@
         "source": "bridge",
         "title": "Investigate ticket TKME-2348",
         "detail": "Starting Phase 0 - pre-flight checks. Reading past learnings, checking for existing cache/lock files, and preparing to fetch the ticket.No existing cache or lock file — this is a fresh investigation. ",
-        "status": "success"
-      },
-      {
-        "id": "1790612865206-rwhb98",
-        "timestamp": "2026-09-28T16:27:45.206Z",
-        "type": "agent-response",
-        "source": "bridge",
-        "title": "Investigate ticket SAME-4005",
-        "detail": "Starting Phase 0 — reading past learnings, checking for existing RCA/cache files, and probing MCP servers in parallel.A lock file already exists. Let me check it and also start MCP health probes.The l",
         "status": "success"
       }
     ],
@@ -4257,30 +4257,34 @@
         "issueNum": 533,
         "title": "🔴 MCP Alert: Confluence down for 5m 0s",
         "startTime": "2026-10-02T20:49:52.189Z",
-        "status": "thinking",
+        "status": "done",
         "commandHistory": [
           {
             "title": "🔴 MCP Alert: Confluence down for 5m 0s",
             "time": "2026-10-02T20:49:52.189Z"
           }
-        ]
+        ],
+        "endTime": "2026-10-02T20:50:44.796Z",
+        "lastOutput": "**Confluence MCP Alert — 401 Unauthorized (Not a server outage)**\n\nThe alert reports HTTP 401, which means **authentication failure**, not a server crash. Confluence itself is likely up — the credentials used by the MCP server connector have expired or been rotated.\n\nMost common causes for a 401 on the Confluence MCP integration:\n\n1. **Expired API token** — Atlassian API tokens expire or get revoked. Generate a new one at https://id.atlassian.com/manage-profile/security/api-tokens\n2. **Session c"
       }
     },
-    "bridgeLogTail": "                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-10-02T08:18:15.568Z] aipro completed for #521 (4497 chars)\n[2026-10-02T08:18:16.846Z] Comment posted on #521\n[2026-10-02T20:49:50.829Z] INBOX <- #533 from aryanverma2410: \"🔴 MCP Alert: Confluence down for 5m 0s\"\n[2026-10-02T20:49:51.832Z] Comment posted on #533\n[2026-10-02T20:49:51.834Z] Auto-ack posted on #533\n[2026-10-02T20:49:51.840Z] Spawning aipro for #533: \"🔴 MCP Alert: Confluence down for 5m 0s\"\n[2026-10-02T20:49:51.853Z] Created new session 96832b79-d16a-4914-9418-d880f10a5135 for #533\n[2026-10-02T20:49:52.199Z] 1 new message(s) added to inbox.",
+    "bridgeLogTail": "[2026-10-02T20:50:40.878Z] STDOUT data for #533: 107 bytes\n[2026-10-02T20:50:40.880Z] LIVE write for #533: 1084 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_533.txt\n[2026-10-02T20:50:40.889Z] STDOUT data for #533: 118 bytes\n[2026-10-02T20:50:40.891Z] LIVE write for #533: 1099 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_533.txt\n[2026-10-02T20:50:40.908Z] STDOUT data for #533: 114 bytes\n[2026-10-02T20:50:40.910Z] LIVE write for #533: 1110 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_533.txt\n[2026-10-02T20:50:40.911Z] STDOUT data for #533: 110 bytes\n[2026-10-02T20:50:40.912Z] LIVE write for #533: 1117 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_533.txt\n[2026-10-02T20:50:40.918Z] STDOUT data for #533: 110 bytes\n[2026-10-02T20:50:40.920Z] LIVE write for #533: 1124 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_533.txt\n[2026-10-02T20:50:40.928Z] STDOUT data for #533: 111 bytes\n[2026-10-02T20:50:40.930Z] LIVE write for #533: 1132 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_533.txt\n[2026-10-02T20:50:40.939Z] STDOUT data for #533: 112 bytes\n[2026-10-02T20:50:40.940Z] LIVE write for #533: 1141 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_533.txt\n[2026-10-02T20:50:40.947Z] STDOUT data for #533: 104 bytes\n[2026-10-02T20:50:40.949Z] LIVE write for #533: 1142 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_533.txt\n[2026-10-02T20:50:40.966Z] STDOUT data for #533: 323 bytes\n[2026-10-02T20:50:40.968Z] LIVE write for #533: 1142 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_533.txt\n[2026-10-02T20:50:42.915Z] aipro completed for #533 (1142 chars)\n[2026-10-02T20:50:44.776Z] Comment posted on #533",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-02T19:52:41.095Z",
-      "ageMs": 3445856
+      "ageMs": 3484985
     },
     "watchdogLogTail": "[2026-10-02T14:29:43.840Z] Starting jira-dashboard-server.js...\n[2026-10-02T14:29:44.017Z] Dashboard started with PID 36240 (restart #1, 1 in last hour)\n[2026-10-02T14:29:48.833Z] Starting jira-dashboard-server.js...\n[2026-10-02T14:29:49.007Z] Dashboard started with PID 49720 (restart #2, 2 in last hour)\n[2026-10-02T14:29:56.711Z] DUPLICATE jira-dashboard-server detected: PID 36240 — killing\n[2026-10-02T17:17:42.000Z] DUPLICATE watchdog detected: PID 55408 — killing\n[2026-10-02T18:02:41.676Z] DUPLICATE watchdog detected: PID 54368 — killing\n[2026-10-02T19:42:40.551Z] DUPLICATE watchdog detected: PID 56108 — killing\n[2026-10-02T19:47:40.920Z] DUPLICATE watchdog detected: PID 46676 — killing\n[2026-10-02T19:52:41.094Z] DUPLICATE watchdog detected: PID 34704 — killing",
-    "jobOutputs": {}
+    "jobOutputs": {
+      "533": "{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:39.991Z\",\"role\":\"assistant\",\"content\":\"Confluence MCP\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:39.999Z\",\"role\":\"assistant\",\"content\":\" Alert — 40\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.010Z\",\"role\":\"assistant\",\"content\":\"1 Unauthorized\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.019Z\",\"role\":\"assistant\",\"content\":\" (\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.031Z\",\"role\":\"assistant\",\"content\":\"Not\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.071Z\",\"role\":\"assistant\",\"content\":\" a server\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.072Z\",\"role\":\"assistant\",\"content\":\" outage)**\\n\\nThe\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.072Z\",\"role\":\"assistant\",\"content\":\" alert\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.073Z\",\"role\":\"assistant\",\"content\":\" reports\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.076Z\",\"role\":\"assistant\",\"content\":\" HTTP\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.087Z\",\"role\":\"assistant\",\"content\":\" 401,\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.097Z\",\"role\":\"assistant\",\"content\":\" which means **authentication\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.107Z\",\"role\":\"assistant\",\"content\":\" failure**, not a\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.137Z\",\"role\":\"assistant\",\"content\":\" server crash\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.138Z\",\"role\":\"assistant\",\"content\":\". Con\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.149Z\",\"role\":\"assistant\",\"content\":\"fluence itself\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.150Z\",\"role\":\"assistant\",\"content\":\" is likely\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.164Z\",\"role\":\"assistant\",\"content\":\" up —\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.180Z\",\"role\":\"assistant\",\"content\":\" the credentials\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.180Z\",\"role\":\"assistant\",\"content\":\" used\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.185Z\",\"role\":\"assistant\",\"content\":\" by\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.194Z\",\"role\":\"assistant\",\"content\":\" the MCP server connector\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.207Z\",\"role\":\"assistant\",\"content\":\" have expired or been\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.213Z\",\"role\":\"assistant\",\"content\":\" rotated\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.224Z\",\"role\":\"assistant\",\"content\":\".\\n\\nMost\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.233Z\",\"role\":\"assistant\",\"content\":\" common\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.243Z\",\"role\":\"assistant\",\"content\":\" causes for\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.269Z\",\"role\":\"assistant\",\"content\":\" a 401\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.270Z\",\"role\":\"assistant\",\"content\":\" on the\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.272Z\",\"role\":\"assistant\",\"content\":\" Confluence MCP integration\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.282Z\",\"role\":\"assistant\",\"content\":\":\\n\\n1. **\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.291Z\",\"role\":\"assistant\",\"content\":\"Expired\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.301Z\",\"role\":\"assistant\",\"content\":\" API token** —\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.311Z\",\"role\":\"assistant\",\"content\":\" At\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.321Z\",\"role\":\"assistant\",\"content\":\"lassian API\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.332Z\",\"role\":\"assistant\",\"content\":\" tokens expire\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.341Z\",\"role\":\"assistant\",\"content\":\" or\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.350Z\",\"role\":\"assistant\",\"content\":\" get\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.361Z\",\"role\":\"assistant\",\"content\":\" revoked. Generate\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.371Z\",\"role\":\"assistant\",\"content\":\" a new one\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.379Z\",\"role\":\"assistant\",\"content\":\" at https\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.388Z\",\"role\":\"assistant\",\"content\":\"://id\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.399Z\",\"role\":\"assistant\",\"content\":\".atlassian.com/manage\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.409Z\",\"role\":\"assistant\",\"content\":\"-profile\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.418Z\",\"role\":\"assistant\",\"content\":\"/security/api\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.431Z\",\"role\":\"assistant\",\"content\":\"-tokens\\n\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.437Z\",\"role\":\"assistant\",\"content\":\"2. **Session\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.451Z\",\"role\":\"assistant\",\"content\":\" cookie expired\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.458Z\",\"role\":\"assistant\",\"content\":\"** — If the\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.467Z\",\"role\":\"assistant\",\"content\":\" MCP connector uses cookie\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.476Z\",\"role\":\"assistant\",\"content\":\"-based auth (\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.487Z\",\"role\":\"assistant\",\"content\":\"not\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.496Z\",\"role\":\"assistant\",\"content\":\" API\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.507Z\",\"role\":\"assistant\",\"content\":\" token), the session\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.516Z\",\"role\":\"assistant\",\"content\":\" timed\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.524Z\",\"role\":\"assistant\",\"content\":\" out.\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.535Z\",\"role\":\"assistant\",\"content\":\" Restart the MCP server\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.544Z\",\"role\":\"assistant\",\"content\":\" to\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.555Z\",\"role\":\"assistant\",\"content\":\" re\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.565Z\",\"role\":\"assistant\",\"content\":\"-authenticate.\\n3\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.576Z\",\"role\":\"assistant\",\"content\":\". **Token\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.583Z\",\"role\":\"assistant\",\"content\":\" rotation** — Someone\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.594Z\",\"role\":\"assistant\",\"content\":\" on\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.603Z\",\"role\":\"assistant\",\"content\":\" the team\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.614Z\",\"role\":\"assistant\",\"content\":\" rotated the shared\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.670Z\",\"role\":\"assistant\",\"content\":\" Confluence credential\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.670Z\",\"role\":\"assistant\",\"content\":\" without updating\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.670Z\",\"role\":\"assistant\",\"content\":\" the MCP config\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.671Z\",\"role\":\"assistant\",\"content\":\".\\n\\n**Action needed\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.671Z\",\"role\":\"assistant\",\"content\":\":**\\n- Check\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.671Z\",\"role\":\"assistant\",\"content\":\" the MCP server config\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.681Z\",\"role\":\"assistant\",\"content\":\" for the Confluence\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.690Z\",\"role\":\"assistant\",\"content\":\" connector and\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.701Z\",\"role\":\"assistant\",\"content\":\" verify\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.710Z\",\"role\":\"assistant\",\"content\":\" the API token /\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.721Z\",\"role\":\"assistant\",\"content\":\" credentials are valid\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.729Z\",\"role\":\"assistant\",\"content\":\".\\n- If\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.740Z\",\"role\":\"assistant\",\"content\":\" using\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.749Z\",\"role\":\"assistant\",\"content\":\" an\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.759Z\",\"role\":\"assistant\",\"content\":\" API token, regenerate\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.769Z\",\"role\":\"assistant\",\"content\":\" it\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.778Z\",\"role\":\"assistant\",\"content\":\" and update the MCP\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.788Z\",\"role\":\"assistant\",\"content\":\" config.\\n- Restart\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.798Z\",\"role\":\"assistant\",\"content\":\" the MCP server after\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.809Z\",\"role\":\"assistant\",\"content\":\" updating credentials\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.817Z\",\"role\":\"assistant\",\"content\":\".\\n\\nThis is\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.831Z\",\"role\":\"assistant\",\"content\":\" a credentials\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.839Z\",\"role\":\"assistant\",\"content\":\" problem\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.847Z\",\"role\":\"assistant\",\"content\":\", not a Con\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.856Z\",\"role\":\"assistant\",\"content\":\"fluence availability\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.867Z\",\"role\":\"assistant\",\"content\":\" problem\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.876Z\",\"role\":\"assistant\",\"content\":\". No\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.886Z\",\"role\":\"assistant\",\"content\":\" infrastructure\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.906Z\",\"role\":\"assistant\",\"content\":\" escalation\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.908Z\",\"role\":\"assistant\",\"content\":\" needed\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.916Z\",\"role\":\"assistant\",\"content\":\" — just\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.926Z\",\"role\":\"assistant\",\"content\":\" refresh\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.936Z\",\"role\":\"assistant\",\"content\":\" the auth\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-02T20:50:40.945Z\",\"role\":\"assistant\",\"content\":\".\",\"delta\":true}\n{\"type\":\"result\",\"timestamp\":\"2026-10-02T20:50:40.963Z\",\"status\":\"success\",\"stats\":{\"total_tokens\":19857,\"input_tokens\":19567,\"output_tokens\":290,\"cached\":3392,\"input\":16175,\"duration_ms\":3233,\"tool_calls\":0,\"models\":{\"glm-5.2\":{\"total_tokens\":19857,\"input_tokens\":19567,\"output_tokens\":290,\"cached\":3392,\"input\":16175}}}}"
+    }
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-02T20:49:41.293Z",
+      "lastCheck": "2026-10-02T20:50:40.710Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4289,18 +4293,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-02T20:49:41.293Z",
+      "lastCheck": "2026-10-02T20:50:40.710Z",
       "downSince": "2026-10-02T14:29:50.430Z",
-      "downDuration": 22790863,
+      "downDuration": 22850280,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-02T20:49:41.293Z",
+      "lastCheck": "2026-10-02T20:50:40.710Z",
       "downSince": "2026-10-02T20:44:40.680Z",
-      "downDuration": 300613,
+      "downDuration": 360030,
       "alert": true
     }
   ],
