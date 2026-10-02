@@ -1,34 +1,84 @@
 {
-  "generatedAt": "2026-10-02T08:02:20.280Z",
+  "generatedAt": "2026-10-02T08:03:00.637Z",
   "totalTickets": 18,
   "tickets": [
     {
-      "key": "PC-54929",
-      "summary": "Script to reset NorthLadder ExternalService and retrigger deal creation",
-      "status": "To do",
-      "statusCategory": "To Do",
-      "priority": "Medium",
-      "project": "PROD Change",
-      "projectKey": "PC",
-      "issuetype": "Hybris Platform",
-      "updated": "2026-10-02T16:46:55.000+0900",
-      "created": "2026-10-02T16:44:54.000+0900",
-      "statusChangedAt": "",
+      "key": "MHME-1439",
+      "summary": "SMI - List of MENA Extracts",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Morocco Maintenance & Enhancements",
+      "projectKey": "MHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-02T17:04:14.000+0900",
+      "created": "2026-09-18T13:19:57.000+0900",
+      "statusChangedAt": "2026-09-18T13:22:24.330+0900",
       "assignedToMeAt": "",
-      "description": "For order mentioned in ticket : AEME-6527. NorthLadder ExternalService for order AE260723-36597333 is stuck in ERROR status. Script resets the ExternalService from ERROR to NEW and retriggers the order process from processExternalServices to call the NL Claim API again.\n\nScript: ^script-AEME-6527-no",
-      "commentsCount": 0,
-      "recentComments": [],
-      "lastCommentBy": "",
-      "lastCommentSnippet": "",
-      "lastCommentDate": "",
-      "url": "https://jira.secext.samsung.net/browse/PC-54929",
+      "description": "Hi ~@email \n\nWe want to do an audit of all the current extracts that being generated for MENA markets only (both cronjobs and scripts). We are only focusing on the extracts that are being generated and sent via email\n\nPlease can you share a list of these jobs and the subject of the email so we can r",
+      "commentsCount": 1,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-02T17:04:13.280+0900",
+          "snippet": "Hi Rizwan,\n\nCompleted the audit of all active extracts generated for MENA markets. Below is the list of cronjobs and scripts that generate extracts and send them via email.\n\nSales Report Extracts (per country):\n1. report-ae-tokoSalesReportJob-nonPII — Email subject: \"Order Extract - AE/GCC\" — AE\n2. "
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Rizwan,\n\nCompleted the audit of all active extracts generated for MENA markets. Below is the list of cronjobs and scripts that generate extracts and send them via email.\n\nSales Report Extracts (per country):\n1. report-ae-tokoSalesReportJob-nonPII — Email subject: \"Order Extract - AE/GCC\" — AE\n2. ",
+      "lastCommentDate": "2026-10-02T17:04:13.280+0900",
+      "url": "https://jira.secext.samsung.net/browse/MHME-1439",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "# RCA: MHME-1439\n\nSummary: SMI - List of MENA Extracts\nGenerated: 2026-09-18T11:07:12.910Z\n\nHi [~khan.r@samsung.com] ,\n\nThis ticket requests an audit and inventory of all data extracts (both cronjobs and scripts) that generate extracts sent via email for MENA markets only. The request covers both scheduled cronjobs and ad-hoc scripts that produce extracts distributed via email.\n\nAll CronJob and Trigger records were queried directly from the Hybris database using FlexibleSearch. The results were filtered for MENA market prefixes (ae, bh, eg, iq, jo, kw, ma, om, qa, sa, lb, dz, tn) and for MENA-region cronjobs with \"mena\" or \"MENA\" in the name. The query covered all active and inactive jobs to provide a complete inventory. Triggers were also joined to provide schedule information.\n\nThe email subject lines are not stored as metadata on the CronJob entity. They are hardcoded within each Groovy script or Java reporting class. The script URIs for all ScriptingJob-based cronjobs were retrieved and are listed below. To get the exact email subject for each extract, the individual Groovy scripts would need to be opened and reviewed. The inventory below lists each job, its schedule, active status, and the script URI where applicable.\n\nBelow is the complete list of MENA extracts that generate and send extracts via email, organized by category:\n\n1. Per-Market StockInformation Reports (NonPII, sent via email)\n\nCronJob: ae-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 10 5,10,14 * * ? (3x daily at 05:10, 10:10, 14:10)\nActive: Yes\nScript: model://ae-StockInformationScriptingJob\n\nCronJob: eg-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 35 5,10,14 * * ? (3x daily at 05:35, 10:35, 14:35)\nActive: Yes\nScript: model://egStockInformationScriptingJob\n\nCronJob: iq-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 5 5,10,14 * * ? (3x daily at 05:05, 10:05, 14:05)\nActive: Yes\nScript: model://IQ_PROD_StockInformationScript\n\nCronJob: jo-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 40 5,10,14 * * ? (3x daily at 05:40, 10:40, 14:40)\nActive: Yes\nScript: model://joStockInformationScriptingJob\n\nCronJob: ma-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 15 5,10,14 * * ? (3x daily at 05:15, 10:15, 14:15)\nActive: Yes\nScript: model://ma-StockInformationScriptingJob\n\nCronJob: sa-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 25 5,10,14 * * ? (3x daily at 05:25, 10:25, 14:25)\nActive: Yes\nScript: model://sa-StockInformationScriptingJob\n\n2. Per-Market Sales and EPP Reports (NonPII, sent via email)\n\nCronJob: ae-Report-NonPII-EMAIL-DailyteleSalesReportJob-NewOneJob\nSchedule: 0 0 20 1/1 * ? * (daily at 20:00)\nActive: Yes\nScript: model://ae-Report-NonPII-EMAIL-DailyteleSalesReportJob-NewOneScript\n\nCronJob: ae-Report-NonPII-Email-gcc-EPP-RegisteredUserReport\nSchedule: 0 0 4 1/1 * ? * (daily at 04:00)\nActive: Yes\nScript: model://ae-gcc-EPP-RegisteredUserReportScript\n\nCronJob: ae-Report-NON-PII-EMAIL-tradein-instant-discount-report\nSchedule: Not found (manual trigger)\nActive: Yes\nScript: reportingJobPerformable (Java-based, not Groovy)\n\nCronJob: eg-report-NonPII-EMAIL-EPP-ReportJob\nSchedule: 0 2 5 1/1 * ? * (daily at 05:02)\nActive: Yes\nScript: model://eg-report-NonPII-EMAIL-EPP-ReportScript\n\n3. MENA-Region Extract and Report Jobs (sent via email)\n\nCronJob: mena-Report-NonPII-Email-NERPOrderExtractCronJob\nSchedule: 0 0 4 ? * MON * (weekly Monday at 04:00)\nActive: Yes\nScript: model://MENANERPOrderExtract\n\nCronJob: MENA-TokoPromotionExtractJSONScriptCronJob\nSchedule: 0 0 1 ? * * * (daily at 01:00)\nActive: Yes\nScript: model://MENA-TokoPromotionExtractJSONScript\n\nCronJob: mena-report-nonpii-email-salesReportJob\nSchedule: 0 0 4 ? * MON * (weekly Monday at 04:00)\nActive: Yes\nScript: reportingJobPerformable (Java-based, not Groovy)\n\nCronJob: mena-daily-nonpii-email-PromotionReportJob\nSchedule: 0 5/3 ? * * * (every 3 hours starting at 00:05)\nActive: Yes\nScript: model://mena-daily-nonpii-email-PromotionReportScript\n\nCronJob: mena-epp-monthly-report-nonpii-email-salesReportJob\nSchedule: 0 0 0 15 1/1 ? * (monthly on 15th at 00:00)\nActive: Yes\nScript: reportingJobPerformable (Java-based, not Groovy)\n\nCronJob: mena-epp-weekly-nonpii-email-salesReportJob\nSchedule: 0 0 5 ? * 2 * (weekly Tuesday at 05:00)\nActive: Yes\nScript: model://mena-epp-weekly-nonpii-email-salesReportScript\n\nCronJob: mena-epp-oneTime-nonpii-email-salesReportJob\nSchedule: Not found (one-time)\nActive: Yes\nScript: model://mena-epp-oneTime-nonpii-email-salesReportScript\n\n4. MENA Monitoring and Alert Jobs (sent via email)\n\nCronJob: MENA-StuckOrdersInLast24HoursJob\nSchedule: 0 3 0/6 1/1 * ? * (every 6 hours)\nActive: Yes\nScript: model://MENA-StuckOrdersInLast24Hours\n\nCronJob: mena-nullOrdersAlertCronJob\nSchedule: 0 1 0/6 1/1 * ? * (every 6 hours)\nActive: Yes\nScript: model://mena-nullOrdersAlertScript\n\nCronJob: mena-EmailsFailingJob\nSchedule: 0 4 0/1 1/1 * ? * (hourly)\nActive: Yes\nScript: model://mena-EmailsFailingScript\n\nCronJob: toko-MENA-SpecialMonitoringReportJob\nSchedule: 0 0 4,12,20 1/1 * ? * (3x daily at 04:00, 12:00, 20:00)\nActive: Yes\nScript: SpecialMonitoringReportJob (Java-based)\n\nCronJob: toko-MENA-PaymentOrderStatusReportJob\nSchedule: 0 4 0/6 1/1 * ? * (every 6 hours)\nActive: Yes\nScript: PaymentOrderStatusReportJob (Java-based)\n\nCronJob: mena-AuditSalesReportsAlertForPIICronJob\nSchedule: 0 57 3 ? * * * (daily at 03:57)\nActive: Yes\nScript: model://mena-AuditSalesReportsAlertForPIIScript\n\n5. MENA GPV2 (GCDM 2.0) Sales and Pricing Reports (sent via email)\n\nCronJob: toko-GPV2-mena-orderGenerateSalesReportJob\nSchedule: 0 2/17 * * * ? (every 17 minutes)\nActive: Yes\nScript: tokoCdmGenerateSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-orderGenerateSalesReportJob_new\nSchedule: 0 3/15 * ? * * (every 15 minutes)\nActive: Yes\nScript: tokoCdmGenerateSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-ONE-TIME-orderGenerateSalesReportJob\nSchedule: Not found (one-time)\nActive: Yes\nEmail: genesis.joy.pineda@accenture.com\nScript: tokoCdmGenerateSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-ONE-TIME-sendPricingInformationReportJob\nSchedule: Not found (one-time)\nActive: Yes\nScript: tokoCdmSendSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-generateAndSendPreOrderProductCronJob\nSchedule: 0 3 3 1/1 * ? * (daily at 03:03)\nActive: Yes\nScript: model://toko-GPV2-mena-generateAndSendPreOrderProductScript\n\nCronJob: toko-GPV2-mena-generateAndSendRewardsDataCronJob\nSchedule: 0 59 3 ? * * * (daily at 03:59)\nActive: Yes\nScript: toko-GPV2-qa-generateAndSendRewardsDataCronJobScriptingJob\n\n6. GCC-Wide Reports (covering MENA markets, sent via email)\n\nCronJob: gcc-Report-NonPII-Email-PRODDailySCReportCronJob\nSchedule: 0 2 3 1/1 * ? * (daily at 03:02)\nActive: Yes\nScript: model://gcc-PRODDailySCReportScriptingJob\n\n7. RestrictedProductsExtract Jobs (per market, generate extracts)\n\nCronJob: ae-restrictedProductsExtractReportJob (Active)\nCronJob: eg-restrictedProductsExtractReportJob (Active)\nCronJob: iq-restrictedProductsExtractReportJob (Active)\nCronJob: jo-restrictedProductsExtractReportJob (Active)\nCronJob: ma-restrictedProductsExtractReportJob (Active)\nCronJob: sa-restrictedProductsExtractReportJob (Active)\nSchedule: No trigger found for these jobs\nScript: Per-market ScriptingJob variants (e.g., ae-restrictedProductsExtractReportScriptJob)\n\n8. Other MENA Extract and Alert Jobs\n\nCronJob: UAEExtractCronJob (Active, Script: UAEExtractScriptJob)\nCronJob: mena-CategoryToProductMappingScriptingJob (Active, daily at 03:00, Script: model://mena-CategoryToProductMappingScript)\nCronJob: toko-MENA-CancelledPreorderStatusJob (Inactive, Script: CancelledPreorderStatusReportJob)\nCronJob: mena-missingCompositeEntriesCronJob (Active, Script: model://mena-missingCompositeEntriesScript)\nCronJob: MENA-GCDM2.0-voucher-interface-v1 (Active, Script: tokoVoucherCodeGCPUploadJob)\nCronJob: toko-MENA-VoucherRedemptionReport (Inactive, Script: tokoSalesReportJob)\n\nNotes:\n- All 27 cronjobs with \"NonPII\" and \"EMAIL\" in their names were confirmed via DB query. These are the primary email-sent extract jobs.\n- An additional 18 MENA-prefixed cronjobs were found (monitoring, alerts, GPV2, extracts) that also generate and send extracts/reports via email.\n- The StockInformation reports run 3x daily per market (at staggered intervals to avoid overlap) across AE, EG, IQ, JO, MA, SA.\n- Several jobs use \"reportingJobPerformable\" (Java-based) instead of Groovy scripts. These are configured via Spring beans and generate reports using the Hybris reporting framework.\n- Two cronjobs have explicit email addresses configured: toko-GPV2-mena-ONE-TIME-orderGenerateSalesReportJob (genesis.joy.pineda@accenture.com) and toko-GPV2-mena-ONE-TIME-generatePricingInformationReportJob (kathlene.mae.basuel@accenture.com). All others send to distribution lists configured within the scripts themselves.\n- Inactive jobs (sendEmail=0 or active=0) were excluded from the list above except where noted. The complete DB query returned 35 extract-named cronjobs and 45 MENA-named cronjobs.\n\nKindly let me know if you need the exact email subject lines for any specific extract. I can open the corresponding Groovy scripts to retrieve those.\n\nRegards\n\nAryan\n\n## Remediation\n\nThis is an informational/audit request, not a technical issue requiring remediation. No platform bug or code defect was involved. The inventory above provides the complete list of MENA market extracts generated and sent via email.\n\nTicket URL: https://jira.secext.samsung.net/browse/MHME-1439",
+        "sections": {
+          "issue": "",
+          "rca": "# RCA: MHME-1439\n\nSummary: SMI - List of MENA Extracts\nGenerated: 2026-09-18T11:07:12.910Z\n\nHi [~khan.r@samsung.com] ,\n\nThis ticket requests an audit and inventory of all data extracts (both cronjobs and scripts) that generate extracts sent via email for MENA markets only. The request covers both scheduled cronjobs and ad-hoc scripts that produce extracts distributed via email.\n\nAll CronJob and Trigger records were queried directly from the Hybris database using FlexibleSearch. The results were filtered for MENA market prefixes (ae, bh, eg, iq, jo, kw, ma, om, qa, sa, lb, dz, tn) and for MENA-region cronjobs with \"mena\" or \"MENA\" in the name. The query covered all active and inactive jobs to provide a complete inventory. Triggers were also joined to provide schedule information.\n\nThe email subject lines are not stored as metadata on the CronJob entity. They are hardcoded within each Groovy script or Java reporting class. The script URIs for all ScriptingJob-based cronjobs were retrieved and are listed below. To get the exact email subject for each extract, the individual Groovy scripts would need to be opened and reviewed. The inventory below lists each job, its schedule, active status, and the script URI where applicable.\n\nBelow is the complete list of MENA extracts that generate and send extracts via email, organized by category:\n\n1. Per-Market StockInformation Reports (NonPII, sent via email)\n\nCronJob: ae-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 10 5,10,14 * * ? (3x daily at 05:10, 10:10, 14:10)\nActive: Yes\nScript: model://ae-StockInformationScriptingJob\n\nCronJob: eg-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 35 5,10,14 * * ? (3x daily at 05:35, 10:35, 14:35)\nActive: Yes\nScript: model://egStockInformationScriptingJob\n\nCronJob: iq-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 5 5,10,14 * * ? (3x daily at 05:05, 10:05, 14:05)\nActive: Yes\nScript: model://IQ_PROD_StockInformationScript\n\nCronJob: jo-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 40 5,10,14 * * ? (3x daily at 05:40, 10:40, 14:40)\nActive: Yes\nScript: model://joStockInformationScriptingJob\n\nCronJob: ma-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 15 5,10,14 * * ? (3x daily at 05:15, 10:15, 14:15)\nActive: Yes\nScript: model://ma-StockInformationScriptingJob\n\nCronJob: sa-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 25 5,10,14 * * ? (3x daily at 05:25, 10:25, 14:25)\nActive: Yes\nScript: model://sa-StockInformationScriptingJob\n\n2. Per-Market Sales and EPP Reports (NonPII, sent via email)\n\nCronJob: ae-Report-NonPII-EMAIL-DailyteleSalesReportJob-NewOneJob\nSchedule: 0 0 20 1/1 * ? * (daily at 20:00)\nActive: Yes\nScript: model://ae-Report-NonPII-EMAIL-DailyteleSalesReportJob-NewOneScript\n\nCronJob: ae-Report-NonPII-Email-gcc-EPP-RegisteredUserReport\nSchedule: 0 0 4 1/1 * ? * (daily at 04:00)\nActive: Yes\nScript: model://ae-gcc-EPP-RegisteredUserReportScript\n\nCronJob: ae-Report-NON-PII-EMAIL-tradein-instant-discount-report\nSchedule: Not found (manual trigger)\nActive: Yes\nScript: reportingJobPerformable (Java-based, not Groovy)\n\nCronJob: eg-report-NonPII-EMAIL-EPP-ReportJob\nSchedule: 0 2 5 1/1 * ? * (daily at 05:02)\nActive: Yes\nScript: model://eg-report-NonPII-EMAIL-EPP-ReportScript\n\n3. MENA-Region Extract and Report Jobs (sent via email)\n\nCronJob: mena-Report-NonPII-Email-NERPOrderExtractCronJob\nSchedule: 0 0 4 ? * MON * (weekly Monday at 04:00)\nActive: Yes\nScript: model://MENANERPOrderExtract\n\nCronJob: MENA-TokoPromotionExtractJSONScriptCronJob\nSchedule: 0 0 1 ? * * * (daily at 01:00)\nActive: Yes\nScript: model://MENA-TokoPromotionExtractJSONScript\n\nCronJob: mena-report-nonpii-email-salesReportJob\nSchedule: 0 0 4 ? * MON * (weekly Monday at 04:00)\nActive: Yes\nScript: reportingJobPerformable (Java-based, not Groovy)\n\nCronJob: mena-daily-nonpii-email-PromotionReportJob\nSchedule: 0 5/3 ? * * * (every 3 hours starting at 00:05)\nActive: Yes\nScript: model://mena-daily-nonpii-email-PromotionReportScript\n\nCronJob: mena-epp-monthly-report-nonpii-email-salesReportJob\nSchedule: 0 0 0 15 1/1 ? * (monthly on 15th at 00:00)\nActive: Yes\nScript: reportingJobPerformable (Java-based, not Groovy)\n\nCronJob: mena-epp-weekly-nonpii-email-salesReportJob\nSchedule: 0 0 5 ? * 2 * (weekly Tuesday at 05:00)\nActive: Yes\nScript: model://mena-epp-weekly-nonpii-email-salesReportScript\n\nCronJob: mena-epp-oneTime-nonpii-email-salesReportJob\nSchedule: Not found (one-time)\nActive: Yes\nScript: model://mena-epp-oneTime-nonpii-email-salesReportScript\n\n4. MENA Monitoring and Alert Jobs (sent via email)\n\nCronJob: MENA-StuckOrdersInLast24HoursJob\nSchedule: 0 3 0/6 1/1 * ? * (every 6 hours)\nActive: Yes\nScript: model://MENA-StuckOrdersInLast24Hours\n\nCronJob: mena-nullOrdersAlertCronJob\nSchedule: 0 1 0/6 1/1 * ? * (every 6 hours)\nActive: Yes\nScript: model://mena-nullOrdersAlertScript\n\nCronJob: mena-EmailsFailingJob\nSchedule: 0 4 0/1 1/1 * ? * (hourly)\nActive: Yes\nScript: model://mena-EmailsFailingScript\n\nCronJob: toko-MENA-SpecialMonitoringReportJob\nSchedule: 0 0 4,12,20 1/1 * ? * (3x daily at 04:00, 12:00, 20:00)\nActive: Yes\nScript: SpecialMonitoringReportJob (Java-based)\n\nCronJob: toko-MENA-PaymentOrderStatusReportJob\nSchedule: 0 4 0/6 1/1 * ? * (every 6 hours)\nActive: Yes\nScript: PaymentOrderStatusReportJob (Java-based)\n\nCronJob: mena-AuditSalesReportsAlertForPIICronJob\nSchedule: 0 57 3 ? * * * (daily at 03:57)\nActive: Yes\nScript: model://mena-AuditSalesReportsAlertForPIIScript\n\n5. MENA GPV2 (GCDM 2.0) Sales and Pricing Reports (sent via email)\n\nCronJob: toko-GPV2-mena-orderGenerateSalesReportJob\nSchedule: 0 2/17 * * * ? (every 17 minutes)\nActive: Yes\nScript: tokoCdmGenerateSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-orderGenerateSalesReportJob_new\nSchedule: 0 3/15 * ? * * (every 15 minutes)\nActive: Yes\nScript: tokoCdmGenerateSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-ONE-TIME-orderGenerateSalesReportJob\nSchedule: Not found (one-time)\nActive: Yes\nEmail: genesis.joy.pineda@accenture.com\nScript: tokoCdmGenerateSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-ONE-TIME-sendPricingInformationReportJob\nSchedule: Not found (one-time)\nActive: Yes\nScript: tokoCdmSendSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-generateAndSendPreOrderProductCronJob\nSchedule: 0 3 3 1/1 * ? * (daily at 03:03)\nActive: Yes\nScript: model://toko-GPV2-mena-generateAndSendPreOrderProductScript\n\nCronJob: toko-GPV2-mena-generateAndSendRewardsDataCronJob\nSchedule: 0 59 3 ? * * * (daily at 03:59)\nActive: Yes\nScript: toko-GPV2-qa-generateAndSendRewardsDataCronJobScriptingJob\n\n6. GCC-Wide Reports (covering MENA markets, sent via email)\n\nCronJob: gcc-Report-NonPII-Email-PRODDailySCReportCronJob\nSchedule: 0 2 3 1/1 * ? * (daily at 03:02)\nActive: Yes\nScript: model://gcc-PRODDailySCReportScriptingJob\n\n7. RestrictedProductsExtract Jobs (per market, generate extracts)\n\nCronJob: ae-restrictedProductsExtractReportJob (Active)\nCronJob: eg-restrictedProductsExtractReportJob (Active)\nCronJob: iq-restrictedProductsExtractReportJob (Active)\nCronJob: jo-restrictedProductsExtractReportJob (Active)\nCronJob: ma-restrictedProductsExtractReportJob (Active)\nCronJob: sa-restrictedProductsExtractReportJob (Active)\nSchedule: No trigger found for these jobs\nScript: Per-market ScriptingJob variants (e.g., ae-restrictedProductsExtractReportScriptJob)\n\n8. Other MENA Extract and Alert Jobs\n\nCronJob: UAEExtractCronJob (Active, Script: UAEExtractScriptJob)\nCronJob: mena-CategoryToProductMappingScriptingJob (Active, daily at 03:00, Script: model://mena-CategoryToProductMappingScript)\nCronJob: toko-MENA-CancelledPreorderStatusJob (Inactive, Script: CancelledPreorderStatusReportJob)\nCronJob: mena-missingCompositeEntriesCronJob (Active, Script: model://mena-missingCompositeEntriesScript)\nCronJob: MENA-GCDM2.0-voucher-interface-v1 (Active, Script: tokoVoucherCodeGCPUploadJob)\nCronJob: toko-MENA-VoucherRedemptionReport (Inactive, Script: tokoSalesReportJob)\n\nNotes:\n- All 27 cronjobs with \"NonPII\" and \"EMAIL\" in their names were confirmed via DB query. These are the primary email-sent extract jobs.\n- An additional 18 MENA-prefixed cronjobs were found (monitoring, alerts, GPV2, extracts) that also generate and send extracts/reports via email.\n- The StockInformation reports run 3x daily per market (at staggered intervals to avoid overlap) across AE, EG, IQ, JO, MA, SA.\n- Several jobs use \"reportingJobPerformable\" (Java-based) instead of Groovy scripts. These are configured via Spring beans and generate reports using the Hybris reporting framework.\n- Two cronjobs have explicit email addresses configured: toko-GPV2-mena-ONE-TIME-orderGenerateSalesReportJob (genesis.joy.pineda@accenture.com) and toko-GPV2-mena-ONE-TIME-generatePricingInformationReportJob (kathlene.mae.basuel@accenture.com). All others send to distribution lists configured within the scripts themselves.\n- Inactive jobs (sendEmail=0 or active=0) were excluded from the list above except where noted. The complete DB query returned 35 extract-named cronjobs and 45 MENA-named cronjobs.\n\nKindly let me know if you need the exact email subject lines for any specific extract. I can open the corresponding Groovy scripts to retrieve those.\n\nRegards\n\nAryan\n\n## Remediation\n\nThis is an informational/audit request, not a technical issue requiring remediation. No platform bug or code defect was involved. The inventory above provides the complete list of MENA market extracts generated and sent via email.\n\nTicket URL: https://jira.secext.samsung.net/browse/MHME-1439",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-18T05:37:13.224Z"
+      }
+    },
+    {
+      "key": "AEME-6596",
+      "summary": "Expert Care Orders Stuck || 29-Sep",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "UAE Maintenance & Enhancements",
+      "projectKey": "AEME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-02T17:04:12.000+0900",
+      "created": "2026-09-29T17:09:55.000+0900",
+      "statusChangedAt": "2026-10-01T22:10:34.224+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\n \n\nThe expert care orders below are being stuck with Shipped status. Kindly check and fix the issue\n\nAE260917-86564020 -SHIPPED\nAE260917-86564071- SHIPPED\nAE260922-91048112 -SHIPPED\nAE260922-91000993 -SHIPPED\nAE260928-97214836 -SHIPPED\n\nAE260922-91467505 -SHIPPED\n\n \n\nRegards\n\nJaffar",
+      "commentsCount": 7,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-02T17:04:10.134+0900",
+          "snippet": "Hi Talib,\n\nChecked the order AE260922-91467505. This is fundamentally different from the other 5 orders that were remediated earlier. Those orders had ExternalService (GCIC) in ERROR status because the GCIC API call failed. This order has ExternalService in NEW status — the GCIC API was never called"
+        },
+        {
+          "author": "Talib Raza Zaidi",
+          "date": "2026-10-01T22:13:54.573+0900",
+          "snippet": "Hi ~@email,\n\n \n\nThis is an Expert care order. It is a service order, no physical SKUs are there in the order.\n\nPlease check first what is causing the error/stuck.\n\n \n\nRegards\n\nTalib\n\nCC: ~@email"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Talib,\n\nChecked the order AE260922-91467505. This is fundamentally different from the other 5 orders that were remediated earlier. Those orders had ExternalService (GCIC) in ERROR status because the GCIC API call failed. This order has ExternalService in NEW status — the GCIC API was never called",
+      "lastCommentDate": "2026-10-02T17:04:10.134+0900",
+      "url": "https://jira.secext.samsung.net/browse/AEME-6596",
       "linkedTickets": [
         {
-          "key": "AEME-6527",
-          "summary": "Stuck Order || 31-Aug",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
-          "relation": "is blocked by",
+          "key": "PC-54773",
+          "summary": "Reset GCIC Expert Care ExternalService from ERROR to NEW and restart order process",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
           "assignee": null
         }
       ],
@@ -49,27 +99,27 @@
       "project": "UAE Maintenance & Enhancements",
       "projectKey": "AEME",
       "issuetype": "Maintenance Request",
-      "updated": "2026-10-02T16:44:57.000+0900",
+      "updated": "2026-10-02T17:04:09.000+0900",
       "created": "2026-08-31T16:46:21.000+0900",
       "statusChangedAt": "2026-10-01T19:46:38.763+0900",
       "assignedToMeAt": "",
       "description": "Hi Team,\n\n \n\nPlease find the SC+ activation error order and fix the issue.\n\n \n|Order ID|Order Status|Order Creation Date|Sale Type|Activation Status|\n|AE260823-66529054|COMPLETED|23-08-26|Bundle|UPDATE_ERROR|\n\n \n|AE260826-69146168|WAITING_FOR_EXTERNAL_FRAUD_RESULT|28/08/2026|\n|KW260830-72315746|WAIT",
-      "commentsCount": 36,
+      "commentsCount": 37,
       "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-02T17:04:06.674+0900",
+          "snippet": "Hi Talib,\n\nWe have raised PC-54929 for the NorthLadder deal creation retry on AE260723-36597333. The script will reset the ExternalService from ERROR to NEW and retrigger the order process from processExternalServices, which will call the NL Claim API again.\n\nCurrently the ExternalService has provid"
+        },
         {
           "author": "Talib Raza Zaidi",
           "date": "2026-10-01T19:44:32.622+0900",
           "snippet": "Hi ~@email,\n\n \n\nThanks for the assist, we are checking the order.\n\n \n\nHI ~@email ,\n\n \n\nFor the order AE260723-36597333, Requesting you to please trigger the deal creation , because the previous request is failed. Once the deal creation API is triggered from your side. Let me know to verify in the NL"
-        },
-        {
-          "author": "Naveen Chauhan",
-          "date": "2026-10-01T19:18:44.493+0900",
-          "snippet": "Hi ~@email,\n\nPlease check now, SC+ has been activated.\n\n!image-2026-10-01-15-44-16-162.png|width=343,height=226!\n\nActivation Request:\n\nOrder: AE260823-66529054externalServiceWsDTO Call Activate On Registration Service - activate SMC request: {\n  \"device_imei\" : \"3*7\",\n  \"device_model_name\" : \"Galaxy"
         }
       ],
-      "lastCommentBy": "Talib Raza Zaidi",
-      "lastCommentSnippet": "Hi ~@email,\n\n \n\nThanks for the assist, we are checking the order.\n\n \n\nHI ~@email ,\n\n \n\nFor the order AE260723-36597333, Requesting you to please trigger the deal creation , because the previous request is failed. Once the deal creation API is triggered from your side. Let me know to verify in the NL",
-      "lastCommentDate": "2026-10-01T19:44:32.622+0900",
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Talib,\n\nWe have raised PC-54929 for the NorthLadder deal creation retry on AE260723-36597333. The script will reset the ExternalService from ERROR to NEW and retrigger the order process from processExternalServices, which will call the NL Claim API again.\n\nCurrently the ExternalService has provid",
+      "lastCommentDate": "2026-10-02T17:04:06.674+0900",
       "url": "https://jira.secext.samsung.net/browse/AEME-6527",
       "linkedTickets": [
         {
@@ -118,43 +168,32 @@
       }
     },
     {
-      "key": "AEME-6596",
-      "summary": "Expert Care Orders Stuck || 29-Sep",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-01T22:13:54.000+0900",
-      "created": "2026-09-29T17:09:55.000+0900",
-      "statusChangedAt": "2026-10-01T22:10:34.224+0900",
+      "key": "PC-54929",
+      "summary": "Script to reset NorthLadder ExternalService and retrigger deal creation",
+      "status": "To do",
+      "statusCategory": "To Do",
+      "priority": "Medium",
+      "project": "PROD Change",
+      "projectKey": "PC",
+      "issuetype": "Hybris Platform",
+      "updated": "2026-10-02T16:46:55.000+0900",
+      "created": "2026-10-02T16:44:54.000+0900",
+      "statusChangedAt": "",
       "assignedToMeAt": "",
-      "description": "Hi Team,\n\n \n\nThe expert care orders below are being stuck with Shipped status. Kindly check and fix the issue\n\nAE260917-86564020 -SHIPPED\nAE260917-86564071- SHIPPED\nAE260922-91048112 -SHIPPED\nAE260922-91000993 -SHIPPED\nAE260928-97214836 -SHIPPED\n\nAE260922-91467505 -SHIPPED\n\n \n\nRegards\n\nJaffar",
-      "commentsCount": 6,
-      "recentComments": [
-        {
-          "author": "Talib Raza Zaidi",
-          "date": "2026-10-01T22:13:54.573+0900",
-          "snippet": "Hi ~@email,\n\n \n\nThis is an Expert care order. It is a service order, no physical SKUs are there in the order.\n\nPlease check first what is causing the error/stuck.\n\n \n\nRegards\n\nTalib\n\nCC: ~@email"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-01T22:10:16.217+0900",
-          "snippet": "Hi ~@email ,\n\nKindly confirm if the order AE260922-91467505 is delivered.\nWe would mark the consignment  as COMPLETED and push the order forward.\n\nRegards\n\nAryan"
-        }
-      ],
-      "lastCommentBy": "Talib Raza Zaidi",
-      "lastCommentSnippet": "Hi ~@email,\n\n \n\nThis is an Expert care order. It is a service order, no physical SKUs are there in the order.\n\nPlease check first what is causing the error/stuck.\n\n \n\nRegards\n\nTalib\n\nCC: ~@email",
-      "lastCommentDate": "2026-10-01T22:13:54.573+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6596",
+      "description": "For order mentioned in ticket : AEME-6527. NorthLadder ExternalService for order AE260723-36597333 is stuck in ERROR status. Script resets the ExternalService from ERROR to NEW and retriggers the order process from processExternalServices to call the NL Claim API again.\n\nScript: ^script-AEME-6527-no",
+      "commentsCount": 0,
+      "recentComments": [],
+      "lastCommentBy": "",
+      "lastCommentSnippet": "",
+      "lastCommentDate": "",
+      "url": "https://jira.secext.samsung.net/browse/PC-54929",
       "linkedTickets": [
         {
-          "key": "PC-54773",
-          "summary": "Reset GCIC Expert Care ExternalService from ERROR to NEW and restart order process",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "blocks",
+          "key": "AEME-6527",
+          "summary": "Stuck Order || 31-Aug",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "relation": "is blocked by",
           "assignee": null
         }
       ],
@@ -684,39 +723,6 @@
       }
     },
     {
-      "key": "MHME-1439",
-      "summary": "SMI - List of MENA Extracts",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Morocco Maintenance & Enhancements",
-      "projectKey": "MHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-18T13:26:23.000+0900",
-      "created": "2026-09-18T13:19:57.000+0900",
-      "statusChangedAt": "2026-09-18T13:22:24.330+0900",
-      "assignedToMeAt": "",
-      "description": "Hi ~@email \n\nWe want to do an audit of all the current extracts that being generated for MENA markets only (both cronjobs and scripts). We are only focusing on the extracts that are being generated and sent via email\n\nPlease can you share a list of these jobs and the subject of the email so we can r",
-      "commentsCount": 0,
-      "recentComments": [],
-      "lastCommentBy": "",
-      "lastCommentSnippet": "",
-      "lastCommentDate": "",
-      "url": "https://jira.secext.samsung.net/browse/MHME-1439",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: MHME-1439\n\nSummary: SMI - List of MENA Extracts\nGenerated: 2026-09-18T11:07:12.910Z\n\nHi [~khan.r@samsung.com] ,\n\nThis ticket requests an audit and inventory of all data extracts (both cronjobs and scripts) that generate extracts sent via email for MENA markets only. The request covers both scheduled cronjobs and ad-hoc scripts that produce extracts distributed via email.\n\nAll CronJob and Trigger records were queried directly from the Hybris database using FlexibleSearch. The results were filtered for MENA market prefixes (ae, bh, eg, iq, jo, kw, ma, om, qa, sa, lb, dz, tn) and for MENA-region cronjobs with \"mena\" or \"MENA\" in the name. The query covered all active and inactive jobs to provide a complete inventory. Triggers were also joined to provide schedule information.\n\nThe email subject lines are not stored as metadata on the CronJob entity. They are hardcoded within each Groovy script or Java reporting class. The script URIs for all ScriptingJob-based cronjobs were retrieved and are listed below. To get the exact email subject for each extract, the individual Groovy scripts would need to be opened and reviewed. The inventory below lists each job, its schedule, active status, and the script URI where applicable.\n\nBelow is the complete list of MENA extracts that generate and send extracts via email, organized by category:\n\n1. Per-Market StockInformation Reports (NonPII, sent via email)\n\nCronJob: ae-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 10 5,10,14 * * ? (3x daily at 05:10, 10:10, 14:10)\nActive: Yes\nScript: model://ae-StockInformationScriptingJob\n\nCronJob: eg-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 35 5,10,14 * * ? (3x daily at 05:35, 10:35, 14:35)\nActive: Yes\nScript: model://egStockInformationScriptingJob\n\nCronJob: iq-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 5 5,10,14 * * ? (3x daily at 05:05, 10:05, 14:05)\nActive: Yes\nScript: model://IQ_PROD_StockInformationScript\n\nCronJob: jo-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 40 5,10,14 * * ? (3x daily at 05:40, 10:40, 14:40)\nActive: Yes\nScript: model://joStockInformationScriptingJob\n\nCronJob: ma-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 15 5,10,14 * * ? (3x daily at 05:15, 10:15, 14:15)\nActive: Yes\nScript: model://ma-StockInformationScriptingJob\n\nCronJob: sa-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 25 5,10,14 * * ? (3x daily at 05:25, 10:25, 14:25)\nActive: Yes\nScript: model://sa-StockInformationScriptingJob\n\n2. Per-Market Sales and EPP Reports (NonPII, sent via email)\n\nCronJob: ae-Report-NonPII-EMAIL-DailyteleSalesReportJob-NewOneJob\nSchedule: 0 0 20 1/1 * ? * (daily at 20:00)\nActive: Yes\nScript: model://ae-Report-NonPII-EMAIL-DailyteleSalesReportJob-NewOneScript\n\nCronJob: ae-Report-NonPII-Email-gcc-EPP-RegisteredUserReport\nSchedule: 0 0 4 1/1 * ? * (daily at 04:00)\nActive: Yes\nScript: model://ae-gcc-EPP-RegisteredUserReportScript\n\nCronJob: ae-Report-NON-PII-EMAIL-tradein-instant-discount-report\nSchedule: Not found (manual trigger)\nActive: Yes\nScript: reportingJobPerformable (Java-based, not Groovy)\n\nCronJob: eg-report-NonPII-EMAIL-EPP-ReportJob\nSchedule: 0 2 5 1/1 * ? * (daily at 05:02)\nActive: Yes\nScript: model://eg-report-NonPII-EMAIL-EPP-ReportScript\n\n3. MENA-Region Extract and Report Jobs (sent via email)\n\nCronJob: mena-Report-NonPII-Email-NERPOrderExtractCronJob\nSchedule: 0 0 4 ? * MON * (weekly Monday at 04:00)\nActive: Yes\nScript: model://MENANERPOrderExtract\n\nCronJob: MENA-TokoPromotionExtractJSONScriptCronJob\nSchedule: 0 0 1 ? * * * (daily at 01:00)\nActive: Yes\nScript: model://MENA-TokoPromotionExtractJSONScript\n\nCronJob: mena-report-nonpii-email-salesReportJob\nSchedule: 0 0 4 ? * MON * (weekly Monday at 04:00)\nActive: Yes\nScript: reportingJobPerformable (Java-based, not Groovy)\n\nCronJob: mena-daily-nonpii-email-PromotionReportJob\nSchedule: 0 5/3 ? * * * (every 3 hours starting at 00:05)\nActive: Yes\nScript: model://mena-daily-nonpii-email-PromotionReportScript\n\nCronJob: mena-epp-monthly-report-nonpii-email-salesReportJob\nSchedule: 0 0 0 15 1/1 ? * (monthly on 15th at 00:00)\nActive: Yes\nScript: reportingJobPerformable (Java-based, not Groovy)\n\nCronJob: mena-epp-weekly-nonpii-email-salesReportJob\nSchedule: 0 0 5 ? * 2 * (weekly Tuesday at 05:00)\nActive: Yes\nScript: model://mena-epp-weekly-nonpii-email-salesReportScript\n\nCronJob: mena-epp-oneTime-nonpii-email-salesReportJob\nSchedule: Not found (one-time)\nActive: Yes\nScript: model://mena-epp-oneTime-nonpii-email-salesReportScript\n\n4. MENA Monitoring and Alert Jobs (sent via email)\n\nCronJob: MENA-StuckOrdersInLast24HoursJob\nSchedule: 0 3 0/6 1/1 * ? * (every 6 hours)\nActive: Yes\nScript: model://MENA-StuckOrdersInLast24Hours\n\nCronJob: mena-nullOrdersAlertCronJob\nSchedule: 0 1 0/6 1/1 * ? * (every 6 hours)\nActive: Yes\nScript: model://mena-nullOrdersAlertScript\n\nCronJob: mena-EmailsFailingJob\nSchedule: 0 4 0/1 1/1 * ? * (hourly)\nActive: Yes\nScript: model://mena-EmailsFailingScript\n\nCronJob: toko-MENA-SpecialMonitoringReportJob\nSchedule: 0 0 4,12,20 1/1 * ? * (3x daily at 04:00, 12:00, 20:00)\nActive: Yes\nScript: SpecialMonitoringReportJob (Java-based)\n\nCronJob: toko-MENA-PaymentOrderStatusReportJob\nSchedule: 0 4 0/6 1/1 * ? * (every 6 hours)\nActive: Yes\nScript: PaymentOrderStatusReportJob (Java-based)\n\nCronJob: mena-AuditSalesReportsAlertForPIICronJob\nSchedule: 0 57 3 ? * * * (daily at 03:57)\nActive: Yes\nScript: model://mena-AuditSalesReportsAlertForPIIScript\n\n5. MENA GPV2 (GCDM 2.0) Sales and Pricing Reports (sent via email)\n\nCronJob: toko-GPV2-mena-orderGenerateSalesReportJob\nSchedule: 0 2/17 * * * ? (every 17 minutes)\nActive: Yes\nScript: tokoCdmGenerateSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-orderGenerateSalesReportJob_new\nSchedule: 0 3/15 * ? * * (every 15 minutes)\nActive: Yes\nScript: tokoCdmGenerateSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-ONE-TIME-orderGenerateSalesReportJob\nSchedule: Not found (one-time)\nActive: Yes\nEmail: genesis.joy.pineda@accenture.com\nScript: tokoCdmGenerateSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-ONE-TIME-sendPricingInformationReportJob\nSchedule: Not found (one-time)\nActive: Yes\nScript: tokoCdmSendSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-generateAndSendPreOrderProductCronJob\nSchedule: 0 3 3 1/1 * ? * (daily at 03:03)\nActive: Yes\nScript: model://toko-GPV2-mena-generateAndSendPreOrderProductScript\n\nCronJob: toko-GPV2-mena-generateAndSendRewardsDataCronJob\nSchedule: 0 59 3 ? * * * (daily at 03:59)\nActive: Yes\nScript: toko-GPV2-qa-generateAndSendRewardsDataCronJobScriptingJob\n\n6. GCC-Wide Reports (covering MENA markets, sent via email)\n\nCronJob: gcc-Report-NonPII-Email-PRODDailySCReportCronJob\nSchedule: 0 2 3 1/1 * ? * (daily at 03:02)\nActive: Yes\nScript: model://gcc-PRODDailySCReportScriptingJob\n\n7. RestrictedProductsExtract Jobs (per market, generate extracts)\n\nCronJob: ae-restrictedProductsExtractReportJob (Active)\nCronJob: eg-restrictedProductsExtractReportJob (Active)\nCronJob: iq-restrictedProductsExtractReportJob (Active)\nCronJob: jo-restrictedProductsExtractReportJob (Active)\nCronJob: ma-restrictedProductsExtractReportJob (Active)\nCronJob: sa-restrictedProductsExtractReportJob (Active)\nSchedule: No trigger found for these jobs\nScript: Per-market ScriptingJob variants (e.g., ae-restrictedProductsExtractReportScriptJob)\n\n8. Other MENA Extract and Alert Jobs\n\nCronJob: UAEExtractCronJob (Active, Script: UAEExtractScriptJob)\nCronJob: mena-CategoryToProductMappingScriptingJob (Active, daily at 03:00, Script: model://mena-CategoryToProductMappingScript)\nCronJob: toko-MENA-CancelledPreorderStatusJob (Inactive, Script: CancelledPreorderStatusReportJob)\nCronJob: mena-missingCompositeEntriesCronJob (Active, Script: model://mena-missingCompositeEntriesScript)\nCronJob: MENA-GCDM2.0-voucher-interface-v1 (Active, Script: tokoVoucherCodeGCPUploadJob)\nCronJob: toko-MENA-VoucherRedemptionReport (Inactive, Script: tokoSalesReportJob)\n\nNotes:\n- All 27 cronjobs with \"NonPII\" and \"EMAIL\" in their names were confirmed via DB query. These are the primary email-sent extract jobs.\n- An additional 18 MENA-prefixed cronjobs were found (monitoring, alerts, GPV2, extracts) that also generate and send extracts/reports via email.\n- The StockInformation reports run 3x daily per market (at staggered intervals to avoid overlap) across AE, EG, IQ, JO, MA, SA.\n- Several jobs use \"reportingJobPerformable\" (Java-based) instead of Groovy scripts. These are configured via Spring beans and generate reports using the Hybris reporting framework.\n- Two cronjobs have explicit email addresses configured: toko-GPV2-mena-ONE-TIME-orderGenerateSalesReportJob (genesis.joy.pineda@accenture.com) and toko-GPV2-mena-ONE-TIME-generatePricingInformationReportJob (kathlene.mae.basuel@accenture.com). All others send to distribution lists configured within the scripts themselves.\n- Inactive jobs (sendEmail=0 or active=0) were excluded from the list above except where noted. The complete DB query returned 35 extract-named cronjobs and 45 MENA-named cronjobs.\n\nKindly let me know if you need the exact email subject lines for any specific extract. I can open the corresponding Groovy scripts to retrieve those.\n\nRegards\n\nAryan\n\n## Remediation\n\nThis is an informational/audit request, not a technical issue requiring remediation. No platform bug or code defect was involved. The inventory above provides the complete list of MENA market extracts generated and sent via email.\n\nTicket URL: https://jira.secext.samsung.net/browse/MHME-1439",
-        "sections": {
-          "issue": "",
-          "rca": "# RCA: MHME-1439\n\nSummary: SMI - List of MENA Extracts\nGenerated: 2026-09-18T11:07:12.910Z\n\nHi [~khan.r@samsung.com] ,\n\nThis ticket requests an audit and inventory of all data extracts (both cronjobs and scripts) that generate extracts sent via email for MENA markets only. The request covers both scheduled cronjobs and ad-hoc scripts that produce extracts distributed via email.\n\nAll CronJob and Trigger records were queried directly from the Hybris database using FlexibleSearch. The results were filtered for MENA market prefixes (ae, bh, eg, iq, jo, kw, ma, om, qa, sa, lb, dz, tn) and for MENA-region cronjobs with \"mena\" or \"MENA\" in the name. The query covered all active and inactive jobs to provide a complete inventory. Triggers were also joined to provide schedule information.\n\nThe email subject lines are not stored as metadata on the CronJob entity. They are hardcoded within each Groovy script or Java reporting class. The script URIs for all ScriptingJob-based cronjobs were retrieved and are listed below. To get the exact email subject for each extract, the individual Groovy scripts would need to be opened and reviewed. The inventory below lists each job, its schedule, active status, and the script URI where applicable.\n\nBelow is the complete list of MENA extracts that generate and send extracts via email, organized by category:\n\n1. Per-Market StockInformation Reports (NonPII, sent via email)\n\nCronJob: ae-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 10 5,10,14 * * ? (3x daily at 05:10, 10:10, 14:10)\nActive: Yes\nScript: model://ae-StockInformationScriptingJob\n\nCronJob: eg-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 35 5,10,14 * * ? (3x daily at 05:35, 10:35, 14:35)\nActive: Yes\nScript: model://egStockInformationScriptingJob\n\nCronJob: iq-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 5 5,10,14 * * ? (3x daily at 05:05, 10:05, 14:05)\nActive: Yes\nScript: model://IQ_PROD_StockInformationScript\n\nCronJob: jo-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 40 5,10,14 * * ? (3x daily at 05:40, 10:40, 14:40)\nActive: Yes\nScript: model://joStockInformationScriptingJob\n\nCronJob: ma-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 15 5,10,14 * * ? (3x daily at 05:15, 10:15, 14:15)\nActive: Yes\nScript: model://ma-StockInformationScriptingJob\n\nCronJob: sa-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 25 5,10,14 * * ? (3x daily at 05:25, 10:25, 14:25)\nActive: Yes\nScript: model://sa-StockInformationScriptingJob\n\n2. Per-Market Sales and EPP Reports (NonPII, sent via email)\n\nCronJob: ae-Report-NonPII-EMAIL-DailyteleSalesReportJob-NewOneJob\nSchedule: 0 0 20 1/1 * ? * (daily at 20:00)\nActive: Yes\nScript: model://ae-Report-NonPII-EMAIL-DailyteleSalesReportJob-NewOneScript\n\nCronJob: ae-Report-NonPII-Email-gcc-EPP-RegisteredUserReport\nSchedule: 0 0 4 1/1 * ? * (daily at 04:00)\nActive: Yes\nScript: model://ae-gcc-EPP-RegisteredUserReportScript\n\nCronJob: ae-Report-NON-PII-EMAIL-tradein-instant-discount-report\nSchedule: Not found (manual trigger)\nActive: Yes\nScript: reportingJobPerformable (Java-based, not Groovy)\n\nCronJob: eg-report-NonPII-EMAIL-EPP-ReportJob\nSchedule: 0 2 5 1/1 * ? * (daily at 05:02)\nActive: Yes\nScript: model://eg-report-NonPII-EMAIL-EPP-ReportScript\n\n3. MENA-Region Extract and Report Jobs (sent via email)\n\nCronJob: mena-Report-NonPII-Email-NERPOrderExtractCronJob\nSchedule: 0 0 4 ? * MON * (weekly Monday at 04:00)\nActive: Yes\nScript: model://MENANERPOrderExtract\n\nCronJob: MENA-TokoPromotionExtractJSONScriptCronJob\nSchedule: 0 0 1 ? * * * (daily at 01:00)\nActive: Yes\nScript: model://MENA-TokoPromotionExtractJSONScript\n\nCronJob: mena-report-nonpii-email-salesReportJob\nSchedule: 0 0 4 ? * MON * (weekly Monday at 04:00)\nActive: Yes\nScript: reportingJobPerformable (Java-based, not Groovy)\n\nCronJob: mena-daily-nonpii-email-PromotionReportJob\nSchedule: 0 5/3 ? * * * (every 3 hours starting at 00:05)\nActive: Yes\nScript: model://mena-daily-nonpii-email-PromotionReportScript\n\nCronJob: mena-epp-monthly-report-nonpii-email-salesReportJob\nSchedule: 0 0 0 15 1/1 ? * (monthly on 15th at 00:00)\nActive: Yes\nScript: reportingJobPerformable (Java-based, not Groovy)\n\nCronJob: mena-epp-weekly-nonpii-email-salesReportJob\nSchedule: 0 0 5 ? * 2 * (weekly Tuesday at 05:00)\nActive: Yes\nScript: model://mena-epp-weekly-nonpii-email-salesReportScript\n\nCronJob: mena-epp-oneTime-nonpii-email-salesReportJob\nSchedule: Not found (one-time)\nActive: Yes\nScript: model://mena-epp-oneTime-nonpii-email-salesReportScript\n\n4. MENA Monitoring and Alert Jobs (sent via email)\n\nCronJob: MENA-StuckOrdersInLast24HoursJob\nSchedule: 0 3 0/6 1/1 * ? * (every 6 hours)\nActive: Yes\nScript: model://MENA-StuckOrdersInLast24Hours\n\nCronJob: mena-nullOrdersAlertCronJob\nSchedule: 0 1 0/6 1/1 * ? * (every 6 hours)\nActive: Yes\nScript: model://mena-nullOrdersAlertScript\n\nCronJob: mena-EmailsFailingJob\nSchedule: 0 4 0/1 1/1 * ? * (hourly)\nActive: Yes\nScript: model://mena-EmailsFailingScript\n\nCronJob: toko-MENA-SpecialMonitoringReportJob\nSchedule: 0 0 4,12,20 1/1 * ? * (3x daily at 04:00, 12:00, 20:00)\nActive: Yes\nScript: SpecialMonitoringReportJob (Java-based)\n\nCronJob: toko-MENA-PaymentOrderStatusReportJob\nSchedule: 0 4 0/6 1/1 * ? * (every 6 hours)\nActive: Yes\nScript: PaymentOrderStatusReportJob (Java-based)\n\nCronJob: mena-AuditSalesReportsAlertForPIICronJob\nSchedule: 0 57 3 ? * * * (daily at 03:57)\nActive: Yes\nScript: model://mena-AuditSalesReportsAlertForPIIScript\n\n5. MENA GPV2 (GCDM 2.0) Sales and Pricing Reports (sent via email)\n\nCronJob: toko-GPV2-mena-orderGenerateSalesReportJob\nSchedule: 0 2/17 * * * ? (every 17 minutes)\nActive: Yes\nScript: tokoCdmGenerateSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-orderGenerateSalesReportJob_new\nSchedule: 0 3/15 * ? * * (every 15 minutes)\nActive: Yes\nScript: tokoCdmGenerateSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-ONE-TIME-orderGenerateSalesReportJob\nSchedule: Not found (one-time)\nActive: Yes\nEmail: genesis.joy.pineda@accenture.com\nScript: tokoCdmGenerateSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-ONE-TIME-sendPricingInformationReportJob\nSchedule: Not found (one-time)\nActive: Yes\nScript: tokoCdmSendSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-generateAndSendPreOrderProductCronJob\nSchedule: 0 3 3 1/1 * ? * (daily at 03:03)\nActive: Yes\nScript: model://toko-GPV2-mena-generateAndSendPreOrderProductScript\n\nCronJob: toko-GPV2-mena-generateAndSendRewardsDataCronJob\nSchedule: 0 59 3 ? * * * (daily at 03:59)\nActive: Yes\nScript: toko-GPV2-qa-generateAndSendRewardsDataCronJobScriptingJob\n\n6. GCC-Wide Reports (covering MENA markets, sent via email)\n\nCronJob: gcc-Report-NonPII-Email-PRODDailySCReportCronJob\nSchedule: 0 2 3 1/1 * ? * (daily at 03:02)\nActive: Yes\nScript: model://gcc-PRODDailySCReportScriptingJob\n\n7. RestrictedProductsExtract Jobs (per market, generate extracts)\n\nCronJob: ae-restrictedProductsExtractReportJob (Active)\nCronJob: eg-restrictedProductsExtractReportJob (Active)\nCronJob: iq-restrictedProductsExtractReportJob (Active)\nCronJob: jo-restrictedProductsExtractReportJob (Active)\nCronJob: ma-restrictedProductsExtractReportJob (Active)\nCronJob: sa-restrictedProductsExtractReportJob (Active)\nSchedule: No trigger found for these jobs\nScript: Per-market ScriptingJob variants (e.g., ae-restrictedProductsExtractReportScriptJob)\n\n8. Other MENA Extract and Alert Jobs\n\nCronJob: UAEExtractCronJob (Active, Script: UAEExtractScriptJob)\nCronJob: mena-CategoryToProductMappingScriptingJob (Active, daily at 03:00, Script: model://mena-CategoryToProductMappingScript)\nCronJob: toko-MENA-CancelledPreorderStatusJob (Inactive, Script: CancelledPreorderStatusReportJob)\nCronJob: mena-missingCompositeEntriesCronJob (Active, Script: model://mena-missingCompositeEntriesScript)\nCronJob: MENA-GCDM2.0-voucher-interface-v1 (Active, Script: tokoVoucherCodeGCPUploadJob)\nCronJob: toko-MENA-VoucherRedemptionReport (Inactive, Script: tokoSalesReportJob)\n\nNotes:\n- All 27 cronjobs with \"NonPII\" and \"EMAIL\" in their names were confirmed via DB query. These are the primary email-sent extract jobs.\n- An additional 18 MENA-prefixed cronjobs were found (monitoring, alerts, GPV2, extracts) that also generate and send extracts/reports via email.\n- The StockInformation reports run 3x daily per market (at staggered intervals to avoid overlap) across AE, EG, IQ, JO, MA, SA.\n- Several jobs use \"reportingJobPerformable\" (Java-based) instead of Groovy scripts. These are configured via Spring beans and generate reports using the Hybris reporting framework.\n- Two cronjobs have explicit email addresses configured: toko-GPV2-mena-ONE-TIME-orderGenerateSalesReportJob (genesis.joy.pineda@accenture.com) and toko-GPV2-mena-ONE-TIME-generatePricingInformationReportJob (kathlene.mae.basuel@accenture.com). All others send to distribution lists configured within the scripts themselves.\n- Inactive jobs (sendEmail=0 or active=0) were excluded from the list above except where noted. The complete DB query returned 35 extract-named cronjobs and 45 MENA-named cronjobs.\n\nKindly let me know if you need the exact email subject lines for any specific extract. I can open the corresponding Groovy scripts to retrieve those.\n\nRegards\n\nAryan\n\n## Remediation\n\nThis is an informational/audit request, not a technical issue requiring remediation. No platform bug or code defect was involved. The inventory above provides the complete list of MENA market extracts generated and sent via email.\n\nTicket URL: https://jira.secext.samsung.net/browse/MHME-1439",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-18T05:37:13.224Z"
-      }
-    },
-    {
       "key": "SAM-24720",
       "summary": " Update or create Cronjob for autocleanup",
       "status": "Code Review",
@@ -1057,7 +1063,7 @@
       {
         "pid": 31828,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 235970,
+        "ageSeconds": 236010,
         "status": "running",
         "isChild": false,
         "taskSummary": "how many times is the action-items skill working on bg? it should only fire once every 2 hours as...",
@@ -1067,7 +1073,7 @@
       {
         "pid": 19584,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 234266,
+        "ageSeconds": 234306,
         "status": "running",
         "isChild": false,
         "taskSummary": "post these comments. log 45m for 1, 1h for 2, and 1h 30m for 3 and assign back, update labels",
@@ -1077,7 +1083,7 @@
       {
         "pid": 39968,
         "cwd": "c:\\windows",
-        "ageSeconds": 131424,
+        "ageSeconds": 131464,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1087,7 +1093,7 @@
       {
         "pid": 29348,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 73121,
+        "ageSeconds": 73161,
         "status": "running",
         "isChild": false,
         "taskSummary": "how many times is the action-items skill working on bg? it should only fire once every 2 hours as...",
@@ -1097,7 +1103,7 @@
       {
         "pid": 34776,
         "cwd": "unknown",
-        "ageSeconds": 67379,
+        "ageSeconds": 67419,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -4121,17 +4127,17 @@
     "bridgeLogTail": "[2026-09-30T10:39:20.861Z] STDOUT data for #473: 123 bytes\n[2026-09-30T10:39:20.863Z] LIVE write for #473: 3248 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:20.880Z] STDOUT data for #473: 109 bytes\n[2026-09-30T10:39:20.883Z] LIVE write for #473: 3254 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:20.895Z] STDOUT data for #473: 126 bytes\n[2026-09-30T10:39:20.897Z] LIVE write for #473: 3275 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:20.901Z] STDOUT data for #473: 114 bytes\n[2026-09-30T10:39:20.903Z] LIVE write for #473: 3286 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:20.917Z] STDOUT data for #473: 115 bytes\n[2026-09-30T10:39:20.919Z] LIVE write for #473: 3298 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:20.935Z] STDOUT data for #473: 121 bytes\n[2026-09-30T10:39:20.937Z] LIVE write for #473: 3316 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:20.958Z] STDOUT data for #473: 109 bytes\n[2026-09-30T10:39:20.960Z] LIVE write for #473: 3322 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:21.572Z] STDOUT data for #473: 107 bytes\n[2026-09-30T10:39:21.575Z] LIVE write for #473: 3326 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:21.584Z] STDOUT data for #473: 340 bytes\n[2026-09-30T10:39:21.586Z] LIVE write for #473: 3326 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:23.228Z] aipro completed for #473 (3326 chars)\n[2026-09-30T10:39:24.031Z] Comment posted on #473",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-02T08:02:15.657Z",
-      "ageMs": 8672
+      "lastWrite": "2026-10-02T08:03:00.677Z",
+      "ageMs": 3778
     },
-    "watchdogLogTail": "[2026-10-02T08:00:00.600Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T08:00:15.607Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T08:00:30.614Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T08:00:45.616Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T08:01:00.630Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T08:01:15.631Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T08:01:30.644Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T08:01:45.645Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T08:02:00.653Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T08:02:15.657Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-02T08:00:45.616Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T08:01:00.630Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T08:01:15.631Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T08:01:30.644Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T08:01:45.645Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T08:02:00.653Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T08:02:15.657Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T08:02:30.659Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T08:02:45.671Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T08:03:00.678Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-02T08:01:49.133Z",
+      "lastCheck": "2026-10-02T08:02:49.699Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4140,7 +4146,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-02T08:01:49.133Z",
+      "lastCheck": "2026-10-02T08:02:49.699Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4149,9 +4155,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-02T08:01:49.133Z",
+      "lastCheck": "2026-10-02T08:02:49.699Z",
       "downSince": "2026-10-02T07:37:44.847Z",
-      "downDuration": 1444286,
+      "downDuration": 1504852,
       "alert": true
     }
   ],
@@ -4245,6 +4251,18 @@
         "statusChangedAt": "2026-09-28T15:10:33.048+0900"
       },
       {
+        "key": "MHME-1439",
+        "summary": "SMI - List of MENA Extracts",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/MHME-1439",
+        "updated": "2026-10-02T17:04:14.000+0900",
+        "statusChangedAt": "2026-09-18T13:22:24.330+0900"
+      },
+      {
         "key": "AEME-6596",
         "summary": "Expert Care Orders Stuck || 29-Sep",
         "priority": "None",
@@ -4253,7 +4271,7 @@
         "reason": "",
         "whatToDo": "Investigate or continue work",
         "url": "https://jira.secext.samsung.net/browse/AEME-6596",
-        "updated": "2026-10-01T22:13:54.000+0900",
+        "updated": "2026-10-02T17:04:12.000+0900",
         "statusChangedAt": "2026-10-01T22:10:34.224+0900"
       },
       {
@@ -4317,18 +4335,6 @@
         "statusChangedAt": "2026-09-24T16:23:12.749+0900"
       },
       {
-        "key": "MHME-1439",
-        "summary": "SMI - List of MENA Extracts",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/MHME-1439",
-        "updated": "2026-09-18T13:26:23.000+0900",
-        "statusChangedAt": "2026-09-18T13:22:24.330+0900"
-      },
-      {
         "key": "RT-664743",
         "summary": "Mena - Israel | STG1| Order Status is stuck at order split status",
         "priority": "Critical",
@@ -4367,18 +4373,6 @@
         "statusChangedAt": "2026-09-15T22:47:57.919+0900"
       },
       {
-        "key": "AEME-6527",
-        "summary": "Stuck Order || 31-Aug",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "actionable",
-        "reason": "",
-        "whatToDo": "Respond to Talib Raza Zaidi",
-        "url": "https://jira.secext.samsung.net/browse/AEME-6527",
-        "updated": "2026-10-02T16:44:57.000+0900",
-        "statusChangedAt": "2026-10-01T19:46:38.763+0900"
-      },
-      {
         "key": "AEME-6602",
         "summary": "[PROD] | Manual Chargeback | 30th Sept",
         "priority": "None",
@@ -4392,6 +4386,18 @@
       }
     ],
     "blocked": [
+      {
+        "key": "AEME-6527",
+        "summary": "Stuck Order || 31-Aug",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "blocked",
+        "reason": "Waiting for PC-54929 approval (status: To do)",
+        "whatToDo": "",
+        "url": "https://jira.secext.samsung.net/browse/AEME-6527",
+        "updated": "2026-10-02T17:04:09.000+0900",
+        "statusChangedAt": "2026-10-01T19:46:38.763+0900"
+      },
       {
         "key": "PC-53923",
         "summary": "Update SC+ Automated Report — column renames, initial order payment mode, Payment Cycle reorder, recipient update, Qatar",
@@ -4456,8 +4462,8 @@
     "queued": [],
     "totals": {
       "zero": 9,
-      "actionable": 4,
-      "blocked": 5,
+      "actionable": 3,
+      "blocked": 6,
       "queued": 0
     }
   }
