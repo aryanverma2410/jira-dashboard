@@ -1,68 +1,7 @@
 {
-  "generatedAt": "2026-10-02T07:08:47.753Z",
-  "totalTickets": 19,
+  "generatedAt": "2026-10-02T07:09:27.932Z",
+  "totalTickets": 18,
   "tickets": [
-    {
-      "key": "SAHME-3357",
-      "summary": "SMC Errors-ProcessExternalServices",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "South Africa Maintenance & Enhancements",
-      "projectKey": "SAHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-02T16:09:24.000+0900",
-      "created": "2026-08-03T20:40:04.000+0900",
-      "statusChangedAt": "2026-08-03T20:40:12.579+0900",
-      "assignedToMeAt": "",
-      "description": "Hi ~@email \n\nCan you please help to check below orders that were errored at processExternalServices\n\n \n\nZA260730-45028831\n\nError Code: 400 HTTP Response : \\{\\n  \\\"message\\\" : \\\"UNSUPPORTED_DEVICE_MODEL\\\",\\n  \\\"code\\\" : \\\"USR-B1008\\\"\\n}\n\n \n\nZA260729-43785340\n\nError Code: 400 HTTP Response : \\{\\n  \\\"d",
-      "commentsCount": 22,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-02T16:08:56.653+0900",
-          "snippet": "Hi Suresh, Nosipho,\n\nFollowing up on the latest update - Nosipho confirmed on Sep 29 that \"ZA260730-45028831 - policy created\".\n\nI checked the ExternalService on Hybris for this order and it is still in ERROR status. The last retrigger on Sep 23 failed with \"id_type:must not be blank\" from the SMC A"
-        },
-        {
-          "author": "Nosipho Mkhungo",
-          "date": "2026-09-29T22:25:28.783+0900",
-          "snippet": "ZA260730-45028831- policy created"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Suresh, Nosipho,\n\nFollowing up on the latest update - Nosipho confirmed on Sep 29 that \"ZA260730-45028831 - policy created\".\n\nI checked the ExternalService on Hybris for this order and it is still in ERROR status. The last retrigger on Sep 23 failed with \"id_type:must not be blank\" from the SMC A",
-      "lastCommentDate": "2026-10-02T16:08:56.653+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAHME-3357",
-      "linkedTickets": [
-        {
-          "key": "SAHME-3408",
-          "summary": "SMC Errors-ProcessExternalServices",
-          "status": "Launch Verification",
-          "statusCategory": "Done",
-          "relation": "is cloned by",
-          "assignee": null
-        },
-        {
-          "key": "GMT-18732",
-          "summary": "SMI - ZA | Samsung care + Orders in error status",
-          "status": "On-Hold",
-          "statusCategory": "Done",
-          "relation": "relates to",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "SMC Errors-ProcessExternalServices\r\nGenerated: 2026-09-03T22:45:00Z\r\n\r\nHi [~irish.o.antony.rajan@accenture.com] ,\r\n\r\nWe investigated the 14 orders reported with SMC (Samsung Care+) errors at the processExternalServices stage. 11 of the 14 ExternalService records are now in UPDATED status with statusMessage \"OK\", confirming that the SC+ policies are active for those orders. These were remediated after the Subs/SMC team completed the required device and product mappings.\r\n\r\nThree orders still have ExternalService in ERROR status:\r\n\r\nZA260730-45028831 (UNSUPPORTED_DEVICE_MODEL, USR-B1008):\r\nThe device model SM-A366BZKVAFA (Galaxy A36) is not yet mapped in the SMC system. The consignment process invokes ProcessExternalServicesOnConsignmentAction which calls SMCExternalServicesActivationImpl.processService(). This in turn calls SMCWebClient.executeRESTExchangeRequest() to POST the device activation request to the SMC API. The SMC API returns HTTP 400 with \"UNSUPPORTED_DEVICE_MODEL\", causing SMCWebClientResultFailedException. The exception is caught by callDeviceService() which returns false, and the ExternalService is moved to ERROR status. Kibana logs confirm 4 failed retry attempts between August 7 and August 21, all failing with the same error. Kindly confirm with the Subs/SMC team once the A36 device mapping is completed so we can reset and retrigger.\r\n\r\nZA260720-34285353 (INVALID_REQUEST_PARAMETERS, USR-A0002):\r\nThe SMC API rejected the request with \"South Africa Identity Book is invalid\". The ExternalService statusMessage was not persisted in this case. The same code path applies: processService() -> callDeviceService() -> SMCWebClientResultFailedException on HTTP 400. The root cause is an invalid identity document or request parameter submitted during checkout. Kindly confirm with the Subs/SMC team whether the identity document or request parameter issue has been resolved so we can reset and retrigger.\r\n\r\nZA260818-62782020 (NOT_EXISTS_PRODUCT_ID, USR-A1002):\r\nThe product ID SMC-ZA-MOB-24-1-35 was not valid in the SMC system. Kibana logs show the ExternalService was created at checkout on 2026-08-18 and the SMC API returned HTTP 400 with \"the product id is not valid\". The ExternalService was moved to ERROR status via the same SMCWebClientResultFailedException path. Kindly confirm with the Subs/SMC team once this product ID is mapped so we can reset and retrigger.\r\n\r\nThis is not a Hybris platform issue. The root cause is on the SMC/Subs side for all three remaining orders -- device model mapping (A36), identity document validation, and product ID mapping respectively. The Hybris code correctly handles these rejections: ProcessExternalServicesOnConsignmentAction invokes the SMC API via SMCExternalServicesActivationImpl, and when the API returns a non-200 response, SMCWebClientResultFailedException is thrown and ExternalService is set to ERROR.\r\n\r\nThis is the same cluster of orders tracked under GMT-18732 (SMI - ZA | Samsung care+ Orders in error status).\r\n\r\nRegards\r\n\r\nAryan\r\n\r\n## Remediation\r\nReuse PC-52678 (Closed, REUSABLE) for SC+ reset. Once the Subs/SMC team confirms the required mappings are completed:\r\n1. Reset ExternalService status from ERROR to NEW for each affected order\r\n2. Re-invoke processExternalServicesOnConsignmentAction.executeAction(consignmentProcess) to retrigger the SMC API call\r\n3. The existing script script-AEME-6495-scplus-remediation.groovy under PC-52678 can be copied and updated with the new order list\r\n\r\nPre-conditions: secondGI must be valid (non-blank) for each consignment before retrigger. The 11 already-resolved orders do not need any further action.",
-        "sections": {
-          "issue": "",
-          "rca": "SMC Errors-ProcessExternalServices\r\nGenerated: 2026-09-03T22:45:00Z\r\n\r\nHi [~irish.o.antony.rajan@accenture.com] ,\r\n\r\nWe investigated the 14 orders reported with SMC (Samsung Care+) errors at the processExternalServices stage. 11 of the 14 ExternalService records are now in UPDATED status with statusMessage \"OK\", confirming that the SC+ policies are active for those orders. These were remediated after the Subs/SMC team completed the required device and product mappings.\r\n\r\nThree orders still have ExternalService in ERROR status:\r\n\r\nZA260730-45028831 (UNSUPPORTED_DEVICE_MODEL, USR-B1008):\r\nThe device model SM-A366BZKVAFA (Galaxy A36) is not yet mapped in the SMC system. The consignment process invokes ProcessExternalServicesOnConsignmentAction which calls SMCExternalServicesActivationImpl.processService(). This in turn calls SMCWebClient.executeRESTExchangeRequest() to POST the device activation request to the SMC API. The SMC API returns HTTP 400 with \"UNSUPPORTED_DEVICE_MODEL\", causing SMCWebClientResultFailedException. The exception is caught by callDeviceService() which returns false, and the ExternalService is moved to ERROR status. Kibana logs confirm 4 failed retry attempts between August 7 and August 21, all failing with the same error. Kindly confirm with the Subs/SMC team once the A36 device mapping is completed so we can reset and retrigger.\r\n\r\nZA260720-34285353 (INVALID_REQUEST_PARAMETERS, USR-A0002):\r\nThe SMC API rejected the request with \"South Africa Identity Book is invalid\". The ExternalService statusMessage was not persisted in this case. The same code path applies: processService() -> callDeviceService() -> SMCWebClientResultFailedException on HTTP 400. The root cause is an invalid identity document or request parameter submitted during checkout. Kindly confirm with the Subs/SMC team whether the identity document or request parameter issue has been resolved so we can reset and retrigger.\r\n\r\nZA260818-62782020 (NOT_EXISTS_PRODUCT_ID, USR-A1002):\r\nThe product ID SMC-ZA-MOB-24-1-35 was not valid in the SMC system. Kibana logs show the ExternalService was created at checkout on 2026-08-18 and the SMC API returned HTTP 400 with \"the product id is not valid\". The ExternalService was moved to ERROR status via the same SMCWebClientResultFailedException path. Kindly confirm with the Subs/SMC team once this product ID is mapped so we can reset and retrigger.\r\n\r\nThis is not a Hybris platform issue. The root cause is on the SMC/Subs side for all three remaining orders -- device model mapping (A36), identity document validation, and product ID mapping respectively. The Hybris code correctly handles these rejections: ProcessExternalServicesOnConsignmentAction invokes the SMC API via SMCExternalServicesActivationImpl, and when the API returns a non-200 response, SMCWebClientResultFailedException is thrown and ExternalService is set to ERROR.\r\n\r\nThis is the same cluster of orders tracked under GMT-18732 (SMI - ZA | Samsung care+ Orders in error status).\r\n\r\nRegards\r\n\r\nAryan\r\n\r\n## Remediation\r\nReuse PC-52678 (Closed, REUSABLE) for SC+ reset. Once the Subs/SMC team confirms the required mappings are completed:\r\n1. Reset ExternalService status from ERROR to NEW for each affected order\r\n2. Re-invoke processExternalServicesOnConsignmentAction.executeAction(consignmentProcess) to retrigger the SMC API call\r\n3. The existing script script-AEME-6495-scplus-remediation.groovy under PC-52678 can be copied and updated with the new order list\r\n\r\nPre-conditions: secondGI must be valid (non-blank) for each consignment before retrigger. The 11 already-resolved orders do not need any further action.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-03T13:45:10.016Z"
-      }
-    },
     {
       "key": "SAME-4004",
       "summary": "Orders - Adv FI Not Received",
@@ -77,8 +16,13 @@
       "statusChangedAt": "2026-10-02T01:26:00.630+0900",
       "assignedToMeAt": "",
       "description": "Hi Team,\n\nPlease support checking why ADV FI not received for below orders as per NERP & FI team and kindly let us know if  this can be sent for completed orders as it's required for FI team to complete the billing.\n\n \n\nKindly share the request and response logs received for each order and let us kn",
-      "commentsCount": 1,
+      "commentsCount": 2,
       "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-02T16:11:08.888+0900",
+          "snippet": "Hi Arjenelle,\n\nUpon checking, the FI payment was successfully posted to NERP for all 14 orders. The orders proceeded to the subsequent processing steps and completed successfully.\n\nFor 7 orders we verified the request/response logs from the application. All received \"No error log exist\" with BDC_DON"
+        },
         {
           "author": "Aryan Verma",
           "date": "2026-09-29T20:11:32.044+0900",
@@ -86,8 +30,8 @@
         }
       ],
       "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Arjenelle,\n\nWe are checking this issue. We will verify the FI posting status and NERP response logs for all 14 orders and share our findings. Please note that application logs are only available for 7 recent orders. For the remaining 7 older orders, we can only verify whether the FI was posted ba",
-      "lastCommentDate": "2026-09-29T20:11:32.044+0900",
+      "lastCommentSnippet": "Hi Arjenelle,\n\nUpon checking, the FI payment was successfully posted to NERP for all 14 orders. The orders proceeded to the subsequent processing steps and completed successfully.\n\nFor 7 orders we verified the request/response logs from the application. All received \"No error log exist\" with BDC_DON",
+      "lastCommentDate": "2026-10-02T16:11:08.888+0900",
       "url": "https://jira.secext.samsung.net/browse/SAME-4004",
       "linkedTickets": [],
       "solution": {
@@ -1111,7 +1055,7 @@
       {
         "pid": 31828,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 232758,
+        "ageSeconds": 232798,
         "status": "running",
         "isChild": false,
         "taskSummary": "how many times is the action-items skill working on bg? it should only fire once every 2 hours as...",
@@ -1121,17 +1065,17 @@
       {
         "pid": 29716,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 231059,
+        "ageSeconds": 231100,
         "status": "running",
         "isChild": false,
-        "taskSummary": "execute 1 and 2 and remove 3 and then start working on 3",
-        "lastExchange": "execute 1 and 2 and remove 3 and then start working on 3",
+        "taskSummary": "start working on all these in parallel",
+        "lastExchange": "start working on all these in parallel",
         "sessionId": "bin"
       },
       {
         "pid": 19584,
         "cwd": "c:\\windows",
-        "ageSeconds": 231053,
+        "ageSeconds": 231093,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1141,7 +1085,7 @@
       {
         "pid": 39608,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 170503,
+        "ageSeconds": 170544,
         "status": "running",
         "isChild": false,
         "taskSummary": "how many times is the action-items skill working on bg? it should only fire once every 2 hours as...",
@@ -1151,7 +1095,7 @@
       {
         "pid": 39968,
         "cwd": "unknown",
-        "ageSeconds": 128211,
+        "ageSeconds": 128251,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -1161,7 +1105,7 @@
       {
         "pid": 4888,
         "cwd": "unknown",
-        "ageSeconds": 121213,
+        "ageSeconds": 121254,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -1171,7 +1115,7 @@
       {
         "pid": 29348,
         "cwd": "unknown",
-        "ageSeconds": 69909,
+        "ageSeconds": 69949,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -1181,7 +1125,7 @@
       {
         "pid": 34776,
         "cwd": "unknown",
-        "ageSeconds": 64166,
+        "ageSeconds": 64206,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -4205,10 +4149,10 @@
     "bridgeLogTail": "[2026-09-30T10:39:20.861Z] STDOUT data for #473: 123 bytes\n[2026-09-30T10:39:20.863Z] LIVE write for #473: 3248 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:20.880Z] STDOUT data for #473: 109 bytes\n[2026-09-30T10:39:20.883Z] LIVE write for #473: 3254 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:20.895Z] STDOUT data for #473: 126 bytes\n[2026-09-30T10:39:20.897Z] LIVE write for #473: 3275 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:20.901Z] STDOUT data for #473: 114 bytes\n[2026-09-30T10:39:20.903Z] LIVE write for #473: 3286 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:20.917Z] STDOUT data for #473: 115 bytes\n[2026-09-30T10:39:20.919Z] LIVE write for #473: 3298 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:20.935Z] STDOUT data for #473: 121 bytes\n[2026-09-30T10:39:20.937Z] LIVE write for #473: 3316 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:20.958Z] STDOUT data for #473: 109 bytes\n[2026-09-30T10:39:20.960Z] LIVE write for #473: 3322 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:21.572Z] STDOUT data for #473: 107 bytes\n[2026-09-30T10:39:21.575Z] LIVE write for #473: 3326 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:21.584Z] STDOUT data for #473: 340 bytes\n[2026-09-30T10:39:21.586Z] LIVE write for #473: 3326 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_473.txt\n[2026-09-30T10:39:23.228Z] aipro completed for #473 (3326 chars)\n[2026-09-30T10:39:24.031Z] Comment posted on #473",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-02T07:08:46.826Z",
-      "ageMs": 4510
+      "lastWrite": "2026-10-02T07:09:31.841Z",
+      "ageMs": 337
     },
-    "watchdogLogTail": "[2026-10-02T07:06:28.711Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T07:06:43.714Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T07:06:58.717Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T07:07:13.723Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T07:07:28.725Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T07:07:43.730Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T07:08:01.800Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T07:08:16.805Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T07:08:31.812Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T07:08:46.826Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-02T07:07:13.723Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T07:07:28.725Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T07:07:43.730Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T07:08:01.800Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T07:08:16.805Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T07:08:31.812Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T07:08:46.826Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T07:09:01.836Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T07:09:16.839Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-02T07:09:31.842Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
@@ -4578,14 +4522,6 @@
     ],
     "queued": [
       {
-        "key": "SAHME-3357",
-        "summary": "SMC Errors-ProcessExternalServices",
-        "priority": "None",
-        "status": "In Progress",
-        "queueActions": "pending",
-        "url": "https://jira.secext.samsung.net/browse/SAHME-3357"
-      },
-      {
         "key": "SAME-4004",
         "summary": "Orders - Adv FI Not Received",
         "priority": "None",
@@ -4606,7 +4542,7 @@
       "zero": 9,
       "actionable": 3,
       "blocked": 4,
-      "queued": 3
+      "queued": 2
     }
   }
 }
