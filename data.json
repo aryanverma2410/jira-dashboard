@@ -1,7 +1,51 @@
 {
-  "generatedAt": "2026-10-05T05:54:37.214Z",
-  "totalTickets": 21,
+  "generatedAt": "2026-10-05T05:55:15.584Z",
+  "totalTickets": 22,
   "tickets": [
+    {
+      "key": "SAME-3979",
+      "summary": "Order Refund - SA260730-45663184 (Block Auto Refund)",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Kingdom of Saudi Arabia Maintenance & Enhancements",
+      "projectKey": "SAME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-05T14:54:36.000+0900",
+      "created": "2026-09-16T20:24:47.000+0900",
+      "statusChangedAt": "2026-10-05T14:54:36.223+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nPlease note that order SA260730-45663184 was +manually refunded from PG.+\n\nCurrent Order status is Cancelled and no Refund event on Hybris.\n\n1 - Can you please check why the auto refund was not triggered?\n\n2 - Please confirm that auto refund will not happen on this order to avoid duplicate",
+      "commentsCount": 5,
+      "recentComments": [
+        {
+          "author": "Arjenelle Acabado",
+          "date": "2026-10-05T14:54:23.146+0900",
+          "snippet": "Hi ~@email \n\nCan you please check as per below feedback from NERP team?\n\nKindly check if we can push Advance and Refund posting for this order and if we cannot proceed w/ this order, please let us know the reason so we can inform the team accordingly.\n\n \n\n!image-2026-10-05-09-53-02-372.png!\n\n \n\nThan"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-09-24T21:06:41.520+0900",
+          "snippet": "Hi Arj,\n\nYes, the initial FI posting was sent on Jul 31, 2026 at 13:59:40 (gerpSalesOrderNr = 1356695276).\n\nThanks,\nAryan."
+        }
+      ],
+      "lastCommentBy": "Arjenelle Acabado",
+      "lastCommentSnippet": "Hi ~@email \n\nCan you please check as per below feedback from NERP team?\n\nKindly check if we can push Advance and Refund posting for this order and if we cannot proceed w/ this order, please let us know the reason so we can inform the team accordingly.\n\n \n\n!image-2026-10-05-09-53-02-372.png!\n\n \n\nThan",
+      "lastCommentDate": "2026-10-05T14:54:23.146+0900",
+      "url": "https://jira.secext.samsung.net/browse/SAME-3979",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "# RCA: SAME-3979\nOrder Refund - SA260730-45663184 (Block Auto Refund)\nGenerated: 2026-09-21\n\nHi [~arjenelle.a@samsung.com] ,\n\nOrder SA260730-45663184 was placed on Jul 31 with Checkout.com (checkoutDotComFlowPaymentMode) for 31.00 SAR. The payment AUTHORIZATION and CAPTURE both completed successfully on the same day. However, the order process (order-process-v25-69) failed early in the fulfilment flow shortly after consignment creation, with endMessage \"Order failed\". The consignment process (consignment-process-v11-36) also failed with endMessage \"Order not placed.\"\n\nThe refund step in the order process is the action \"refundCancelOrder\" (bean refundCancelOrderActionV3), which sits in the cancellation path: waitForCancelledOrder -> isChargeBackRefundProcessed -> isInstantRefundEnabledCheckBeforeFinancialUpdate -> refundCancelOrder -> sendRefundNotification -> failed. This path is only reachable while the order process is still active and progressing through its defined states.\n\nBecause the order process entered the \"failed\" end state immediately after the consignment failure, it never reached the cancellation/refund branch. The process treats \"failed\" as a terminal state. The order was subsequently set to CANCELLED on Aug 6 (via external/backoffice action), but this status change does not re-engage the business process. The sendOrderCancelledEmailProcess ran separately and successfully, but the payment refund, which is part of the order-process-v25-69 flow, was never triggered.\n\nThe DB was checked on Sep 21 and confirms only two PaymentTransactionEntry records exist: AUTHORIZATION-1 (ACCEPTED, 31.00 SAR) and CAPTURE-2 (ACCEPTED, 31.00 SAR). No REFUND entry was ever created.\n\nRegarding the duplicate refund concern: the order process is in FAILED state (terminal), the order status is CANCELLED, and no automated mechanism will trigger a refund on this order going forward. The manual refund from PG is the only refund that has occurred. Auto refund will not happen on this order.\n\nThe order process was manually moved to failed state on Sep 17 to stop the 48-day loop between WaitForWarehouse and WaitForSendToWarehouse. The consignment is in CANCELLED status since Sep 17.\n\nThanks,\nAryan.",
+        "sections": {
+          "issue": "",
+          "rca": "# RCA: SAME-3979\nOrder Refund - SA260730-45663184 (Block Auto Refund)\nGenerated: 2026-09-21\n\nHi [~arjenelle.a@samsung.com] ,\n\nOrder SA260730-45663184 was placed on Jul 31 with Checkout.com (checkoutDotComFlowPaymentMode) for 31.00 SAR. The payment AUTHORIZATION and CAPTURE both completed successfully on the same day. However, the order process (order-process-v25-69) failed early in the fulfilment flow shortly after consignment creation, with endMessage \"Order failed\". The consignment process (consignment-process-v11-36) also failed with endMessage \"Order not placed.\"\n\nThe refund step in the order process is the action \"refundCancelOrder\" (bean refundCancelOrderActionV3), which sits in the cancellation path: waitForCancelledOrder -> isChargeBackRefundProcessed -> isInstantRefundEnabledCheckBeforeFinancialUpdate -> refundCancelOrder -> sendRefundNotification -> failed. This path is only reachable while the order process is still active and progressing through its defined states.\n\nBecause the order process entered the \"failed\" end state immediately after the consignment failure, it never reached the cancellation/refund branch. The process treats \"failed\" as a terminal state. The order was subsequently set to CANCELLED on Aug 6 (via external/backoffice action), but this status change does not re-engage the business process. The sendOrderCancelledEmailProcess ran separately and successfully, but the payment refund, which is part of the order-process-v25-69 flow, was never triggered.\n\nThe DB was checked on Sep 21 and confirms only two PaymentTransactionEntry records exist: AUTHORIZATION-1 (ACCEPTED, 31.00 SAR) and CAPTURE-2 (ACCEPTED, 31.00 SAR). No REFUND entry was ever created.\n\nRegarding the duplicate refund concern: the order process is in FAILED state (terminal), the order status is CANCELLED, and no automated mechanism will trigger a refund on this order going forward. The manual refund from PG is the only refund that has occurred. Auto refund will not happen on this order.\n\nThe order process was manually moved to failed state on Sep 17 to stop the 48-day loop between WaitForWarehouse and WaitForSendToWarehouse. The consignment is in CANCELLED status since Sep 17.\n\nThanks,\nAryan.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-21T13:49:42.331Z"
+      }
+    },
     {
       "key": "MHME-1439",
       "summary": "SMI - List of MENA Extracts",
@@ -1194,7 +1238,7 @@
       }
     ],
     "pid": 22420,
-    "uptime": 1293,
+    "uptime": 1333,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1206,7 +1250,7 @@
       {
         "pid": 24232,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 438,
+        "ageSeconds": 476,
         "status": "running",
         "isChild": false,
         "taskSummary": "how many times is the action-items skill working on bg? it should only fire once every 2 hours as...",
@@ -1216,7 +1260,7 @@
       {
         "pid": 22968,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 427,
+        "ageSeconds": 465,
         "status": "running",
         "isChild": false,
         "taskSummary": "fix logs on SAME-4004 in the latest comment",
@@ -1226,7 +1270,7 @@
       {
         "pid": 22212,
         "cwd": "c:\\windows",
-        "ageSeconds": 423,
+        "ageSeconds": 461,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -4341,7 +4385,7 @@
     "watchdog": {
       "alive": true,
       "lastWrite": "2026-10-05T05:52:40.795Z",
-      "ageMs": 119000
+      "ageMs": 157243
     },
     "watchdogLogTail": "[2026-10-05T00:02:59.335Z] Starting bridge.js...\n[2026-10-05T00:02:59.505Z] Bridge started with PID 22420 (restart #1, 1 in last hour)\n[2026-10-05T00:03:04.335Z] Starting jira-dashboard-server.js...\n[2026-10-05T00:03:04.603Z] Dashboard started with PID 23044 (restart #1, 1 in last hour)\n[2026-10-05T00:03:12.676Z] DUPLICATE jira-dashboard-server detected: PID 16072 — killing\n[2026-10-05T05:39:01.471Z] Dashboard is degraded (failures: 5). Will not restart yet.\n[2026-10-05T05:40:02.173Z] Dashboard is degraded (failures: 6). Will not restart yet.\n[2026-10-05T05:41:02.053Z] Dashboard is degraded (failures: 7). Will not restart yet.\n[2026-10-05T05:42:00.986Z] Dashboard is degraded (failures: 8). Will not restart yet.\n[2026-10-05T05:52:40.795Z] DUPLICATE watchdog detected: PID 16104 — killing"
   },
@@ -4634,6 +4678,18 @@
         "statusChangedAt": "2026-09-15T22:47:57.919+0900"
       },
       {
+        "key": "SAME-3979",
+        "summary": "Order Refund - SA260730-45663184 (Block Auto Refund)",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "actionable",
+        "reason": "",
+        "whatToDo": "Respond to Arjenelle Acabado",
+        "url": "https://jira.secext.samsung.net/browse/SAME-3979",
+        "updated": "2026-10-05T14:54:36.000+0900",
+        "statusChangedAt": "2026-10-05T14:54:36.223+0900"
+      },
+      {
         "key": "TKME-2349",
         "summary": "Return Creation Issue",
         "priority": "None",
@@ -4711,7 +4767,7 @@
     "queued": [],
     "totals": {
       "zero": 13,
-      "actionable": 4,
+      "actionable": 5,
       "blocked": 4,
       "queued": 0
     }
