@@ -1,7 +1,51 @@
 {
-  "generatedAt": "2026-10-05T07:58:49.640Z",
+  "generatedAt": "2026-10-05T07:59:28.150Z",
   "totalTickets": 23,
   "tickets": [
+    {
+      "key": "SAHME-3456",
+      "summary": "Multiple orders stuck ",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "South Africa Maintenance & Enhancements",
+      "projectKey": "SAHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-05T16:58:51.000+0900",
+      "created": "2026-09-30T19:20:45.000+0900",
+      "statusChangedAt": "2026-09-30T19:21:19.622+0900",
+      "assignedToMeAt": "",
+      "description": "Good day, \n\n \n\nPlease can you urgently assist with the below orders that are stuck on Hybris. \n|Order number|Enquiry |Comment|\n|ZA260928-97498808|WAITING  FOR SEND FINANCIAL|Order is stuck on waiting for send finanacial |\n|ZA260822-65638688|WAITING  FOR SEND FINANCIAL|Order is stuck on waiting for s",
+      "commentsCount": 3,
+      "recentComments": [
+        {
+          "author": "Zaahier Isaacs",
+          "date": "2026-10-05T16:58:51.368+0900",
+          "snippet": "Hi ~@email \n\n \n\nJust wanted to see whether there is any feedback on the orders. \n\n \n\nThanks \n\nZaahier"
+        },
+        {
+          "author": "Zaahier Isaacs",
+          "date": "2026-10-01T13:29:57.137+0900",
+          "snippet": "Hi ~@email \n\n \n\nThanks for the update. \n\nPlease can you assist with retriggering the 2 orders. \n\n \n\nThanks \n\nZaahier"
+        }
+      ],
+      "lastCommentBy": "Zaahier Isaacs",
+      "lastCommentSnippet": "Hi ~@email \n\n \n\nJust wanted to see whether there is any feedback on the orders. \n\n \n\nThanks \n\nZaahier",
+      "lastCommentDate": "2026-10-05T16:58:51.368+0900",
+      "url": "https://jira.secext.samsung.net/browse/SAHME-3456",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "Summary: Multiple orders stuck\r\nGenerated: 2026-09-30T10:35:00Z\r\n\r\nIssue:\r\nThree ZA-region orders are reported as stuck on Hybris.\r\n\r\nOrder 1: ZA260928-97498808 (created 2026-09-28, total 41,018.40 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at WAITING_FOR_SEND_FINANCIAL status. Payment was authorized and captured successfully (both ACCEPTED, 41,018.40 ZAR). The order process (order-process-v25-69) is in ERROR state. Zero consignments were created.\r\n\r\nOrder 2: ZA260822-65638688 (created 2026-08-22, total 5,399.10 ZAR, payment mode za-PJNPaymentMode) is stuck at WAITING_FOR_SEND_FINANCIAL status. Payment was authorized and captured successfully (both ACCEPTED, 5,399.10 ZAR). The order process (order-process-v25-69) is in ERROR state with splitOrder looping 50+ times. Zero consignments were created. The ticket notes the unit has been GR'd and stock needs to be released. This order was previously investigated in SAHME-3399 and identified as a stock allocation issue.\r\n\r\nOrder 3: ZA260924-93112936 (created 2026-09-24, total 7,448.00 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at PAYMENT_NOT_CAPTURED status. The payment capture was rejected by the gateway (CAPTURE:REJECTED). This order was previously investigated in SAHME-3449.\r\n\r\nRCA:\r\n\r\nZA260928-97498808:\r\nThe order process advanced through checkout, fraud checks, and payment capture without issues. The sendFinancialUpdate action successfully posted the financial integration to GERP — the task log shows the process continued past isInitialFISuccess to fraudCheckPostFi, isFinanceApprovalRequired, isFulfilmentRequired, and isBulkOrder, confirming the FI step completed. The process then reached the splitOrder action, which is responsible for allocating order entries to warehouse consignments. The process entered ERROR state at this point with zero consignments created.\r\n\r\nThe splitOrder action calls OrderSplittingService to assign products to warehouses based on stock availability and warehouse configuration for the za store. The failure at splitOrder with zero consignments indicates either a stock allocation failure (products not available at any configured warehouse) or an exception during the splitting logic (such as a zero-quantity entry or warehouse configuration issue). Without Kibana log access, the exact exception cannot be confirmed, but the DB state is conclusive: the FI succeeded, the process errored at splitOrder, and no consignments were created.\r\n\r\nThis is the same pattern seen in SAHME-3437 (ZA260915-85021615) where a ZA-region order errored after the financial update stage, and in SAHME-3399 where ZA260822-65638688 has the same splitOrder failure pattern.\r\n\r\nZA260822-65638688:\r\nThis order was investigated in SAHME-3399 and identified as a stock allocation issue. The order process reached splitOrder, but OrderSplittingService could not assign products to any warehouse because the product is out of stock across all configured warehouses for the za site. After splitOrder returned an empty consignment list, the process entered a loop between waitForWarehouseSubprocessEnd and isProcessCompleted (50+ splitOrder entries in task logs), and eventually transitioned to ERROR state.\r\n\r\nThe ticket now notes that the unit has been GR'd (Goods Receipt completed) and stock needs to be released. This aligns with the SAHME-3399 conclusion: the order is awaiting stock transfer to a ZA warehouse. Once stock is available, the order process can be restarted from splitOrder to create consignments and proceed to fulfillment.\r\n\r\nThe order has been stagnant for 38 days (created 2026-08-22). Payment of 5,399.10 ZAR was fully captured. The customer is waiting for either stock availability and fulfillment, or cancellation and refund.\r\n\r\nZA260924-93112936:\r\nThis order was investigated in SAHME-3449. The payment authorization was successful but the subsequent capture step was rejected by the payment gateway (PayGate/DPO). The order has been stagnant for approximately 6 days. No consignments were created. The payment authorization has likely expired by now (typically 7 days for PayGate/DPO).\r\n\r\nThis is a gateway-side rejection, not a Hybris platform issue. The capture was declined by the payment provider, not by Hybris.\r\n\r\nPossible remediation:\r\n\r\nZA260928-97498808:\r\nOption A (if stock is available): Restart the order process from the splitOrder action node via HAC Groovy script. If stock is available at a configured ZA warehouse, the order will split into consignments and proceed to fulfillment.\r\n\r\nOption B (if stock is not available): Arrange stock transfer to a ZA warehouse for the products on this order, then restart the process from splitOrder. This is the same approach as for ZA260822-65638688.\r\n\r\nOption C: If the splitOrder error is caused by a data issue (zero-quantity entry, pricing error) rather than stock, Kibana log verification is needed to identify the exact exception. Fix the underlying data issue, then restart the process.\r\n\r\nRecommendation: Verify Kibana logs for the exact exception at splitOrder before attempting remediation. If stock-related, coordinate with the regional team for stock availability, then restart the process.\r\n\r\nZA260822-65638688:\r\nAs concluded in SAHME-3399: the regional team has confirmed the unit is GR'd and stock needs to be released. Once stock is released/transferred in the system, restart the order process from splitOrder. If stock cannot be arranged, cancel the order and process a full refund (5,399.10 ZAR) via REFUND_FOLLOW_ON, similar to what was done for ZA260822-65856992 in SAHME-3399.\r\n\r\nGiven this order has been stagnant for 38 days, urgent resolution is recommended — either arrange stock and fulfill, or cancel and refund.\r\n\r\nZA260924-93112936:\r\nAs concluded in SAHME-3449: the payment capture was rejected by the gateway. Hybris-side remediation is limited. The payment authorization has likely expired after 6+ days. Recommend cancelling the order and asking the customer to place a new order. If the payment team confirms the authorization is still valid, a re-capture can be attempted by retriggering the capture payment action in the order process.",
+        "sections": {
+          "issue": "Three ZA-region orders are reported as stuck on Hybris.\r\n\r\nOrder 1: ZA260928-97498808 (created 2026-09-28, total 41,018.40 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at WAITING_FOR_SEND_FINANCIAL status. Payment was authorized and captured successfully (both ACCEPTED, 41,018.40 ZAR). The order process (order-process-v25-69) is in ERROR state. Zero consignments were created.\r\n\r\nOrder 2: ZA260822-65638688 (created 2026-08-22, total 5,399.10 ZAR, payment mode za-PJNPaymentMode) is stuck at WAITING_FOR_SEND_FINANCIAL status. Payment was authorized and captured successfully (both ACCEPTED, 5,399.10 ZAR). The order process (order-process-v25-69) is in ERROR state with splitOrder looping 50+ times. Zero consignments were created. The ticket notes the unit has been GR'd and stock needs to be released. This order was previously investigated in SAHME-3399 and identified as a stock allocation issue.\r\n\r\nOrder 3: ZA260924-93112936 (created 2026-09-24, total 7,448.00 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at PAYMENT_NOT_CAPTURED status. The payment capture was rejected by the gateway (CAPTURE:REJECTED). This order was previously investigated in SAHME-3449.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-30T10:38:47.471Z"
+      }
+    },
     {
       "key": "AEME-6582",
       "summary": "RCA Request || 24-Sep",
@@ -447,50 +491,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-10-02T08:08:03.116Z"
-      }
-    },
-    {
-      "key": "SAHME-3456",
-      "summary": "Multiple orders stuck ",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "South Africa Maintenance & Enhancements",
-      "projectKey": "SAHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-02T20:39:20.000+0900",
-      "created": "2026-09-30T19:20:45.000+0900",
-      "statusChangedAt": "2026-09-30T19:21:19.622+0900",
-      "assignedToMeAt": "",
-      "description": "Good day, \n\n \n\nPlease can you urgently assist with the below orders that are stuck on Hybris. \n|Order number|Enquiry |Comment|\n|ZA260928-97498808|WAITING  FOR SEND FINANCIAL|Order is stuck on waiting for send finanacial |\n|ZA260822-65638688|WAITING  FOR SEND FINANCIAL|Order is stuck on waiting for s",
-      "commentsCount": 2,
-      "recentComments": [
-        {
-          "author": "Zaahier Isaacs",
-          "date": "2026-10-01T13:29:57.137+0900",
-          "snippet": "Hi ~@email \n\n \n\nThanks for the update. \n\nPlease can you assist with retriggering the 2 orders. \n\n \n\nThanks \n\nZaahier"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-30T22:39:29.359+0900",
-          "snippet": "Hi Zaahier,\n\nWe have checked all 3 orders on the PROD database. Below are the findings.\n\nZA260928-97498808 (WAITING_FOR_SEND_FINANCIAL):\nPayment capture was successful via dpoPayGate (41,018.40 ZAR). The order process (order-process-v25-69) is in ERROR state with end message \"An error occurred while"
-        }
-      ],
-      "lastCommentBy": "Zaahier Isaacs",
-      "lastCommentSnippet": "Hi ~@email \n\n \n\nThanks for the update. \n\nPlease can you assist with retriggering the 2 orders. \n\n \n\nThanks \n\nZaahier",
-      "lastCommentDate": "2026-10-01T13:29:57.137+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAHME-3456",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Summary: Multiple orders stuck\r\nGenerated: 2026-09-30T10:35:00Z\r\n\r\nIssue:\r\nThree ZA-region orders are reported as stuck on Hybris.\r\n\r\nOrder 1: ZA260928-97498808 (created 2026-09-28, total 41,018.40 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at WAITING_FOR_SEND_FINANCIAL status. Payment was authorized and captured successfully (both ACCEPTED, 41,018.40 ZAR). The order process (order-process-v25-69) is in ERROR state. Zero consignments were created.\r\n\r\nOrder 2: ZA260822-65638688 (created 2026-08-22, total 5,399.10 ZAR, payment mode za-PJNPaymentMode) is stuck at WAITING_FOR_SEND_FINANCIAL status. Payment was authorized and captured successfully (both ACCEPTED, 5,399.10 ZAR). The order process (order-process-v25-69) is in ERROR state with splitOrder looping 50+ times. Zero consignments were created. The ticket notes the unit has been GR'd and stock needs to be released. This order was previously investigated in SAHME-3399 and identified as a stock allocation issue.\r\n\r\nOrder 3: ZA260924-93112936 (created 2026-09-24, total 7,448.00 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at PAYMENT_NOT_CAPTURED status. The payment capture was rejected by the gateway (CAPTURE:REJECTED). This order was previously investigated in SAHME-3449.\r\n\r\nRCA:\r\n\r\nZA260928-97498808:\r\nThe order process advanced through checkout, fraud checks, and payment capture without issues. The sendFinancialUpdate action successfully posted the financial integration to GERP — the task log shows the process continued past isInitialFISuccess to fraudCheckPostFi, isFinanceApprovalRequired, isFulfilmentRequired, and isBulkOrder, confirming the FI step completed. The process then reached the splitOrder action, which is responsible for allocating order entries to warehouse consignments. The process entered ERROR state at this point with zero consignments created.\r\n\r\nThe splitOrder action calls OrderSplittingService to assign products to warehouses based on stock availability and warehouse configuration for the za store. The failure at splitOrder with zero consignments indicates either a stock allocation failure (products not available at any configured warehouse) or an exception during the splitting logic (such as a zero-quantity entry or warehouse configuration issue). Without Kibana log access, the exact exception cannot be confirmed, but the DB state is conclusive: the FI succeeded, the process errored at splitOrder, and no consignments were created.\r\n\r\nThis is the same pattern seen in SAHME-3437 (ZA260915-85021615) where a ZA-region order errored after the financial update stage, and in SAHME-3399 where ZA260822-65638688 has the same splitOrder failure pattern.\r\n\r\nZA260822-65638688:\r\nThis order was investigated in SAHME-3399 and identified as a stock allocation issue. The order process reached splitOrder, but OrderSplittingService could not assign products to any warehouse because the product is out of stock across all configured warehouses for the za site. After splitOrder returned an empty consignment list, the process entered a loop between waitForWarehouseSubprocessEnd and isProcessCompleted (50+ splitOrder entries in task logs), and eventually transitioned to ERROR state.\r\n\r\nThe ticket now notes that the unit has been GR'd (Goods Receipt completed) and stock needs to be released. This aligns with the SAHME-3399 conclusion: the order is awaiting stock transfer to a ZA warehouse. Once stock is available, the order process can be restarted from splitOrder to create consignments and proceed to fulfillment.\r\n\r\nThe order has been stagnant for 38 days (created 2026-08-22). Payment of 5,399.10 ZAR was fully captured. The customer is waiting for either stock availability and fulfillment, or cancellation and refund.\r\n\r\nZA260924-93112936:\r\nThis order was investigated in SAHME-3449. The payment authorization was successful but the subsequent capture step was rejected by the payment gateway (PayGate/DPO). The order has been stagnant for approximately 6 days. No consignments were created. The payment authorization has likely expired by now (typically 7 days for PayGate/DPO).\r\n\r\nThis is a gateway-side rejection, not a Hybris platform issue. The capture was declined by the payment provider, not by Hybris.\r\n\r\nPossible remediation:\r\n\r\nZA260928-97498808:\r\nOption A (if stock is available): Restart the order process from the splitOrder action node via HAC Groovy script. If stock is available at a configured ZA warehouse, the order will split into consignments and proceed to fulfillment.\r\n\r\nOption B (if stock is not available): Arrange stock transfer to a ZA warehouse for the products on this order, then restart the process from splitOrder. This is the same approach as for ZA260822-65638688.\r\n\r\nOption C: If the splitOrder error is caused by a data issue (zero-quantity entry, pricing error) rather than stock, Kibana log verification is needed to identify the exact exception. Fix the underlying data issue, then restart the process.\r\n\r\nRecommendation: Verify Kibana logs for the exact exception at splitOrder before attempting remediation. If stock-related, coordinate with the regional team for stock availability, then restart the process.\r\n\r\nZA260822-65638688:\r\nAs concluded in SAHME-3399: the regional team has confirmed the unit is GR'd and stock needs to be released. Once stock is released/transferred in the system, restart the order process from splitOrder. If stock cannot be arranged, cancel the order and process a full refund (5,399.10 ZAR) via REFUND_FOLLOW_ON, similar to what was done for ZA260822-65856992 in SAHME-3399.\r\n\r\nGiven this order has been stagnant for 38 days, urgent resolution is recommended — either arrange stock and fulfill, or cancel and refund.\r\n\r\nZA260924-93112936:\r\nAs concluded in SAHME-3449: the payment capture was rejected by the gateway. Hybris-side remediation is limited. The payment authorization has likely expired after 6+ days. Recommend cancelling the order and asking the customer to place a new order. If the payment team confirms the authorization is still valid, a re-capture can be attempted by retriggering the capture payment action in the order process.",
-        "sections": {
-          "issue": "Three ZA-region orders are reported as stuck on Hybris.\r\n\r\nOrder 1: ZA260928-97498808 (created 2026-09-28, total 41,018.40 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at WAITING_FOR_SEND_FINANCIAL status. Payment was authorized and captured successfully (both ACCEPTED, 41,018.40 ZAR). The order process (order-process-v25-69) is in ERROR state. Zero consignments were created.\r\n\r\nOrder 2: ZA260822-65638688 (created 2026-08-22, total 5,399.10 ZAR, payment mode za-PJNPaymentMode) is stuck at WAITING_FOR_SEND_FINANCIAL status. Payment was authorized and captured successfully (both ACCEPTED, 5,399.10 ZAR). The order process (order-process-v25-69) is in ERROR state with splitOrder looping 50+ times. Zero consignments were created. The ticket notes the unit has been GR'd and stock needs to be released. This order was previously investigated in SAHME-3399 and identified as a stock allocation issue.\r\n\r\nOrder 3: ZA260924-93112936 (created 2026-09-24, total 7,448.00 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at PAYMENT_NOT_CAPTURED status. The payment capture was rejected by the gateway (CAPTURE:REJECTED). This order was previously investigated in SAHME-3449.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-30T10:38:47.471Z"
       }
     },
     {
@@ -1293,7 +1293,7 @@
       }
     ],
     "pid": 22420,
-    "uptime": 8746,
+    "uptime": 8786,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1305,7 +1305,7 @@
       {
         "pid": 24232,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 7890,
+        "ageSeconds": 7929,
         "status": "running",
         "isChild": false,
         "taskSummary": "make a plan and then start implementing these 3 and keep a state file that keeps track of what is...",
@@ -1315,7 +1315,7 @@
       {
         "pid": 22968,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 7880,
+        "ageSeconds": 7918,
         "status": "running",
         "isChild": false,
         "taskSummary": "fix logs on SAME-4004 in the latest comment",
@@ -1325,7 +1325,7 @@
       {
         "pid": 22212,
         "cwd": "c:\\windows",
-        "ageSeconds": 7875,
+        "ageSeconds": 7914,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1335,7 +1335,7 @@
       {
         "pid": 20432,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 6723,
+        "ageSeconds": 6762,
         "status": "running",
         "isChild": false,
         "taskSummary": "make a plan and then start implementing these 3 and keep a state file that keeps track of what is...",
@@ -4465,7 +4465,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-05T07:07:47.097Z",
-      "ageMs": 3064871
+      "ageMs": 3104251
     },
     "watchdogLogTail": "[2026-10-05T06:12:41.203Z] DUPLICATE watchdog detected: PID 16644 — killing\n[2026-10-05T06:17:41.742Z] DUPLICATE watchdog detected: PID 11984 — killing\n[2026-10-05T06:40:59.389Z] DUPLICATE jira-dashboard-server detected: PID 23388 — killing\n[2026-10-05T06:41:44.341Z] DUPLICATE jira-dashboard-server detected: PID 27356 — killing\n[2026-10-05T06:43:58.724Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 23044) not found\n[2026-10-05T06:44:01.104Z] Could not kill dashboard PID 23044: Command failed: taskkill /PID 23044 /F /T\n[2026-10-05T06:44:07.961Z] Starting jira-dashboard-server.js...\n[2026-10-05T06:44:08.132Z] Dashboard started with PID 25756 (restart #2, 1 in last hour)\n[2026-10-05T06:44:29.352Z] DUPLICATE jira-dashboard-server detected: PID 25632 — killing\n[2026-10-05T07:07:47.097Z] DUPLICATE watchdog detected: PID 13660 — killing"
   },
@@ -4588,6 +4588,18 @@
         "statusChangedAt": "2026-09-28T15:10:33.048+0900"
       },
       {
+        "key": "SAHME-3456",
+        "summary": "Multiple orders stuck ",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/SAHME-3456",
+        "updated": "2026-10-05T16:58:51.000+0900",
+        "statusChangedAt": "2026-09-30T19:21:19.622+0900"
+      },
+      {
         "key": "AEME-6582",
         "summary": "RCA Request || 24-Sep",
         "priority": "None",
@@ -4670,18 +4682,6 @@
         "url": "https://jira.secext.samsung.net/browse/MHME-1451",
         "updated": "2026-10-02T22:21:52.000+0900",
         "statusChangedAt": "2026-10-02T22:21:52.028+0900"
-      },
-      {
-        "key": "SAHME-3456",
-        "summary": "Multiple orders stuck ",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/SAHME-3456",
-        "updated": "2026-10-02T20:39:20.000+0900",
-        "statusChangedAt": "2026-09-30T19:21:19.622+0900"
       },
       {
         "key": "GMT-21857",
