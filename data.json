@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-05T06:59:01.220Z",
+  "generatedAt": "2026-10-05T06:59:39.434Z",
   "totalTickets": 23,
   "tickets": [
     {
@@ -1136,9 +1136,16 @@
     "online": true,
     "activeSessions": [],
     "stats": {
-      "totalProcessed": 195
+      "totalProcessed": 196
     },
     "recentActivity": [
+      {
+        "issueNum": 565,
+        "title": "Investigate ticket AEME-6597",
+        "received": "2026-10-05T06:59:12.935Z",
+        "responded": "",
+        "responseSnippet": ""
+      },
       {
         "issueNum": 533,
         "title": "🔴 MCP Alert: Confluence down for 5m 0s",
@@ -1271,20 +1278,21 @@
         "received": "2026-09-28T16:09:26.573Z",
         "responded": "2026-09-28T16:27:45.179Z",
         "responseSnippet": "Starting Phase 0 — reading past learnings, checking for existing RCA/cache files, and probing MCP servers in parallel.A lock file already exists. Let me check it and also start MCP health probes.The lock is from a previous auto-trigger at 16:09 UTC today. No RCA or cache was produced — the prior attempt failed. I'll proceed with a fresh investigation. Let me fix the PowerShell syntax and run health probes.HAC appears reachable (got CSRF token). Exit code 1 may just be the empty result. Let me no"
-      },
-      {
-        "issueNum": 441,
-        "title": "Investigate ticket SAHME-3449",
-        "received": "2026-09-28T16:09:28.758Z",
-        "responded": "2026-09-28T16:23:38.922Z",
-        "responseSnippet": "Starting Phase 0 — reading past learnings, checking for existing RCA/cache files, and locating Jira tooling.No existing RCA/cache for SAHME-3449. Now let me find the Jira and HAC tooling.I see the pattern for Jira queries. Let me find the exact Jira fetch script and the jira-ops/hac tooling by looking at recent scripts.Good, I can see the tooling patterns. Let me create the lock file and fetch the Jira ticket in parallel.Ticket fetched. Two orders:\n1. **ZA260910-80402150** — EXTERNAL_FRAUD_RESUL"
       }
     ],
     "pid": 22420,
-    "uptime": 5158,
+    "uptime": 5195,
     "failures": 0,
-    "activeJobCount": 0,
-    "jobs": [],
+    "activeJobCount": 1,
+    "jobs": [
+      {
+        "issueNum": 565,
+        "issueTitle": "Investigate ticket AEME-6597",
+        "snippet": "Auto-triggered investigation for new ticket AEME-6597.\n\nTicket: AEME-6597\nSummary: Stuck in Shipped Status || 29-Sep\n\nUs",
+        "pid": 27500,
+        "elapsed": 23
+      }
+    ],
     "startTime": "2026-10-05T05:33:02.276Z",
     "version": "v3",
     "lastResponseAt": "2026-10-02T20:50:44.787Z",
@@ -1293,7 +1301,7 @@
       {
         "pid": 24232,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 4302,
+        "ageSeconds": 4340,
         "status": "running",
         "isChild": false,
         "taskSummary": "add a feature where I can fetch a jira ticket details by putting in the jira ticket number. it sh...",
@@ -1303,7 +1311,7 @@
       {
         "pid": 22968,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 4291,
+        "ageSeconds": 4329,
         "status": "running",
         "isChild": false,
         "taskSummary": "fix logs on SAME-4004 in the latest comment",
@@ -1313,7 +1321,7 @@
       {
         "pid": 22212,
         "cwd": "c:\\windows",
-        "ageSeconds": 4287,
+        "ageSeconds": 4325,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1323,7 +1331,7 @@
       {
         "pid": 20432,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 3135,
+        "ageSeconds": 3173,
         "status": "running",
         "isChild": false,
         "taskSummary": "add a feature where I can fetch a jira ticket details by putting in the jira ticket number. it sh...",
@@ -1333,7 +1341,7 @@
       {
         "pid": 26508,
         "cwd": "unknown",
-        "ageSeconds": 1947,
+        "ageSeconds": 1985,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -1342,6 +1350,15 @@
       }
     ],
     "activityLog": [
+      {
+        "id": "1791183553873-gk5xcy",
+        "timestamp": "2026-10-05T06:59:13.873Z",
+        "type": "command",
+        "source": "aryanverma2410",
+        "title": "Investigate ticket AEME-6597",
+        "detail": "#565",
+        "status": "pending"
+      },
       {
         "id": "1790974244793-i9wvn8",
         "timestamp": "2026-10-02T20:50:44.793Z",
@@ -1601,15 +1618,6 @@
         "source": "bridge",
         "title": "Investigate ticket PKHME-942",
         "detail": "Starting the investigate workflow for PKHME-942. Let me run Phase 0 pre-flight checks in parallel: read past learnings, check for existing RCA/cache files, and check MCP availability.Good - learnings ",
-        "status": "success"
-      },
-      {
-        "id": "1790613588253-9a57sn",
-        "timestamp": "2026-09-28T16:39:48.253Z",
-        "type": "agent-response",
-        "source": "bridge",
-        "title": "Investigate ticket TKME-2348",
-        "detail": "Starting Phase 0 - pre-flight checks. Reading past learnings, checking for existing cache/lock files, and preparing to fetch the ticket.No existing cache or lock file — this is a fresh investigation. ",
         "status": "success"
       }
     ],
@@ -4442,22 +4450,36 @@
         ],
         "endTime": "2026-10-02T20:50:44.796Z",
         "lastOutput": "**Confluence MCP Alert — 401 Unauthorized (Not a server outage)**\n\nThe alert reports HTTP 401, which means **authentication failure**, not a server crash. Confluence itself is likely up — the credentials used by the MCP server connector have expired or been rotated.\n\nMost common causes for a 401 on the Confluence MCP integration:\n\n1. **Expired API token** — Atlassian API tokens expire or get revoked. Generate a new one at https://id.atlassian.com/manage-profile/security/api-tokens\n2. **Session c"
+      },
+      "565": {
+        "sessionId": "f91188d6-cfe0-4b7f-acca-04c774b480bf",
+        "issueNum": 565,
+        "title": "Investigate ticket AEME-6597",
+        "startTime": "2026-10-05T06:59:14.059Z",
+        "status": "thinking",
+        "commandHistory": [
+          {
+            "title": "Investigate ticket AEME-6597",
+            "time": "2026-10-05T06:59:14.059Z"
+          }
+        ]
       }
     },
-    "bridgeLogTail": "[2026-10-05T05:32:22.580Z] ==========================================\n[2026-10-05T05:32:22.599Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-05T05:32:22.710Z] === with Aipro Auto-Launch ===\n[2026-10-05T05:32:22.713Z] ==========================================\n[2026-10-05T05:32:22.716Z] PID: 20024\n[2026-10-05T05:32:22.719Z] Repo: aryanverma2410/agent-bridge\n[2026-10-05T05:32:22.725Z] Poll interval: 10000ms\n[2026-10-05T05:32:22.733Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-05T05:32:22.736Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-05T05:32:22.757Z] Waiting for messages...\n[2026-10-05T05:33:02.245Z] ==========================================\n[2026-10-05T05:33:02.252Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-05T05:33:02.254Z] === with Aipro Auto-Launch ===\n[2026-10-05T05:33:02.257Z] ==========================================\n[2026-10-05T05:33:02.259Z] PID: 22420\n[2026-10-05T05:33:02.262Z] Repo: aryanverma2410/agent-bridge\n[2026-10-05T05:33:02.264Z] Poll interval: 10000ms\n[2026-10-05T05:33:02.266Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-05T05:33:02.268Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-05T05:33:02.271Z] Waiting for messages...",
+    "bridgeLogTail": "[2026-10-05T06:59:38.273Z] STDOUT data for #565: 109 bytes\n[2026-10-05T06:59:38.274Z] LIVE write for #565: 69 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_565.txt\n[2026-10-05T06:59:38.282Z] STDOUT data for #565: 106 bytes\n[2026-10-05T06:59:38.284Z] LIVE write for #565: 72 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_565.txt\n[2026-10-05T06:59:38.292Z] STDOUT data for #565: 111 bytes\n[2026-10-05T06:59:38.294Z] LIVE write for #565: 80 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_565.txt\n[2026-10-05T06:59:38.301Z] STDOUT data for #565: 119 bytes\n[2026-10-05T06:59:38.303Z] LIVE write for #565: 96 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_565.txt\n[2026-10-05T06:59:38.312Z] STDOUT data for #565: 131 bytes\n[2026-10-05T06:59:38.313Z] LIVE write for #565: 124 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_565.txt\n[2026-10-05T06:59:38.323Z] STDOUT data for #565: 118 bytes\n[2026-10-05T06:59:38.324Z] LIVE write for #565: 139 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_565.txt\n[2026-10-05T06:59:38.331Z] STDOUT data for #565: 112 bytes\n[2026-10-05T06:59:38.332Z] LIVE write for #565: 148 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_565.txt\n[2026-10-05T06:59:38.343Z] STDOUT data for #565: 109 bytes\n[2026-10-05T06:59:38.344Z] LIVE write for #565: 154 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_565.txt\n[2026-10-05T06:59:39.234Z] STDOUT data for #565: 231 bytes\n[2026-10-05T06:59:39.236Z] LIVE write for #565: 154 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_565.txt\n[2026-10-05T06:59:39.236Z] STDOUT data for #565: 1321 bytes\n[2026-10-05T06:59:39.238Z] LIVE write for #565: 154 chars to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_565.txt",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-05T06:44:29.353Z",
-      "ageMs": 874535
+      "ageMs": 913083
     },
-    "watchdogLogTail": "[2026-10-05T06:02:40.812Z] DUPLICATE watchdog detected: PID 8808 — killing\n[2026-10-05T06:12:41.203Z] DUPLICATE watchdog detected: PID 16644 — killing\n[2026-10-05T06:17:41.742Z] DUPLICATE watchdog detected: PID 11984 — killing\n[2026-10-05T06:40:59.389Z] DUPLICATE jira-dashboard-server detected: PID 23388 — killing\n[2026-10-05T06:41:44.341Z] DUPLICATE jira-dashboard-server detected: PID 27356 — killing\n[2026-10-05T06:43:58.724Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 23044) not found\n[2026-10-05T06:44:01.104Z] Could not kill dashboard PID 23044: Command failed: taskkill /PID 23044 /F /T\n[2026-10-05T06:44:07.961Z] Starting jira-dashboard-server.js...\n[2026-10-05T06:44:08.132Z] Dashboard started with PID 25756 (restart #2, 1 in last hour)\n[2026-10-05T06:44:29.352Z] DUPLICATE jira-dashboard-server detected: PID 25632 — killing"
+    "watchdogLogTail": "[2026-10-05T06:02:40.812Z] DUPLICATE watchdog detected: PID 8808 — killing\n[2026-10-05T06:12:41.203Z] DUPLICATE watchdog detected: PID 16644 — killing\n[2026-10-05T06:17:41.742Z] DUPLICATE watchdog detected: PID 11984 — killing\n[2026-10-05T06:40:59.389Z] DUPLICATE jira-dashboard-server detected: PID 23388 — killing\n[2026-10-05T06:41:44.341Z] DUPLICATE jira-dashboard-server detected: PID 27356 — killing\n[2026-10-05T06:43:58.724Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 23044) not found\n[2026-10-05T06:44:01.104Z] Could not kill dashboard PID 23044: Command failed: taskkill /PID 23044 /F /T\n[2026-10-05T06:44:07.961Z] Starting jira-dashboard-server.js...\n[2026-10-05T06:44:08.132Z] Dashboard started with PID 25756 (restart #2, 1 in last hour)\n[2026-10-05T06:44:29.352Z] DUPLICATE jira-dashboard-server detected: PID 25632 — killing",
+    "jobOutputs": {}
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-05T06:58:11.523Z",
+      "lastCheck": "2026-10-05T06:59:11.329Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4466,7 +4488,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-05T06:58:11.523Z",
+      "lastCheck": "2026-10-05T06:59:11.329Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4475,9 +4497,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-05T06:58:11.523Z",
+      "lastCheck": "2026-10-05T06:59:11.329Z",
       "downSince": "2026-10-05T06:44:10.612Z",
-      "downDuration": 840911,
+      "downDuration": 900717,
       "alert": true
     }
   ],
