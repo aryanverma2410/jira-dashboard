@@ -1,7 +1,46 @@
 {
-  "generatedAt": "2026-10-05T07:27:09.259Z",
+  "generatedAt": "2026-10-05T07:27:48.318Z",
   "totalTickets": 23,
   "tickets": [
+    {
+      "key": "AEME-6582",
+      "summary": "RCA Request || 24-Sep",
+      "status": "RCA Requested",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "UAE Maintenance & Enhancements",
+      "projectKey": "AEME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-05T16:27:44.000+0900",
+      "created": "2026-09-24T16:04:58.000+0900",
+      "statusChangedAt": "2026-09-24T16:23:12.749+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\n \n\nPlease find the RCA for the below\n|AE260804-50056392|04-08-26|COMPLETED|Order & SC+ have split entry in ADV FI posting, But in refund FI have same entry together.\nNeed same split as same as ADV FI.|\n\nRegards\n\nJaffar",
+      "commentsCount": 1,
+      "recentComments": [
+        {
+          "author": "Dilip Boddula",
+          "date": "2026-10-05T16:27:44.488+0900",
+          "snippet": "Dear ~@email \n\n Please update us on ETA for this ticket.\n\nRegards\nDilip"
+        }
+      ],
+      "lastCommentBy": "Dilip Boddula",
+      "lastCommentSnippet": "Dear ~@email \n\n Please update us on ETA for this ticket.\n\nRegards\nDilip",
+      "lastCommentDate": "2026-10-05T16:27:44.488+0900",
+      "url": "https://jira.secext.samsung.net/browse/AEME-6582",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "RCA Request || 24-Sep\r\nGenerated: 2026-09-24T07:40:00Z\r\n\r\nIssue:\r\nFor order AE260804-50056392 (COMPLETED, created 04-Aug-2026), the GERP advance (ADV) FI posting correctly splits the order product entries and SC+ (Samsung Care+) external service entries into separate FI posting documents. However, the refund FI posting combines the order product refund and SC+ refund amounts into a single FI posting document instead of separating them like the ADV FI does. The reporter (Jaffar Ali) requests that the refund FI posting also split order and SC+ entries separately, matching the ADV FI behaviour.\r\n\r\nRCA:\r\nThis is expected behaviour based on the current architecture of the GERP FI posting framework, not a bug or system error.\r\n\r\nThe FI posting system uses two separate code paths for advance (initial) and refund postings:\r\n\r\n1. ADV (Initial) FI Posting:\r\nThe initial FI posting is orchestrated by TokoConsignmentFIStrategy (tokofulfilmentprocess/src/com/samsung/toko/fulfilmentprocess/strategy/impl/TokoConsignmentFIStrategy.java, line 143). It iterates over all external services on the consignment and calls sendInitialFinancialUpdateOnConsignmentForExternalService once per external service, in addition to the main sendInitialFinancialUpdateOnConsignment call for the order product entries. This produces one FI document for the order products and a separate FI document for each SC+ external service. The NERP implementation (TokoNerpConsignmentFinancialsServiceImpl, line 142) creates a separate GerpFIRequestWrapper per external service, each carrying its own externalServices list (Collections.singletonList(externalService)), and each triggers a separate initiateFinancialRequestOnConsignmentForExternalService call to the NERP FI client. This is why the ADV FI posting shows split entries.\r\n\r\n2. Refund FI Posting:\r\nThe refund FI posting is orchestrated by SendFIUpdateExternalServiceRefundAction (tokofulfilmentprocess/src/com/samsung/toko/fulfilmentprocess/actions/returns/SendFIUpdateExternalServiceRefundAction.java). The main refund FI is sent via sendRefundFinancialUpdate (TokoNerpConsignmentFinancialsServiceImpl, line 593), which calls completeRefundFinancialUpdateRequestV2 on the NERP FI client. This single call covers all order product return entries in one combined FI document.\r\n\r\nFor external services (SC+), the action iterates through FI-eligible external services and calls sendAdditionalExternalServiceRefundFinancialUpdate per service (line 96-104 of SendFIUpdateExternalServiceRefundAction), but only when the store configuration flag SUPPORTED_EXTERNAL_SERVICE_FI_POSTING is enabled for that service type and provider. If this flag is not set for the SC+ service on the UAE store, no separate SC+ refund FI is triggered, and the SC+ refund amount remains embedded in the main combined refund FI.\r\n\r\nAdditionally, for trade-in external services specifically, a separate sendExternalServiceRefundFinancialUpdate call is made (line 77), but only when the trade-in service does not support FI posting natively (hasTradeInExternalService and not isTradeInFIPostingSupported).\r\n\r\nThe key difference is:\r\n- ADV FI: Always creates separate FI documents for order products and each external service by design.\r\n- Refund FI: Creates one combined refund FI for all order return entries, then conditionally creates separate FIs for external services only if the store-level configuration (SUPPORTED_EXTERNAL_SERVICE_FI_POSTING) is enabled.\r\n\r\nThe SC+ refund FI split depends on the TokoConfigProperty / added-service configuration for the UAE store. If SUPPORTED_EXTERNAL_SERVICE_FI_POSTING is not enabled for the SC+ service type on the UAE store, the refund FI will combine SC+ amounts into the main refund document. The ADV path does not have this conditional check — it always splits.\r\n\r\nHAC database verification was limited because the production HAC endpoint (cc.commerce.ondemand.com) was not resolvable from the investigation environment. Kibana MENA cookies were available but the order is from the UAE store which falls under the MENA Kibana cluster — no error-level logs were found because this is a configuration/design gap, not a runtime error. No exceptions were thrown during the FI posting; the system behaved as designed.\r\n\r\nPossible remediation:\r\nThis is a design enhancement request, not a bug fix. Two approaches:\r\n\r\nOption A (configuration-only, no code change):\r\nVerify whether the SUPPORTED_EXTERNAL_SERVICE_FI_POSTING config is enabled for the SC+ service type on the UAE store. If it is disabled, enabling it via TokoConfigProperty or AddedServiceConfigParam would cause the refund FI posting to trigger a separate FI document for SC+ refunds via sendAdditionalExternalServiceRefundFinancialUpdate. This is the fastest fix if the config is simply missing. Requires checking the AddedServiceConfigParam table for the UAE store, SC+ service type, and the SUPPORTED_EXTERNAL_SERVICE_FI_POSTING parameter.\r\n\r\nOption B (code change, permanent fix):\r\nModify the refund FI posting flow in SendFIUpdateExternalServiceRefundAction to always split external service refunds into separate FI documents regardless of the SUPPORTED_EXTERNAL_SERVICE_FI_POSTING flag, matching the ADV FI behaviour which unconditionally splits. This would mean removing or bypassing the isExternalServiceFIPostingSupported check for the refund path, or adding a new config property to control refund-specific FI splitting independently. This requires a PC ticket and code deployment.\r\n\r\nRecommendation: Start with Option A — check the store configuration. If the flag is simply not set for SC+ on UAE, enabling it would immediately resolve the issue without code changes. If the flag is already enabled and the split still does not occur, then Option B is needed and a PC ticket should be created for the code change.\r\n\r\n## Remediation\r\nNo script needed — this is a configuration/design issue, not a data remediation. The order is COMPLETED and the FI postings have already been sent to GERP. Any fix would apply to future orders only. For the existing order, a manual GERP-side adjustment would be needed to split the refund FI posting retroactively, which is outside Hybris platform scope.",
+        "sections": {
+          "issue": "For order AE260804-50056392 (COMPLETED, created 04-Aug-2026), the GERP advance (ADV) FI posting correctly splits the order product entries and SC+ (Samsung Care+) external service entries into separate FI posting documents. However, the refund FI posting combines the order product refund and SC+ refund amounts into a single FI posting document instead of separating them like the ADV FI does. The reporter (Jaffar Ali) requests that the refund FI posting also split order and SC+ entries separately, matching the ADV FI behaviour.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-24T07:59:19.092Z"
+      }
+    },
     {
       "key": "AEME-6602",
       "summary": "[PROD] | Manual Chargeback | 30th Sept",
@@ -877,39 +916,6 @@
       }
     },
     {
-      "key": "AEME-6582",
-      "summary": "RCA Request || 24-Sep",
-      "status": "RCA Requested",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-24T16:23:20.000+0900",
-      "created": "2026-09-24T16:04:58.000+0900",
-      "statusChangedAt": "2026-09-24T16:23:12.749+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\n \n\nPlease find the RCA for the below\n|AE260804-50056392|04-08-26|COMPLETED|Order & SC+ have split entry in ADV FI posting, But in refund FI have same entry together.\nNeed same split as same as ADV FI.|\n\nRegards\n\nJaffar",
-      "commentsCount": 0,
-      "recentComments": [],
-      "lastCommentBy": "",
-      "lastCommentSnippet": "",
-      "lastCommentDate": "",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6582",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "RCA Request || 24-Sep\r\nGenerated: 2026-09-24T07:40:00Z\r\n\r\nIssue:\r\nFor order AE260804-50056392 (COMPLETED, created 04-Aug-2026), the GERP advance (ADV) FI posting correctly splits the order product entries and SC+ (Samsung Care+) external service entries into separate FI posting documents. However, the refund FI posting combines the order product refund and SC+ refund amounts into a single FI posting document instead of separating them like the ADV FI does. The reporter (Jaffar Ali) requests that the refund FI posting also split order and SC+ entries separately, matching the ADV FI behaviour.\r\n\r\nRCA:\r\nThis is expected behaviour based on the current architecture of the GERP FI posting framework, not a bug or system error.\r\n\r\nThe FI posting system uses two separate code paths for advance (initial) and refund postings:\r\n\r\n1. ADV (Initial) FI Posting:\r\nThe initial FI posting is orchestrated by TokoConsignmentFIStrategy (tokofulfilmentprocess/src/com/samsung/toko/fulfilmentprocess/strategy/impl/TokoConsignmentFIStrategy.java, line 143). It iterates over all external services on the consignment and calls sendInitialFinancialUpdateOnConsignmentForExternalService once per external service, in addition to the main sendInitialFinancialUpdateOnConsignment call for the order product entries. This produces one FI document for the order products and a separate FI document for each SC+ external service. The NERP implementation (TokoNerpConsignmentFinancialsServiceImpl, line 142) creates a separate GerpFIRequestWrapper per external service, each carrying its own externalServices list (Collections.singletonList(externalService)), and each triggers a separate initiateFinancialRequestOnConsignmentForExternalService call to the NERP FI client. This is why the ADV FI posting shows split entries.\r\n\r\n2. Refund FI Posting:\r\nThe refund FI posting is orchestrated by SendFIUpdateExternalServiceRefundAction (tokofulfilmentprocess/src/com/samsung/toko/fulfilmentprocess/actions/returns/SendFIUpdateExternalServiceRefundAction.java). The main refund FI is sent via sendRefundFinancialUpdate (TokoNerpConsignmentFinancialsServiceImpl, line 593), which calls completeRefundFinancialUpdateRequestV2 on the NERP FI client. This single call covers all order product return entries in one combined FI document.\r\n\r\nFor external services (SC+), the action iterates through FI-eligible external services and calls sendAdditionalExternalServiceRefundFinancialUpdate per service (line 96-104 of SendFIUpdateExternalServiceRefundAction), but only when the store configuration flag SUPPORTED_EXTERNAL_SERVICE_FI_POSTING is enabled for that service type and provider. If this flag is not set for the SC+ service on the UAE store, no separate SC+ refund FI is triggered, and the SC+ refund amount remains embedded in the main combined refund FI.\r\n\r\nAdditionally, for trade-in external services specifically, a separate sendExternalServiceRefundFinancialUpdate call is made (line 77), but only when the trade-in service does not support FI posting natively (hasTradeInExternalService and not isTradeInFIPostingSupported).\r\n\r\nThe key difference is:\r\n- ADV FI: Always creates separate FI documents for order products and each external service by design.\r\n- Refund FI: Creates one combined refund FI for all order return entries, then conditionally creates separate FIs for external services only if the store-level configuration (SUPPORTED_EXTERNAL_SERVICE_FI_POSTING) is enabled.\r\n\r\nThe SC+ refund FI split depends on the TokoConfigProperty / added-service configuration for the UAE store. If SUPPORTED_EXTERNAL_SERVICE_FI_POSTING is not enabled for the SC+ service type on the UAE store, the refund FI will combine SC+ amounts into the main refund document. The ADV path does not have this conditional check — it always splits.\r\n\r\nHAC database verification was limited because the production HAC endpoint (cc.commerce.ondemand.com) was not resolvable from the investigation environment. Kibana MENA cookies were available but the order is from the UAE store which falls under the MENA Kibana cluster — no error-level logs were found because this is a configuration/design gap, not a runtime error. No exceptions were thrown during the FI posting; the system behaved as designed.\r\n\r\nPossible remediation:\r\nThis is a design enhancement request, not a bug fix. Two approaches:\r\n\r\nOption A (configuration-only, no code change):\r\nVerify whether the SUPPORTED_EXTERNAL_SERVICE_FI_POSTING config is enabled for the SC+ service type on the UAE store. If it is disabled, enabling it via TokoConfigProperty or AddedServiceConfigParam would cause the refund FI posting to trigger a separate FI document for SC+ refunds via sendAdditionalExternalServiceRefundFinancialUpdate. This is the fastest fix if the config is simply missing. Requires checking the AddedServiceConfigParam table for the UAE store, SC+ service type, and the SUPPORTED_EXTERNAL_SERVICE_FI_POSTING parameter.\r\n\r\nOption B (code change, permanent fix):\r\nModify the refund FI posting flow in SendFIUpdateExternalServiceRefundAction to always split external service refunds into separate FI documents regardless of the SUPPORTED_EXTERNAL_SERVICE_FI_POSTING flag, matching the ADV FI behaviour which unconditionally splits. This would mean removing or bypassing the isExternalServiceFIPostingSupported check for the refund path, or adding a new config property to control refund-specific FI splitting independently. This requires a PC ticket and code deployment.\r\n\r\nRecommendation: Start with Option A — check the store configuration. If the flag is simply not set for SC+ on UAE, enabling it would immediately resolve the issue without code changes. If the flag is already enabled and the split still does not occur, then Option B is needed and a PC ticket should be created for the code change.\r\n\r\n## Remediation\r\nNo script needed — this is a configuration/design issue, not a data remediation. The order is COMPLETED and the FI postings have already been sent to GERP. Any fix would apply to future orders only. For the existing order, a manual GERP-side adjustment would be needed to split the refund FI posting retroactively, which is outside Hybris platform scope.",
-        "sections": {
-          "issue": "For order AE260804-50056392 (COMPLETED, created 04-Aug-2026), the GERP advance (ADV) FI posting correctly splits the order product entries and SC+ (Samsung Care+) external service entries into separate FI posting documents. However, the refund FI posting combines the order product refund and SC+ refund amounts into a single FI posting document instead of separating them like the ADV FI does. The reporter (Jaffar Ali) requests that the refund FI posting also split order and SC+ entries separately, matching the ADV FI behaviour.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-24T07:59:19.092Z"
-      }
-    },
-    {
       "key": "PC-53923",
       "summary": "Update SC+ Automated Report — column renames, initial order payment mode, Payment Cycle reorder, recipient update, Qatar",
       "status": "Approved-ES",
@@ -1287,7 +1293,7 @@
       }
     ],
     "pid": 22420,
-    "uptime": 6844,
+    "uptime": 6884,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1299,7 +1305,7 @@
       {
         "pid": 24232,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 5990,
+        "ageSeconds": 6029,
         "status": "running",
         "isChild": false,
         "taskSummary": "add a feature where I can fetch a jira ticket details by putting in the jira ticket number. it sh...",
@@ -1309,7 +1315,7 @@
       {
         "pid": 22968,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 5979,
+        "ageSeconds": 6018,
         "status": "running",
         "isChild": false,
         "taskSummary": "fix logs on SAME-4004 in the latest comment",
@@ -1319,7 +1325,7 @@
       {
         "pid": 22212,
         "cwd": "c:\\windows",
-        "ageSeconds": 5975,
+        "ageSeconds": 6014,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1329,7 +1335,7 @@
       {
         "pid": 20432,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 4823,
+        "ageSeconds": 4862,
         "status": "running",
         "isChild": false,
         "taskSummary": "add a feature where I can fetch a jira ticket details by putting in the jira ticket number. it sh...",
@@ -1339,7 +1345,7 @@
       {
         "pid": 26508,
         "cwd": "unknown",
-        "ageSeconds": 3635,
+        "ageSeconds": 3674,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -4469,7 +4475,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-05T07:07:47.097Z",
-      "ageMs": 1165202
+      "ageMs": 1204096
     },
     "watchdogLogTail": "[2026-10-05T06:12:41.203Z] DUPLICATE watchdog detected: PID 16644 — killing\n[2026-10-05T06:17:41.742Z] DUPLICATE watchdog detected: PID 11984 — killing\n[2026-10-05T06:40:59.389Z] DUPLICATE jira-dashboard-server detected: PID 23388 — killing\n[2026-10-05T06:41:44.341Z] DUPLICATE jira-dashboard-server detected: PID 27356 — killing\n[2026-10-05T06:43:58.724Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 23044) not found\n[2026-10-05T06:44:01.104Z] Could not kill dashboard PID 23044: Command failed: taskkill /PID 23044 /F /T\n[2026-10-05T06:44:07.961Z] Starting jira-dashboard-server.js...\n[2026-10-05T06:44:08.132Z] Dashboard started with PID 25756 (restart #2, 1 in last hour)\n[2026-10-05T06:44:29.352Z] DUPLICATE jira-dashboard-server detected: PID 25632 — killing\n[2026-10-05T07:07:47.097Z] DUPLICATE watchdog detected: PID 13660 — killing"
   },
@@ -4478,7 +4484,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-05T07:26:24.874Z",
+      "lastCheck": "2026-10-05T07:27:24.826Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4487,7 +4493,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-05T07:26:24.874Z",
+      "lastCheck": "2026-10-05T07:27:24.826Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4496,9 +4502,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-05T07:26:24.874Z",
+      "lastCheck": "2026-10-05T07:27:24.826Z",
       "downSince": "2026-10-05T06:44:10.612Z",
-      "downDuration": 2534262,
+      "downDuration": 2594214,
       "alert": true
     }
   ],
@@ -4590,6 +4596,18 @@
         "url": "https://jira.secext.samsung.net/browse/RT-722599",
         "updated": "2026-09-29T02:59:15.000+0900",
         "statusChangedAt": "2026-09-28T15:10:33.048+0900"
+      },
+      {
+        "key": "AEME-6582",
+        "summary": "RCA Request || 24-Sep",
+        "priority": "None",
+        "status": "RCA Requested",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Review and take next step",
+        "url": "https://jira.secext.samsung.net/browse/AEME-6582",
+        "updated": "2026-10-05T16:27:44.000+0900",
+        "statusChangedAt": "2026-09-24T16:23:12.749+0900"
       },
       {
         "key": "AEME-6602",
@@ -4734,18 +4752,6 @@
         "url": "https://jira.secext.samsung.net/browse/GMT-21163",
         "updated": "2026-09-24T21:02:45.000+0900",
         "statusChangedAt": "2026-09-16T17:16:21.147+0900"
-      },
-      {
-        "key": "AEME-6582",
-        "summary": "RCA Request || 24-Sep",
-        "priority": "None",
-        "status": "RCA Requested",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Review and take next step",
-        "url": "https://jira.secext.samsung.net/browse/AEME-6582",
-        "updated": "2026-09-24T16:23:20.000+0900",
-        "statusChangedAt": "2026-09-24T16:23:12.749+0900"
       },
       {
         "key": "RT-664743",
