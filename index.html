@@ -588,6 +588,35 @@ body.has-status-bar .scroll{padding-top:28px}
 .ai-row-status{font-size:10px;color:var(--text-dim);margin-left:auto}
 .ai-empty{text-align:center;padding:20px;color:var(--text-dim);font-size:12px}
 
+/* LOOKUP VIEW */
+.lk-search-bar{padding:12px 16px;display:flex;gap:8px}
+.lk-search-bar input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;font-family:monospace;outline:none}
+.lk-search-bar input:focus{border-color:var(--accent)}
+.lk-search-bar button{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.lk-search-bar button:active{opacity:0.7}
+.lk-card{margin:0 16px 16px;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.lk-card-header{padding:12px 14px;border-bottom:1px solid var(--border)}
+.lk-card-key{font-family:monospace;font-size:14px;font-weight:700;color:var(--accent)}
+.lk-card-summary{font-size:13px;color:var(--text);margin-top:4px}
+.lk-card-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.lk-chip{font-size:10px;font-weight:600;border-radius:4px;padding:2px 8px;background:var(--card);color:var(--text-dim)}
+.lk-chip.status{background:rgba(88,166,255,0.15);color:var(--accent)}
+.lk-chip.priority-high{background:rgba(248,81,73,0.15);color:var(--danger)}
+.lk-chip.priority-med{background:rgba(210,153,34,0.15);color:#d29922}
+.lk-card-desc{padding:10px 14px;font-size:12px;color:var(--text-dim);line-height:1.5;max-height:200px;overflow-y:auto;white-space:pre-wrap;border-bottom:1px solid var(--border)}
+.lk-card-section-title{font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;padding:8px 14px 4px}
+.lk-comment{padding:6px 14px;border-bottom:1px solid var(--border)}
+.lk-comment:last-child{border-bottom:none}
+.lk-comment-head{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+.lk-comment-author{font-size:11px;font-weight:600;color:var(--text)}
+.lk-comment-date{font-size:10px;color:var(--text-dim)}
+.lk-comment-body{font-size:12px;color:var(--text-dim);line-height:1.4}
+.lk-link-row{padding:6px 14px;font-size:12px;color:var(--text-dim);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
+.lk-link-key{font-family:monospace;font-weight:600;color:var(--accent)}
+.lk-loading{padding:40px 16px;text-align:center;color:var(--text-dim);font-size:13px}
+.lk-error{padding:20px 16px;text-align:center;color:var(--danger);font-size:13px}
+.lk-open-link{display:block;padding:8px 14px;font-size:12px;color:var(--accent);text-decoration:none;border-top:1px solid var(--border);text-align:center;font-weight:600}
+
 /* F8/F10/F11 Section wrappers */
 .qol-section{padding:12px 16px}
 .qol-section-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:6px}
@@ -778,6 +807,24 @@ body.has-status-bar .scroll{padding-top:28px}
   </div>
 </div>
 
+<!-- VIEW: TICKET LOOKUP -->
+<div class="view" id="view-lookup">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="pulse-dot" id="lookupPulseDot"></div>
+      <h1>Ticket Lookup</h1>
+    </div>
+    <div class="refresh-time" id="lookupRefreshTime">...</div>
+  </div>
+  <div class="lk-search-bar">
+    <input type="text" id="lookupInput" placeholder="Enter ticket key (e.g. SAME-1234, PC-5678)..." onkeydown="if(event.key==='Enter')doLookup()">
+    <button onclick="doLookup()">&#128269; Fetch</button>
+  </div>
+  <div class="scroll" id="lookupScroll">
+    <div id="lookupResults"><div class="lk-loading">Enter a ticket key above to fetch full details from Jira.</div></div>
+  </div>
+</div>
+
 <!-- VIEW: HAC REPORT -->
 <div class="view" id="view-hac">
   <div class="topbar">
@@ -872,6 +919,10 @@ body.has-status-bar .scroll{padding-top:28px}
     <div class="nav-icon">&#128269;</div>
     <span>RCA</span>
     <div class="nav-badge" id="navBadgeRca"></div>
+  </div>
+  <div class="nav-item" data-nav="view-lookup" onclick="switchView('view-lookup')">
+    <div class="nav-icon">&#128270;</div>
+    <span>Lookup</span>
   </div>
   <div class="nav-item" data-nav="view-hac" onclick="switchView('view-hac')">
     <div class="nav-icon">&#128202;</div>
@@ -3244,6 +3295,69 @@ function deleteTemplate(idx,e){
   tpls.splice(idx,1);
   saveTemplates(tpls);
   showToast('Template deleted','');
+}
+
+// ===== TICKET LOOKUP =====
+function doLookup(){
+  var inp=document.getElementById('lookupInput');
+  var el=document.getElementById('lookupResults');
+  if(!inp||!el)return;
+  var key=inp.value.trim().toUpperCase();
+  if(!key){el.innerHTML='<div class="lk-error">Please enter a ticket key.</div>';return}
+  el.innerHTML='<div class="lk-loading">Fetching '+escapeHtml(key)+' from Jira...</div>';
+  fetch('http://127.0.0.1:9293/lookup?key='+encodeURIComponent(key))
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if(!d.ok){
+        el.innerHTML='<div class="lk-error">'+escapeHtml(d.error||'Ticket not found')+'</div>';
+        return;
+      }
+      var t=d.ticket;
+      var sc=statusClass(t.status,t.statusCategory);
+      var pc=priorityColor(t.priority);
+      var priCls=(t.priority==='Highest'||t.priority==='Critical'||t.priority==='High')?'priority-high':'priority-med';
+      var html='<div class="lk-card">'+
+        '<div class="lk-card-header">'+
+          '<div class="lk-card-key">'+escapeHtml(t.key)+'</div>'+
+          '<div class="lk-card-summary">'+escapeHtml(t.summary)+'</div>'+
+          '<div class="lk-card-meta">'+
+            '<span class="lk-chip status">'+escapeHtml(t.status)+'</span>'+
+            '<span class="lk-chip '+priCls+'">'+escapeHtml(t.priority)+'</span>'+
+            '<span class="lk-chip">'+escapeHtml(t.project)+'</span>'+
+            '<span class="lk-chip">'+escapeHtml(t.issuetype)+'</span>'+
+            '<span class="lk-chip">Assignee: '+escapeHtml(t.assignee)+'</span>'+
+            '<span class="lk-chip">Reporter: '+escapeHtml(t.reporter)+'</span>'+
+            '<span class="lk-chip">Updated '+relTime(t.updated)+'</span>'+
+          '</div>'+
+        '</div>';
+      if(t.labels&&t.labels.length>0){
+        html+='<div class="lk-card-meta" style="padding:6px 14px">'+t.labels.map(function(l){return '<span class="lk-chip">'+escapeHtml(l)+'</span>'}).join('')+'</div>';
+      }
+      if(t.description){
+        html+='<div class="lk-card-desc">'+escapeHtml(t.description)+'</div>';
+      }
+      if(t.comments&&t.comments.length>0){
+        html+='<div class="lk-card-section-title">Comments ('+t.commentsCount+')</div>';
+        t.comments.forEach(function(c){
+          html+='<div class="lk-comment">'+
+            '<div class="lk-comment-head"><span class="lk-comment-author">'+escapeHtml(c.author)+'</span><span class="lk-comment-date">'+relTime(c.date)+'</span></div>'+
+            '<div class="lk-comment-body">'+escapeHtml(c.body)+'</div>'+
+          '</div>';
+        });
+      }
+      if(t.linkedTickets&&t.linkedTickets.length>0){
+        html+='<div class="lk-card-section-title">Linked Tickets ('+t.linkedTickets.length+')</div>';
+        t.linkedTickets.forEach(function(l){
+          html+='<div class="lk-link-row"><span class="lk-link-key">'+escapeHtml(l.key)+'</span>'+escapeHtml(l.relation)+' — '+escapeHtml(l.summary)+' ('+escapeHtml(l.status)+')</div>';
+        });
+      }
+      html+='<a class="lk-open-link" href="'+escapeHtml(t.url)+'" target="_blank">Open in Jira &#8599;</a>';
+      html+='</div>';
+      el.innerHTML=html;
+    })
+    .catch(function(e){
+      el.innerHTML='<div class="lk-error">Request failed: '+escapeHtml(e.message)+'</div>';
+    });
 }
 </script>
 </body>
