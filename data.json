@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-06T06:43:24.144Z",
-  "totalTickets": 25,
+  "generatedAt": "2026-10-06T06:44:04.952Z",
+  "totalTickets": 24,
   "tickets": [
     {
       "key": "MHME-1451",
@@ -554,50 +554,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-10-05T07:16:57.446Z"
-      }
-    },
-    {
-      "key": "SAME-3979",
-      "summary": "Order Refund - SA260730-45663184 (Block Auto Refund)",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Kingdom of Saudi Arabia Maintenance & Enhancements",
-      "projectKey": "SAME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-05T14:54:36.000+0900",
-      "created": "2026-09-16T20:24:47.000+0900",
-      "statusChangedAt": "2026-10-05T14:54:36.223+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nPlease note that order SA260730-45663184 was +manually refunded from PG.+\n\nCurrent Order status is Cancelled and no Refund event on Hybris.\n\n1 - Can you please check why the auto refund was not triggered?\n\n2 - Please confirm that auto refund will not happen on this order to avoid duplicate",
-      "commentsCount": 6,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-06T15:43:23.185+0900",
-          "snippet": "Hi Arj,\n\nWe checked the order on PROD. The order process failed at placement on Jul 31 — the advance invoice was never generated and no credit note was created. Since the order process did not complete, we cannot create the FI posting from Hybris for this order.\n\nThe NERP team will need to post the "
-        },
-        {
-          "author": "Arjenelle Acabado",
-          "date": "2026-10-05T14:54:23.146+0900",
-          "snippet": "Hi ~@email \n\nCan you please check as per below feedback from NERP team?\n\nKindly check if we can push Advance and Refund posting for this order and if we cannot proceed w/ this order, please let us know the reason so we can inform the team accordingly.\n\n \n\n!image-2026-10-05-09-53-02-372.png!\n\n \n\nThan"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Arj,\n\nWe checked the order on PROD. The order process failed at placement on Jul 31 — the advance invoice was never generated and no credit note was created. Since the order process did not complete, we cannot create the FI posting from Hybris for this order.\n\nThe NERP team will need to post the ",
-      "lastCommentDate": "2026-10-06T15:43:23.185+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAME-3979",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: SAME-3979\nOrder Refund - SA260730-45663184 (Block Auto Refund)\nGenerated: 2026-09-21\n\nHi [~arjenelle.a@samsung.com] ,\n\nOrder SA260730-45663184 was placed on Jul 31 with Checkout.com (checkoutDotComFlowPaymentMode) for 31.00 SAR. The payment AUTHORIZATION and CAPTURE both completed successfully on the same day. However, the order process (order-process-v25-69) failed early in the fulfilment flow shortly after consignment creation, with endMessage \"Order failed\". The consignment process (consignment-process-v11-36) also failed with endMessage \"Order not placed.\"\n\nThe refund step in the order process is the action \"refundCancelOrder\" (bean refundCancelOrderActionV3), which sits in the cancellation path: waitForCancelledOrder -> isChargeBackRefundProcessed -> isInstantRefundEnabledCheckBeforeFinancialUpdate -> refundCancelOrder -> sendRefundNotification -> failed. This path is only reachable while the order process is still active and progressing through its defined states.\n\nBecause the order process entered the \"failed\" end state immediately after the consignment failure, it never reached the cancellation/refund branch. The process treats \"failed\" as a terminal state. The order was subsequently set to CANCELLED on Aug 6 (via external/backoffice action), but this status change does not re-engage the business process. The sendOrderCancelledEmailProcess ran separately and successfully, but the payment refund, which is part of the order-process-v25-69 flow, was never triggered.\n\nThe DB was checked on Sep 21 and confirms only two PaymentTransactionEntry records exist: AUTHORIZATION-1 (ACCEPTED, 31.00 SAR) and CAPTURE-2 (ACCEPTED, 31.00 SAR). No REFUND entry was ever created.\n\nRegarding the duplicate refund concern: the order process is in FAILED state (terminal), the order status is CANCELLED, and no automated mechanism will trigger a refund on this order going forward. The manual refund from PG is the only refund that has occurred. Auto refund will not happen on this order.\n\nThe order process was manually moved to failed state on Sep 17 to stop the 48-day loop between WaitForWarehouse and WaitForSendToWarehouse. The consignment is in CANCELLED status since Sep 17.\n\nThanks,\nAryan.",
-        "sections": {
-          "issue": "",
-          "rca": "# RCA: SAME-3979\nOrder Refund - SA260730-45663184 (Block Auto Refund)\nGenerated: 2026-09-21\n\nHi [~arjenelle.a@samsung.com] ,\n\nOrder SA260730-45663184 was placed on Jul 31 with Checkout.com (checkoutDotComFlowPaymentMode) for 31.00 SAR. The payment AUTHORIZATION and CAPTURE both completed successfully on the same day. However, the order process (order-process-v25-69) failed early in the fulfilment flow shortly after consignment creation, with endMessage \"Order failed\". The consignment process (consignment-process-v11-36) also failed with endMessage \"Order not placed.\"\n\nThe refund step in the order process is the action \"refundCancelOrder\" (bean refundCancelOrderActionV3), which sits in the cancellation path: waitForCancelledOrder -> isChargeBackRefundProcessed -> isInstantRefundEnabledCheckBeforeFinancialUpdate -> refundCancelOrder -> sendRefundNotification -> failed. This path is only reachable while the order process is still active and progressing through its defined states.\n\nBecause the order process entered the \"failed\" end state immediately after the consignment failure, it never reached the cancellation/refund branch. The process treats \"failed\" as a terminal state. The order was subsequently set to CANCELLED on Aug 6 (via external/backoffice action), but this status change does not re-engage the business process. The sendOrderCancelledEmailProcess ran separately and successfully, but the payment refund, which is part of the order-process-v25-69 flow, was never triggered.\n\nThe DB was checked on Sep 21 and confirms only two PaymentTransactionEntry records exist: AUTHORIZATION-1 (ACCEPTED, 31.00 SAR) and CAPTURE-2 (ACCEPTED, 31.00 SAR). No REFUND entry was ever created.\n\nRegarding the duplicate refund concern: the order process is in FAILED state (terminal), the order status is CANCELLED, and no automated mechanism will trigger a refund on this order going forward. The manual refund from PG is the only refund that has occurred. Auto refund will not happen on this order.\n\nThe order process was manually moved to failed state on Sep 17 to stop the 48-day loop between WaitForWarehouse and WaitForSendToWarehouse. The consignment is in CANCELLED status since Sep 17.\n\nThanks,\nAryan.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-21T13:49:42.331Z"
       }
     },
     {
@@ -1411,7 +1367,7 @@
       }
     ],
     "pid": 31312,
-    "uptime": 73192,
+    "uptime": 73232,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1423,7 +1379,7 @@
       {
         "pid": 33768,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 3604,
+        "ageSeconds": 3644,
         "status": "running",
         "isChild": false,
         "taskSummary": "I am unable to see any output from the AI windows I send commands from the mobile dashboard. I sh...",
@@ -1433,7 +1389,7 @@
       {
         "pid": 28676,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 3599,
+        "ageSeconds": 3639,
         "status": "running",
         "isChild": false,
         "taskSummary": "post comment with 30m logs, assign back and put to LV and update labels",
@@ -1443,7 +1399,7 @@
       {
         "pid": 29064,
         "cwd": "c:\\windows",
-        "ageSeconds": 3595,
+        "ageSeconds": 3635,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1453,7 +1409,7 @@
       {
         "pid": 25828,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 3579,
+        "ageSeconds": 3619,
         "status": "running",
         "isChild": false,
         "taskSummary": "I am unable to see any output from the AI windows I send commands from the mobile dashboard. I sh...",
@@ -4582,10 +4538,10 @@
     "bridgeLogTail": "[2026-10-05T08:22:32.269Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-05T08:22:32.271Z] === with Aipro Auto-Launch ===\n[2026-10-05T08:22:32.272Z] ==========================================\n[2026-10-05T08:22:32.273Z] PID: 824\n[2026-10-05T08:22:32.274Z] Repo: aryanverma2410/agent-bridge\n[2026-10-05T08:22:32.274Z] Poll interval: 10000ms\n[2026-10-05T08:22:32.275Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-05T08:22:32.276Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-05T08:22:32.277Z] Waiting for messages...\n[2026-10-05T10:23:32.178Z] ==========================================\n[2026-10-05T10:23:32.180Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-05T10:23:32.181Z] === with Aipro Auto-Launch ===\n[2026-10-05T10:23:32.182Z] ==========================================\n[2026-10-05T10:23:32.183Z] PID: 31312\n[2026-10-05T10:23:32.184Z] Repo: aryanverma2410/agent-bridge\n[2026-10-05T10:23:32.185Z] Poll interval: 10000ms\n[2026-10-05T10:23:32.186Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-05T10:23:32.187Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-05T10:23:32.188Z] Waiting for messages...\n[2026-10-05T13:54:22.416Z] ERROR poll #1: API returned 502 - backing off 10000ms",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-06T06:43:24.351Z",
-      "ageMs": 5163
+      "lastWrite": "2026-10-06T06:43:54.387Z",
+      "ageMs": 13984
     },
-    "watchdogLogTail": "[2026-10-06T06:41:09.271Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:41:24.299Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:41:39.306Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:41:54.319Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:42:09.321Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:42:24.330Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:42:39.345Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:42:54.347Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:43:09.346Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:43:24.350Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-06T06:41:39.306Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:41:54.319Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:42:09.321Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:42:24.330Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:42:39.345Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:42:54.347Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:43:09.346Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:43:24.350Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:43:39.378Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:43:54.384Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
@@ -4792,18 +4748,6 @@
         "url": "https://jira.secext.samsung.net/browse/AEME-6597",
         "updated": "2026-10-05T15:58:25.000+0900",
         "statusChangedAt": "2026-10-05T15:58:25.179+0900"
-      },
-      {
-        "key": "SAME-3979",
-        "summary": "Order Refund - SA260730-45663184 (Block Auto Refund)",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/SAME-3979",
-        "updated": "2026-10-05T14:54:36.000+0900",
-        "statusChangedAt": "2026-10-05T14:54:36.223+0900"
       },
       {
         "key": "MHME-1439",
@@ -5013,7 +4957,7 @@
       }
     ],
     "totals": {
-      "zero": 13,
+      "zero": 12,
       "actionable": 3,
       "blocked": 8,
       "queued": 1
