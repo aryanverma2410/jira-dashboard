@@ -1,60 +1,7 @@
 {
-  "generatedAt": "2026-10-06T07:47:15.514Z",
-  "totalTickets": 24,
+  "generatedAt": "2026-10-06T07:47:54.863Z",
+  "totalTickets": 23,
   "tickets": [
-    {
-      "key": "AEME-6596",
-      "summary": "Expert Care Orders Stuck || 29-Sep",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-06T16:47:09.000+0900",
-      "created": "2026-09-29T17:09:55.000+0900",
-      "statusChangedAt": "2026-10-01T22:10:34.224+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\n \n\nThe expert care orders below are being stuck with Shipped status. Kindly check and fix the issue\n\nAE260917-86564020 -SHIPPED\nAE260917-86564071- SHIPPED\nAE260922-91048112 -SHIPPED\nAE260922-91000993 -SHIPPED\nAE260928-97214836 -SHIPPED\n\nAE260922-91467505 -SHIPPED\n\n \n\nRegards\n\nJaffar",
-      "commentsCount": 11,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-06T16:47:09.779+0900",
-          "snippet": "Hi ~@email ,\n\nSO is created again for the order. Kindly check new SO 1366981829 and confirm if we may  put the consignment to COMPLETE and push the  conf=signment forward for the GCIC external service to activate.\n\nIt is already activated for other 5 orders and they have moved to COMPLETED,\n\nRegards"
-        },
-        {
-          "author": "Dilip Boddula",
-          "date": "2026-10-03T17:44:45.016+0900",
-          "snippet": "Dear ~@email ,\n\n\n\nPlease fetch the latest consignment from NERP. Once the billing number is received, you can then send the request to GCIC.\n\nAlso, as mentioned earlier, these GCIC Standalone services move directly from shipping requested to COMPLETED as there is no delivery order involved and this "
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi ~@email ,\n\nSO is created again for the order. Kindly check new SO 1366981829 and confirm if we may  put the consignment to COMPLETE and push the  conf=signment forward for the GCIC external service to activate.\n\nIt is already activated for other 5 orders and they have moved to COMPLETED,\n\nRegards",
-      "lastCommentDate": "2026-10-06T16:47:09.779+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6596",
-      "linkedTickets": [
-        {
-          "key": "PC-54773",
-          "summary": "Reset GCIC Expert Care ExternalService from ERROR to NEW and restart order process",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "blocks",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "Expert Care Orders Stuck || 29-Sep\r\nGenerated: 2026-10-02T18:00:00+09:00\r\n\r\nIssue:\r\n6 UAE Expert Care (GCIC) orders were reported stuck at SHIPPED status on 29-Sep. The orders are Galaxy Expert Care standalone service orders with GCIC_EXPERT_CARE_STANDALONE external service integration. DB verification on 2-Oct shows that 5 of the 6 orders have already been remediated and are now COMPLETED. One order (AE260922-91467505) remains stuck at SHIPPING_REQUESTED with a fundamentally different root cause from the other 5.\r\n\r\nRCA:\r\nTwo distinct issues affected these orders:\r\n\r\nGroup 1 — 5 orders already remediated (AE260917-86564020, AE260917-86564071, AE260922-91048112, AE260922-91000993, AE260928-97214836):\r\nAll 5 had ExternalService (GCIC_EXPERT_CARE_STANDALONE) in ERROR status because the GCIC API call failed during order processing. The ExternalService ERROR state blocked the order process from completing, leaving consignments stuck at SHIPPED and the order process in ERROR state. These were remediated by PC-54773, which reset the ExternalService from ERROR to NEW and restarted the order process from processExternalServicesAction. All 5 are now COMPLETED with ExternalService status UPDATED and processes SUCCEEDED. Delivery mode for all 5 was ae-galaxy-expertCare-CarryIn, payment mode was ae-CheckoutDotComFlowPaymentMode.\r\n\r\nGroup 2 — 1 order still stuck (AE260922-91467505):\r\nThis order is fundamentally different. Key differences from Group 1:\r\n- Order status is SHIPPING_REQUESTED (not SHIPPED) — the order never reached SHIPPED\r\n- Consignment status is SHIPPING_REQUESTED with no shipped or completed dates, no GERP billing\r\n- ExternalService (GCIC_EXPERT_CARE_STANDALONE) is in NEW status — the GCIC API was never called, the service was never attempted (not ERROR)\r\n- Order process (order-process-v25-69) is in RUNNING state (not ERROR) — the process is alive but waiting\r\n- Consignment process (consignment-process-v11-36) is also RUNNING\r\n- Delivery mode is ae-galaxy-expertCare (without CarryIn) — a different fulfillment path from the other 5\r\n- Payment mode is ae-tamaraPayment (Tamara BNPL) — different from the other 5 which used Checkout.com\r\n- Process last action is isDelayedFiRequired — the process is stalled waiting for delayed financial integration\r\n\r\nThe order completed checkout and payment capture successfully (Tamara authorization and capture both ACCEPTED for 804 AED + 120 AED = 924 AED). However, the order process is stuck at the isDelayedFiRequired action. The ExternalService was created (status NEW) but the GCIC API call was never triggered because the process never reached the point where the external service would be activated for this delivery mode and payment flow. The Tamara BNPL payment path and the ae-galaxy-expertCare delivery mode (non-CarryIn) route through a different process branch that requires delayed FI posting before the consignment can progress. The delayed FI event from GERP was never received, causing the process to stall at isDelayedFiRequired. As a result, the consignment remains at SHIPPING_REQUESTED and the GCIC service activation was never initiated.\r\n\r\nSimilar tickets: AEME-5925 (Order Stuck | Expert Cleaning Orders) and AEME-6272 (Orders stuck at processExternalServices [GCIC_EXPERT_CLEANING_STANDALONE]) dealt with the same GCIC ExternalService ERROR pattern as Group 1. AE260922-91467505 does not match this pattern.\r\n\r\nPossible remediation:\r\nFor the 5 already remediated orders: No action needed. All 5 are COMPLETED with processes SUCCEEDED. PC-54773 script was executed successfully.\r\n\r\nFor AE260922-91467505:\r\nThe remediation approach differs from the other 5 because the ExternalService is NEW (not ERROR) and the process is RUNNING (not ERROR). The following steps are recommended:\r\n\r\n1. Set the consignment status from SHIPPING_REQUESTED to COMPLETED to simulate the service completion. This order is a standalone Expert Care service (ae-galaxy-expertCare) — there is no physical shipment, so the consignment completion represents the service being rendered.\r\n\r\n2. Trigger the GCIC ExternalService by updating its status to trigger the GCIC API call, or manually setting the ExternalService to UPDATED if the service was already fulfilled out-of-band.\r\n\r\n3. Restart the order process from the isDelayedFiRequired action to push it past the stalled FI wait, or alternatively restart from processExternalServicesAction to re-attempt the GCIC integration after setting the consignment to COMPLETED.\r\n\r\n4. Verify the order progresses to COMPLETED and the order process reaches SUCCEEDED state.\r\n\r\nPC-54773 is reusable for this ticket but the existing script only covers the 5 already-remediated orders. A new script or modification is needed for AE260922-91467505 with the different remediation approach (consignment status change + process restart from a different action). Alternatively, PC-46538 (TKME-2056: Orders stuck at processExternalServices [GCIC_EXPERT_CLEANING_STANDALONE]) may provide a reusable pattern for the consignment completion approach.\r\n\r\nThe existing PC-54773 script (script-AEME-6596-expert-care-remediation.groovy) is in the bin directory and can be adapted. The script should be updated to include AE260922-91467505 with the modified logic: set consignment to COMPLETED, optionally trigger GCIC, and restart the order process from the appropriate action.",
-        "sections": {
-          "issue": "6 UAE Expert Care (GCIC) orders were reported stuck at SHIPPED status on 29-Sep. The orders are Galaxy Expert Care standalone service orders with GCIC_EXPERT_CARE_STANDALONE external service integration. DB verification on 2-Oct shows that 5 of the 6 orders have already been remediated and are now COMPLETED. One order (AE260922-91467505) remains stuck at SHIPPING_REQUESTED with a fundamentally different root cause from the other 5.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-02T06:25:29.973Z"
-      }
-    },
     {
       "key": "MHME-1451",
       "summary": "Cancellation of MA260821-64994011 order",
@@ -1367,7 +1314,7 @@
       }
     ],
     "pid": 31312,
-    "uptime": 77022,
+    "uptime": 77062,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1379,7 +1326,7 @@
       {
         "pid": 33768,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 7435,
+        "ageSeconds": 7474,
         "status": "running",
         "isChild": false,
         "taskSummary": "I am unable to see any output from the AI windows I send commands from the mobile dashboard. I sh...",
@@ -1389,7 +1336,7 @@
       {
         "pid": 28676,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 7429,
+        "ageSeconds": 7469,
         "status": "running",
         "isChild": false,
         "taskSummary": "how to remediate the last one?",
@@ -1399,7 +1346,7 @@
       {
         "pid": 29064,
         "cwd": "c:\\windows",
-        "ageSeconds": 7426,
+        "ageSeconds": 7465,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1409,7 +1356,7 @@
       {
         "pid": 25828,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 7410,
+        "ageSeconds": 7449,
         "status": "running",
         "isChild": false,
         "taskSummary": "I am unable to see any output from the AI windows I send commands from the mobile dashboard. I sh...",
@@ -4538,17 +4485,17 @@
     "bridgeLogTail": "[2026-10-05T08:22:32.269Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-05T08:22:32.271Z] === with Aipro Auto-Launch ===\n[2026-10-05T08:22:32.272Z] ==========================================\n[2026-10-05T08:22:32.273Z] PID: 824\n[2026-10-05T08:22:32.274Z] Repo: aryanverma2410/agent-bridge\n[2026-10-05T08:22:32.274Z] Poll interval: 10000ms\n[2026-10-05T08:22:32.275Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-05T08:22:32.276Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-05T08:22:32.277Z] Waiting for messages...\n[2026-10-05T10:23:32.178Z] ==========================================\n[2026-10-05T10:23:32.180Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-05T10:23:32.181Z] === with Aipro Auto-Launch ===\n[2026-10-05T10:23:32.182Z] ==========================================\n[2026-10-05T10:23:32.183Z] PID: 31312\n[2026-10-05T10:23:32.184Z] Repo: aryanverma2410/agent-bridge\n[2026-10-05T10:23:32.185Z] Poll interval: 10000ms\n[2026-10-05T10:23:32.186Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-05T10:23:32.187Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-05T10:23:32.188Z] Waiting for messages...\n[2026-10-05T13:54:22.416Z] ERROR poll #1: API returned 502 - backing off 10000ms",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-06T07:47:05.461Z",
-      "ageMs": 13289
+      "lastWrite": "2026-10-06T07:47:50.490Z",
+      "ageMs": 8159
     },
-    "watchdogLogTail": "[2026-10-06T07:44:50.391Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T07:45:05.396Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T07:45:20.398Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T07:45:35.414Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T07:45:50.420Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T07:46:05.425Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T07:46:20.436Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T07:46:35.452Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T07:46:50.453Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T07:47:05.459Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-06T07:45:35.414Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T07:45:50.420Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T07:46:05.425Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T07:46:20.436Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T07:46:35.452Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T07:46:50.453Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T07:47:05.459Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T07:47:20.472Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T07:47:35.485Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T07:47:50.489Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-06T07:46:27.863Z",
+      "lastCheck": "2026-10-06T07:47:27.323Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4557,18 +4504,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-06T07:46:27.863Z",
+      "lastCheck": "2026-10-06T07:47:27.323Z",
       "downSince": "2026-10-06T07:43:27.755Z",
-      "downDuration": 180108,
+      "downDuration": 239568,
       "alert": false
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-06T07:46:27.863Z",
+      "lastCheck": "2026-10-06T07:47:27.323Z",
       "downSince": "2026-10-05T22:36:34.387Z",
-      "downDuration": 32993476,
+      "downDuration": 33052936,
       "alert": true
     }
   ],
@@ -4850,18 +4797,6 @@
         "statusChangedAt": "2026-10-06T14:05:18.355+0900"
       },
       {
-        "key": "AEME-6596",
-        "summary": "Expert Care Orders Stuck || 29-Sep",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "blocked",
-        "reason": "Waiting for someone to respond",
-        "whatToDo": "",
-        "url": "https://jira.secext.samsung.net/browse/AEME-6596",
-        "updated": "2026-10-06T16:47:09.000+0900",
-        "statusChangedAt": "2026-10-01T22:10:34.224+0900"
-      },
-      {
         "key": "PC-53923",
         "summary": "Update SC+ Automated Report — column renames, initial order payment mode, Payment Cycle reorder, recipient update, Qatar",
         "priority": "Low",
@@ -4959,7 +4894,7 @@
     "totals": {
       "zero": 11,
       "actionable": 3,
-      "blocked": 9,
+      "blocked": 8,
       "queued": 1
     }
   }
