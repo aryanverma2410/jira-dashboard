@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-06T06:18:09.330Z",
+  "generatedAt": "2026-10-06T06:18:49.928Z",
   "totalTickets": 23,
   "tickets": [
     {
@@ -617,14 +617,14 @@
       "linkedTickets": [],
       "solution": {
         "status": "found",
-        "excerpt": "SMI | Multiple Aborted Cron Jobs\r\nGenerated: 2026-10-02T18:10:00+09:00\r\n\r\nIssue:\r\nSix non-critical cron jobs on the SMI cluster are in ABORTED state. The affected jobs are tokoPaymentLogsCleanupJob, toko-ilProductCatalogSyncCronJob, kwMktCPICustomerOutboundSyncCronJob, ae-TokoCartRemovalJob, outboundRequestMediaCleanupCronJob, and outboundRequestCleanupCronJob. All six jobs belong to the backgroundProcessing node group and were triggered between Oct 1 22:30 and Oct 2 03:15 KST. The ticket was raised by Ganesh Kumar M via the CronJob mail monitoring dashboard.\r\n\r\nRCA:\r\nDB verification via HAC FlexibleSearch confirms all six cron jobs have status ABORTED with NULL endTime values, meaning none of them completed gracefully. Four of the six jobs (tokoPaymentLogsCleanupJob, ae-TokoCartRemovalJob, outboundRequestMediaCleanupCronJob, outboundRequestCleanupCronJob) have runningOnClusterNode set to -1, which in Hybris indicates the cluster node that was executing the job is no longer registered in the cluster. The remaining two jobs (toko-ilProductCatalogSyncCronJob, kwMktCPICustomerOutboundSyncCronJob) have NULL runningOnClusterNode, meaning they were either not yet assigned to a node or the assignment was cleared when the node went down.\r\n\r\nNone of the six jobs have requestAbort set to true, confirming they were not manually aborted. All six are assigned to the backgroundProcessing node group. The runningOnClusterNode=-1 pattern across four jobs that started at different times (00:00, 01:00, 01:03) points to a single cluster node failure or restart on the SMI background processing node during the early morning hours of Oct 2. When a Hybris cluster node crashes or is restarted, any cron jobs executing on that node are left in ABORTED state because the job execution thread is killed without a graceful shutdown sequence. The Hybris cron job engine does not automatically recover jobs from ABORTED state — they must be manually restarted.\r\n\r\nThis is a well-documented recurring pattern on the SMI cluster. A Jira search returned 931 historical tickets for aborted cron jobs on SMI, including GMT-14861 (May 2026) which had the exact same outboundRequestCleanupCronJob and outboundRequestMediaCleanupCronJob aborted, and GMT-4204 (Oct 2025) which had ae-TokoCartRemovalJob among multiple aborted jobs. All prior tickets were resolved by manually restarting the jobs from Backoffice.\r\n\r\nKibana log analysis was not possible due to the cookie bridge being down (last response Sep 30). The log attachments on the ticket could not be downloaded due to a URL parsing issue. However, the DB evidence is sufficient to confirm the root cause as cluster node failure, which is consistent with the 931 prior SMI aborted cronjob tickets that followed the same pattern and resolution.\r\n\r\nPossible remediation:\r\nRestart all six cron jobs from the Backoffice CronJob console. Navigate to Backoffice > System > Cron Jobs, search for each job by name, and click Start to re-trigger execution. Monitor each job to confirm it transitions from RUNNING to FINISHED with SUCCESS result. No HAC Groovy script or PC ticket is needed — this is a standard Backoffice operational fix.\r\n\r\nThe recurring nature of this issue (931 historical tickets) suggests the SMI cluster's background processing node is prone to intermittent restarts. A permanent fix would require infra team investigation into why the backgroundProcessing node group experiences unexpected node loss. This is outside the scope of a Hybris application fix and should be escalated to the platform infrastructure team if a trend analysis is warranted.\r\n\r\nTicket URL: https://jira.secext.samsung.net/browse/GMT-21857",
+        "excerpt": "# RCA: GMT-21857\nSMI | Multiple Aborted Cron Jobs\nGenerated: 2026-10-06T15:15:00+09:00 (Re-investigation Round 2)\n\n## Updated RCA (Kibana gap filled):\n\nRoot cause corrected from \"cluster node failure\" to \"database connection pool recovery event\".\n\nKibana logs at 2026-10-02 ~01:10 KST show RecoveryInProgressException thrown by de.hybris.platform.jdbcwrapper.interceptor.recover across multiple jobs simultaneously. This is a DB connection pool recovery, not a cluster node crash. The runningOnClusterNode=-1 pattern was a symptom of DB recovery killing connections.\n\nCurrent DB state (Oct 6):\n- 5 of 6 jobs: FINISHED (restarted and completed successfully)\n- outboundRequestMediaCleanupCronJob: RUNNING on node 44 (started Oct 6 00:00)\n\nTicket URL: https://jira.secext.samsung.net/browse/GMT-21857",
         "sections": {
-          "issue": "Six non-critical cron jobs on the SMI cluster are in ABORTED state. The affected jobs are tokoPaymentLogsCleanupJob, toko-ilProductCatalogSyncCronJob, kwMktCPICustomerOutboundSyncCronJob, ae-TokoCartRemovalJob, outboundRequestMediaCleanupCronJob, and outboundRequestCleanupCronJob. All six jobs belong to the backgroundProcessing node group and were triggered between Oct 1 22:30 and Oct 2 03:15 KST. The ticket was raised by Ganesh Kumar M via the CronJob mail monitoring dashboard.",
-          "rca": "",
+          "issue": "",
+          "rca": "# RCA: GMT-21857\nSMI | Multiple Aborted Cron Jobs\nGenerated: 2026-10-06T15:15:00+09:00 (Re-investigation Round 2)\n\n## Updated RCA (Kibana gap filled):\n\nRoot cause corrected from \"cluster node failure\" to \"database connection pool recovery event\".\n\nKibana logs at 2026-10-02 ~01:10 KST show RecoveryInProgressException thrown by de.hybris.platform.jdbcwrapper.interceptor.recover across multiple jobs simultaneously. This is a DB connection pool recovery, not a cluster node crash. The runningOnClusterNode=-1 pattern was a symptom of DB recovery killing connections.\n\nCurrent DB state (Oct 6):\n- 5 of 6 jobs: FINISHED (restarted and completed successfully)\n- outboundRequestMediaCleanupCronJob: RUNNING on node 44 (started Oct 6 00:00)\n\nTicket URL: https://jira.secext.samsung.net/browse/GMT-21857",
           "remediation": ""
         },
         "source": "RCA MD",
-        "foundAt": "2026-10-02T06:20:21.460Z"
+        "foundAt": "2026-10-06T06:18:16.126Z"
       }
     },
     {
@@ -1311,7 +1311,7 @@
       }
     ],
     "pid": 31312,
-    "uptime": 71678,
+    "uptime": 71715,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1323,7 +1323,7 @@
       {
         "pid": 33768,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 2089,
+        "ageSeconds": 2130,
         "status": "running",
         "isChild": false,
         "taskSummary": "I am unable to see any output from the AI windows I send commands from the mobile dashboard. I sh...",
@@ -1333,7 +1333,7 @@
       {
         "pid": 28676,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 2084,
+        "ageSeconds": 2125,
         "status": "running",
         "isChild": false,
         "taskSummary": "SAME-3979",
@@ -1343,7 +1343,7 @@
       {
         "pid": 29064,
         "cwd": "c:\\windows",
-        "ageSeconds": 2080,
+        "ageSeconds": 2121,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1353,7 +1353,7 @@
       {
         "pid": 25828,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 2064,
+        "ageSeconds": 2105,
         "status": "running",
         "isChild": false,
         "taskSummary": "I am unable to see any output from the AI windows I send commands from the mobile dashboard. I sh...",
@@ -4482,10 +4482,10 @@
     "bridgeLogTail": "[2026-10-05T08:22:32.269Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-05T08:22:32.271Z] === with Aipro Auto-Launch ===\n[2026-10-05T08:22:32.272Z] ==========================================\n[2026-10-05T08:22:32.273Z] PID: 824\n[2026-10-05T08:22:32.274Z] Repo: aryanverma2410/agent-bridge\n[2026-10-05T08:22:32.274Z] Poll interval: 10000ms\n[2026-10-05T08:22:32.275Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-05T08:22:32.276Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-05T08:22:32.277Z] Waiting for messages...\n[2026-10-05T10:23:32.178Z] ==========================================\n[2026-10-05T10:23:32.180Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-05T10:23:32.181Z] === with Aipro Auto-Launch ===\n[2026-10-05T10:23:32.182Z] ==========================================\n[2026-10-05T10:23:32.183Z] PID: 31312\n[2026-10-05T10:23:32.184Z] Repo: aryanverma2410/agent-bridge\n[2026-10-05T10:23:32.185Z] Poll interval: 10000ms\n[2026-10-05T10:23:32.186Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-05T10:23:32.187Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-05T10:23:32.188Z] Waiting for messages...\n[2026-10-05T13:54:22.416Z] ERROR poll #1: API returned 502 - backing off 10000ms",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-06T06:18:08.330Z",
-      "ageMs": 6080
+      "lastWrite": "2026-10-06T06:18:53.438Z",
+      "ageMs": 3828
     },
-    "watchdogLogTail": "[2026-10-06T06:15:51.999Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:16:08.262Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:16:23.267Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:16:38.296Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:16:53.301Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:17:08.304Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:17:23.311Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:17:38.314Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:17:53.315Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:18:08.330Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-06T06:16:38.296Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:16:53.301Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:17:08.304Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:17:23.311Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:17:38.314Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:17:53.315Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:18:08.330Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:18:23.334Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:18:38.344Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:18:53.419Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
