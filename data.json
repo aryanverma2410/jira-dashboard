@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-06T12:05:51.052Z",
+  "generatedAt": "2026-10-06T12:06:30.955Z",
   "totalTickets": 21,
   "tickets": [
     {
@@ -1069,9 +1069,16 @@
     "online": true,
     "activeSessions": [],
     "stats": {
-      "totalProcessed": 197
+      "totalProcessed": 198
     },
     "recentActivity": [
+      {
+        "issueNum": 585,
+        "title": "🔴 MCP Alert: Confluence down for 5m 1s",
+        "received": "2026-10-06T12:05:53.653Z",
+        "responded": "2026-10-06T12:06:19.255Z",
+        "responseSnippet": "The Confluence MCP server isn't actually \"down\" — HTTP 401 means **Unauthorized**. The server is responding, but authentication is failing. This is almost certainly an expired or revoked API token / OAuth credential, not a service outage.\n\nLikely causes:\n- Confluence API token expired (Atlassian tokens have lifecycles)\n- OAuth refresh token stopped working\n- Token was rotated or revoked manually\n- Confluence changed its auth policy (e.g., deprecating basic auth in favor of bearer tokens)\n\nRecomm"
+      },
       {
         "issueNum": 584,
         "title": "Investigate ticket PC-54387",
@@ -1204,17 +1211,10 @@
         "received": "2026-09-28T16:07:29.910Z",
         "responded": "2026-09-28T16:44:43.239Z",
         "responseSnippet": "Starting the investigate workflow for PKHME-942. Let me run Phase 0 pre-flight checks in parallel: read past learnings, check for existing RCA/cache files, and check MCP availability.Good - learnings loaded, no existing RCA or cache for PKHME-942 (just a .lock from the auto-trigger). Need to find Aryantone.md and fetch the ticket. Let me do these in parallel.Ticket fetched. 4 stuck PK-region orders with 2 distinct error patterns. Launching Phase 1 parallel fan-out investigation now. I'll also se"
-      },
-      {
-        "issueNum": 442,
-        "title": "Investigate ticket TKME-2348",
-        "received": "2026-09-28T16:09:27.755Z",
-        "responded": "2026-09-28T16:39:48.200Z",
-        "responseSnippet": "Starting Phase 0 - pre-flight checks. Reading past learnings, checking for existing cache/lock files, and preparing to fetch the ticket.No existing cache or lock file — this is a fresh investigation. Now I need to find the Aryantone style file, locate the Jira/bin scripts, and fetch the ticket. Let me do these in parallel.The workspace tools can't see the toko bin directory or the bin memory folder. Let me use shell commands to locate the key files.All files located. Now let me read the Aryanton"
       }
     ],
     "pid": 15856,
-    "uptime": 1053,
+    "uptime": 1094,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -1223,18 +1223,18 @@
         "issueTitle": "Investigate ticket PC-54387",
         "snippet": "Manual investigation request from dashboard.\n\nTicket: PC-54387\n\nUse the investigate workflow:\n1. Fetch the ticket detail",
         "pid": 20240,
-        "elapsed": 1050
+        "elapsed": 1091
       }
     ],
     "startTime": "2026-10-06T11:48:15.028Z",
     "version": "v3",
-    "lastResponseAt": "2026-10-05T07:17:06.299Z",
-    "lastResponseIssue": 565,
+    "lastResponseAt": "2026-10-06T12:06:19.272Z",
+    "lastResponseIssue": 585,
     "ideSessions": [
       {
         "pid": 33768,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 22951,
+        "ageSeconds": 22991,
         "status": "running",
         "isChild": false,
         "taskSummary": "add a feature to directly fetch any tickets details from jira using script that I can put in dash...",
@@ -1244,7 +1244,7 @@
       {
         "pid": 28676,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 22945,
+        "ageSeconds": 22986,
         "status": "running",
         "isChild": false,
         "taskSummary": "post the comment on 1st ticket with 45m logs, assig back and update labels",
@@ -1254,7 +1254,7 @@
       {
         "pid": 29064,
         "cwd": "c:\\windows",
-        "ageSeconds": 22942,
+        "ageSeconds": 22982,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1264,7 +1264,7 @@
       {
         "pid": 25828,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 22926,
+        "ageSeconds": 22966,
         "status": "running",
         "isChild": false,
         "taskSummary": "add a feature to directly fetch any tickets details from jira using script that I can put in dash...",
@@ -1273,6 +1273,15 @@
       }
     ],
     "activityLog": [
+      {
+        "id": "1791288379275-yaqp39",
+        "timestamp": "2026-10-06T12:06:19.275Z",
+        "type": "agent-response",
+        "source": "bridge",
+        "title": "🔴 MCP Alert: Confluence down for 5m 1s",
+        "detail": "The Confluence MCP server isn't actually \"down\" — HTTP 401 means **Unauthorized**. The server is responding, but authentication is failing. This is almost certainly an expired or revoked API token / O",
+        "status": "success"
+      },
       {
         "id": "1791288354577-sbn8w9",
         "timestamp": "2026-10-06T12:05:54.577Z",
@@ -1532,15 +1541,6 @@
         "source": "aryanverma2410",
         "title": "Investigate ticket AEME-6597",
         "detail": "#453",
-        "status": "pending"
-      },
-      {
-        "id": "1790678769455-dsxa07",
-        "timestamp": "2026-09-29T10:46:09.455Z",
-        "type": "command",
-        "source": "aryanverma2410",
-        "title": "Investigate ticket AEME-6596",
-        "detail": "#454",
         "status": "pending"
       }
     ],
@@ -4407,22 +4407,24 @@
         "issueNum": 585,
         "title": "🔴 MCP Alert: Confluence down for 5m 1s",
         "startTime": "2026-10-06T12:05:54.809Z",
-        "status": "thinking",
+        "status": "done",
         "commandHistory": [
           {
             "title": "🔴 MCP Alert: Confluence down for 5m 1s",
             "time": "2026-10-06T12:05:54.809Z"
           }
-        ]
+        ],
+        "endTime": "2026-10-06T12:06:19.276Z",
+        "lastOutput": "The Confluence MCP server isn't actually \"down\" — HTTP 401 means **Unauthorized**. The server is responding, but authentication is failing. This is almost certainly an expired or revoked API token / OAuth credential, not a service outage.\n\nLikely causes:\n- Confluence API token expired (Atlassian tokens have lifecycles)\n- OAuth refresh token stopped working\n- Token was rotated or revoked manually\n- Confluence changed its auth policy (e.g., deprecating basic auth in favor of bearer tokens)\n\nRecomm"
       }
     },
-    "bridgeLogTail": "      at throwUnexpectedCharacter (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-AMPHR7K3.js:7552:11)\n      at jsonrepair (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-AMPHR7K3.js:7053:3)\n      at safeJsonParse (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-AMPHR7K3.js:7581:28)\n      at StreamingToolCallParser.getCompletedToolCalls (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-AMPHR7K3.js:7758:22)\n      at OpenAIContentConverter.convertOpenAIChunkToGemini (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-AMPHR7K3.js:8294:65)\n      at ContentGenerationPipeline.processStreamWithLogging (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-AMPHR7K3.js:8596:41)\n      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n      at async GeminiChat.processStreamResponse (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:298143:22)\n      at async GeminiChat.streamWithRetries (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:297807:30)\n      at async _LocalAgentExecutor.callModel (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:313831:22) {\n    position: 125\n  },\n  jsonString: '{\"command\": \"Get-ChildItem -Path \\\\\"C:\\\\\\\\toko\\\\\\\\toko6\\\\\\\\toko6\\\\\\\\core-customize\\\\\\\\hybris\\\\\\\\bin\\\\\\\\custom\\\\\\\\toko\\\\\" -Recurse -Include \\\\\"*.{\"dir_path\": \"Cxml\\\\\" | Select-String -Pattern \\\\\"ExternalFraudCheck|fra:\\\\\\\\Users\\\\\\\\aryudCheck\\\\\" -Context 3,an.v1\\\\\\\\.gemini\\\\\\\\tmp3 | ForEach\\\\\\\\aryan-v-Object { \\\\\"$1\", \"pattern\": \"*PC-54387($_.Path):$($_.LineNumber)\\\\\"; $_.*\"}'\n}\n[2026-10-06T12:05:53.653Z] INBOX <- #585 from aryanverma2410: \"🔴 MCP Alert: Confluence down for 5m 1s\"\n[2026-10-06T12:05:54.571Z] Comment posted on #585\n[2026-10-06T12:05:54.573Z] Auto-ack posted on #585\n[2026-10-06T12:05:54.591Z] Spawning aipro for #585: \"🔴 MCP Alert: Confluence down for 5m 1s\"\n[2026-10-06T12:05:54.596Z] Created new session 3d2005a0-a942-44f7-b6a3-f85df546f227 for #585\n[2026-10-06T12:05:54.822Z] 1 new message(s) added to inbox.",
+    "bridgeLogTail": "[2026-10-06T12:06:16.646Z] STDOUT data for #585: 107 bytes\n[2026-10-06T12:06:16.649Z] LIVE events write for #585: 62 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_585.txt\n[2026-10-06T12:06:16.656Z] STDOUT data for #585: 132 bytes\n[2026-10-06T12:06:16.659Z] LIVE events write for #585: 63 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_585.txt\n[2026-10-06T12:06:16.666Z] STDOUT data for #585: 128 bytes\n[2026-10-06T12:06:16.669Z] LIVE events write for #585: 64 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_585.txt\n[2026-10-06T12:06:16.676Z] STDOUT data for #585: 118 bytes\n[2026-10-06T12:06:16.679Z] LIVE events write for #585: 65 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_585.txt\n[2026-10-06T12:06:16.686Z] STDOUT data for #585: 111 bytes\n[2026-10-06T12:06:16.690Z] LIVE events write for #585: 66 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_585.txt\n[2026-10-06T12:06:16.698Z] STDOUT data for #585: 110 bytes\n[2026-10-06T12:06:16.701Z] LIVE events write for #585: 67 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_585.txt\n[2026-10-06T12:06:16.708Z] STDOUT data for #585: 111 bytes\n[2026-10-06T12:06:16.710Z] LIVE events write for #585: 68 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_585.txt\n[2026-10-06T12:06:16.720Z] STDOUT data for #585: 110 bytes\n[2026-10-06T12:06:16.722Z] LIVE events write for #585: 69 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_585.txt\n[2026-10-06T12:06:16.735Z] STDOUT data for #585: 323 bytes\n[2026-10-06T12:06:16.738Z] LIVE events write for #585: 70 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_585.txt\n[2026-10-06T12:06:18.503Z] aipro completed for #585 (773 chars)\n[2026-10-06T12:06:19.254Z] Comment posted on #585",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-06T12:05:55.339Z",
-      "ageMs": 39
+      "lastWrite": "2026-10-06T12:06:25.344Z",
+      "ageMs": 11771
     },
-    "watchdogLogTail": "[2026-10-06T12:03:40.263Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T12:03:55.273Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T12:04:10.280Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T12:04:25.294Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T12:04:40.310Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T12:04:55.316Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T12:05:10.324Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T12:05:25.327Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T12:05:40.329Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T12:05:55.339Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.",
+    "watchdogLogTail": "[2026-10-06T12:04:10.280Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T12:04:25.294Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T12:04:40.310Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T12:04:55.316Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T12:05:10.324Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T12:05:25.327Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T12:05:40.329Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T12:05:55.339Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T12:06:10.343Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T12:06:25.343Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.",
     "jobOutputs": {}
   },
   "mcps": [
