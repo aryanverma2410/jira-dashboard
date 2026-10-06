@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-06T06:06:39.474Z",
-  "totalTickets": 24,
+  "generatedAt": "2026-10-06T06:07:17.528Z",
+  "totalTickets": 23,
   "tickets": [
     {
       "key": "PC-55037",
@@ -259,45 +259,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-14T12:18:37.301Z"
-      }
-    },
-    {
-      "key": "MHME-1451",
-      "summary": "Cancellation of MA260821-64994011 order",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Morocco Maintenance & Enhancements",
-      "projectKey": "MHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-05T19:21:41.000+0900",
-      "created": "2026-10-02T22:09:59.000+0900",
-      "statusChangedAt": "2026-10-02T22:21:52.028+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\ncan you please check with this order MA260821-64994011, it's stuck in Full cancel request market asks to cancel this order.\n\n!image-2026-10-02-17-09-13-766.png|width=353,height=139!\n\nThanks\n\nAshwani Verma\n\nCC: ~@email",
-      "commentsCount": 1,
-      "recentComments": [
-        {
-          "author": "Ashwani Verma",
-          "date": "2026-10-05T19:21:41.477+0900",
-          "snippet": "Hi ~@email \n\nare there any updates regarding this issue?\n\nThanks\n\n~@email"
-        }
-      ],
-      "lastCommentBy": "Ashwani Verma",
-      "lastCommentSnippet": "Hi ~@email \n\nare there any updates regarding this issue?\n\nThanks\n\n~@email",
-      "lastCommentDate": "2026-10-05T19:21:41.477+0900",
-      "url": "https://jira.secext.samsung.net/browse/MHME-1451",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Ticket: Cancellation of MA260821-64994011 order\r\nGenerated: 2026-10-02T08:15:00.000Z\r\n\r\n## Issue\r\n\r\nOrder MA260821-64994011 (Morocco, Fatourati payment mode, 12.10 MAD) is stuck at CANCEL_REQUEST status. The market is requesting to cancel the order but it has not progressed beyond this state since 21 August 2026.\r\n\r\n## RCA\r\n\r\nHi Ashwani ,\r\n\r\nThe order MA260821-64994011 is currently stuck at CANCEL_REQUEST status with the main order process (order-process-v25-69) in RUNNING state, positioned at the voidOrder action. The order has not progressed to CANCELLED despite being in CANCEL_REQUEST for over 40 days.\r\n\r\nThe DB state reveals the following payment flow. Two PaymentTransactions exist for this order. The first PT (14dab100...) had an AUTHORIZATION entry with REVIEW status at 11:05:34 on 21 Aug, which was subsequently cancelled (CANCEL entry with ACCEPTED status at 11:18:11). The second PT (9f93b452...) had an AUTHORIZATION entry with ACCEPTED status for 12.10 MAD at 12:05:48 on 21 Aug. This indicates the original payment was flagged for fraud review, the system cancelled the first authorisation, and a second authorisation was attempted and accepted.\r\n\r\nThe order process task log shows the following action sequence: checkPartialPaymentEnabled, sendOrderAcknowledgementEmail, processOrderAnalytics, checkExternalEnabled, checkOrder, compensationApprovalCheck, checkTransactionReviewStatus, sendOrderPaymentExpiredEmail, cancelExternalServiceOnWaitExternalCancel, and finally voidOrder as the latest action. The orderPaymentExpiredNotificationEmailProcess is in ERROR state, confirming the payment expired notification flow also failed.\r\n\r\nThe order has zero consignments, which means the order never reached the fulfilment stage. The order is a Fatourati (Morocco local payment gateway) order in the ma store. The process is stuck at voidOrder because the order cancellation flow cannot complete the void operation. This is the same pattern observed in SAME-3798, NUKME-8742, and IQME-400 where orders remained stuck at CANCEL_REQUEST after a fraud check failure triggered a cancel request that the process could not fully execute.\r\n\r\nThe root cause is that the order process (order-process-v25-69) reached the voidOrder action but could not complete it. The process is in RUNNING state (not ERROR), which means the voidOrder action is either waiting for an external response (e.g., payment void from the Fatourati gateway) or encountering a silent failure where the action does not return a transition result. Given that the order has an accepted AUTHORIZATION of 12.10 MAD on the second PT, the voidOrder action likely needs to void this payment authorisation with the Fatourati gateway, and this void request either failed silently or was never sent.\r\n\r\nNo BusinessProcessParameter stack traces were found for the order process, and Kibana logs were not available during this investigation to confirm the exact exception at the voidOrder action. The absence of a stack trace combined with the RUNNING state suggests the process may be waiting on an asynchronous response rather than having thrown an exception.\r\n\r\n## Possible Remediation\r\n\r\nTwo approaches are possible depending on whether the payment void can be completed externally:\r\n\r\n1. If the market confirms the order should be cancelled, the order process can be retried from the voidOrder action. This would re-attempt the payment void with the Fatourati gateway. If the gateway responds, the process will transition the order to CANCELLED.\r\n\r\n2. If the Fatourati gateway void is not required or has already been processed externally, the order status can be manually set to CANCELLED and the order process can be given an explicit DONE signal at the voidOrder action to allow the process to complete.\r\n\r\nA HAC Groovy script can be prepared to either retry the voidOrder action or manually transition the order to CANCELLED, depending on the market's confirmation regarding the payment authorisation status with Fatourati.\r\n\r\nThis is the same pattern confirmed and resolved in SAME-3798, NUKME-8742, and IQME-400 where orders stuck at CANCEL_REQUEST were moved to CANCELLED after process intervention.\r\n\r\nKindly confirm if the order should be cancelled so we can prepare the remediation script.\r\n\r\nThanks,\r\nAryan.\r\n\r\n## Remediation\r\n\r\nRemediation approach: Retry voidOrder action on the order process or manually set order to CANCELLED + signal process DONE, pending market confirmation on Fatourati payment void status.\r\nNo reusable PC ticket found for void-order-stuck scenario. A new PC ticket would be needed if remediation is confirmed.",
-        "sections": {
-          "issue": "Order MA260821-64994011 (Morocco, Fatourati payment mode, 12.10 MAD) is stuck at CANCEL_REQUEST status. The market is requesting to cancel the order but it has not progressed beyond this state since 21 August 2026.",
-          "rca": "Hi Ashwani ,\r\n\r\nThe order MA260821-64994011 is currently stuck at CANCEL_REQUEST status with the main order process (order-process-v25-69) in RUNNING state, positioned at the voidOrder action. The order has not progressed to CANCELLED despite being in CANCEL_REQUEST for over 40 days.\r\n\r\nThe DB state reveals the following payment flow. Two PaymentTransactions exist for this order. The first PT (14dab100...) had an AUTHORIZATION entry with REVIEW status at 11:05:34 on 21 Aug, which was subsequently cancelled (CANCEL entry with ACCEPTED status at 11:18:11). The second PT (9f93b452...) had an AUTHORIZATION entry with ACCEPTED status for 12.10 MAD at 12:05:48 on 21 Aug. This indicates the original payment was flagged for fraud review, the system cancelled the first authorisation, and a second authorisation was attempted and accepted.\r\n\r\nThe order process task log shows the following action sequence: checkPartialPaymentEnabled, sendOrderAcknowledgementEmail, processOrderAnalytics, checkExternalEnabled, checkOrder, compensationApprovalCheck, checkTransactionReviewStatus, sendOrderPaymentExpiredEmail, cancelExternalServiceOnWaitExternalCancel, and finally voidOrder as the latest action. The orderPaymentExpiredNotificationEmailProcess is in ERROR state, confirming the payment expired notification flow also failed.\r\n\r\nThe order has zero consignments, which means the order never reached the fulfilment stage. The order is a Fatourati (Morocco local payment gateway) order in the ma store. The process is stuck at voidOrder because the order cancellation flow cannot complete the void operation. This is the same pattern observed in SAME-3798, NUKME-8742, and IQME-400 where orders remained stuck at CANCEL_REQUEST after a fraud check failure triggered a cancel request that the process could not fully execute.\r\n\r\nThe root cause is that the order process (order-process-v25-69) reached the voidOrder action but could not complete it. The process is in RUNNING state (not ERROR), which means the voidOrder action is either waiting for an external response (e.g., payment void from the Fatourati gateway) or encountering a silent failure where the action does not return a transition result. Given that the order has an accepted AUTHORIZATION of 12.10 MAD on the second PT, the voidOrder action likely needs to void this payment authorisation with the Fatourati gateway, and this void request either failed silently or was never sent.\r\n\r\nNo BusinessProcessParameter stack traces were found for the order process, and Kibana logs were not available during this investigation to confirm the exact exception at the voidOrder action. The absence of a stack trace combined with the RUNNING state suggests the process may be waiting on an asynchronous response rather than having thrown an exception.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-02T08:08:03.116Z"
       }
     },
     {
@@ -1344,7 +1305,7 @@
       }
     ],
     "pid": 31312,
-    "uptime": 70983,
+    "uptime": 71026,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1356,7 +1317,7 @@
       {
         "pid": 33768,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 1399,
+        "ageSeconds": 1437,
         "status": "running",
         "isChild": false,
         "taskSummary": "I am unable to see any output from the AI windows I send commands from the mobile dashboard. I sh...",
@@ -1366,7 +1327,7 @@
       {
         "pid": 28676,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 1393,
+        "ageSeconds": 1432,
         "status": "running",
         "isChild": false,
         "taskSummary": "queue this comment with 45m logs, assign back and upday=te labels",
@@ -1376,7 +1337,7 @@
       {
         "pid": 29064,
         "cwd": "c:\\windows",
-        "ageSeconds": 1390,
+        "ageSeconds": 1428,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1386,7 +1347,7 @@
       {
         "pid": 25828,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 1374,
+        "ageSeconds": 1412,
         "status": "running",
         "isChild": false,
         "taskSummary": "I am unable to see any output from the AI windows I send commands from the mobile dashboard. I sh...",
@@ -4515,17 +4476,17 @@
     "bridgeLogTail": "[2026-10-05T08:22:32.269Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-05T08:22:32.271Z] === with Aipro Auto-Launch ===\n[2026-10-05T08:22:32.272Z] ==========================================\n[2026-10-05T08:22:32.273Z] PID: 824\n[2026-10-05T08:22:32.274Z] Repo: aryanverma2410/agent-bridge\n[2026-10-05T08:22:32.274Z] Poll interval: 10000ms\n[2026-10-05T08:22:32.275Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-05T08:22:32.276Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-05T08:22:32.277Z] Waiting for messages...\n[2026-10-05T10:23:32.178Z] ==========================================\n[2026-10-05T10:23:32.180Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-05T10:23:32.181Z] === with Aipro Auto-Launch ===\n[2026-10-05T10:23:32.182Z] ==========================================\n[2026-10-05T10:23:32.183Z] PID: 31312\n[2026-10-05T10:23:32.184Z] Repo: aryanverma2410/agent-bridge\n[2026-10-05T10:23:32.185Z] Poll interval: 10000ms\n[2026-10-05T10:23:32.186Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-05T10:23:32.187Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-05T10:23:32.188Z] Waiting for messages...\n[2026-10-05T13:54:22.416Z] ERROR poll #1: API returned 502 - backing off 10000ms",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-06T06:06:36.078Z",
-      "ageMs": 6166
+      "lastWrite": "2026-10-06T06:07:21.156Z",
+      "ageMs": 455
     },
-    "watchdogLogTail": "[2026-10-06T06:04:20.984Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:04:35.997Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:04:51.004Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:05:06.017Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:05:21.022Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:05:36.036Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:05:51.045Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:06:06.058Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:06:21.067Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:06:36.076Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-06T06:05:06.017Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:05:21.022Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:05:36.036Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:05:51.045Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:06:06.058Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:06:21.067Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:06:36.076Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:06:51.087Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:07:06.097Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:07:21.142Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-06T06:05:49.170Z",
+      "lastCheck": "2026-10-06T06:06:49.292Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4534,7 +4495,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-06T06:05:49.170Z",
+      "lastCheck": "2026-10-06T06:06:49.292Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4543,9 +4504,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-06T06:05:49.170Z",
+      "lastCheck": "2026-10-06T06:06:49.292Z",
       "downSince": "2026-10-05T22:36:34.387Z",
-      "downDuration": 26954783,
+      "downDuration": 27014905,
       "alert": true
     }
   ],
@@ -4623,7 +4584,23 @@
       "pending": []
     }
   },
-  "actionQueue": [],
+  "actionQueue": [
+    {
+      "id": 1,
+      "ticket": "MHME-1451",
+      "actions": {
+        "comment": "Hi Ashwani,\n\nWe have checked the order on the PROD database. Here are the findings.\n\n*MA260821-64994011 (CANCEL_REQUEST):*\nThe Fatourati payment transaction review expired on 21 Aug. The order process attempted to void the order, but the voidOrder action is stuck in WAIT state. On 2 Oct, the backoffice cancellation was attempted, which moved the order to CANCEL_REQUEST, but the cancellation cannot complete because the voidOrder step is still waiting.\n\nThe Fatourati payment authorization has already been cancelled. However, 1,112 Samsung Reward Points were authorized and need to be reversed.\n\nWe can proceed with a remediation script to:\n1. Complete the order cancellation (force from CANCEL_REQUEST to CANCELLED)\n2. Reverse the Samsung Reward Points\n\nCould you please confirm if we can proceed?\n\nThanks,\nAryan.",
+        "worklogHours": null,
+        "transition": null,
+        "fallbackTransition": null,
+        "assignee": null,
+        "linkType": null,
+        "linkTicket": null
+      },
+      "createdAt": "2026-10-06",
+      "notes": "Investigation update comment for MHME-1451 — voidOrder stuck in WAIT, Fatourati expired, rewards need reversal. Waiting on reporter confirmation before remediation."
+    }
+  ],
   "actionItems": {
     "zero": [
       {
@@ -4649,18 +4626,6 @@
         "url": "https://jira.secext.samsung.net/browse/SAME-4005",
         "updated": "2026-10-06T15:01:16.000+0900",
         "statusChangedAt": "2026-09-29T01:09:03.411+0900"
-      },
-      {
-        "key": "MHME-1451",
-        "summary": "Cancellation of MA260821-64994011 order",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/MHME-1451",
-        "updated": "2026-10-05T19:21:41.000+0900",
-        "statusChangedAt": "2026-10-02T22:21:52.028+0900"
       },
       {
         "key": "AEME-6596",
@@ -4921,7 +4886,7 @@
     ],
     "queued": [],
     "totals": {
-      "zero": 13,
+      "zero": 12,
       "actionable": 4,
       "blocked": 7,
       "queued": 0
