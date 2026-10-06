@@ -1,7 +1,104 @@
 {
-  "generatedAt": "2026-10-06T06:11:13.764Z",
+  "generatedAt": "2026-10-06T06:11:53.740Z",
   "totalTickets": 23,
   "tickets": [
+    {
+      "key": "SAHME-3448",
+      "summary": "Request to trigger a refund on the cancelled order.",
+      "status": "QA Server Review",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "South Africa Maintenance & Enhancements",
+      "projectKey": "SAHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-06T15:11:18.000+0900",
+      "created": "2026-09-28T23:26:58.000+0900",
+      "statusChangedAt": "2026-10-06T14:59:16.162+0900",
+      "assignedToMeAt": "",
+      "description": "Good day,\n\nThe refund did not trigger on the cancelled order. Please trigger the refund.\n\nZA260822-65631545\n\n!image-2026-09-28-16-26-25-478.png!\n\nKind regards,\n\nLerato",
+      "commentsCount": 3,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-06T15:11:18.450+0900",
+          "snippet": "Hi Lerato,\n\nWe have raised PC-55035 for the remediation script. The script will set the consignment to CANCELLED and restart the consignment and order business processes to unblock the refund flow.\n\nS2 staging test has been completed successfully. The script is ready for execution once PC-55035 is a"
+        },
+        {
+          "author": "Lerato Mbambisa",
+          "date": "2026-10-05T17:30:48.648+0900",
+          "snippet": "Good day ~@email ,\n\nPlease proceed with the remediation.\n\nKind regards,\n\nLerato"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Lerato,\n\nWe have raised PC-55035 for the remediation script. The script will set the consignment to CANCELLED and restart the consignment and order business processes to unblock the refund flow.\n\nS2 staging test has been completed successfully. The script is ready for execution once PC-55035 is a",
+      "lastCommentDate": "2026-10-06T15:11:18.450+0900",
+      "url": "https://jira.secext.samsung.net/browse/SAHME-3448",
+      "linkedTickets": [
+        {
+          "key": "PC-55035",
+          "summary": "Script to unstick consignment cancellation and retrigger order process for refund",
+          "status": "To do",
+          "statusCategory": "To Do",
+          "relation": "blocks",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "# RCA: SAHME-3448\nSummary: Request to trigger a refund on the cancelled order.\nGenerated: 2026-09-28T14:30:00Z\n\nIssue:\nOrder ZA260822-65631545 was cancelled but the refund of R8,999.10 was never triggered. The payment was successfully captured on 2026-08-24 at 09:11:20, the order was moved to CANCELLED status with fullyCancelled=true, and the cancel-related email notifications were sent. However, no refund payment transaction entry was ever created. The order process (order-process-v25-69) and consignment process (consignment-process-v11-36) are both stuck in RUNNING state, and the consignment remains in WAITING_FOR_TRANSFER_CANCELLING.\n\nRCA:\nThe order was created on 2026-08-24 at 09:00:51 with a total value of R8,999.10 (subtotal R10,999.00 + tax R1,173.80) using the za-floatPaymentMode. Payment was authorized and captured successfully at 09:11:20. The order was subsequently cancelled and moved to CANCELLED status with fullyCancelled=true. All price fields were zeroed out as expected after cancellation.\n\nThree email processes completed successfully: sendOrderAcknowledgementEmailProcess, sendOrderCancelRequestEmailProcess, and sendOrderCancelledEmailProcess. However, the main order process (order-process-v25-69) is still in RUNNING state with its last executed action being isCancelledBeforeFinancialUpdateV1. This action evaluates whether the order was cancelled before the financial update was sent. Since fiPosted=false and the order is CANCELLED, this condition should evaluate to true and route the process to the refund path (refundCancelOrder). The process has not progressed past this decision point.\n\nThe consignment (ZA260822-65631545) is in WAITING_FOR_TRANSFER_CANCELLING status with warehouse WC11, and its consignment process (consignment-process-v11-36) is also stuck in RUNNING. The cancelRequestSentToLogistics flag is false, meaning the cancel request was never sent to the logistics system. The order process is likely blocked waiting for the consignment cancellation to complete before it can proceed to the refund step. Since the consignment cancellation never finalized, the order process never reached refundCancelOrder, and no refund payment transaction entry was created.\n\nNo return requests exist for this order, and no external service entries were found. There are no BusinessProcessParameter error entries (no stack traces stored) since the process is in RUNNING, not ERROR state.\n\nThis is the same pattern observed in SAHME-3376 (order ZA260521-83842685, same reporter Lerato) where a ZA-region order was cancelled before DO creation but the refund did not trigger. In that case, the payment team processed a manual refund because the order process had already completed without triggering the refund.\n\nPossible remediation:\nTwo approaches are available:\n\nApproach 1 — Process restart: Restart the order process from the refundCancelOrder action using the refund retrigger script (adapted from script-SAME-3941-refund-retrigger.groovy under PC-52765). The script needs to be modified to recognize isCancelledBeforeFinancialUpdateV1 as a valid restart point and use forceRetrigger=true since the process is in RUNNING state, not ERROR. This would attempt to re-trigger the automated refund flow.\n\nApproach 2 — Manual refund: If the automated process restart does not succeed (as was the case with SAHME-3376), the payment team can process a manual refund of R8,999.10 to the customer. The capture transaction (ZA260822-65631545_8b5ca128-52c7-4684-bc86-54832dbd29c8, CAPTURE, ACCEPTED, R8,999.10) provides the reference for the manual refund.\n\nKibana logs were not available during this investigation (cookie bridge rate-limited). The DB state is conclusive, but log analysis would provide additional confirmation of the exact blocking condition at isCancelledBeforeFinancialUpdateV1.",
+        "sections": {
+          "issue": "Order ZA260822-65631545 was cancelled but the refund of R8,999.10 was never triggered. The payment was successfully captured on 2026-08-24 at 09:11:20, the order was moved to CANCELLED status with fullyCancelled=true, and the cancel-related email notifications were sent. However, no refund payment transaction entry was ever created. The order process (order-process-v25-69) and consignment process (consignment-process-v11-36) are both stuck in RUNNING state, and the consignment remains in WAITING_FOR_TRANSFER_CANCELLING.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-28T14:37:28.150Z"
+      }
+    },
+    {
+      "key": "PC-55035",
+      "summary": "Script to unstick consignment cancellation and retrigger order process for refund",
+      "status": "To do",
+      "statusCategory": "To Do",
+      "priority": "Low",
+      "project": "PROD Change",
+      "projectKey": "PC",
+      "issuetype": "Hybris Platform",
+      "updated": "2026-10-06T15:11:18.000+0900",
+      "created": "2026-10-06T14:57:58.000+0900",
+      "statusChangedAt": "",
+      "assignedToMeAt": "",
+      "description": "For order mentioned in ticket : SAHME-3448\n\nOrder ZA260822-65631545 is CANCELLED but consignment stuck in WAITING_FOR_TRANSFER_CANCELLING. Script sets consignment to CANCELLED, restarts consignment process and order process to unblock the refund flow.\n\nSimilar PC: [Jira Link]\n\nScript: ^script-SAHME-",
+      "commentsCount": 1,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-06T15:11:18.370+0900",
+          "snippet": "S2 Staging Test Results\n\nTest Order: AE250216-86570008 (CANCELLED order with consignment stuck in WAITING_FOR_TRANSFER_CANCELLING — matches prod issue)\n\n||Field||Before||After||\n|Order Status|CANCELLED|CANCELLED (unchanged)|\n|Consignment Status|WAITING_FOR_TRANSFER_CANCELLING|Would change to CANCELL"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "S2 Staging Test Results\n\nTest Order: AE250216-86570008 (CANCELLED order with consignment stuck in WAITING_FOR_TRANSFER_CANCELLING — matches prod issue)\n\n||Field||Before||After||\n|Order Status|CANCELLED|CANCELLED (unchanged)|\n|Consignment Status|WAITING_FOR_TRANSFER_CANCELLING|Would change to CANCELL",
+      "lastCommentDate": "2026-10-06T15:11:18.370+0900",
+      "url": "https://jira.secext.samsung.net/browse/PC-55035",
+      "linkedTickets": [
+        {
+          "key": "SAHME-3448",
+          "summary": "Request to trigger a refund on the cancelled order.",
+          "status": "QA Server Review",
+          "statusCategory": "In Progress",
+          "relation": "is blocked by",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "none",
+        "excerpt": "",
+        "source": "",
+        "foundAt": "",
+        "issueNumber": null
+      }
+    },
     {
       "key": "SAME-4005",
       "summary": "Stuck order on Hybris",
@@ -79,97 +176,6 @@
         {
           "key": "SAME-4005",
           "summary": "Stuck order on Hybris",
-          "status": "QA Server Review",
-          "statusCategory": "In Progress",
-          "relation": "is blocked by",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "none",
-        "excerpt": "",
-        "source": "",
-        "foundAt": "",
-        "issueNumber": null
-      }
-    },
-    {
-      "key": "SAHME-3448",
-      "summary": "Request to trigger a refund on the cancelled order.",
-      "status": "QA Server Review",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "South Africa Maintenance & Enhancements",
-      "projectKey": "SAHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-06T14:59:16.000+0900",
-      "created": "2026-09-28T23:26:58.000+0900",
-      "statusChangedAt": "2026-10-06T14:59:16.162+0900",
-      "assignedToMeAt": "",
-      "description": "Good day,\n\nThe refund did not trigger on the cancelled order. Please trigger the refund.\n\nZA260822-65631545\n\n!image-2026-09-28-16-26-25-478.png!\n\nKind regards,\n\nLerato",
-      "commentsCount": 2,
-      "recentComments": [
-        {
-          "author": "Lerato Mbambisa",
-          "date": "2026-10-05T17:30:48.648+0900",
-          "snippet": "Good day ~@email ,\n\nPlease proceed with the remediation.\n\nKind regards,\n\nLerato"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-29T02:53:46.078+0900",
-          "snippet": "Hi Lerato,\n\nWe have checked order ZA260822-65631545 and found that the order is cancelled but the consignment is stuck in WAITING_FOR_TRANSFER_CANCELLING since 21 September. The consignment process has been looping on a warehouse transfer check every 30 minutes for the past 7 days without progressin"
-        }
-      ],
-      "lastCommentBy": "Lerato Mbambisa",
-      "lastCommentSnippet": "Good day ~@email ,\n\nPlease proceed with the remediation.\n\nKind regards,\n\nLerato",
-      "lastCommentDate": "2026-10-05T17:30:48.648+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAHME-3448",
-      "linkedTickets": [
-        {
-          "key": "PC-55035",
-          "summary": "Script to unstick consignment cancellation and retrigger order process for refund",
-          "status": "To do",
-          "statusCategory": "To Do",
-          "relation": "blocks",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: SAHME-3448\nSummary: Request to trigger a refund on the cancelled order.\nGenerated: 2026-09-28T14:30:00Z\n\nIssue:\nOrder ZA260822-65631545 was cancelled but the refund of R8,999.10 was never triggered. The payment was successfully captured on 2026-08-24 at 09:11:20, the order was moved to CANCELLED status with fullyCancelled=true, and the cancel-related email notifications were sent. However, no refund payment transaction entry was ever created. The order process (order-process-v25-69) and consignment process (consignment-process-v11-36) are both stuck in RUNNING state, and the consignment remains in WAITING_FOR_TRANSFER_CANCELLING.\n\nRCA:\nThe order was created on 2026-08-24 at 09:00:51 with a total value of R8,999.10 (subtotal R10,999.00 + tax R1,173.80) using the za-floatPaymentMode. Payment was authorized and captured successfully at 09:11:20. The order was subsequently cancelled and moved to CANCELLED status with fullyCancelled=true. All price fields were zeroed out as expected after cancellation.\n\nThree email processes completed successfully: sendOrderAcknowledgementEmailProcess, sendOrderCancelRequestEmailProcess, and sendOrderCancelledEmailProcess. However, the main order process (order-process-v25-69) is still in RUNNING state with its last executed action being isCancelledBeforeFinancialUpdateV1. This action evaluates whether the order was cancelled before the financial update was sent. Since fiPosted=false and the order is CANCELLED, this condition should evaluate to true and route the process to the refund path (refundCancelOrder). The process has not progressed past this decision point.\n\nThe consignment (ZA260822-65631545) is in WAITING_FOR_TRANSFER_CANCELLING status with warehouse WC11, and its consignment process (consignment-process-v11-36) is also stuck in RUNNING. The cancelRequestSentToLogistics flag is false, meaning the cancel request was never sent to the logistics system. The order process is likely blocked waiting for the consignment cancellation to complete before it can proceed to the refund step. Since the consignment cancellation never finalized, the order process never reached refundCancelOrder, and no refund payment transaction entry was created.\n\nNo return requests exist for this order, and no external service entries were found. There are no BusinessProcessParameter error entries (no stack traces stored) since the process is in RUNNING, not ERROR state.\n\nThis is the same pattern observed in SAHME-3376 (order ZA260521-83842685, same reporter Lerato) where a ZA-region order was cancelled before DO creation but the refund did not trigger. In that case, the payment team processed a manual refund because the order process had already completed without triggering the refund.\n\nPossible remediation:\nTwo approaches are available:\n\nApproach 1 — Process restart: Restart the order process from the refundCancelOrder action using the refund retrigger script (adapted from script-SAME-3941-refund-retrigger.groovy under PC-52765). The script needs to be modified to recognize isCancelledBeforeFinancialUpdateV1 as a valid restart point and use forceRetrigger=true since the process is in RUNNING state, not ERROR. This would attempt to re-trigger the automated refund flow.\n\nApproach 2 — Manual refund: If the automated process restart does not succeed (as was the case with SAHME-3376), the payment team can process a manual refund of R8,999.10 to the customer. The capture transaction (ZA260822-65631545_8b5ca128-52c7-4684-bc86-54832dbd29c8, CAPTURE, ACCEPTED, R8,999.10) provides the reference for the manual refund.\n\nKibana logs were not available during this investigation (cookie bridge rate-limited). The DB state is conclusive, but log analysis would provide additional confirmation of the exact blocking condition at isCancelledBeforeFinancialUpdateV1.",
-        "sections": {
-          "issue": "Order ZA260822-65631545 was cancelled but the refund of R8,999.10 was never triggered. The payment was successfully captured on 2026-08-24 at 09:11:20, the order was moved to CANCELLED status with fullyCancelled=true, and the cancel-related email notifications were sent. However, no refund payment transaction entry was ever created. The order process (order-process-v25-69) and consignment process (consignment-process-v11-36) are both stuck in RUNNING state, and the consignment remains in WAITING_FOR_TRANSFER_CANCELLING.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-28T14:37:28.150Z"
-      }
-    },
-    {
-      "key": "PC-55035",
-      "summary": "Script to unstick consignment cancellation and retrigger order process for refund",
-      "status": "To do",
-      "statusCategory": "To Do",
-      "priority": "Low",
-      "project": "PROD Change",
-      "projectKey": "PC",
-      "issuetype": "Hybris Platform",
-      "updated": "2026-10-06T14:58:39.000+0900",
-      "created": "2026-10-06T14:57:58.000+0900",
-      "statusChangedAt": "",
-      "assignedToMeAt": "",
-      "description": "For order mentioned in ticket : SAHME-3448\n\nOrder ZA260822-65631545 is CANCELLED but consignment stuck in WAITING_FOR_TRANSFER_CANCELLING. Script sets consignment to CANCELLED, restarts consignment process and order process to unblock the refund flow.\n\nSimilar PC: [Jira Link]\n\nScript: ^script-SAHME-",
-      "commentsCount": 0,
-      "recentComments": [],
-      "lastCommentBy": "",
-      "lastCommentSnippet": "",
-      "lastCommentDate": "",
-      "url": "https://jira.secext.samsung.net/browse/PC-55035",
-      "linkedTickets": [
-        {
-          "key": "SAHME-3448",
-          "summary": "Request to trigger a refund on the cancelled order.",
           "status": "QA Server Review",
           "statusCategory": "In Progress",
           "relation": "is blocked by",
@@ -1305,7 +1311,7 @@
       }
     ],
     "pid": 31312,
-    "uptime": 71259,
+    "uptime": 71300,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1317,7 +1323,7 @@
       {
         "pid": 33768,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 1673,
+        "ageSeconds": 1714,
         "status": "running",
         "isChild": false,
         "taskSummary": "I am unable to see any output from the AI windows I send commands from the mobile dashboard. I sh...",
@@ -1327,7 +1333,7 @@
       {
         "pid": 28676,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 1668,
+        "ageSeconds": 1709,
         "status": "running",
         "isChild": false,
         "taskSummary": "yes and post PC raised comment on payment ticket and put parent ticket to qa server review",
@@ -1337,7 +1343,7 @@
       {
         "pid": 29064,
         "cwd": "c:\\windows",
-        "ageSeconds": 1664,
+        "ageSeconds": 1706,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1347,7 +1353,7 @@
       {
         "pid": 25828,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 1648,
+        "ageSeconds": 1689,
         "status": "running",
         "isChild": false,
         "taskSummary": "I am unable to see any output from the AI windows I send commands from the mobile dashboard. I sh...",
@@ -4476,17 +4482,17 @@
     "bridgeLogTail": "[2026-10-05T08:22:32.269Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-05T08:22:32.271Z] === with Aipro Auto-Launch ===\n[2026-10-05T08:22:32.272Z] ==========================================\n[2026-10-05T08:22:32.273Z] PID: 824\n[2026-10-05T08:22:32.274Z] Repo: aryanverma2410/agent-bridge\n[2026-10-05T08:22:32.274Z] Poll interval: 10000ms\n[2026-10-05T08:22:32.275Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-05T08:22:32.276Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-05T08:22:32.277Z] Waiting for messages...\n[2026-10-05T10:23:32.178Z] ==========================================\n[2026-10-05T10:23:32.180Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-05T10:23:32.181Z] === with Aipro Auto-Launch ===\n[2026-10-05T10:23:32.182Z] ==========================================\n[2026-10-05T10:23:32.183Z] PID: 31312\n[2026-10-05T10:23:32.184Z] Repo: aryanverma2410/agent-bridge\n[2026-10-05T10:23:32.185Z] Poll interval: 10000ms\n[2026-10-05T10:23:32.186Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-05T10:23:32.187Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-05T10:23:32.188Z] Waiting for messages...\n[2026-10-05T13:54:22.416Z] ERROR poll #1: API returned 502 - backing off 10000ms",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-06T06:11:06.205Z",
-      "ageMs": 12449
+      "lastWrite": "2026-10-06T06:11:51.233Z",
+      "ageMs": 6791
     },
-    "watchdogLogTail": "[2026-10-06T06:08:51.162Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:09:06.165Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:09:21.169Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:09:36.174Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:09:51.175Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:10:06.174Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:10:21.176Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:10:36.184Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:10:51.195Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:11:06.204Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-06T06:09:36.174Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:09:51.175Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:10:06.174Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:10:21.176Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:10:36.184Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:10:51.195Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:11:06.204Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:11:21.204Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:11:36.214Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T06:11:51.230Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-06T06:10:49.308Z",
+      "lastCheck": "2026-10-06T06:11:48.941Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4495,7 +4501,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-06T06:10:49.308Z",
+      "lastCheck": "2026-10-06T06:11:48.941Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4504,9 +4510,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-06T06:10:49.308Z",
+      "lastCheck": "2026-10-06T06:11:48.941Z",
       "downSince": "2026-10-05T22:36:34.387Z",
-      "downDuration": 27254921,
+      "downDuration": 27314554,
       "alert": true
     }
   ],
@@ -4832,7 +4838,7 @@
         "reason": "Blocked by SAHME-3448 (QA Server Review)",
         "whatToDo": "",
         "url": "https://jira.secext.samsung.net/browse/PC-55035",
-        "updated": "2026-10-06T14:58:39.000+0900",
+        "updated": "2026-10-06T15:11:18.000+0900",
         "statusChangedAt": ""
       },
       {
@@ -4868,7 +4874,7 @@
         "reason": "Waiting for QA/review team",
         "whatToDo": "",
         "url": "https://jira.secext.samsung.net/browse/SAHME-3448",
-        "updated": "2026-10-06T14:59:16.000+0900",
+        "updated": "2026-10-06T15:11:18.000+0900",
         "statusChangedAt": "2026-10-06T14:59:16.162+0900"
       },
       {
