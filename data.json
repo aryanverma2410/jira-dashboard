@@ -1,68 +1,7 @@
 {
-  "generatedAt": "2026-10-06T11:51:05.607Z",
-  "totalTickets": 22,
+  "generatedAt": "2026-10-06T11:51:48.935Z",
+  "totalTickets": 21,
   "tickets": [
-    {
-      "key": "AEME-6548",
-      "summary": "Stuck Order || 09-Sep",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-06T20:50:04.000+0900",
-      "created": "2026-09-09T17:03:11.000+0900",
-      "statusChangedAt": "2026-10-06T15:21:55.974+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team\n\n \n\nPlease fix the order below as it is stuck with Hybris. Kindly share the RCA as well\n\nAE260903-74755067 -CHECKED_INVALID\n\n \n\nThe payment authorization has been completed for the order below. Please capture and create the order with the below payment details.\n\n \n|Date|Request ID|Reference|",
-      "commentsCount": 8,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-06T20:48:48.357+0900",
-          "snippet": "Hi Dilip,\n\nWe checked the payment transaction entries for AE260906-76717980 on the PROD database. Here are the findings.\n\n\norderCode          | entryType      | txStatus  | reqId                             | amount  | entryTime\n-----------------------------------------------------------------------"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-06T20:47:59.427+0900",
-          "snippet": "Hi Dilip,\n\nWe checked the payment transaction entries for AE260906-76717980 on the PROD database. Here are the findings.\n\n\norderCode          | entryType      | txStatus  | reqId                             | amount  | entryTime\n-----------------------------------------------------------------------"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Dilip,\n\nWe checked the payment transaction entries for AE260906-76717980 on the PROD database. Here are the findings.\n\n\norderCode          | entryType      | txStatus  | reqId                             | amount  | entryTime\n-----------------------------------------------------------------------",
-      "lastCommentDate": "2026-10-06T20:48:48.357+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6548",
-      "linkedTickets": [
-        {
-          "key": "PC-53917",
-          "summary": "AEME-6548 | Convert TEMPORARY_EXPIRED order AE260906-76717980_1 to normal order - GooglePay",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "is blocked by",
-          "assignee": null
-        },
-        {
-          "key": "AEME-6487",
-          "summary": "Stuck Order || 12-Aug",
-          "status": "RCA Requested",
-          "statusCategory": "In Progress",
-          "relation": "relates to",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: AEME-6548\nStuck Order || 09-Sep\nGenerated: 2026-09-09T11:35:00.000Z\n\nHi Jaffar ,\n\nOrder AE260903-74755067 is stuck at CHECKED_INVALID status with both order process instances (order-process-v25-69) in FAILED state. The order was placed on 07 September 2026 at 10:42:13 UTC via Checkout.com flow on the AE store for a total of 2,564.10 AED. The payment was successfully authorised twice — two AUTHORIZATION PaymentTransactionEntry records both show ACCEPTED status for 2,564.10 AED at 10:43:15 and 14:43:15 respectively. The paymentInfo (CreditCardPaymentInfo PK 9448882667562) is present and correctly linked to the order and PaymentTransaction. The payment side is healthy.\n\nThe root cause is a NULL deliveryMode on the order header. The order entry (entry 0) has the delivery mode set to ae-mx-calendar-delivery (PK 8797993762856), but this was not propagated to the order header during checkout conversion. DefaultCheckOrderService.check() validates that order.getDeliveryMode() is non-null as one of its mandatory conditions. When this check fails, the order status is set to CHECKED_INVALID and the method returns false. The CheckOrderAction in order-process-v25-69 then returns NOK, but the process appears to loop at the checkOrder action 50+ times before eventually reaching FAILED state, likely due to additional custom Toko pre-validation logic that throws an unhandled exception when deliveryMode is null rather than cleanly returning NOK on each attempt.\n\nAdditionally, order.getPaymentStatus() is NULL and there is a malformed ExternalService entry linked to the order with all fields NULL (provider, status, serviceProduct, serviceID are all empty). This partially initialised external service record is a secondary anomaly that would cause further issues downstream at checkExternalEnabled if the process were to progress past checkOrder.\n\nNo consignments were ever created because the process never reached the splitOrder step. The order is stuck at CHECKED_INVALID with no fulfilment path.\n\nThis is the same pattern observed in SAME-3952 (September 2026, order SA260831-72577904) where a Checkout.com ApplePay order on the SA store had a NULL deliveryMode on the order header despite the order entry having the delivery mode set. That ticket was resolved by setting the order header deliveryMode from the order entry and restarting the order process. The same remediation approach applies here.\n\nThe remediation is to set the order header deliveryMode from the order entry (ae-mx-calendar-delivery), set the paymentStatus to PAID (since both AUTHORIZATION entries are ACCEPTED), clean up the malformed ExternalService entry, and restart the order process from checkOrder. This requires a Groovy script run via HAC.\n\nThis is the same remediation approach confirmed and successfully applied in SAME-3952.\n\nThanks,\n\nAryan.\n\n## Remediation\n\n1. Set order.deliveryMode from order entry (ae-mx-calendar-delivery, PK 8797993762856)\n2. Set order.paymentStatus to PAID\n3. Clean up the malformed ExternalService entry (all fields NULL)\n4. Set order.status back to CREATED\n5. Restart the order process (order-process-v25-69) from the beginning or from checkOrder action\n6. Reuse approach from SAME-3952 remediation\n\nNo reusable PC ticket was found for this specific remediation type. A new PC ticket may be needed if script execution is required.",
-        "sections": {
-          "issue": "",
-          "rca": "# RCA: AEME-6548\nStuck Order || 09-Sep\nGenerated: 2026-09-09T11:35:00.000Z\n\nHi Jaffar ,\n\nOrder AE260903-74755067 is stuck at CHECKED_INVALID status with both order process instances (order-process-v25-69) in FAILED state. The order was placed on 07 September 2026 at 10:42:13 UTC via Checkout.com flow on the AE store for a total of 2,564.10 AED. The payment was successfully authorised twice — two AUTHORIZATION PaymentTransactionEntry records both show ACCEPTED status for 2,564.10 AED at 10:43:15 and 14:43:15 respectively. The paymentInfo (CreditCardPaymentInfo PK 9448882667562) is present and correctly linked to the order and PaymentTransaction. The payment side is healthy.\n\nThe root cause is a NULL deliveryMode on the order header. The order entry (entry 0) has the delivery mode set to ae-mx-calendar-delivery (PK 8797993762856), but this was not propagated to the order header during checkout conversion. DefaultCheckOrderService.check() validates that order.getDeliveryMode() is non-null as one of its mandatory conditions. When this check fails, the order status is set to CHECKED_INVALID and the method returns false. The CheckOrderAction in order-process-v25-69 then returns NOK, but the process appears to loop at the checkOrder action 50+ times before eventually reaching FAILED state, likely due to additional custom Toko pre-validation logic that throws an unhandled exception when deliveryMode is null rather than cleanly returning NOK on each attempt.\n\nAdditionally, order.getPaymentStatus() is NULL and there is a malformed ExternalService entry linked to the order with all fields NULL (provider, status, serviceProduct, serviceID are all empty). This partially initialised external service record is a secondary anomaly that would cause further issues downstream at checkExternalEnabled if the process were to progress past checkOrder.\n\nNo consignments were ever created because the process never reached the splitOrder step. The order is stuck at CHECKED_INVALID with no fulfilment path.\n\nThis is the same pattern observed in SAME-3952 (September 2026, order SA260831-72577904) where a Checkout.com ApplePay order on the SA store had a NULL deliveryMode on the order header despite the order entry having the delivery mode set. That ticket was resolved by setting the order header deliveryMode from the order entry and restarting the order process. The same remediation approach applies here.\n\nThe remediation is to set the order header deliveryMode from the order entry (ae-mx-calendar-delivery), set the paymentStatus to PAID (since both AUTHORIZATION entries are ACCEPTED), clean up the malformed ExternalService entry, and restart the order process from checkOrder. This requires a Groovy script run via HAC.\n\nThis is the same remediation approach confirmed and successfully applied in SAME-3952.\n\nThanks,\n\nAryan.\n\n## Remediation\n\n1. Set order.deliveryMode from order entry (ae-mx-calendar-delivery, PK 8797993762856)\n2. Set order.paymentStatus to PAID\n3. Clean up the malformed ExternalService entry (all fields NULL)\n4. Set order.status back to CREATED\n5. Restart the order process (order-process-v25-69) from the beginning or from checkOrder action\n6. Reuse approach from SAME-3952 remediation\n\nNo reusable PC ticket was found for this specific remediation type. A new PC ticket may be needed if script execution is required.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-09T11:40:12.173Z"
-      }
-    },
     {
       "key": "MHME-1451",
       "summary": "Cancellation of MA260821-64994011 order",
@@ -1275,7 +1214,7 @@
       }
     ],
     "pid": 15856,
-    "uptime": 171,
+    "uptime": 211,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -1284,7 +1223,7 @@
         "issueTitle": "Investigate ticket PC-54387",
         "snippet": "Manual investigation request from dashboard.\n\nTicket: PC-54387\n\nUse the investigate workflow:\n1. Fetch the ticket detail",
         "pid": 20240,
-        "elapsed": 167
+        "elapsed": 208
       }
     ],
     "startTime": "2026-10-06T11:48:15.028Z",
@@ -1295,7 +1234,7 @@
       {
         "pid": 33768,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 22066,
+        "ageSeconds": 22109,
         "status": "running",
         "isChild": false,
         "taskSummary": "I am unable to see any output from the AI windows I send commands from the mobile dashboard. I sh...",
@@ -1305,7 +1244,7 @@
       {
         "pid": 28676,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 22060,
+        "ageSeconds": 22104,
         "status": "running",
         "isChild": false,
         "taskSummary": "post the comment on 1st ticket with 45m logs, assig back and update labels",
@@ -1315,7 +1254,7 @@
       {
         "pid": 29064,
         "cwd": "c:\\windows",
-        "ageSeconds": 22057,
+        "ageSeconds": 22100,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1325,7 +1264,7 @@
       {
         "pid": 25828,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 22041,
+        "ageSeconds": 22084,
         "status": "running",
         "isChild": false,
         "taskSummary": "I am unable to see any output from the AI windows I send commands from the mobile dashboard. I sh...",
@@ -4464,13 +4403,13 @@
         ]
       }
     },
-    "bridgeLogTail": "      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n      at async GeminiChat.processStreamResponse (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:298143:22)\n      at async GeminiChat.streamWithRetries (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:297807:30)\n      at async _LocalAgentExecutor.callModel (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:313831:22)\n      at async _LocalAgentExecutor.executeTurn (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:313414:43),\n  repairError: JSONRepairError: Unexpected character \"{\" at position 46\n      at throwUnexpectedCharacter (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-AMPHR7K3.js:7552:11)\n      at jsonrepair (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-AMPHR7K3.js:7053:3)\n      at safeJsonParse (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-AMPHR7K3.js:7581:28)\n      at StreamingToolCallParser.getCompletedToolCalls (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-AMPHR7K3.js:7758:22)\n      at OpenAIContentConverter.convertOpenAIChunkToGemini (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-AMPHR7K3.js:8294:65)\n      at ContentGenerationPipeline.processStreamWithLogging (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-AMPHR7K3.js:8596:41)\n      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n      at async GeminiChat.processStreamResponse (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:298143:22)\n      at async GeminiChat.streamWithRetries (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:297807:30)\n      at async _LocalAgentExecutor.callModel (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:313831:22) {\n    position: 46\n  },\n  jsonString: '{\"file_path\": \"C:\\\\\\\\Users\\\\\\\\aryan.v1\\\\\\\\.gemini\\\\\\\\t{\"command\": \"mp\\\\\\\\aryanGet-ChildItem-v1-1 -Path \\\\\"C\\\\\\\\memory\\\\\\\\MEM:\\\\\\\\toko\\\\\\\\tORY.md\"}oko6\\\\\\\\toko'\n}",
+    "bridgeLogTail": "      at async _LocalAgentExecutor.callModel (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:313831:22) {\n    position: 46\n  },\n  jsonString: '{\"file_path\": \"C:\\\\\\\\Users\\\\\\\\aryan.v1\\\\\\\\.gemini\\\\\\\\t{\"command\": \"mp\\\\\\\\aryanGet-ChildItem-v1-1 -Path \\\\\"C\\\\\\\\memory\\\\\\\\MEM:\\\\\\\\toko\\\\\\\\tORY.md\"}oko6\\\\\\\\toko'\n}\n[2026-10-06T11:51:52.707Z] aipro stderr for #584: Error during GrepLogic execution: Error: Operation timed out after 30000ms. In large repositories, consider narrowing your search scope by specifying a 'dir_path' or an 'include_pattern'.\n[2026-10-06T11:51:55.150Z] aipro stderr for #584: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-06T11:51:04.221Z",
-      "ageMs": 8848
+      "lastWrite": "2026-10-06T11:51:49.233Z",
+      "ageMs": 6111
     },
-    "watchdogLogTail": "[2026-10-06T11:48:59.343Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T11:49:15.809Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T11:49:30.824Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T11:49:37.963Z] DUPLICATE jira-dashboard-server detected: PID 22904 — killing\n[2026-10-06T11:49:49.152Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T11:50:04.159Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T11:50:19.163Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T11:50:34.175Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T11:50:49.187Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T11:51:04.212Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.",
+    "watchdogLogTail": "[2026-10-06T11:49:37.963Z] DUPLICATE jira-dashboard-server detected: PID 22904 — killing\n[2026-10-06T11:49:49.152Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T11:50:04.159Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T11:50:19.163Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T11:50:34.175Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T11:50:49.187Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T11:51:04.212Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T11:51:19.217Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T11:51:34.222Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T11:51:49.230Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.",
     "jobOutputs": {}
   },
   "mcps": [
@@ -4478,7 +4417,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-06T11:50:44.027Z",
+      "lastCheck": "2026-10-06T11:51:44.185Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4487,7 +4426,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-06T11:50:44.027Z",
+      "lastCheck": "2026-10-06T11:51:44.186Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4496,9 +4435,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-06T11:50:44.027Z",
+      "lastCheck": "2026-10-06T11:51:44.186Z",
       "downSince": "2026-10-06T07:54:38.689Z",
-      "downDuration": 14165338,
+      "downDuration": 14225497,
       "alert": true
     }
   ],
@@ -4590,18 +4529,6 @@
         "url": "https://jira.secext.samsung.net/browse/RT-722599",
         "updated": "2026-09-29T02:59:15.000+0900",
         "statusChangedAt": "2026-09-28T15:10:33.048+0900"
-      },
-      {
-        "key": "AEME-6548",
-        "summary": "Stuck Order || 09-Sep",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/AEME-6548",
-        "updated": "2026-10-06T20:50:04.000+0900",
-        "statusChangedAt": "2026-10-06T15:21:55.974+0900"
       },
       {
         "key": "MHME-1451",
@@ -4850,7 +4777,7 @@
     ],
     "queued": [],
     "totals": {
-      "zero": 11,
+      "zero": 10,
       "actionable": 3,
       "blocked": 8,
       "queued": 0
