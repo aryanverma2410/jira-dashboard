@@ -106,6 +106,32 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .status-option{padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);font-size:13px;cursor:pointer;text-align:center}
 .status-option:active{background:rgba(88,166,255,0.2)}
 
+/* WORKLOG TRACKER */
+.worklog-tracker{background:var(--card);border:1px solid var(--border);border-radius:12px;margin:0 16px 12px;overflow:hidden}
+.worklog-tracker-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;user-select:none}
+.worklog-tracker-title{font-size:13px;font-weight:600;color:var(--text)}
+.worklog-tracker-stats{display:flex;gap:16px}
+.wl-stat{display:flex;flex-direction:column;align-items:center}
+.wl-stat-label{font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px}
+.wl-stat-val{font-size:18px;font-weight:700;color:var(--accent)}
+.wl-stat-val.zero{color:var(--text-dim)}
+.worklog-tracker-arrow{font-size:10px;color:var(--text-dim);transition:transform 0.2s}
+.worklog-tracker.expanded .worklog-tracker-arrow{transform:rotate(180deg)}
+.worklog-tracker-details{padding:0 14px 12px;border-top:1px solid var(--border)}
+.wl-day-breakdown{display:flex;gap:4px;margin-top:10px;overflow-x:auto;scrollbar-width:none}
+.wl-day-bar{flex:1;min-width:40px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.wl-day-bar-fill{width:100%;background:var(--accent);border-radius:3px 3px 0 0;min-height:2px;transition:height 0.3s}
+.wl-day-bar-fill.zero{background:rgba(88,166,255,0.15)}
+.wl-day-bar-label{font-size:9px;color:var(--text-dim)}
+.wl-day-bar-val{font-size:10px;font-weight:600;color:var(--text)}
+.wl-ticket-breakdown{margin-top:12px}
+.wl-ticket-breakdown-title{font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px}
+.wl-ticket-row{display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px}
+.wl-ticket-key{font-family:monospace;font-weight:600;color:var(--accent);flex-shrink:0}
+.wl-ticket-hours{color:var(--text);font-weight:600;flex-shrink:0}
+.wl-ticket-summary{color:var(--text-dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
+.wl-loading{text-align:center;padding:12px;color:var(--text-dim);font-size:12px}
+
 /* FAB */
 .fab{position:fixed;bottom:calc(var(--nav-h) + 16px);right:16px;width:52px;height:52px;border-radius:50%;background:var(--accent);border:none;color:#fff;font-size:24px;cursor:pointer;box-shadow:0 4px 16px rgba(88,166,255,0.4);z-index:200;display:flex;align-items:center;justify-content:center;transition:transform 0.2s}
 .fab:active{transform:scale(0.9)}
@@ -269,6 +295,41 @@ body.has-status-bar .scroll{padding-top:28px}
 .ticket-actions-swipe .act-label{background:var(--success)}
 .ticket-actions-swipe .act-assign{background:#a371f7}
 .ticket-actions-swipe .act-investigate{background:#ff7b72}
+.ticket-actions-swipe .act-worklog{background:#7d8590}
+
+/* ===== AI CONSOLE (Live Conversation) ===== */
+.ai-console{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:300;background:var(--bg);overflow:hidden;flex-direction:column}
+.ai-console.show{display:flex}
+.ai-console-header{position:sticky;top:0;z-index:10;background:var(--bg);padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.ai-console-back{background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;flex-shrink:0}
+.ai-console-title{flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ai-console-status{font-size:11px;padding:2px 8px;border-radius:10px;flex-shrink:0}
+.ai-console-status.thinking{background:rgba(88,166,255,0.15);color:var(--accent);animation:pulse-dot 1.5s infinite}
+.ai-console-status.done{background:rgba(63,185,80,0.15);color:var(--success)}
+.ai-console-status.idle{background:var(--card);color:var(--text-dim)}
+.ai-console-body{flex:1;overflow-y:auto;padding:12px 16px;-webkit-overflow-scrolling:touch}
+.ai-console-input-bar{position:sticky;bottom:0;z-index:10;background:var(--bg);padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end}
+.ai-console-input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 12px;color:var(--text);font-size:13px;resize:none;max-height:100px;min-height:40px;font-family:inherit}
+.ai-console-send{background:var(--accent);color:#fff;border:none;border-radius:12px;padding:10px 16px;font-size:13px;cursor:pointer;flex-shrink:0;transition:opacity 0.2s}
+.ai-console-send:disabled{opacity:0.4;cursor:not-allowed}
+.ai-console-send:active{transform:scale(0.95)}
+
+/* AI Console events */
+.ai-event{margin-bottom:10px;font-size:13px;line-height:1.5}
+.ai-event-tool{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer}
+.ai-event-tool-header{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-dim)}
+.ai-event-tool-name{font-weight:600;color:var(--accent)}
+.ai-event-tool-arrow{font-size:10px;transition:transform 0.2s}
+.ai-event-tool.expanded .ai-event-tool-arrow{transform:rotate(90deg)}
+.ai-event-tool-params{margin-top:6px;padding:6px 8px;background:rgba(0,0,0,0.2);border-radius:6px;font-size:11px;color:var(--text-dim);font-family:monospace;white-space:pre-wrap;word-break:break-all;display:none}
+.ai-event-tool.expanded .ai-event-tool-params{display:block}
+.ai-event-result{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--success);border-radius:6px;padding:8px 10px;font-size:11px;color:var(--text-dim);max-height:300px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;font-family:monospace}
+.ai-event-result.error{border-left-color:var(--danger)}
+.ai-event-text{color:var(--text);padding:2px 0}
+.ai-event-init{color:var(--text-dim);font-size:11px;font-style:italic;padding:4px 0}
+.ai-event-empty{color:var(--text-dim);font-size:13px;text-align:center;padding:40px 20px}
+.ai-event-typing{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:4px;animation:pulse-dot 1s infinite}
+@keyframes pulse-dot{0%,100%{opacity:0.3}50%{opacity:1}}
 
 /* ===== TICKET DETAIL PAGE ===== */
 .detail-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:200;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch}
@@ -646,6 +707,21 @@ body.has-status-bar .scroll{padding-top:28px}
   </div>
   <div class="scroll" id="ticketsScroll">
     <div id="dayStarter"></div>
+    <!-- WORKLOG TRACKER -->
+    <div class="worklog-tracker" id="worklogTracker">
+      <div class="worklog-tracker-header" onclick="toggleWorklogDetails()">
+        <span class="worklog-tracker-title">&#9201; Worklogs</span>
+        <div class="worklog-tracker-stats">
+          <span class="wl-stat"><span class="wl-stat-label">Today</span><span class="wl-stat-val" id="wlTodayVal">—</span></span>
+          <span class="wl-stat"><span class="wl-stat-label">7-Day</span><span class="wl-stat-val" id="wlWeekVal">—</span></span>
+        </div>
+        <span class="worklog-tracker-arrow" id="wlArrow">&#9660;</span>
+      </div>
+      <div class="worklog-tracker-details" id="worklogDetails" style="display:none">
+        <div class="wl-day-breakdown" id="wlDayBreakdown"></div>
+        <div class="wl-ticket-breakdown" id="wlTicketBreakdown"></div>
+      </div>
+    </div>
     <div class="watch-input-row">
       <input type="text" class="watch-input" id="watchInput" placeholder="Investigate ticket KEY (e.g. SAME-1234)">
       <button class="watch-btn" onclick="triggerManualInvestigation()">&#128269; Investigate</button>
@@ -947,6 +1023,22 @@ body.has-status-bar .scroll{padding-top:28px}
 <div class="offline-indicator hidden" id="offlineIndicator" style="position:fixed;bottom:calc(var(--nav-h) + 70px);left:50%;transform:translateX(-50%);z-index:380">&#9888; You are offline. Actions will be saved and synced when connection returns.</div>
 
 <div class="toast" id="toast"></div>
+
+<!-- AI CONSOLE (Live Conversation) -->
+<div class="ai-console" id="aiConsole">
+  <div class="ai-console-header">
+    <div class="ai-console-back" onclick="closeAiConsole()">&#8592;</div>
+    <div class="ai-console-title" id="aiConsoleTitle">AI Console</div>
+    <span class="ai-console-status idle" id="aiConsoleStatus">Idle</span>
+  </div>
+  <div class="ai-console-body" id="aiConsoleBody">
+    <div class="ai-event-empty">Loading...</div>
+  </div>
+  <div class="ai-console-input-bar">
+    <textarea class="ai-console-input" id="aiConsoleInput" placeholder="Send a follow-up message..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiFollowup()}"></textarea>
+    <button class="ai-console-send" id="aiConsoleSend" onclick="sendAiFollowup()">Send</button>
+  </div>
+</div>
 
 <!-- TICKET DETAIL OVERLAY -->
 <div class="detail-overlay" id="detailOverlay">
@@ -1304,10 +1396,12 @@ function buildCard(t,exp,ch){
         '<button class="action-btn quick" data-action="investigate" data-key="'+escapeHtml(t.key)+'">Investigate</button>'+
         '<button class="action-btn quick" data-action="script" data-key="'+escapeHtml(t.key)+'">Write Script</button>'+
         '<button class="action-btn quick" data-action="queue-action" data-key="'+escapeHtml(t.key)+'">Queue Action</button>'+
+        '<button class="action-btn quick" data-action="worklog" data-key="'+escapeHtml(t.key)+'">Log Time</button>'+
       '</div>'+
       '<div class="inline-action-area" id="ca-'+escapeHtml(t.key)+'"><textarea class="inline-textarea" id="ct-'+escapeHtml(t.key)+'" placeholder="Type your comment..."></textarea><button class="inline-submit" data-action="submit-comment" data-key="'+escapeHtml(t.key)+'">Submit Comment</button></div>'+
       '<div class="status-dropdown" id="sd-'+escapeHtml(t.key)+'"><div class="status-option" data-status="In Progress" data-key="'+escapeHtml(t.key)+'">In Progress</div><div class="status-option" data-status="Done" data-key="'+escapeHtml(t.key)+'">Done</div><div class="status-option" data-status="Open" data-key="'+escapeHtml(t.key)+'">Open</div><div class="status-option" data-status="Reopened" data-key="'+escapeHtml(t.key)+'">Reopened</div><div class="status-option" data-status="Closed" data-key="'+escapeHtml(t.key)+'">Closed</div></div>'+
       '<div class="inline-action-area" id="la-'+escapeHtml(t.key)+'"><input type="text" class="inline-input" id="li-'+escapeHtml(t.key)+'" placeholder="Label name (e.g. MENAL1, c=platform_issue)..."><button class="inline-submit" data-action="submit-label" data-key="'+escapeHtml(t.key)+'">Add Label</button></div>'+
+      '<div class="inline-action-area" id="wl-'+escapeHtml(t.key)+'"><input type="text" class="inline-input" id="wt-'+escapeHtml(t.key)+'" placeholder="Time spent (e.g. 1h 30m, 2h, 30m)..."><input type="text" class="inline-input" id="wc-'+escapeHtml(t.key)+'" placeholder="Comment (optional)..."><button class="inline-submit" data-action="submit-worklog" data-key="'+escapeHtml(t.key)+'">Log Time</button></div>'+
       '<div class="inline-action-area" id="lk-'+escapeHtml(t.key)+'"><input type="text" class="inline-input" id="lt-'+escapeHtml(t.key)+'" placeholder="Target ticket key (e.g. PC-1234)..."><select class="inline-select" id="lr-'+escapeHtml(t.key)+'"><option value="Relates">Relates</option><option value="Blocks">Blocks</option><option value="Is blocked by">Is blocked by</option><option value="Duplicates">Duplicates</option><option value="Is duplicated by">Is duplicated by</option></select><button class="inline-submit" data-action="submit-link" data-key="'+escapeHtml(t.key)+'">Link Issue</button></div>'+
           '<div class="solution-section" data-field="solution">'+buildSolutionHtml(t.solution)+'</div>'+
 '</div></div>'
@@ -1463,7 +1557,7 @@ function toggleExpand(key){
 }
 
 function hideAllInlineActions(key){
-  ['ca-','sd-','la-','lk-'].forEach(function(prefix){var el=document.getElementById(prefix+key);if(el)el.classList.remove('show')})
+  ['ca-','sd-','la-','lk-','wl-'].forEach(function(prefix){var el=document.getElementById(prefix+key);if(el)el.classList.remove('show')})
 }
 function toggleInlineAction(key,type){
   hideAllInlineActions(key);
@@ -1471,6 +1565,7 @@ function toggleInlineAction(key,type){
   else if(type==='status'){var s=document.getElementById('sd-'+key);if(s)s.classList.toggle('show')}
   else if(type==='label'){var l=document.getElementById('la-'+key);if(l)l.classList.toggle('show');var li=document.getElementById('li-'+key);if(li&&l.classList.contains('show'))setTimeout(function(){li.focus()},50)}
   else if(type==='link'){var k=document.getElementById('lk-'+key);if(k)k.classList.toggle('show');var lt=document.getElementById('lt-'+key);if(lt&&k.classList.contains('show'))setTimeout(function(){lt.focus()},50)}
+  else if(type==='worklog'){var w=document.getElementById('wl-'+key);if(w)w.classList.toggle('show');var wt=document.getElementById('wt-'+key);if(wt&&w.classList.contains('show'))setTimeout(function(){wt.focus()},50)}
 }
 
 // ===== SESSIONS =====
@@ -1638,25 +1733,50 @@ function createIssue(title,body,cb){
   })
 }
 
+function directJiraAction(action,key,value,okMsg,errMsg){
+  var body=JSON.stringify({action:action,key:key,value:value||''});
+  fetch('http://127.0.0.1:9293/jira-action',{method:'POST',headers:{'Content-Type':'application/json'},body:body})
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if(d.ok){showToast(okMsg||'Done','success')}
+      else{showToast(errMsg||('Failed: '+(d.error||'unknown')),'error')}
+    })
+    .catch(function(e){showToast('Request failed: '+e.message,'error')})
+}
+
 function submitComment(key){
   var ta=document.getElementById('ct-'+key);
   if(!ta||!ta.value.trim())return;
   var c=ta.value.trim();
-  showToast('Sending comment...','');
-  createIssue('JIRA ACTION: Add comment to '+key,'Comment: '+c+NL+'Sent from dashboard',function(e,d){
-    if(e||!d||!d.number){showToast('Failed to send','error');return}
-    showToast('Sent to aipro (Issue #'+d.number+')','success');
-    ta.value='';document.getElementById('ca-'+key).classList.remove('show')
-  })
+  showToast('Posting comment...','');
+  var body=JSON.stringify({action:'comment',key:key,value:c});
+  fetch('http://127.0.0.1:9293/jira-action',{method:'POST',headers:{'Content-Type':'application/json'},body:body})
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if(d.ok){showToast('Comment posted to '+key,'success');ta.value='';document.getElementById('ca-'+key).classList.remove('show')}
+      else{showToast('Failed: '+(d.error||'unknown'),'error')}
+    })
+    .catch(function(e){showToast('Request failed: '+e.message,'error')})
 }
 
 function submitStatus(key,status){
-  showToast('Sending status change...','');
-  createIssue('JIRA ACTION: Transition '+key+' to '+status,'Transition '+key+' to '+status+NL+'Sent from dashboard',function(e,d){
-    if(e||!d||!d.number){showToast('Failed to send','error');return}
-    showToast('Sent to aipro (Issue #'+d.number+')','success');
-    document.getElementById('sd-'+key).classList.remove('show')
-  })
+  showToast('Finding transition for '+status+'...','');
+  var trBody=JSON.stringify({action:'transitions',key:key});
+  fetch('http://127.0.0.1:9293/jira-action',{method:'POST',headers:{'Content-Type':'application/json'},body:trBody})
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if(!d.ok||!d.transitions){showToast('Cannot get transitions: '+(d.error||'unknown'),'error');return}
+      var found=d.transitions.find(function(t){return t.to&&t.to.name===status});
+      if(!found){showToast('No transition to "'+status+'" available','error');return}
+      showToast('Transitioning to '+status+'...','');
+      var transBody=JSON.stringify({action:'transition',key:key,value:found.id});
+      return fetch('http://127.0.0.1:9293/jira-action',{method:'POST',headers:{'Content-Type':'application/json'},body:transBody}).then(function(r){return r.json()});
+    })
+    .then(function(d){
+      if(d&&d.ok){showToast(key+' → '+status,'success');document.getElementById('sd-'+key).classList.remove('show')}
+      else if(d){showToast('Transition failed: '+(d.error||'unknown'),'error')}
+    })
+    .catch(function(e){showToast('Request failed: '+e.message,'error')})
 }
 
 function submitLabel(key){
@@ -1664,11 +1784,14 @@ function submitLabel(key){
   if(!inp||!inp.value.trim())return;
   var label=inp.value.trim();
   showToast('Adding label "'+label+'"...','');
-  createIssue('JIRA ACTION: Add label '+label+' to '+key,'Add label "'+label+'" to '+key+NL+'Sent from dashboard',function(e,d){
-    if(e||!d||!d.number){showToast('Failed to send','error');return}
-    showToast('Sent to aipro (Issue #'+d.number+')','success');
-    inp.value='';document.getElementById('la-'+key).classList.remove('show')
-  })
+  var body=JSON.stringify({action:'label',key:key,value:label});
+  fetch('http://127.0.0.1:9293/jira-action',{method:'POST',headers:{'Content-Type':'application/json'},body:body})
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if(d.ok){showToast('Label "'+label+'" added to '+key,'success');inp.value='';document.getElementById('la-'+key).classList.remove('show')}
+      else{showToast('Failed: '+(d.error||'unknown'),'error')}
+    })
+    .catch(function(e){showToast('Request failed: '+e.message,'error')})
 }
 
 function submitLink(key){
@@ -1685,12 +1808,33 @@ function submitLink(key){
   })
 }
 
+function submitWorklog(key){
+  var ti=document.getElementById('wt-'+key);
+  var ci=document.getElementById('wc-'+key);
+  if(!ti||!ti.value.trim())return;
+  var time=ti.value.trim();
+  var comment=ci?ci.value.trim():'';
+  showToast('Logging '+time+' to '+key+'...','');
+  var body=JSON.stringify({key:key,timeSpent:time,comment:comment});
+  fetch('http://127.0.0.1:9293/jira-worklog',{method:'POST',headers:{'Content-Type':'application/json'},body:body})
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if(d.ok){showToast(time+' logged to '+key,'success');ti.value='';if(ci)ci.value='';document.getElementById('wl-'+key).classList.remove('show')}
+      else{showToast('Failed: '+(d.error||'unknown'),'error')}
+    })
+    .catch(function(e){showToast('Request failed: '+e.message,'error')})
+}
+
 function assignToMe(key){
   showToast('Assigning '+key+' to you...','');
-  createIssue('JIRA ACTION: Assign '+key+' to me','Assign '+key+' to me'+NL+'Sent from dashboard',function(e,d){
-    if(e||!d||!d.number){showToast('Failed to send','error');return}
-    showToast('Sent to aipro (Issue #'+d.number+')','success')
-  })
+  var body=JSON.stringify({action:'assign',key:key});
+  fetch('http://127.0.0.1:9293/jira-action',{method:'POST',headers:{'Content-Type':'application/json'},body:body})
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if(d.ok){showToast(key+' assigned to '+(d.assignee||'you'),'success')}
+      else{showToast('Failed: '+(d.error||'unknown'),'error')}
+    })
+    .catch(function(e){showToast('Request failed: '+e.message,'error')})
 }
 
 // ===== AUTOLOGIN (via GitHub Issue — bridge picks up and runs on desktop) =====
@@ -1783,6 +1927,7 @@ function renderCmdHistory(){
     else{
       h+='<div class="cmd-h-pending">Waiting for response...<span class="pending-dot"></span></div>';
       h+='<pre class="cmd-h-live" id="cmdLive_'+item.issueNum+'"></pre>';
+      h+='<button class="action-btn quick" style="margin-top:6px" onclick="openAiConsole('+item.issueNum+',\''+escapeHtml(item.command).replace(/'/g,"\\'")+'\')">🖥 Open AI Console</button>';
       startLivePolling(item.issueNum);
     }
     h+='</div>'
@@ -1820,8 +1965,8 @@ function startLivePolling(issueNum){
       .then(function(d){
         var el=document.getElementById('cmdLive_'+issueNum);
         if(!el){stopLivePolling(issueNum);return}
-        if(d.active&&d.output){
-          el.textContent=d.output;
+        if(d.active&&(d.text||d.output)){
+          el.textContent=d.text||d.output||'';
           el.scrollTop=el.scrollHeight;
           setTimeout(poll,2000);
         } else {
@@ -1836,6 +1981,205 @@ function startLivePolling(issueNum){
 }
 function stopLivePolling(issueNum){
   delete livePollTimers[issueNum];
+}
+
+// ===== AI CONSOLE (Live Conversation) =====
+var aiConsoleState={issueNum:null,pollTimer:null,lastEventCount:0,isActive:false,scrollLocked:false};
+
+function openAiConsole(issueNum,title){
+  aiConsoleState.issueNum=issueNum;
+  aiConsoleState.lastEventCount=0;
+  aiConsoleState.isActive=true;
+  aiConsoleState.scrollLocked=false;
+  document.getElementById('aiConsole').classList.add('show');
+  document.getElementById('aiConsoleTitle').textContent='#'+issueNum+(title?' '+title:'');
+  document.getElementById('aiConsoleBody').innerHTML='<div class="ai-event-empty">Connecting...</div>';
+  updateAiConsoleStatus('connecting');
+  // Start polling
+  pollAiConsole();
+  if(aiConsoleState.pollTimer) clearInterval(aiConsoleState.pollTimer);
+  aiConsoleState.pollTimer=setInterval(pollAiConsole,1000);
+}
+
+function closeAiConsole(){
+  document.getElementById('aiConsole').classList.remove('show');
+  if(aiConsoleState.pollTimer){clearInterval(aiConsoleState.pollTimer);aiConsoleState.pollTimer=null}
+  aiConsoleState.issueNum=null;
+}
+
+function updateAiConsoleStatus(state){
+  var el=document.getElementById('aiConsoleStatus');
+  el.className='ai-console-status';
+  if(state==='thinking'){el.classList.add('thinking');el.textContent='Thinking...'}
+  else if(state==='done'){el.classList.add('done');el.textContent='Done'}
+  else if(state==='connecting'){el.classList.add('idle');el.textContent='Connecting...'}
+  else{el.classList.add('idle');el.textContent='Idle'}
+}
+
+function pollAiConsole(){
+  if(!aiConsoleState.issueNum) return;
+  var num=aiConsoleState.issueNum;
+  fetch('http://127.0.0.1:9293/live/'+num)
+    .then(function(r){return r.json()})
+    .then(function(data){
+      aiConsoleState.isActive=data.active;
+      // Render events
+      if(data.events&&data.events.length>0){
+        renderAiEvents(data.events,data.active,num);
+      } else if(data.text){
+        // Backward compat: text-only mode
+        var el=document.getElementById('aiConsoleBody');
+        if(el.querySelector('.ai-event-empty')) el.innerHTML='';
+        var pre=el.querySelector('.ai-event-text-legacy');
+        if(!pre){pre=document.createElement('div');pre.className='ai-event-text';pre.id='aiEventLegacyText';el.appendChild(pre)}
+        pre.textContent=data.text;
+      } else if(!data.active){
+        var el=document.getElementById('aiConsoleBody');
+        if(el.querySelector('.ai-event-empty')) el.innerHTML='<div class="ai-event-empty">Session ended. No output captured.</div>';
+      }
+      // Update status
+      if(data.active) updateAiConsoleStatus('thinking');
+      else if(data.eventCount>0||data.text) updateAiConsoleStatus('done');
+      else updateAiConsoleStatus('idle');
+      // Auto-scroll
+      if(!aiConsoleState.scrollLocked){
+        var body=document.getElementById('aiConsoleBody');
+        body.scrollTop=body.scrollHeight;
+      }
+    })
+    .catch(function(e){
+      console.log('AI Console poll error:',e);
+    });
+}
+
+function renderAiEvents(events,isActive,issueNum){
+  var el=document.getElementById('aiConsoleBody');
+  var wasAtBottom=el.scrollHeight-el.scrollTop-el.clientHeight<50;
+  
+  // Build HTML for all events
+  var html='';
+  var toolCallMap={}; // Track tool_use IDs for matching with results
+  
+  for(var i=0;i<events.length;i++){
+    var ev=events[i];
+    if(ev.type==='init'){
+      html+='<div class="ai-event ai-event-init">Session initialized · Model: '+escapeHtml(ev.model||'gemini-2.0-flash')+'</div>';
+    } else if(ev.type==='message'){
+      if(ev.role==='assistant'){
+        // Assistant message (may have content and/or tool_calls)
+        if(ev.content){
+          html+='<div class="ai-event ai-event-text">'+escapeHtml(ev.content).replace(/\n/g,'<br>')+'</div>';
+        }
+        if(ev.tool_calls){
+          for(var t=0;t<ev.tool_calls.length;t++){
+            var tc=ev.tool_calls[t];
+            var toolId=tc.id||('tool-'+i+'-'+t);
+            toolCallMap[toolId]=i;
+            var params=typeof tc.params==='string'?tc.params:JSON.stringify(tc.params||tc.arguments||{},null,2);
+            html+='<div class="ai-event ai-event-tool" onclick="this.classList.toggle(\'expanded\')" id="aiTool_'+toolId+'">';
+            html+='<div class="ai-event-tool-header"><span class="ai-event-tool-arrow">&#9654;</span><span class="ai-event-tool-name">&#128295; '+escapeHtml(tc.name||'tool')+'</span></div>';
+            html+='<div class="ai-event-tool-params">'+escapeHtml(params)+'</div>';
+            html+='</div>';
+          }
+        }
+      } else if(ev.role==='user'&&ev.content){
+        html+='<div class="ai-event ai-event-text" style="color:var(--text-dim);font-style:italic">'+escapeHtml(ev.content).replace(/\n/g,'<br>')+'</div>';
+      }
+    } else if(ev.type==='tool_use'){
+      var toolId=ev.id||('tool-'+i);
+      toolCallMap[toolId]=i;
+      var params=ev.params||ev.input||{};
+      if(typeof params==='object') params=JSON.stringify(params,null,2);
+      html+='<div class="ai-event ai-event-tool" onclick="this.classList.toggle(\'expanded\')" id="aiTool_'+toolId+'">';
+      html+='<div class="ai-event-tool-header"><span class="ai-event-tool-arrow">&#9654;</span><span class="ai-event-tool-name">&#128295; '+escapeHtml(ev.name||'tool')+'</span></div>';
+      html+='<div class="ai-event-tool-params">'+escapeHtml(params)+'</div>';
+      html+='</div>';
+    } else if(ev.type==='tool_result'){
+      var resultId=ev.tool_use_id||ev.id||'';
+      var isError=ev.is_error||false;
+      var output=ev.output||ev.result||'';
+      if(typeof output==='object') output=JSON.stringify(output,null,2);
+      html+='<div class="ai-event ai-event-result'+(isError?' error':'')+'" '+(resultId?'data-tool-id="'+escapeHtml(resultId)+'"':'')+'>'+escapeHtml(output).replace(/\n/g,'<br>')+'</div>';
+    } else if(ev.type==='done'||ev.type==='end'){
+      html+='<div class="ai-event ai-event-init">Session completed</div>';
+    }
+  }
+  
+  // Typing indicator if active
+  if(isActive){
+    html+='<div class="ai-event"><span class="ai-event-typing"></span><span class="ai-event-typing" style="animation-delay:0.2s"></span><span class="ai-event-typing" style="animation-delay:0.4s"></span></div>';
+  }
+  
+  el.innerHTML=html;
+  
+  // Restore scroll position
+  if(wasAtBottom){
+    el.scrollTop=el.scrollHeight;
+  }
+  
+  // Track scroll state
+  el.onscroll=function(){
+    aiConsoleState.scrollLocked=(el.scrollHeight-el.scrollTop-el.clientHeight>100);
+  };
+}
+
+function sendAiFollowup(){
+  var input=document.getElementById('aiConsoleInput');
+  var msg=input.value.trim();
+  if(!msg||!aiConsoleState.issueNum) return;
+  var btn=document.getElementById('aiConsoleSend');
+  btn.disabled=true;
+  input.value='';
+  
+  // Show user message immediately
+  var el=document.getElementById('aiConsoleBody');
+  var userDiv=document.createElement('div');
+  userDiv.className='ai-event ai-event-text';
+  userDiv.style.color='var(--accent)';
+  userDiv.style.fontWeight='500';
+  userDiv.innerHTML='You: '+escapeHtml(msg).replace(/\n/g,'<br>');
+  el.appendChild(userDiv);
+  el.scrollTop=el.scrollHeight;
+  
+  // POST to /live/:issueNum/send
+  fetch('http://127.0.0.1:9293/live/'+aiConsoleState.issueNum+'/send',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({message:msg})
+  })
+  .then(function(r){return r.json()})
+  .then(function(data){
+    btn.disabled=false;
+    if(!data.ok){
+      var errDiv=document.createElement('div');
+      errDiv.className='ai-event ai-event-text';
+      errDiv.style.color='var(--danger)';
+      errDiv.textContent='Error: '+(data.error||'Failed to send');
+      el.appendChild(errDiv);
+      el.scrollTop=el.scrollHeight;
+    } else {
+      // Show status indicator
+      var statusDiv=document.createElement('div');
+      statusDiv.className='ai-event ai-event-init';
+      statusDiv.textContent='Follow-up sent to bridge. Waiting for AI response...';
+      el.appendChild(statusDiv);
+      el.scrollTop=el.scrollHeight;
+      // Resume active polling if stopped
+      if(!aiConsoleState.pollTimer){
+        aiConsoleState.isActive=true;
+        aiConsoleState.pollTimer=setInterval(pollAiConsole,1000);
+      }
+    }
+  })
+  .catch(function(e){
+    btn.disabled=false;
+    var errDiv=document.createElement('div');
+    errDiv.className='ai-event ai-event-text';
+    errDiv.style.color='var(--danger)';
+    errDiv.textContent='Network error: '+e.message;
+    el.appendChild(errDiv);
+    el.scrollTop=el.scrollHeight;
+  });
 }
 
 // ===== ACTIVITY VIEW (Bridge health + jobs + activity feed) =====
@@ -2102,6 +2446,8 @@ document.getElementById('ticketsList').addEventListener('click',function(e){
     else if(ak==='submit-comment')submitComment(ky);
     else if(ak==='submit-label')submitLabel(ky);
     else if(ak==='submit-link')submitLink(ky);
+    else if(ak==='worklog')toggleInlineAction(ky,'worklog');
+    else if(ak==='submit-worklog')submitWorklog(ky);
     return}
   var so=e.target.closest('[data-status]');
   if(so){e.stopPropagation();submitStatus(so.getAttribute('data-key'),so.getAttribute('data-status'));return}
@@ -3296,6 +3642,94 @@ function deleteTemplate(idx,e){
   saveTemplates(tpls);
   showToast('Template deleted','');
 }
+
+// ===== WORKLOG TRACKER =====
+var wlExpanded=false;
+var wlPollTimer=null;
+
+function toggleWorklogDetails(){
+  wlExpanded=!wlExpanded;
+  var tracker=document.getElementById('worklogTracker');
+  var details=document.getElementById('worklogDetails');
+  var arrow=document.getElementById('wlArrow');
+  if(wlExpanded){
+    tracker.classList.add('expanded');
+    details.style.display='block';
+    fetchWorklogStats();
+  } else {
+    tracker.classList.remove('expanded');
+    details.style.display='none';
+  }
+}
+
+function fetchWorklogStats(){
+  fetch('http://127.0.0.1:9293/worklog-stats')
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if(!d.ok){
+        document.getElementById('wlTodayVal').textContent='—';
+        document.getElementById('wlWeekVal').textContent='—';
+        document.getElementById('wlDayBreakdown').innerHTML='<div class="wl-loading">'+escapeHtml(d.error||'Failed to fetch')+'</div>';
+        return;
+      }
+      // Header stats
+      var tv=document.getElementById('wlTodayVal');
+      var wv=document.getElementById('wlWeekVal');
+      tv.textContent=d.today.hours>0?d.today.hours+'h':'0h';
+      tv.classList.toggle('zero',d.today.hours===0);
+      wv.textContent=d.week.hours>0?d.week.hours+'h':'0h';
+      wv.classList.toggle('zero',d.week.hours===0);
+      
+      // Day breakdown bars
+      var maxHours=0;
+      d.dayBreakdown.forEach(function(day){if(day.hours>maxHours)maxHours=day.hours});
+      var dbHtml='';
+      d.dayBreakdown.forEach(function(day){
+        var pct=maxHours>0?Math.round((day.hours/maxHours)*100):0;
+        var dayLabel=day.date.split('-')[2]; // DD
+        var dayName=['S','M','T','W','T','F','S'][new Date(day.date).getDay()];
+        dbHtml+='<div class="wl-day-bar">'+
+          '<div class="wl-day-bar-val">'+(day.hours>0?day.hours+'h':'')+'</div>'+
+          '<div class="wl-day-bar-fill'+(day.hours===0?' zero':'')+'" style="height:'+(pct>0?Math.max(4,pct):2)+'px"></div>'+
+          '<div class="wl-day-bar-label">'+dayName+' '+dayLabel+'</div>'+
+        '</div>';
+      });
+      document.getElementById('wlDayBreakdown').innerHTML=dbHtml;
+      
+      // Per-ticket breakdown
+      var tbHtml='';
+      if(d.ticketBreakdown.length===0){
+        tbHtml='<div class="wl-loading">No worklogs in last 7 days</div>';
+      } else {
+        tbHtml='<div class="wl-ticket-breakdown-title">By Ticket ('+d.ticketBreakdown.length+')</div>';
+        d.ticketBreakdown.forEach(function(t){
+          tbHtml+='<div class="wl-ticket-row" onclick="doLookupById(\''+escapeHtml(t.key)+'\')">'+
+            '<span class="wl-ticket-key">'+escapeHtml(t.key)+'</span>'+
+            '<span class="wl-ticket-hours">'+t.hours+'h</span>'+
+            '<span class="wl-ticket-summary">'+escapeHtml(t.summary||'')+'</span>'+
+          '</div>';
+        });
+      }
+      document.getElementById('wlTicketBreakdown').innerHTML=tbHtml;
+    })
+    .catch(function(e){
+      document.getElementById('wlTodayVal').textContent='—';
+      document.getElementById('wlWeekVal').textContent='—';
+    });
+}
+
+function doLookupById(key){
+  var inp=document.getElementById('lookupInput');
+  if(inp){inp.value=key;switchView('view-lookup');doLookup()}
+}
+
+// Poll worklog stats every 5 minutes (when expanded)
+setInterval(function(){
+  if(wlExpanded)fetchWorklogStats();
+},300000);
+
+// Also fetch on initial load (for header stats)
+setTimeout(fetchWorklogStats,3000);
 
 // ===== TICKET LOOKUP =====
 function doLookup(){
