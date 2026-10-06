@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-06T15:32:23.184Z",
+  "generatedAt": "2026-10-06T15:33:03.253Z",
   "totalTickets": 21,
   "tickets": [
     {
@@ -1069,9 +1069,16 @@
     "online": true,
     "activeSessions": [],
     "stats": {
-      "totalProcessed": 198
+      "totalProcessed": 199
     },
     "recentActivity": [
+      {
+        "issueNum": 587,
+        "title": "Test: What is 2+2?",
+        "received": "2026-10-06T15:32:31.195Z",
+        "responded": "2026-10-06T15:32:51.652Z",
+        "responseSnippet": "2 + 2 = 4"
+      },
       {
         "issueNum": 584,
         "title": "Investigate ticket PC-54387",
@@ -1204,29 +1211,22 @@
         "received": "2026-09-29T10:46:06.471Z",
         "responded": "",
         "responseSnippet": ""
-      },
-      {
-        "issueNum": 440,
-        "title": "Investigate ticket PKHME-942",
-        "received": "2026-09-28T16:07:29.910Z",
-        "responded": "2026-09-28T16:44:43.239Z",
-        "responseSnippet": "Starting the investigate workflow for PKHME-942. Let me run Phase 0 pre-flight checks in parallel: read past learnings, check for existing RCA/cache files, and check MCP availability.Good - learnings loaded, no existing RCA or cache for PKHME-942 (just a .lock from the auto-trigger). Need to find Aryantone.md and fetch the ticket. Let me do these in parallel.Ticket fetched. 4 stuck PK-region orders with 2 distinct error patterns. Launching Phase 1 parallel fan-out investigation now. I'll also se"
       }
     ],
     "pid": 23000,
-    "uptime": 15,
+    "uptime": 55,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
     "startTime": "2026-10-06T15:32:06.669Z",
     "version": "v3",
-    "lastResponseAt": "2026-10-06T12:20:57.165Z",
-    "lastResponseIssue": 584,
+    "lastResponseAt": "2026-10-06T15:32:51.665Z",
+    "lastResponseIssue": 587,
     "ideSessions": [
       {
         "pid": 33768,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 35342,
+        "ageSeconds": 35383,
         "status": "running",
         "isChild": false,
         "taskSummary": "what about other qol features in state file/planning file. Also, test the AI console thoroughly a...",
@@ -1236,7 +1236,7 @@
       {
         "pid": 28676,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 35337,
+        "ageSeconds": 35377,
         "status": "running",
         "isChild": false,
         "taskSummary": "start drafting reply for tickets wherre the reporters are chasing",
@@ -1246,7 +1246,7 @@
       {
         "pid": 29064,
         "cwd": "c:\\windows",
-        "ageSeconds": 35334,
+        "ageSeconds": 35374,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1256,7 +1256,7 @@
       {
         "pid": 25828,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 35318,
+        "ageSeconds": 35358,
         "status": "running",
         "isChild": false,
         "taskSummary": "what about other qol features in state file/planning file. Also, test the AI console thoroughly a...",
@@ -1265,6 +1265,24 @@
       }
     ],
     "activityLog": [
+      {
+        "id": "1791300771667-etldi8",
+        "timestamp": "2026-10-06T15:32:51.667Z",
+        "type": "agent-response",
+        "source": "bridge",
+        "title": "Test: What is 2+2?",
+        "detail": "2 + 2 = 4",
+        "status": "success"
+      },
+      {
+        "id": "1791300752005-hyknw5",
+        "timestamp": "2026-10-06T15:32:32.005Z",
+        "type": "command",
+        "source": "aryanverma2410",
+        "title": "Test: What is 2+2?",
+        "detail": "#587",
+        "status": "pending"
+      },
       {
         "id": "1791289257168-qrv7ey",
         "timestamp": "2026-10-06T12:20:57.168Z",
@@ -1515,24 +1533,6 @@
         "source": "aryanverma2410",
         "title": "Investigate ticket AEME-6595",
         "detail": "#459",
-        "status": "pending"
-      },
-      {
-        "id": "1790692429605-dh2uom",
-        "timestamp": "2026-09-29T14:33:49.605Z",
-        "type": "agent-response",
-        "source": "bridge",
-        "title": "🔴 MCP Alert: Confluence down for 330m 44s",
-        "detail": "Let me check the dashboard server and MCP config to understand the Confluence setup.The alert is an automated MCP health monitor firing because Confluence is returning HTTP 401 (Unauthorized). Let me ",
-        "status": "success"
-      },
-      {
-        "id": "1790692186100-fj2miz",
-        "timestamp": "2026-09-29T14:29:46.100Z",
-        "type": "command",
-        "source": "aryanverma2410",
-        "title": "🔴 MCP Alert: Confluence down for 330m 44s",
-        "detail": "#458",
         "status": "pending"
       }
     ],
@@ -4410,22 +4410,37 @@
         ],
         "endTime": "2026-10-06T12:06:19.276Z",
         "lastOutput": "The Confluence MCP server isn't actually \"down\" — HTTP 401 means **Unauthorized**. The server is responding, but authentication is failing. This is almost certainly an expired or revoked API token / OAuth credential, not a service outage.\n\nLikely causes:\n- Confluence API token expired (Atlassian tokens have lifecycles)\n- OAuth refresh token stopped working\n- Token was rotated or revoked manually\n- Confluence changed its auth policy (e.g., deprecating basic auth in favor of bearer tokens)\n\nRecomm"
+      },
+      "587": {
+        "sessionId": "70debcd4-a3f7-4ff8-9f4c-8dcf18cddd49",
+        "issueNum": 587,
+        "title": "Test: What is 2+2?",
+        "startTime": "2026-10-06T15:32:32.188Z",
+        "status": "done",
+        "commandHistory": [
+          {
+            "title": "Test: What is 2+2?",
+            "time": "2026-10-06T15:32:32.188Z"
+          }
+        ],
+        "endTime": "2026-10-06T15:32:51.669Z",
+        "lastOutput": "2 + 2 = 4"
       }
     },
-    "bridgeLogTail": "[2026-10-06T12:20:55.206Z] LIVE events write for #584: 419 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_584.txt\n[2026-10-06T12:20:55.211Z] STDOUT data for #584: 109 bytes\n[2026-10-06T12:20:55.214Z] LIVE events write for #584: 420 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_584.txt\n[2026-10-06T12:20:55.266Z] STDOUT data for #584: 105 bytes\n[2026-10-06T12:20:55.270Z] LIVE events write for #584: 421 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_584.txt\n[2026-10-06T12:20:55.271Z] STDOUT data for #584: 348 bytes\n[2026-10-06T12:20:55.274Z] LIVE events write for #584: 422 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_584.txt\n[2026-10-06T12:20:56.373Z] aipro completed for #584 (4524 chars)\n[2026-10-06T12:20:57.151Z] Comment posted on #584\n[2026-10-06T14:42:04.961Z] ERROR poll #1: API returned 504 - backing off 10000ms\n[2026-10-06T15:32:06.652Z] ==========================================\n[2026-10-06T15:32:06.658Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-06T15:32:06.659Z] === with Aipro Auto-Launch ===\n[2026-10-06T15:32:06.660Z] ==========================================\n[2026-10-06T15:32:06.661Z] PID: 23000\n[2026-10-06T15:32:06.663Z] Repo: aryanverma2410/agent-bridge\n[2026-10-06T15:32:06.664Z] Poll interval: 10000ms\n[2026-10-06T15:32:06.665Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-06T15:32:06.666Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-06T15:32:06.667Z] Waiting for messages...",
+    "bridgeLogTail": "[2026-10-06T15:32:06.666Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-06T15:32:06.667Z] Waiting for messages...\n[2026-10-06T15:32:31.195Z] INBOX <- #587 from aryanverma2410: \"Test: What is 2+2?\"\n[2026-10-06T15:32:32.003Z] Comment posted on #587\n[2026-10-06T15:32:32.004Z] Auto-ack posted on #587\n[2026-10-06T15:32:32.007Z] Spawning aipro for #587: \"Test: What is 2+2?\"\n[2026-10-06T15:32:32.010Z] Created new session 70debcd4-a3f7-4ff8-9f4c-8dcf18cddd49 for #587\n[2026-10-06T15:32:32.198Z] 1 new message(s) added to inbox.\n[2026-10-06T15:32:46.407Z] STDOUT data for #587: 125 bytes\n[2026-10-06T15:32:46.409Z] LIVE events write for #587: 1 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_587.txt\n[2026-10-06T15:32:46.410Z] STDOUT data for #587: 627 bytes\n[2026-10-06T15:32:46.411Z] LIVE events write for #587: 2 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_587.txt\n[2026-10-06T15:32:49.319Z] STDOUT data for #587: 108 bytes\n[2026-10-06T15:32:49.321Z] LIVE events write for #587: 3 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_587.txt\n[2026-10-06T15:32:49.476Z] STDOUT data for #587: 107 bytes\n[2026-10-06T15:32:49.478Z] LIVE events write for #587: 4 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_587.txt\n[2026-10-06T15:32:49.483Z] STDOUT data for #587: 319 bytes\n[2026-10-06T15:32:49.486Z] LIVE events write for #587: 5 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_587.txt\n[2026-10-06T15:32:50.440Z] aipro completed for #587 (9 chars)\n[2026-10-06T15:32:51.651Z] Comment posted on #587",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-06T15:32:24.374Z",
-      "ageMs": 3241
+      "lastWrite": "2026-10-06T15:32:54.389Z",
+      "ageMs": 12804
     },
-    "watchdogLogTail": "[2026-10-06T15:30:09.339Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T15:30:24.338Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T15:30:39.348Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T15:30:54.349Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T15:31:09.357Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T15:31:24.360Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T15:31:39.362Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T15:31:54.374Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T15:32:09.375Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T15:32:24.373Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-06T15:30:39.348Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T15:30:54.349Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T15:31:09.357Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T15:31:24.360Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T15:31:39.362Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T15:31:54.374Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T15:32:09.375Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T15:32:24.373Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T15:32:39.384Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-06T15:32:54.387Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-06T15:31:41.187Z",
+      "lastCheck": "2026-10-06T15:32:40.617Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4434,7 +4449,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-06T15:31:41.187Z",
+      "lastCheck": "2026-10-06T15:32:40.617Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4443,9 +4458,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-06T15:31:41.187Z",
+      "lastCheck": "2026-10-06T15:32:40.617Z",
       "downSince": "2026-10-06T15:25:40.895Z",
-      "downDuration": 360292,
+      "downDuration": 419722,
       "alert": true
     }
   ],
