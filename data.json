@@ -1,7 +1,151 @@
 {
-  "generatedAt": "2026-10-07T12:20:38.425Z",
+  "generatedAt": "2026-10-07T12:21:17.722Z",
   "totalTickets": 23,
   "tickets": [
+    {
+      "key": "AEME-6595",
+      "summary": "Incomplete NorthLadder Orders || 29-Sep",
+      "status": "QA Server Review",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "UAE Maintenance & Enhancements",
+      "projectKey": "AEME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-07T21:22:37.000+0900",
+      "created": "2026-09-29T16:32:45.000+0900",
+      "statusChangedAt": "2026-10-07T21:22:37.191+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\n \n\nConsignment completed, order still shipped\n|Order Code|Order Creation Date Time|Order Status|Consignment Status|TradeIn Status|\n|AE260924-93470498|24/09/2026 14:41|SHIPPED|COMPLETED|ADDITIONAL_INFO_REQUIRED|\n\n \n\nThe trade-in status not updated in the NL system  (NL does not know that Or",
+      "commentsCount": 2,
+      "recentComments": [
+        {
+          "author": "Jaffar Ali",
+          "date": "2026-09-29T21:36:48.016+0900",
+          "snippet": "Hi ~@email \n\nBoth are same related to Northladder issue\n\n \n\nRegards\n\nJaffar"
+        },
+        {
+          "author": "Vaibhav Jain",
+          "date": "2026-09-29T18:00:40.895+0900",
+          "snippet": "Please create separate tickets for different issues for better tracking."
+        }
+      ],
+      "lastCommentBy": "Jaffar Ali",
+      "lastCommentSnippet": "Hi ~@email \n\nBoth are same related to Northladder issue\n\n \n\nRegards\n\nJaffar",
+      "lastCommentDate": "2026-09-29T21:36:48.016+0900",
+      "url": "https://jira.secext.samsung.net/browse/AEME-6595",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "Incomplete NorthLadder Orders || 29-Sep\r\nGenerated: 2026-09-29T18:05:00.000Z\r\n\r\nIssue\r\n\r\nTwo AE-region orders with NorthLadder trade-in integration are not reaching their expected terminal state on the NorthLadder side. Order AE260924-93470498 is SHIPPED with consignment COMPLETED but the order process is still RUNNING, and the NorthLadder ExternalService remains in ADDITIONAL_INFO_REQUIRED status. Order AE260723-37343410 is fully COMPLETED on the Hybris side (including a partial return and refund) but NorthLadder has not received the terminal status update — their system shows \"Awaiting confirmation\".\r\n\r\nRCA\r\n\r\nBoth orders exhibit the same root cause: NorthLadder's claim/appraisal API returned a requestId during the initial submitOrder call, which correctly set the ExternalService status to ADDITIONAL_INFO_REQUIRED. This is by design — the code in TokoNorthladderExternalServicesServiceImpl.submitOrder() (tokonorthladderintegration extension) sets ADDITIONAL_INFO_REQUIRED whenever the NorthLadder claim API returns a non-empty requestId, then returns true. The process engine transitions to WAIT, and processAdditionalInfo() is hardcoded to return false for NorthLadder, meaning the process cannot self-advance at the order level.\r\n\r\nThe process is designed to advance only when one of three events occurs:\r\n1. NorthLadder sends a notification callback to TokoNorthLadderNotificationController with the appraisal confirmation\r\n2. The TokoNorthLadderStatusCheckStrategy cronjob polls NorthLadder and detects a terminal status\r\n3. The consignment-level updateAppraisalForExternalService() call fires when the consignment ships, calling NorthLadder's modify API to fetch updated appraisal details\r\n\r\nFor AE260924-93470498: The consignment completed on 25-Sep at 12:02:08. The NorthLadder ExternalService was modified 11 seconds later at 12:02:19, confirming that the consignment-level updateAppraisalForExternalService() did fire. However, the ES remained in ADDITIONAL_INFO_REQUIRED, meaning NorthLadder's modify API either returned a non-200 response, or the response indicated the appraisal is still pending additional info from the customer. The consignment process (consignment-process-v11-36) is still RUNNING, and the order process is stuck at isDelayedFiRequired, waiting for the consignment process to complete. The consignment process cannot complete because the NL update did not resolve the ADDITIONAL_INFO_REQUIRED status. The order will remain stuck until NorthLadder confirms the appraisal.\r\n\r\nFor AE260723-37343410: This order went through a complete lifecycle — created 24-Jul, consignments completed 30-Jul, a partial return processed (765 AED refunded on 27-Aug), and the order reached COMPLETED status. The order has two NorthLadder ExternalService entries: the original at ADDITIONAL_INFO_REQUIRED (created 24-Jul) and a second at UPDATED status (created during the return flow). Both SMC ExternalService entries are CANCELLED. The order process is still RUNNING and looping at isProcessCompleted. Despite the order being COMPLETED on the Hybris side, NorthLadder never received the terminal status notification. The return-refund process (return-refund-process-v8-33) succeeded, but the NL terminal status was never pushed to NorthLadder's system. This is a NorthLadder-side gap — their system shows \"Awaiting confirmation\" because the terminal status update was either never sent by Hybris or was not processed by NorthLadder.\r\n\r\nThe same pattern was seen in AEME-4325 (Oct 2024), where multiple orders were stuck at SHIPPED with NL ADDITIONAL_INFO_REQUIRED due to NorthLadder API returning HTML instead of JSON (a NorthLadder-side outage). The resolution was to ensure the ES is at ADDITIONAL_INFO_REQUIRED and retrigger the consignment process from processExternalService.\r\n\r\nPossible remediation\r\n\r\nFor AE260924-93470498 (SHIPPED, consignment COMPLETED, NL ES at ADDITIONAL_INFO_REQUIRED):\r\n- Step 1: Verify the ExternalService is still at ADDITIONAL_INFO_REQUIRED (confirmed via DB query — status PK 8799422152795)\r\n- Step 2: Retrigger the consignment process from the processExternalService action. This will cause updateAppraisalForExternalService() to call NorthLadder's modify API again. If NorthLadder has since processed the appraisal, the ES will move to UPDATED and the process will advance.\r\n- Step 3: If NorthLadder still returns ADDITIONAL_INFO_REQUIRED after retrigger, this is a NorthLadder-side issue — the customer has not completed the appraisal questionnaire on NorthLadder's portal. No Hybris-side fix can resolve this. The NorthLadder team needs to follow up with the customer.\r\n\r\nFor AE260723-37343410 (COMPLETED, NL terminal status not sent):\r\n- This order is already COMPLETED on the Hybris side. The issue is that NorthLadder's system never received the terminal status. Since the order process is looping at isProcessCompleted, the process engine thinks the order is not fully done. The NL ES has an UPDATED entry from the return flow, but the original ADDITIONAL_INFO_REQUIRED entry was never resolved.\r\n- Step 1: Check with the NorthLadder team whether their system received any status update for this order. The \"Awaiting confirmation\" status suggests they are still expecting a callback.\r\n- Step 2: If Hybris needs to resend the terminal status, retrigger the NL ExternalService by resetting the ADDITIONAL_INFO_REQUIRED entry to NEW and retriggering the consignment process. However, since the order is already COMPLETED and has a completed return, this needs careful coordination with the NorthLadder team to avoid duplicate appraisals.\r\n- Step 3: Alternatively, if NorthLadder confirms they can manually update the status on their side, no Hybris-side action is needed.\r\n\r\nReusable PC ticket: PC-44806 (AEME-6104, Closed) and PC-11659 (Closed) both describe the same remediation pattern: Step 1 ensure ES at ADDITIONAL_INFO_REQUIRED, Step 2 retrigger consignment process from processExternalService. Neither has a local script in the pc-script-library.json, but the remediation steps are documented in the ticket descriptions.",
+        "sections": {
+          "issue": "",
+          "rca": "Incomplete NorthLadder Orders || 29-Sep\r\nGenerated: 2026-09-29T18:05:00.000Z\r\n\r\nIssue\r\n\r\nTwo AE-region orders with NorthLadder trade-in integration are not reaching their expected terminal state on the NorthLadder side. Order AE260924-93470498 is SHIPPED with consignment COMPLETED but the order process is still RUNNING, and the NorthLadder ExternalService remains in ADDITIONAL_INFO_REQUIRED status. Order AE260723-37343410 is fully COMPLETED on the Hybris side (including a partial return and refund) but NorthLadder has not received the terminal status update — their system shows \"Awaiting confirmation\".\r\n\r\nRCA\r\n\r\nBoth orders exhibit the same root cause: NorthLadder's claim/appraisal API returned a requestId during the initial submitOrder call, which correctly set the ExternalService status to ADDITIONAL_INFO_REQUIRED. This is by design — the code in TokoNorthladderExternalServicesServiceImpl.submitOrder() (tokonorthladderintegration extension) sets ADDITIONAL_INFO_REQUIRED whenever the NorthLadder claim API returns a non-empty requestId, then returns true. The process engine transitions to WAIT, and processAdditionalInfo() is hardcoded to return false for NorthLadder, meaning the process cannot self-advance at the order level.\r\n\r\nThe process is designed to advance only when one of three events occurs:\r\n1. NorthLadder sends a notification callback to TokoNorthLadderNotificationController with the appraisal confirmation\r\n2. The TokoNorthLadderStatusCheckStrategy cronjob polls NorthLadder and detects a terminal status\r\n3. The consignment-level updateAppraisalForExternalService() call fires when the consignment ships, calling NorthLadder's modify API to fetch updated appraisal details\r\n\r\nFor AE260924-93470498: The consignment completed on 25-Sep at 12:02:08. The NorthLadder ExternalService was modified 11 seconds later at 12:02:19, confirming that the consignment-level updateAppraisalForExternalService() did fire. However, the ES remained in ADDITIONAL_INFO_REQUIRED, meaning NorthLadder's modify API either returned a non-200 response, or the response indicated the appraisal is still pending additional info from the customer. The consignment process (consignment-process-v11-36) is still RUNNING, and the order process is stuck at isDelayedFiRequired, waiting for the consignment process to complete. The consignment process cannot complete because the NL update did not resolve the ADDITIONAL_INFO_REQUIRED status. The order will remain stuck until NorthLadder confirms the appraisal.\r\n\r\nFor AE260723-37343410: This order went through a complete lifecycle — created 24-Jul, consignments completed 30-Jul, a partial return processed (765 AED refunded on 27-Aug), and the order reached COMPLETED status. The order has two NorthLadder ExternalService entries: the original at ADDITIONAL_INFO_REQUIRED (created 24-Jul) and a second at UPDATED status (created during the return flow). Both SMC ExternalService entries are CANCELLED. The order process is still RUNNING and looping at isProcessCompleted. Despite the order being COMPLETED on the Hybris side, NorthLadder never received the terminal status notification. The return-refund process (return-refund-process-v8-33) succeeded, but the NL terminal status was never pushed to NorthLadder's system. This is a NorthLadder-side gap — their system shows \"Awaiting confirmation\" because the terminal status update was either never sent by Hybris or was not processed by NorthLadder.\r\n\r\nThe same pattern was seen in AEME-4325 (Oct 2024), where multiple orders were stuck at SHIPPED with NL ADDITIONAL_INFO_REQUIRED due to NorthLadder API returning HTML instead of JSON (a NorthLadder-side outage). The resolution was to ensure the ES is at ADDITIONAL_INFO_REQUIRED and retrigger the consignment process from processExternalService.\r\n\r\nPossible remediation\r\n\r\nFor AE260924-93470498 (SHIPPED, consignment COMPLETED, NL ES at ADDITIONAL_INFO_REQUIRED):\r\n- Step 1: Verify the ExternalService is still at ADDITIONAL_INFO_REQUIRED (confirmed via DB query — status PK 8799422152795)\r\n- Step 2: Retrigger the consignment process from the processExternalService action. This will cause updateAppraisalForExternalService() to call NorthLadder's modify API again. If NorthLadder has since processed the appraisal, the ES will move to UPDATED and the process will advance.\r\n- Step 3: If NorthLadder still returns ADDITIONAL_INFO_REQUIRED after retrigger, this is a NorthLadder-side issue — the customer has not completed the appraisal questionnaire on NorthLadder's portal. No Hybris-side fix can resolve this. The NorthLadder team needs to follow up with the customer.\r\n\r\nFor AE260723-37343410 (COMPLETED, NL terminal status not sent):\r\n- This order is already COMPLETED on the Hybris side. The issue is that NorthLadder's system never received the terminal status. Since the order process is looping at isProcessCompleted, the process engine thinks the order is not fully done. The NL ES has an UPDATED entry from the return flow, but the original ADDITIONAL_INFO_REQUIRED entry was never resolved.\r\n- Step 1: Check with the NorthLadder team whether their system received any status update for this order. The \"Awaiting confirmation\" status suggests they are still expecting a callback.\r\n- Step 2: If Hybris needs to resend the terminal status, retrigger the NL ExternalService by resetting the ADDITIONAL_INFO_REQUIRED entry to NEW and retriggering the consignment process. However, since the order is already COMPLETED and has a completed return, this needs careful coordination with the NorthLadder team to avoid duplicate appraisals.\r\n- Step 3: Alternatively, if NorthLadder confirms they can manually update the status on their side, no Hybris-side action is needed.\r\n\r\nReusable PC ticket: PC-44806 (AEME-6104, Closed) and PC-11659 (Closed) both describe the same remediation pattern: Step 1 ensure ES at ADDITIONAL_INFO_REQUIRED, Step 2 retrigger consignment process from processExternalService. Neither has a local script in the pc-script-library.json, but the remediation steps are documented in the ticket descriptions.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-29T17:42:24.504Z"
+      }
+    },
+    {
+      "key": "SAHME-3435",
+      "summary": "SC+ Policy Creation 16.09.2026",
+      "status": "QA Server Review",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "South Africa Maintenance & Enhancements",
+      "projectKey": "SAHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-07T21:22:36.000+0900",
+      "created": "2026-09-16T18:08:00.000+0900",
+      "statusChangedAt": "2026-10-07T21:22:36.991+0900",
+      "assignedToMeAt": "",
+      "description": "Hi All\n\n \n\nPlease retrigger the attached Samsung Care Plus orders with provided IMEI number and serial numbers provided. Share the error response log.\n\nOrder Number\t\t\t\nZA260708-23722486\tRFGL43423GN\tGalaxy Watch Ultra\t\nZA260724-38477057\t353584603614393\tGalaxy Z Fold8\t\nZA260802-48565264\t35358460359883",
+      "commentsCount": 3,
+      "recentComments": [
+        {
+          "author": "Nosipho Mkhungo",
+          "date": "2026-09-30T15:33:39.519+0900",
+          "snippet": "~@email \n\nIs it possible to check if all these orders are captured incorrectly or it's because they are passports?\n\nKind Regards\n\nNosipho"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-09-17T23:03:15.420+0900",
+          "snippet": "Hi Nosipho,\n\nWe ran the direct SMC API activation call for all 10 orders. Here are the results:\n||Order||Device||SMC Code||SMC Message||SMC Description||\n|ZA260708-23722486|Galaxy Watch Ultra|USR-A0002|INVALID_REQUEST_PARAMETERS|the id type is invalid. Please send an IdentityBook, SouthAfricanPasspo"
+        }
+      ],
+      "lastCommentBy": "Nosipho Mkhungo",
+      "lastCommentSnippet": "~@email \n\nIs it possible to check if all these orders are captured incorrectly or it's because they are passports?\n\nKind Regards\n\nNosipho",
+      "lastCommentDate": "2026-09-30T15:33:39.519+0900",
+      "url": "https://jira.secext.samsung.net/browse/SAHME-3435",
+      "linkedTickets": [
+        {
+          "key": "SAHME-3424",
+          "summary": "SC+ Policy Creation 09.09.2026",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "clones",
+          "assignee": null
+        },
+        {
+          "key": "SAHME-3454",
+          "summary": "SC+ Policy Creation 30.09.2026",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "relation": "is cloned by",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "Agent encountered an error while processing your request. Please try again or rephrase. Exit code: 1",
+        "sections": {
+          "issue": "",
+          "rca": "Agent encountered an error while processing your request. Please try again or rephrase. Exit code: 1",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-16T09:29:59.696Z"
+      }
+    },
+    {
+      "key": "MHME-1451",
+      "summary": "Cancellation of MA260821-64994011 order",
+      "status": "QA Server Review",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Morocco Maintenance & Enhancements",
+      "projectKey": "MHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-07T21:22:36.000+0900",
+      "created": "2026-10-02T22:09:59.000+0900",
+      "statusChangedAt": "2026-10-07T21:22:36.862+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\ncan you please check with this order MA260821-64994011, it's stuck in Full cancel request market asks to cancel this order.\n\n!image-2026-10-02-17-09-13-766.png|width=353,height=139!\n\nThanks\n\nAshwani Verma\n\nCC: ~@email",
+      "commentsCount": 1,
+      "recentComments": [
+        {
+          "author": "Ashwani Verma",
+          "date": "2026-10-05T19:21:41.477+0900",
+          "snippet": "Hi ~@email \n\nare there any updates regarding this issue?\n\nThanks\n\n~@email"
+        }
+      ],
+      "lastCommentBy": "Ashwani Verma",
+      "lastCommentSnippet": "Hi ~@email \n\nare there any updates regarding this issue?\n\nThanks\n\n~@email",
+      "lastCommentDate": "2026-10-05T19:21:41.477+0900",
+      "url": "https://jira.secext.samsung.net/browse/MHME-1451",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "Ticket: Cancellation of MA260821-64994011 order\r\nGenerated: 2026-10-02T08:15:00.000Z\r\n\r\n## Issue\r\n\r\nOrder MA260821-64994011 (Morocco, Fatourati payment mode, 12.10 MAD) is stuck at CANCEL_REQUEST status. The market is requesting to cancel the order but it has not progressed beyond this state since 21 August 2026.\r\n\r\n## RCA\r\n\r\nHi Ashwani ,\r\n\r\nThe order MA260821-64994011 is currently stuck at CANCEL_REQUEST status with the main order process (order-process-v25-69) in RUNNING state, positioned at the voidOrder action. The order has not progressed to CANCELLED despite being in CANCEL_REQUEST for over 40 days.\r\n\r\nThe DB state reveals the following payment flow. Two PaymentTransactions exist for this order. The first PT (14dab100...) had an AUTHORIZATION entry with REVIEW status at 11:05:34 on 21 Aug, which was subsequently cancelled (CANCEL entry with ACCEPTED status at 11:18:11). The second PT (9f93b452...) had an AUTHORIZATION entry with ACCEPTED status for 12.10 MAD at 12:05:48 on 21 Aug. This indicates the original payment was flagged for fraud review, the system cancelled the first authorisation, and a second authorisation was attempted and accepted.\r\n\r\nThe order process task log shows the following action sequence: checkPartialPaymentEnabled, sendOrderAcknowledgementEmail, processOrderAnalytics, checkExternalEnabled, checkOrder, compensationApprovalCheck, checkTransactionReviewStatus, sendOrderPaymentExpiredEmail, cancelExternalServiceOnWaitExternalCancel, and finally voidOrder as the latest action. The orderPaymentExpiredNotificationEmailProcess is in ERROR state, confirming the payment expired notification flow also failed.\r\n\r\nThe order has zero consignments, which means the order never reached the fulfilment stage. The order is a Fatourati (Morocco local payment gateway) order in the ma store. The process is stuck at voidOrder because the order cancellation flow cannot complete the void operation. This is the same pattern observed in SAME-3798, NUKME-8742, and IQME-400 where orders remained stuck at CANCEL_REQUEST after a fraud check failure triggered a cancel request that the process could not fully execute.\r\n\r\nThe root cause is that the order process (order-process-v25-69) reached the voidOrder action but could not complete it. The process is in RUNNING state (not ERROR), which means the voidOrder action is either waiting for an external response (e.g., payment void from the Fatourati gateway) or encountering a silent failure where the action does not return a transition result. Given that the order has an accepted AUTHORIZATION of 12.10 MAD on the second PT, the voidOrder action likely needs to void this payment authorisation with the Fatourati gateway, and this void request either failed silently or was never sent.\r\n\r\nNo BusinessProcessParameter stack traces were found for the order process, and Kibana logs were not available during this investigation to confirm the exact exception at the voidOrder action. The absence of a stack trace combined with the RUNNING state suggests the process may be waiting on an asynchronous response rather than having thrown an exception.\r\n\r\n## Possible Remediation\r\n\r\nTwo approaches are possible depending on whether the payment void can be completed externally:\r\n\r\n1. If the market confirms the order should be cancelled, the order process can be retried from the voidOrder action. This would re-attempt the payment void with the Fatourati gateway. If the gateway responds, the process will transition the order to CANCELLED.\r\n\r\n2. If the Fatourati gateway void is not required or has already been processed externally, the order status can be manually set to CANCELLED and the order process can be given an explicit DONE signal at the voidOrder action to allow the process to complete.\r\n\r\nA HAC Groovy script can be prepared to either retry the voidOrder action or manually transition the order to CANCELLED, depending on the market's confirmation regarding the payment authorisation status with Fatourati.\r\n\r\nThis is the same pattern confirmed and resolved in SAME-3798, NUKME-8742, and IQME-400 where orders stuck at CANCEL_REQUEST were moved to CANCELLED after process intervention.\r\n\r\nKindly confirm if the order should be cancelled so we can prepare the remediation script.\r\n\r\nThanks,\r\nAryan.\r\n\r\n## Remediation\r\n\r\nRemediation approach: Retry voidOrder action on the order process or manually set order to CANCELLED + signal process DONE, pending market confirmation on Fatourati payment void status.\r\nNo reusable PC ticket found for void-order-stuck scenario. A new PC ticket would be needed if remediation is confirmed.",
+        "sections": {
+          "issue": "Order MA260821-64994011 (Morocco, Fatourati payment mode, 12.10 MAD) is stuck at CANCEL_REQUEST status. The market is requesting to cancel the order but it has not progressed beyond this state since 21 August 2026.",
+          "rca": "Hi Ashwani ,\r\n\r\nThe order MA260821-64994011 is currently stuck at CANCEL_REQUEST status with the main order process (order-process-v25-69) in RUNNING state, positioned at the voidOrder action. The order has not progressed to CANCELLED despite being in CANCEL_REQUEST for over 40 days.\r\n\r\nThe DB state reveals the following payment flow. Two PaymentTransactions exist for this order. The first PT (14dab100...) had an AUTHORIZATION entry with REVIEW status at 11:05:34 on 21 Aug, which was subsequently cancelled (CANCEL entry with ACCEPTED status at 11:18:11). The second PT (9f93b452...) had an AUTHORIZATION entry with ACCEPTED status for 12.10 MAD at 12:05:48 on 21 Aug. This indicates the original payment was flagged for fraud review, the system cancelled the first authorisation, and a second authorisation was attempted and accepted.\r\n\r\nThe order process task log shows the following action sequence: checkPartialPaymentEnabled, sendOrderAcknowledgementEmail, processOrderAnalytics, checkExternalEnabled, checkOrder, compensationApprovalCheck, checkTransactionReviewStatus, sendOrderPaymentExpiredEmail, cancelExternalServiceOnWaitExternalCancel, and finally voidOrder as the latest action. The orderPaymentExpiredNotificationEmailProcess is in ERROR state, confirming the payment expired notification flow also failed.\r\n\r\nThe order has zero consignments, which means the order never reached the fulfilment stage. The order is a Fatourati (Morocco local payment gateway) order in the ma store. The process is stuck at voidOrder because the order cancellation flow cannot complete the void operation. This is the same pattern observed in SAME-3798, NUKME-8742, and IQME-400 where orders remained stuck at CANCEL_REQUEST after a fraud check failure triggered a cancel request that the process could not fully execute.\r\n\r\nThe root cause is that the order process (order-process-v25-69) reached the voidOrder action but could not complete it. The process is in RUNNING state (not ERROR), which means the voidOrder action is either waiting for an external response (e.g., payment void from the Fatourati gateway) or encountering a silent failure where the action does not return a transition result. Given that the order has an accepted AUTHORIZATION of 12.10 MAD on the second PT, the voidOrder action likely needs to void this payment authorisation with the Fatourati gateway, and this void request either failed silently or was never sent.\r\n\r\nNo BusinessProcessParameter stack traces were found for the order process, and Kibana logs were not available during this investigation to confirm the exact exception at the voidOrder action. The absence of a stack trace combined with the RUNNING state suggests the process may be waiting on an asynchronous response rather than having thrown an exception.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-02T08:08:03.116Z"
+      }
+    },
     {
       "key": "PC-55140",
       "summary": "Script to fix secondGI on ConsignmentEntry for return creation",
@@ -406,45 +550,6 @@
       }
     },
     {
-      "key": "MHME-1451",
-      "summary": "Cancellation of MA260821-64994011 order",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Morocco Maintenance & Enhancements",
-      "projectKey": "MHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-06T15:35:13.000+0900",
-      "created": "2026-10-02T22:09:59.000+0900",
-      "statusChangedAt": "2026-10-02T22:21:52.028+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\ncan you please check with this order MA260821-64994011, it's stuck in Full cancel request market asks to cancel this order.\n\n!image-2026-10-02-17-09-13-766.png|width=353,height=139!\n\nThanks\n\nAshwani Verma\n\nCC: ~@email",
-      "commentsCount": 1,
-      "recentComments": [
-        {
-          "author": "Ashwani Verma",
-          "date": "2026-10-05T19:21:41.477+0900",
-          "snippet": "Hi ~@email \n\nare there any updates regarding this issue?\n\nThanks\n\n~@email"
-        }
-      ],
-      "lastCommentBy": "Ashwani Verma",
-      "lastCommentSnippet": "Hi ~@email \n\nare there any updates regarding this issue?\n\nThanks\n\n~@email",
-      "lastCommentDate": "2026-10-05T19:21:41.477+0900",
-      "url": "https://jira.secext.samsung.net/browse/MHME-1451",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Ticket: Cancellation of MA260821-64994011 order\r\nGenerated: 2026-10-02T08:15:00.000Z\r\n\r\n## Issue\r\n\r\nOrder MA260821-64994011 (Morocco, Fatourati payment mode, 12.10 MAD) is stuck at CANCEL_REQUEST status. The market is requesting to cancel the order but it has not progressed beyond this state since 21 August 2026.\r\n\r\n## RCA\r\n\r\nHi Ashwani ,\r\n\r\nThe order MA260821-64994011 is currently stuck at CANCEL_REQUEST status with the main order process (order-process-v25-69) in RUNNING state, positioned at the voidOrder action. The order has not progressed to CANCELLED despite being in CANCEL_REQUEST for over 40 days.\r\n\r\nThe DB state reveals the following payment flow. Two PaymentTransactions exist for this order. The first PT (14dab100...) had an AUTHORIZATION entry with REVIEW status at 11:05:34 on 21 Aug, which was subsequently cancelled (CANCEL entry with ACCEPTED status at 11:18:11). The second PT (9f93b452...) had an AUTHORIZATION entry with ACCEPTED status for 12.10 MAD at 12:05:48 on 21 Aug. This indicates the original payment was flagged for fraud review, the system cancelled the first authorisation, and a second authorisation was attempted and accepted.\r\n\r\nThe order process task log shows the following action sequence: checkPartialPaymentEnabled, sendOrderAcknowledgementEmail, processOrderAnalytics, checkExternalEnabled, checkOrder, compensationApprovalCheck, checkTransactionReviewStatus, sendOrderPaymentExpiredEmail, cancelExternalServiceOnWaitExternalCancel, and finally voidOrder as the latest action. The orderPaymentExpiredNotificationEmailProcess is in ERROR state, confirming the payment expired notification flow also failed.\r\n\r\nThe order has zero consignments, which means the order never reached the fulfilment stage. The order is a Fatourati (Morocco local payment gateway) order in the ma store. The process is stuck at voidOrder because the order cancellation flow cannot complete the void operation. This is the same pattern observed in SAME-3798, NUKME-8742, and IQME-400 where orders remained stuck at CANCEL_REQUEST after a fraud check failure triggered a cancel request that the process could not fully execute.\r\n\r\nThe root cause is that the order process (order-process-v25-69) reached the voidOrder action but could not complete it. The process is in RUNNING state (not ERROR), which means the voidOrder action is either waiting for an external response (e.g., payment void from the Fatourati gateway) or encountering a silent failure where the action does not return a transition result. Given that the order has an accepted AUTHORIZATION of 12.10 MAD on the second PT, the voidOrder action likely needs to void this payment authorisation with the Fatourati gateway, and this void request either failed silently or was never sent.\r\n\r\nNo BusinessProcessParameter stack traces were found for the order process, and Kibana logs were not available during this investigation to confirm the exact exception at the voidOrder action. The absence of a stack trace combined with the RUNNING state suggests the process may be waiting on an asynchronous response rather than having thrown an exception.\r\n\r\n## Possible Remediation\r\n\r\nTwo approaches are possible depending on whether the payment void can be completed externally:\r\n\r\n1. If the market confirms the order should be cancelled, the order process can be retried from the voidOrder action. This would re-attempt the payment void with the Fatourati gateway. If the gateway responds, the process will transition the order to CANCELLED.\r\n\r\n2. If the Fatourati gateway void is not required or has already been processed externally, the order status can be manually set to CANCELLED and the order process can be given an explicit DONE signal at the voidOrder action to allow the process to complete.\r\n\r\nA HAC Groovy script can be prepared to either retry the voidOrder action or manually transition the order to CANCELLED, depending on the market's confirmation regarding the payment authorisation status with Fatourati.\r\n\r\nThis is the same pattern confirmed and resolved in SAME-3798, NUKME-8742, and IQME-400 where orders stuck at CANCEL_REQUEST were moved to CANCELLED after process intervention.\r\n\r\nKindly confirm if the order should be cancelled so we can prepare the remediation script.\r\n\r\nThanks,\r\nAryan.\r\n\r\n## Remediation\r\n\r\nRemediation approach: Retry voidOrder action on the order process or manually set order to CANCELLED + signal process DONE, pending market confirmation on Fatourati payment void status.\r\nNo reusable PC ticket found for void-order-stuck scenario. A new PC ticket would be needed if remediation is confirmed.",
-        "sections": {
-          "issue": "Order MA260821-64994011 (Morocco, Fatourati payment mode, 12.10 MAD) is stuck at CANCEL_REQUEST status. The market is requesting to cancel the order but it has not progressed beyond this state since 21 August 2026.",
-          "rca": "Hi Ashwani ,\r\n\r\nThe order MA260821-64994011 is currently stuck at CANCEL_REQUEST status with the main order process (order-process-v25-69) in RUNNING state, positioned at the voidOrder action. The order has not progressed to CANCELLED despite being in CANCEL_REQUEST for over 40 days.\r\n\r\nThe DB state reveals the following payment flow. Two PaymentTransactions exist for this order. The first PT (14dab100...) had an AUTHORIZATION entry with REVIEW status at 11:05:34 on 21 Aug, which was subsequently cancelled (CANCEL entry with ACCEPTED status at 11:18:11). The second PT (9f93b452...) had an AUTHORIZATION entry with ACCEPTED status for 12.10 MAD at 12:05:48 on 21 Aug. This indicates the original payment was flagged for fraud review, the system cancelled the first authorisation, and a second authorisation was attempted and accepted.\r\n\r\nThe order process task log shows the following action sequence: checkPartialPaymentEnabled, sendOrderAcknowledgementEmail, processOrderAnalytics, checkExternalEnabled, checkOrder, compensationApprovalCheck, checkTransactionReviewStatus, sendOrderPaymentExpiredEmail, cancelExternalServiceOnWaitExternalCancel, and finally voidOrder as the latest action. The orderPaymentExpiredNotificationEmailProcess is in ERROR state, confirming the payment expired notification flow also failed.\r\n\r\nThe order has zero consignments, which means the order never reached the fulfilment stage. The order is a Fatourati (Morocco local payment gateway) order in the ma store. The process is stuck at voidOrder because the order cancellation flow cannot complete the void operation. This is the same pattern observed in SAME-3798, NUKME-8742, and IQME-400 where orders remained stuck at CANCEL_REQUEST after a fraud check failure triggered a cancel request that the process could not fully execute.\r\n\r\nThe root cause is that the order process (order-process-v25-69) reached the voidOrder action but could not complete it. The process is in RUNNING state (not ERROR), which means the voidOrder action is either waiting for an external response (e.g., payment void from the Fatourati gateway) or encountering a silent failure where the action does not return a transition result. Given that the order has an accepted AUTHORIZATION of 12.10 MAD on the second PT, the voidOrder action likely needs to void this payment authorisation with the Fatourati gateway, and this void request either failed silently or was never sent.\r\n\r\nNo BusinessProcessParameter stack traces were found for the order process, and Kibana logs were not available during this investigation to confirm the exact exception at the voidOrder action. The absence of a stack trace combined with the RUNNING state suggests the process may be waiting on an asynchronous response rather than having thrown an exception.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-02T08:08:03.116Z"
-      }
-    },
-    {
       "key": "SAHME-3448",
       "summary": "Request to trigger a refund on the cancelled order.",
       "status": "QA Server Review",
@@ -755,67 +860,6 @@
       }
     },
     {
-      "key": "SAHME-3435",
-      "summary": "SC+ Policy Creation 16.09.2026",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "South Africa Maintenance & Enhancements",
-      "projectKey": "SAHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-01T21:20:13.000+0900",
-      "created": "2026-09-16T18:08:00.000+0900",
-      "statusChangedAt": "2026-09-16T18:16:11.672+0900",
-      "assignedToMeAt": "",
-      "description": "Hi All\n\n \n\nPlease retrigger the attached Samsung Care Plus orders with provided IMEI number and serial numbers provided. Share the error response log.\n\nOrder Number\t\t\t\nZA260708-23722486\tRFGL43423GN\tGalaxy Watch Ultra\t\nZA260724-38477057\t353584603614393\tGalaxy Z Fold8\t\nZA260802-48565264\t35358460359883",
-      "commentsCount": 3,
-      "recentComments": [
-        {
-          "author": "Nosipho Mkhungo",
-          "date": "2026-09-30T15:33:39.519+0900",
-          "snippet": "~@email \n\nIs it possible to check if all these orders are captured incorrectly or it's because they are passports?\n\nKind Regards\n\nNosipho"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-17T23:03:15.420+0900",
-          "snippet": "Hi Nosipho,\n\nWe ran the direct SMC API activation call for all 10 orders. Here are the results:\n||Order||Device||SMC Code||SMC Message||SMC Description||\n|ZA260708-23722486|Galaxy Watch Ultra|USR-A0002|INVALID_REQUEST_PARAMETERS|the id type is invalid. Please send an IdentityBook, SouthAfricanPasspo"
-        }
-      ],
-      "lastCommentBy": "Nosipho Mkhungo",
-      "lastCommentSnippet": "~@email \n\nIs it possible to check if all these orders are captured incorrectly or it's because they are passports?\n\nKind Regards\n\nNosipho",
-      "lastCommentDate": "2026-09-30T15:33:39.519+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAHME-3435",
-      "linkedTickets": [
-        {
-          "key": "SAHME-3424",
-          "summary": "SC+ Policy Creation 09.09.2026",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "clones",
-          "assignee": null
-        },
-        {
-          "key": "SAHME-3454",
-          "summary": "SC+ Policy Creation 30.09.2026",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
-          "relation": "is cloned by",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "Agent encountered an error while processing your request. Please try again or rephrase. Exit code: 1",
-        "sections": {
-          "issue": "",
-          "rca": "Agent encountered an error while processing your request. Please try again or rephrase. Exit code: 1",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-16T09:29:59.696Z"
-      }
-    },
-    {
       "key": "PKHME-942",
       "summary": "Stuck order on Hybris",
       "status": "QA Server Review",
@@ -866,50 +910,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-28T16:44:25.295Z"
-      }
-    },
-    {
-      "key": "AEME-6595",
-      "summary": "Incomplete NorthLadder Orders || 29-Sep",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-30T02:25:12.000+0900",
-      "created": "2026-09-29T16:32:45.000+0900",
-      "statusChangedAt": "2026-09-29T16:33:52.776+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\n \n\nConsignment completed, order still shipped\n|Order Code|Order Creation Date Time|Order Status|Consignment Status|TradeIn Status|\n|AE260924-93470498|24/09/2026 14:41|SHIPPED|COMPLETED|ADDITIONAL_INFO_REQUIRED|\n\n \n\nThe trade-in status not updated in the NL system  (NL does not know that Or",
-      "commentsCount": 2,
-      "recentComments": [
-        {
-          "author": "Jaffar Ali",
-          "date": "2026-09-29T21:36:48.016+0900",
-          "snippet": "Hi ~@email \n\nBoth are same related to Northladder issue\n\n \n\nRegards\n\nJaffar"
-        },
-        {
-          "author": "Vaibhav Jain",
-          "date": "2026-09-29T18:00:40.895+0900",
-          "snippet": "Please create separate tickets for different issues for better tracking."
-        }
-      ],
-      "lastCommentBy": "Jaffar Ali",
-      "lastCommentSnippet": "Hi ~@email \n\nBoth are same related to Northladder issue\n\n \n\nRegards\n\nJaffar",
-      "lastCommentDate": "2026-09-29T21:36:48.016+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6595",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Incomplete NorthLadder Orders || 29-Sep\r\nGenerated: 2026-09-29T18:05:00.000Z\r\n\r\nIssue\r\n\r\nTwo AE-region orders with NorthLadder trade-in integration are not reaching their expected terminal state on the NorthLadder side. Order AE260924-93470498 is SHIPPED with consignment COMPLETED but the order process is still RUNNING, and the NorthLadder ExternalService remains in ADDITIONAL_INFO_REQUIRED status. Order AE260723-37343410 is fully COMPLETED on the Hybris side (including a partial return and refund) but NorthLadder has not received the terminal status update — their system shows \"Awaiting confirmation\".\r\n\r\nRCA\r\n\r\nBoth orders exhibit the same root cause: NorthLadder's claim/appraisal API returned a requestId during the initial submitOrder call, which correctly set the ExternalService status to ADDITIONAL_INFO_REQUIRED. This is by design — the code in TokoNorthladderExternalServicesServiceImpl.submitOrder() (tokonorthladderintegration extension) sets ADDITIONAL_INFO_REQUIRED whenever the NorthLadder claim API returns a non-empty requestId, then returns true. The process engine transitions to WAIT, and processAdditionalInfo() is hardcoded to return false for NorthLadder, meaning the process cannot self-advance at the order level.\r\n\r\nThe process is designed to advance only when one of three events occurs:\r\n1. NorthLadder sends a notification callback to TokoNorthLadderNotificationController with the appraisal confirmation\r\n2. The TokoNorthLadderStatusCheckStrategy cronjob polls NorthLadder and detects a terminal status\r\n3. The consignment-level updateAppraisalForExternalService() call fires when the consignment ships, calling NorthLadder's modify API to fetch updated appraisal details\r\n\r\nFor AE260924-93470498: The consignment completed on 25-Sep at 12:02:08. The NorthLadder ExternalService was modified 11 seconds later at 12:02:19, confirming that the consignment-level updateAppraisalForExternalService() did fire. However, the ES remained in ADDITIONAL_INFO_REQUIRED, meaning NorthLadder's modify API either returned a non-200 response, or the response indicated the appraisal is still pending additional info from the customer. The consignment process (consignment-process-v11-36) is still RUNNING, and the order process is stuck at isDelayedFiRequired, waiting for the consignment process to complete. The consignment process cannot complete because the NL update did not resolve the ADDITIONAL_INFO_REQUIRED status. The order will remain stuck until NorthLadder confirms the appraisal.\r\n\r\nFor AE260723-37343410: This order went through a complete lifecycle — created 24-Jul, consignments completed 30-Jul, a partial return processed (765 AED refunded on 27-Aug), and the order reached COMPLETED status. The order has two NorthLadder ExternalService entries: the original at ADDITIONAL_INFO_REQUIRED (created 24-Jul) and a second at UPDATED status (created during the return flow). Both SMC ExternalService entries are CANCELLED. The order process is still RUNNING and looping at isProcessCompleted. Despite the order being COMPLETED on the Hybris side, NorthLadder never received the terminal status notification. The return-refund process (return-refund-process-v8-33) succeeded, but the NL terminal status was never pushed to NorthLadder's system. This is a NorthLadder-side gap — their system shows \"Awaiting confirmation\" because the terminal status update was either never sent by Hybris or was not processed by NorthLadder.\r\n\r\nThe same pattern was seen in AEME-4325 (Oct 2024), where multiple orders were stuck at SHIPPED with NL ADDITIONAL_INFO_REQUIRED due to NorthLadder API returning HTML instead of JSON (a NorthLadder-side outage). The resolution was to ensure the ES is at ADDITIONAL_INFO_REQUIRED and retrigger the consignment process from processExternalService.\r\n\r\nPossible remediation\r\n\r\nFor AE260924-93470498 (SHIPPED, consignment COMPLETED, NL ES at ADDITIONAL_INFO_REQUIRED):\r\n- Step 1: Verify the ExternalService is still at ADDITIONAL_INFO_REQUIRED (confirmed via DB query — status PK 8799422152795)\r\n- Step 2: Retrigger the consignment process from the processExternalService action. This will cause updateAppraisalForExternalService() to call NorthLadder's modify API again. If NorthLadder has since processed the appraisal, the ES will move to UPDATED and the process will advance.\r\n- Step 3: If NorthLadder still returns ADDITIONAL_INFO_REQUIRED after retrigger, this is a NorthLadder-side issue — the customer has not completed the appraisal questionnaire on NorthLadder's portal. No Hybris-side fix can resolve this. The NorthLadder team needs to follow up with the customer.\r\n\r\nFor AE260723-37343410 (COMPLETED, NL terminal status not sent):\r\n- This order is already COMPLETED on the Hybris side. The issue is that NorthLadder's system never received the terminal status. Since the order process is looping at isProcessCompleted, the process engine thinks the order is not fully done. The NL ES has an UPDATED entry from the return flow, but the original ADDITIONAL_INFO_REQUIRED entry was never resolved.\r\n- Step 1: Check with the NorthLadder team whether their system received any status update for this order. The \"Awaiting confirmation\" status suggests they are still expecting a callback.\r\n- Step 2: If Hybris needs to resend the terminal status, retrigger the NL ExternalService by resetting the ADDITIONAL_INFO_REQUIRED entry to NEW and retriggering the consignment process. However, since the order is already COMPLETED and has a completed return, this needs careful coordination with the NorthLadder team to avoid duplicate appraisals.\r\n- Step 3: Alternatively, if NorthLadder confirms they can manually update the status on their side, no Hybris-side action is needed.\r\n\r\nReusable PC ticket: PC-44806 (AEME-6104, Closed) and PC-11659 (Closed) both describe the same remediation pattern: Step 1 ensure ES at ADDITIONAL_INFO_REQUIRED, Step 2 retrigger consignment process from processExternalService. Neither has a local script in the pc-script-library.json, but the remediation steps are documented in the ticket descriptions.",
-        "sections": {
-          "issue": "",
-          "rca": "Incomplete NorthLadder Orders || 29-Sep\r\nGenerated: 2026-09-29T18:05:00.000Z\r\n\r\nIssue\r\n\r\nTwo AE-region orders with NorthLadder trade-in integration are not reaching their expected terminal state on the NorthLadder side. Order AE260924-93470498 is SHIPPED with consignment COMPLETED but the order process is still RUNNING, and the NorthLadder ExternalService remains in ADDITIONAL_INFO_REQUIRED status. Order AE260723-37343410 is fully COMPLETED on the Hybris side (including a partial return and refund) but NorthLadder has not received the terminal status update — their system shows \"Awaiting confirmation\".\r\n\r\nRCA\r\n\r\nBoth orders exhibit the same root cause: NorthLadder's claim/appraisal API returned a requestId during the initial submitOrder call, which correctly set the ExternalService status to ADDITIONAL_INFO_REQUIRED. This is by design — the code in TokoNorthladderExternalServicesServiceImpl.submitOrder() (tokonorthladderintegration extension) sets ADDITIONAL_INFO_REQUIRED whenever the NorthLadder claim API returns a non-empty requestId, then returns true. The process engine transitions to WAIT, and processAdditionalInfo() is hardcoded to return false for NorthLadder, meaning the process cannot self-advance at the order level.\r\n\r\nThe process is designed to advance only when one of three events occurs:\r\n1. NorthLadder sends a notification callback to TokoNorthLadderNotificationController with the appraisal confirmation\r\n2. The TokoNorthLadderStatusCheckStrategy cronjob polls NorthLadder and detects a terminal status\r\n3. The consignment-level updateAppraisalForExternalService() call fires when the consignment ships, calling NorthLadder's modify API to fetch updated appraisal details\r\n\r\nFor AE260924-93470498: The consignment completed on 25-Sep at 12:02:08. The NorthLadder ExternalService was modified 11 seconds later at 12:02:19, confirming that the consignment-level updateAppraisalForExternalService() did fire. However, the ES remained in ADDITIONAL_INFO_REQUIRED, meaning NorthLadder's modify API either returned a non-200 response, or the response indicated the appraisal is still pending additional info from the customer. The consignment process (consignment-process-v11-36) is still RUNNING, and the order process is stuck at isDelayedFiRequired, waiting for the consignment process to complete. The consignment process cannot complete because the NL update did not resolve the ADDITIONAL_INFO_REQUIRED status. The order will remain stuck until NorthLadder confirms the appraisal.\r\n\r\nFor AE260723-37343410: This order went through a complete lifecycle — created 24-Jul, consignments completed 30-Jul, a partial return processed (765 AED refunded on 27-Aug), and the order reached COMPLETED status. The order has two NorthLadder ExternalService entries: the original at ADDITIONAL_INFO_REQUIRED (created 24-Jul) and a second at UPDATED status (created during the return flow). Both SMC ExternalService entries are CANCELLED. The order process is still RUNNING and looping at isProcessCompleted. Despite the order being COMPLETED on the Hybris side, NorthLadder never received the terminal status notification. The return-refund process (return-refund-process-v8-33) succeeded, but the NL terminal status was never pushed to NorthLadder's system. This is a NorthLadder-side gap — their system shows \"Awaiting confirmation\" because the terminal status update was either never sent by Hybris or was not processed by NorthLadder.\r\n\r\nThe same pattern was seen in AEME-4325 (Oct 2024), where multiple orders were stuck at SHIPPED with NL ADDITIONAL_INFO_REQUIRED due to NorthLadder API returning HTML instead of JSON (a NorthLadder-side outage). The resolution was to ensure the ES is at ADDITIONAL_INFO_REQUIRED and retrigger the consignment process from processExternalService.\r\n\r\nPossible remediation\r\n\r\nFor AE260924-93470498 (SHIPPED, consignment COMPLETED, NL ES at ADDITIONAL_INFO_REQUIRED):\r\n- Step 1: Verify the ExternalService is still at ADDITIONAL_INFO_REQUIRED (confirmed via DB query — status PK 8799422152795)\r\n- Step 2: Retrigger the consignment process from the processExternalService action. This will cause updateAppraisalForExternalService() to call NorthLadder's modify API again. If NorthLadder has since processed the appraisal, the ES will move to UPDATED and the process will advance.\r\n- Step 3: If NorthLadder still returns ADDITIONAL_INFO_REQUIRED after retrigger, this is a NorthLadder-side issue — the customer has not completed the appraisal questionnaire on NorthLadder's portal. No Hybris-side fix can resolve this. The NorthLadder team needs to follow up with the customer.\r\n\r\nFor AE260723-37343410 (COMPLETED, NL terminal status not sent):\r\n- This order is already COMPLETED on the Hybris side. The issue is that NorthLadder's system never received the terminal status. Since the order process is looping at isProcessCompleted, the process engine thinks the order is not fully done. The NL ES has an UPDATED entry from the return flow, but the original ADDITIONAL_INFO_REQUIRED entry was never resolved.\r\n- Step 1: Check with the NorthLadder team whether their system received any status update for this order. The \"Awaiting confirmation\" status suggests they are still expecting a callback.\r\n- Step 2: If Hybris needs to resend the terminal status, retrigger the NL ExternalService by resetting the ADDITIONAL_INFO_REQUIRED entry to NEW and retriggering the consignment process. However, since the order is already COMPLETED and has a completed return, this needs careful coordination with the NorthLadder team to avoid duplicate appraisals.\r\n- Step 3: Alternatively, if NorthLadder confirms they can manually update the status on their side, no Hybris-side action is needed.\r\n\r\nReusable PC ticket: PC-44806 (AEME-6104, Closed) and PC-11659 (Closed) both describe the same remediation pattern: Step 1 ensure ES at ADDITIONAL_INFO_REQUIRED, Step 2 retrigger consignment process from processExternalService. Neither has a local script in the pc-script-library.json, but the remediation steps are documented in the ticket descriptions.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-29T17:42:24.504Z"
       }
     },
     {
@@ -1337,7 +1337,7 @@
       }
     ],
     "pid": 3816,
-    "uptime": 11578,
+    "uptime": 11617,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1349,7 +1349,7 @@
       {
         "pid": 20536,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 31369,
+        "ageSeconds": 31408,
         "status": "running",
         "isChild": false,
         "taskSummary": "login thing still opens jira and kibana links without #auto30",
@@ -1359,7 +1359,7 @@
       {
         "pid": 21768,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 30976,
+        "ageSeconds": 31015,
         "status": "running",
         "isChild": false,
         "taskSummary": "put the parent tickets for wich we created PCs to QA server review and post a comment saying PC a...",
@@ -1369,7 +1369,7 @@
       {
         "pid": 13300,
         "cwd": "c:\\windows",
-        "ageSeconds": 3049,
+        "ageSeconds": 3089,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1379,7 +1379,7 @@
       {
         "pid": 25524,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 377,
+        "ageSeconds": 417,
         "status": "running",
         "isChild": false,
         "taskSummary": "login thing still opens jira and kibana links without #auto30",
@@ -4599,7 +4599,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-07T11:44:53.739Z",
-      "ageMs": 2147787
+      "ageMs": 2187611
     },
     "watchdogLogTail": "[2026-10-07T03:51:49.352Z] Could not kill dashboard PID 25480: Command failed: taskkill /PID 25480 /F /T\n[2026-10-07T03:51:49.360Z] Starting jira-dashboard-server.js...\n[2026-10-07T03:51:49.536Z] Dashboard started with PID 8472 (restart #4, 4 in last hour)\n[2026-10-07T03:51:54.356Z] Starting jira-dashboard-server.js...\n[2026-10-07T03:51:54.540Z] Dashboard started with PID 4340 (restart #5, 5 in last hour)\n[2026-10-07T03:52:02.647Z] DUPLICATE jira-dashboard-server detected: PID 8472 — killing\n[2026-10-07T11:44:44.927Z] DASHBOARD RESTART NEEDED: No dashboard heartbeat file found\n[2026-10-07T11:44:46.976Z] Killed dashboard PID 4340\n[2026-10-07T11:44:53.562Z] Starting jira-dashboard-server.js...\n[2026-10-07T11:44:53.738Z] Dashboard started with PID 5716 (restart #6, 1 in last hour)"
   },
@@ -4608,7 +4608,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-07T12:20:03.827Z",
+      "lastCheck": "2026-10-07T12:21:03.824Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4617,18 +4617,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-07T12:20:03.827Z",
+      "lastCheck": "2026-10-07T12:21:03.824Z",
       "downSince": "2026-10-07T11:44:55.211Z",
-      "downDuration": 2108616,
+      "downDuration": 2168613,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-07T12:20:03.827Z",
+      "lastCheck": "2026-10-07T12:21:03.824Z",
       "downSince": "2026-10-07T11:44:55.211Z",
-      "downDuration": 2108616,
+      "downDuration": 2168613,
       "alert": true
     }
   ],
@@ -4801,30 +4801,6 @@
         "statusChangedAt": "2026-09-18T13:22:24.330+0900"
       },
       {
-        "key": "SAHME-3435",
-        "summary": "SC+ Policy Creation 16.09.2026",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/SAHME-3435",
-        "updated": "2026-10-01T21:20:13.000+0900",
-        "statusChangedAt": "2026-09-16T18:16:11.672+0900"
-      },
-      {
-        "key": "AEME-6595",
-        "summary": "Incomplete NorthLadder Orders || 29-Sep",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/AEME-6595",
-        "updated": "2026-09-30T02:25:12.000+0900",
-        "statusChangedAt": "2026-09-29T16:33:52.776+0900"
-      },
-      {
         "key": "GMT-21163",
         "summary": "Update or create Cronjob for autocleanup",
         "priority": "None",
@@ -4887,6 +4863,18 @@
         "url": "https://jira.secext.samsung.net/browse/AEME-6527",
         "updated": "2026-10-06T14:05:18.000+0900",
         "statusChangedAt": "2026-10-06T14:05:18.355+0900"
+      },
+      {
+        "key": "AEME-6595",
+        "summary": "Incomplete NorthLadder Orders || 29-Sep",
+        "priority": "None",
+        "status": "QA Server Review",
+        "category": "blocked",
+        "reason": "Waiting for QA/review team",
+        "whatToDo": "",
+        "url": "https://jira.secext.samsung.net/browse/AEME-6595",
+        "updated": "2026-10-07T21:22:37.000+0900",
+        "statusChangedAt": "2026-10-07T21:22:37.191+0900"
       },
       {
         "key": "AEME-6602",
@@ -4961,6 +4949,18 @@
         "statusChangedAt": "2026-09-30T17:26:21.320+0900"
       },
       {
+        "key": "SAHME-3435",
+        "summary": "SC+ Policy Creation 16.09.2026",
+        "priority": "None",
+        "status": "QA Server Review",
+        "category": "blocked",
+        "reason": "Waiting for QA/review team",
+        "whatToDo": "",
+        "url": "https://jira.secext.samsung.net/browse/SAHME-3435",
+        "updated": "2026-10-07T21:22:36.000+0900",
+        "statusChangedAt": "2026-10-07T21:22:36.991+0900"
+      },
+      {
         "key": "SAHME-3448",
         "summary": "Request to trigger a refund on the cancelled order.",
         "priority": "None",
@@ -4999,26 +4999,26 @@
     ],
     "queued": [
       {
+        "key": "MHME-1451",
+        "summary": "Cancellation of MA260821-64994011 order",
+        "priority": "None",
+        "status": "QA Server Review",
+        "queueActions": "pending",
+        "url": "https://jira.secext.samsung.net/browse/MHME-1451"
+      },
+      {
         "key": "AEME-6597",
         "summary": "Stuck in Shipped Status || 29-Sep",
         "priority": "None",
         "status": "In Progress",
         "queueActions": "pending",
         "url": "https://jira.secext.samsung.net/browse/AEME-6597"
-      },
-      {
-        "key": "MHME-1451",
-        "summary": "Cancellation of MA260821-64994011 order",
-        "priority": "None",
-        "status": "In Progress",
-        "queueActions": "pending",
-        "url": "https://jira.secext.samsung.net/browse/MHME-1451"
       }
     ],
     "totals": {
-      "zero": 9,
+      "zero": 7,
       "actionable": 2,
-      "blocked": 10,
+      "blocked": 12,
       "queued": 2
     }
   }
