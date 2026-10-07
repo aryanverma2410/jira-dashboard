@@ -1,7 +1,51 @@
 {
-  "generatedAt": "2026-10-07T12:17:57.096Z",
+  "generatedAt": "2026-10-07T12:18:35.686Z",
   "totalTickets": 23,
   "tickets": [
+    {
+      "key": "PC-55140",
+      "summary": "Script to fix secondGI on ConsignmentEntry for return creation",
+      "status": "To do",
+      "statusCategory": "To Do",
+      "priority": "Low",
+      "project": "PROD Change",
+      "projectKey": "PC",
+      "issuetype": "Hybris Platform",
+      "updated": "2026-10-07T21:20:23.000+0900",
+      "created": "2026-10-07T20:48:44.000+0900",
+      "statusChangedAt": "",
+      "assignedToMeAt": "",
+      "description": "For orders mentioned in ticket : TKME-2349\n\nFix secondGI on ConsignmentEntry for consignment TR260831-72936144. secondGI is currently 00000000000000 (null placeholder), preventing return creation. Correct value derived from consignment gerpBillingDate (20260904164037).\n\nScript: ^script-TKME-2349-sec",
+      "commentsCount": 1,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-07T21:20:22.606+0900",
+          "snippet": "Hi,\n\nFound 3 consignments on S2 with the same issue pattern (secondGI=00000000000000 with non-null gerpBillingDate). Used IN260422-05933166_1 as representative to validate the query and update logic.\n\nSample consignment IN260422-05933166_1 (representative):\n\nBEFORE\n||Consignment||Entry||Product||Qty"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi,\n\nFound 3 consignments on S2 with the same issue pattern (secondGI=00000000000000 with non-null gerpBillingDate). Used IN260422-05933166_1 as representative to validate the query and update logic.\n\nSample consignment IN260422-05933166_1 (representative):\n\nBEFORE\n||Consignment||Entry||Product||Qty",
+      "lastCommentDate": "2026-10-07T21:20:22.606+0900",
+      "url": "https://jira.secext.samsung.net/browse/PC-55140",
+      "linkedTickets": [
+        {
+          "key": "TKME-2349",
+          "summary": "Return Creation Issue",
+          "status": "QA Server Review",
+          "statusCategory": "In Progress",
+          "relation": "is blocked by",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "none",
+        "excerpt": "",
+        "source": "",
+        "foundAt": "",
+        "issueNumber": null
+      }
+    },
     {
       "key": "PC-53845",
       "summary": "[SAM-24720] Create DB cleanup cronjobs for SMI cluster",
@@ -197,44 +241,6 @@
         {
           "key": "AEME-6602",
           "summary": "[PROD] | Manual Chargeback | 30th Sept",
-          "status": "QA Server Review",
-          "statusCategory": "In Progress",
-          "relation": "is blocked by",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "none",
-        "excerpt": "",
-        "source": "",
-        "foundAt": "",
-        "issueNumber": null
-      }
-    },
-    {
-      "key": "PC-55140",
-      "summary": "Script to fix secondGI on ConsignmentEntry for return creation",
-      "status": "To do",
-      "statusCategory": "To Do",
-      "priority": "Low",
-      "project": "PROD Change",
-      "projectKey": "PC",
-      "issuetype": "Hybris Platform",
-      "updated": "2026-10-07T20:50:39.000+0900",
-      "created": "2026-10-07T20:48:44.000+0900",
-      "statusChangedAt": "",
-      "assignedToMeAt": "",
-      "description": "For orders mentioned in ticket : TKME-2349\n\nFix secondGI on ConsignmentEntry for consignment TR260831-72936144. secondGI is currently 00000000000000 (null placeholder), preventing return creation. Correct value derived from consignment gerpBillingDate (20260904164037).\n\nScript: ^script-TKME-2349-sec",
-      "commentsCount": 0,
-      "recentComments": [],
-      "lastCommentBy": "",
-      "lastCommentSnippet": "",
-      "lastCommentDate": "",
-      "url": "https://jira.secext.samsung.net/browse/PC-55140",
-      "linkedTickets": [
-        {
-          "key": "TKME-2349",
-          "summary": "Return Creation Issue",
           "status": "QA Server Review",
           "statusCategory": "In Progress",
           "relation": "is blocked by",
@@ -1331,7 +1337,7 @@
       }
     ],
     "pid": 3816,
-    "uptime": 11417,
+    "uptime": 11452,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1343,7 +1349,7 @@
       {
         "pid": 20536,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 31207,
+        "ageSeconds": 31246,
         "status": "running",
         "isChild": false,
         "taskSummary": "login thing still opens jira and kibana links without #auto30",
@@ -1353,17 +1359,17 @@
       {
         "pid": 21768,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 30814,
+        "ageSeconds": 30853,
         "status": "running",
         "isChild": false,
-        "taskSummary": "add stg results to PC-55140",
-        "lastExchange": "add stg results to PC-55140",
+        "taskSummary": "remove \"Tested the script on S2 staging. Target consignment TR260831-72936144 does not exist on S...",
+        "lastExchange": "remove \"Tested the script on S2 staging. Target consignment TR260831-72936144 does not exist on S2 (expected — different environment data). The script handles not-found gracefully, printing an error and returning without changes.\" and post the comment on PC ticket",
         "sessionId": "bin"
       },
       {
         "pid": 13300,
         "cwd": "c:\\windows",
-        "ageSeconds": 2888,
+        "ageSeconds": 2927,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1373,7 +1379,7 @@
       {
         "pid": 25524,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 216,
+        "ageSeconds": 255,
         "status": "running",
         "isChild": false,
         "taskSummary": "login thing still opens jira and kibana links without #auto30",
@@ -4593,7 +4599,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-07T11:44:53.739Z",
-      "ageMs": 1986119
+      "ageMs": 2025079
     },
     "watchdogLogTail": "[2026-10-07T03:51:49.352Z] Could not kill dashboard PID 25480: Command failed: taskkill /PID 25480 /F /T\n[2026-10-07T03:51:49.360Z] Starting jira-dashboard-server.js...\n[2026-10-07T03:51:49.536Z] Dashboard started with PID 8472 (restart #4, 4 in last hour)\n[2026-10-07T03:51:54.356Z] Starting jira-dashboard-server.js...\n[2026-10-07T03:51:54.540Z] Dashboard started with PID 4340 (restart #5, 5 in last hour)\n[2026-10-07T03:52:02.647Z] DUPLICATE jira-dashboard-server detected: PID 8472 — killing\n[2026-10-07T11:44:44.927Z] DASHBOARD RESTART NEEDED: No dashboard heartbeat file found\n[2026-10-07T11:44:46.976Z] Killed dashboard PID 4340\n[2026-10-07T11:44:53.562Z] Starting jira-dashboard-server.js...\n[2026-10-07T11:44:53.738Z] Dashboard started with PID 5716 (restart #6, 1 in last hour)"
   },
@@ -4602,7 +4608,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-07T12:16:59.962Z",
+      "lastCheck": "2026-10-07T12:18:01.544Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4611,18 +4617,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-07T12:16:59.962Z",
+      "lastCheck": "2026-10-07T12:18:01.544Z",
       "downSince": "2026-10-07T11:44:55.211Z",
-      "downDuration": 1924751,
+      "downDuration": 1986333,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-07T12:16:59.962Z",
+      "lastCheck": "2026-10-07T12:18:01.544Z",
       "downSince": "2026-10-07T11:44:55.211Z",
-      "downDuration": 1924751,
+      "downDuration": 1986333,
       "alert": true
     }
   ],
@@ -4927,7 +4933,7 @@
         "reason": "Blocked by TKME-2349 (QA Server Review)",
         "whatToDo": "",
         "url": "https://jira.secext.samsung.net/browse/PC-55140",
-        "updated": "2026-10-07T20:50:39.000+0900",
+        "updated": "2026-10-07T21:20:23.000+0900",
         "statusChangedAt": ""
       },
       {
