@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-07T13:12:16.554Z",
+  "generatedAt": "2026-10-07T13:12:56.148Z",
   "totalTickets": 19,
   "tickets": [
     {
@@ -1027,9 +1027,23 @@
     "online": true,
     "activeSessions": [],
     "stats": {
-      "totalProcessed": 202
+      "totalProcessed": 204
     },
     "recentActivity": [
+      {
+        "issueNum": 610,
+        "title": "Remove action queue item #2",
+        "received": "2026-10-07T13:12:19.991Z",
+        "responded": "",
+        "responseSnippet": ""
+      },
+      {
+        "issueNum": 611,
+        "title": "Remove action queue item #1",
+        "received": "2026-10-07T13:12:18.797Z",
+        "responded": "",
+        "responseSnippet": ""
+      },
       {
         "issueNum": 606,
         "title": "Hiii",
@@ -1155,27 +1169,28 @@
         "received": "2026-09-29T17:28:41.361Z",
         "responded": "2026-09-29T17:29:22.493Z",
         "responseSnippet": "**Kibana MCP Alert — HTTP 401 (Unauthorized)**\n\nThis is an authentication failure, not a service outage. HTTP 401 means the Kibana MCP server is reachable but rejecting credentials — likely a session/token expiry or cookie refresh issue.\n\n**Likely causes:**\n- Kibana session cookie expired (Samsung Kibana sessions time out periodically)\n- API token or SSO credential rotated without updating the MCP server config\n- Proxy/gateway auth layer changed\n\n**What to do:**\n1. Open Kibana in a browser and r"
-      },
-      {
-        "issueNum": 458,
-        "title": "🔴 MCP Alert: Confluence down for 330m 44s",
-        "received": "2026-09-29T14:29:33.383Z",
-        "responded": "2026-09-29T14:33:49.592Z",
-        "responseSnippet": "Let me check the dashboard server and MCP config to understand the Confluence setup.The alert is an automated MCP health monitor firing because Confluence is returning HTTP 401 (Unauthorized). Let me diagnose the actual state.The cookie bridge (port 4455) is not responding. That's the root cause — the Confluence health check can't get auth cookies, so it gets a 401. Let me verify the dashboard and bridge status.Both the cookie bridge (4455) and dashboard server (3000) are down. The 401 is caused"
-      },
-      {
-        "issueNum": 453,
-        "title": "Investigate ticket AEME-6597",
-        "received": "2026-09-29T10:46:09.696Z",
-        "responded": "",
-        "responseSnippet": ""
       }
     ],
     "pid": 3816,
-    "uptime": 14674,
+    "uptime": 14717,
     "failures": 0,
-    "activeJobCount": 0,
-    "jobs": [],
+    "activeJobCount": 2,
+    "jobs": [
+      {
+        "issueNum": 610,
+        "issueTitle": "Remove action queue item #2",
+        "snippet": "Edit the file C:\\Users\\aryan.v1\\.gemini\\tmp\\bin\\memory\\jira-action-queue.json\nRemove the item with id 2 from the array. ",
+        "pid": 14984,
+        "elapsed": 34
+      },
+      {
+        "issueNum": 611,
+        "issueTitle": "Remove action queue item #1",
+        "snippet": "Edit the file C:\\Users\\aryan.v1\\.gemini\\tmp\\bin\\memory\\jira-action-queue.json\nRemove the item with id 1 from the array. ",
+        "pid": 25156,
+        "elapsed": 36
+      }
+    ],
     "startTime": "2026-10-07T03:39:28.208Z",
     "version": "v3",
     "lastResponseAt": "2026-10-07T10:06:27.738Z",
@@ -1184,7 +1199,7 @@
       {
         "pid": 20536,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 34467,
+        "ageSeconds": 34507,
         "status": "running",
         "isChild": false,
         "taskSummary": "login thing still opens jira and kibana links without #auto30",
@@ -1194,7 +1209,7 @@
       {
         "pid": 21768,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 34074,
+        "ageSeconds": 34114,
         "status": "running",
         "isChild": false,
         "taskSummary": "now lets start working with the scripts",
@@ -1204,7 +1219,7 @@
       {
         "pid": 13300,
         "cwd": "c:\\windows",
-        "ageSeconds": 6147,
+        "ageSeconds": 6188,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1214,7 +1229,7 @@
       {
         "pid": 25524,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 3475,
+        "ageSeconds": 3516,
         "status": "running",
         "isChild": false,
         "taskSummary": "login thing still opens jira and kibana links without #auto30",
@@ -1223,6 +1238,24 @@
       }
     ],
     "activityLog": [
+      {
+        "id": "1791378740937-tgfbky",
+        "timestamp": "2026-10-07T13:12:20.937Z",
+        "type": "command",
+        "source": "aryanverma2410",
+        "title": "Remove action queue item #2",
+        "detail": "#610",
+        "status": "pending"
+      },
+      {
+        "id": "1791378739751-aex866",
+        "timestamp": "2026-10-07T13:12:19.751Z",
+        "type": "command",
+        "source": "aryanverma2410",
+        "title": "Remove action queue item #1",
+        "detail": "#611",
+        "status": "pending"
+      },
       {
         "id": "1791367587741-7ymcu1",
         "timestamp": "2026-10-07T10:06:27.741Z",
@@ -1473,24 +1506,6 @@
         "source": "aryanverma2410",
         "title": "Investigate ticket SAHME-3456",
         "detail": "#473",
-        "status": "pending"
-      },
-      {
-        "id": "1790761432744-23hzl7",
-        "timestamp": "2026-09-30T09:43:52.744Z",
-        "type": "agent-response",
-        "source": "bridge",
-        "title": "Investigate ticket AEME-6602",
-        "detail": "Starting the investigation workflow for AEME-6602. Let me begin Phase 0 — reading past learnings, checking for existing cache/RCA files, and fetching the Jira ticket.Lock file already exists. Let me c",
-        "status": "success"
-      },
-      {
-        "id": "1790759495176-xfekri",
-        "timestamp": "2026-09-30T09:11:35.176Z",
-        "type": "command",
-        "source": "aryanverma2410",
-        "title": "Investigate ticket AEME-6602",
-        "detail": "#472",
         "status": "pending"
       }
     ],
@@ -4428,15 +4443,42 @@
         ],
         "endTime": "2026-10-07T10:06:27.742Z",
         "lastOutput": "Hey Aryan! 👋 What can I help you with today?"
+      },
+      "610": {
+        "sessionId": "5a139ae2-6c01-4043-9a44-a4088188175e",
+        "issueNum": 610,
+        "title": "Remove action queue item #2",
+        "startTime": "2026-10-07T13:12:21.225Z",
+        "status": "thinking",
+        "commandHistory": [
+          {
+            "title": "Remove action queue item #2",
+            "time": "2026-10-07T13:12:21.225Z"
+          }
+        ]
+      },
+      "611": {
+        "sessionId": "4d9476c6-0015-4b67-8424-5ad07d181550",
+        "issueNum": 611,
+        "title": "Remove action queue item #1",
+        "startTime": "2026-10-07T13:12:19.987Z",
+        "status": "thinking",
+        "commandHistory": [
+          {
+            "title": "Remove action queue item #1",
+            "time": "2026-10-07T13:12:19.987Z"
+          }
+        ]
       }
     },
-    "bridgeLogTail": "[2026-10-07T03:39:28.204Z] Waiting for messages...\n[2026-10-07T10:06:06.124Z] INBOX <- #606 from aryanverma2410: \"Hiii\"\n[2026-10-07T10:06:06.843Z] Comment posted on #606\n[2026-10-07T10:06:06.844Z] Auto-ack posted on #606\n[2026-10-07T10:06:06.847Z] Spawning aipro for #606: \"Hiii\"\n[2026-10-07T10:06:06.861Z] Created new session 11eefac9-5afd-4de7-8cc1-f615785a4d97 for #606\n[2026-10-07T10:06:07.050Z] 1 new message(s) added to inbox.\n[2026-10-07T10:06:23.217Z] STDOUT data for #606: 125 bytes\n[2026-10-07T10:06:23.219Z] LIVE events write for #606: 1 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_606.txt\n[2026-10-07T10:06:23.221Z] STDOUT data for #606: 558 bytes\n[2026-10-07T10:06:23.222Z] LIVE events write for #606: 2 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_606.txt\n[2026-10-07T10:06:25.491Z] STDOUT data for #606: 113 bytes\n[2026-10-07T10:06:25.493Z] LIVE events write for #606: 3 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_606.txt\n[2026-10-07T10:06:25.495Z] STDOUT data for #606: 447 bytes\n[2026-10-07T10:06:25.496Z] LIVE events write for #606: 7 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_606.txt\n[2026-10-07T10:06:25.501Z] STDOUT data for #606: 321 bytes\n[2026-10-07T10:06:25.503Z] LIVE events write for #606: 8 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_606.txt\n[2026-10-07T10:06:26.868Z] aipro completed for #606 (45 chars)\n[2026-10-07T10:06:27.724Z] Comment posted on #606\n[2026-10-07T13:12:18.797Z] INBOX <- #611 from aryanverma2410: \"Remove action queue item #1\"",
+    "bridgeLogTail": "    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-10-07T13:12:51.736Z] aipro stderr for #611: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-10-07T13:12:53.204Z] STDOUT data for #610: 580 bytes\n[2026-10-07T13:12:53.207Z] LIVE events write for #610: 7 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_610.txt\n[2026-10-07T13:12:53.218Z] STDOUT data for #611: 601 bytes\n[2026-10-07T13:12:53.220Z] LIVE events write for #611: 7 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_611.txt",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-07T11:44:53.739Z",
-      "ageMs": 5245897
+      "ageMs": 5288364
     },
-    "watchdogLogTail": "[2026-10-07T03:51:49.352Z] Could not kill dashboard PID 25480: Command failed: taskkill /PID 25480 /F /T\n[2026-10-07T03:51:49.360Z] Starting jira-dashboard-server.js...\n[2026-10-07T03:51:49.536Z] Dashboard started with PID 8472 (restart #4, 4 in last hour)\n[2026-10-07T03:51:54.356Z] Starting jira-dashboard-server.js...\n[2026-10-07T03:51:54.540Z] Dashboard started with PID 4340 (restart #5, 5 in last hour)\n[2026-10-07T03:52:02.647Z] DUPLICATE jira-dashboard-server detected: PID 8472 — killing\n[2026-10-07T11:44:44.927Z] DASHBOARD RESTART NEEDED: No dashboard heartbeat file found\n[2026-10-07T11:44:46.976Z] Killed dashboard PID 4340\n[2026-10-07T11:44:53.562Z] Starting jira-dashboard-server.js...\n[2026-10-07T11:44:53.738Z] Dashboard started with PID 5716 (restart #6, 1 in last hour)"
+    "watchdogLogTail": "[2026-10-07T03:51:49.352Z] Could not kill dashboard PID 25480: Command failed: taskkill /PID 25480 /F /T\n[2026-10-07T03:51:49.360Z] Starting jira-dashboard-server.js...\n[2026-10-07T03:51:49.536Z] Dashboard started with PID 8472 (restart #4, 4 in last hour)\n[2026-10-07T03:51:54.356Z] Starting jira-dashboard-server.js...\n[2026-10-07T03:51:54.540Z] Dashboard started with PID 4340 (restart #5, 5 in last hour)\n[2026-10-07T03:52:02.647Z] DUPLICATE jira-dashboard-server detected: PID 8472 — killing\n[2026-10-07T11:44:44.927Z] DASHBOARD RESTART NEEDED: No dashboard heartbeat file found\n[2026-10-07T11:44:46.976Z] Killed dashboard PID 4340\n[2026-10-07T11:44:53.562Z] Starting jira-dashboard-server.js...\n[2026-10-07T11:44:53.738Z] Dashboard started with PID 5716 (restart #6, 1 in last hour)",
+    "jobOutputs": {}
   },
   "mcps": [
     {
