@@ -1,7 +1,104 @@
 {
-  "generatedAt": "2026-10-07T00:55:46.793Z",
-  "totalTickets": 19,
+  "generatedAt": "2026-10-07T03:35:19.105Z",
+  "totalTickets": 20,
   "tickets": [
+    {
+      "key": "AEME-6597",
+      "summary": "Stuck in Shipped Status || 29-Sep",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "UAE Maintenance & Enhancements",
+      "projectKey": "AEME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-07T16:08:17.000+0900",
+      "created": "2026-09-29T17:16:55.000+0900",
+      "statusChangedAt": "2026-10-05T15:58:25.179+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team\n\nThis is replacement order. The order has been delivered and compeleted in NERP. But the order status is being stuck in Shipped status. Please check and move the order status forward.\nAE260921-84726057 - SHIPPED\n\nBilling Number -3247304585\n\n \n\nRegards\n\nJaffar",
+      "commentsCount": 4,
+      "recentComments": [
+        {
+          "author": "Talib Raza Zaidi",
+          "date": "2026-10-07T16:08:17.769+0900",
+          "snippet": "Hi,\n\n \n\nPlease update on this.\n\n \n\nRegards\n\nTalib\n\nCC: ~@email"
+        },
+        {
+          "author": "Talib Raza Zaidi",
+          "date": "2026-10-05T15:58:16.338+0900",
+          "snippet": "Hi ~@email ,\n\n \n\nFor this order AE260921-84726057, the issue is still persists. The order is showing 0 value and invoice cannot be generated even after the order is updated.\n\nPlease assist to remedy this order in a way that we can download the invoice because it is needed by the VOC department to fo"
+        }
+      ],
+      "lastCommentBy": "Talib Raza Zaidi",
+      "lastCommentSnippet": "Hi,\n\n \n\nPlease update on this.\n\n \n\nRegards\n\nTalib\n\nCC: ~@email",
+      "lastCommentDate": "2026-10-07T16:08:17.769+0900",
+      "url": "https://jira.secext.samsung.net/browse/AEME-6597",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "# RCA: AEME-6597\n\nTicket Summary: Stuck in Shipped Status || 29-Sep\nOrder: AE260921-84726057 (Replacement Order)\nOriginal Order: AE260918-87269668\nGenerated: 2026-10-05T07:15:00.000Z\n\nIssue:\nReplacement order AE260921-84726057 was stuck in SHIPPED status. The consignment was already COMPLETED in the warehouse with GERP billing number 3247304585 generated on 24-Sep, but the order-level status never transitioned to COMPLETED. After initial remediation (moving order to COMPLETED via PC-52596 push-from-shipped script), the reporter noted the order shows 0 value and invoice cannot be generated.\n\nRCA:\nThe order is a ReplacementOrder created from original order AE260918-87269668 through return request 09280039. The 0 value is by design. The return request subtotal is 0.00 (exchange, not return-with-refund), and the replacement order entry (SM-F976BZWPMEA, Galaxy Z Fold8 Ultra 1TB Cream, qty=1) has basePrice=0 and totalPrice=0. The customer already paid 7899 AED on the original order (totalPrice=7899.00, totalTax=376.14), so the replacement carries no monetary charge. This is the standard Samsung Toko exchange/replacement flow confirmed by the business process return-replacement-order-process-v17 which completed all 18 tasks including checkReplacementOrder and processServicesForReplacement.\n\nThe order was stuck in SHIPPED because the consignment completed physically (warehouse delivered, GERP billed on 24-Sep) but the Hybris consignment business process did not detect completion and transition the order status. The initial remediation script (PC-52596, script-AEME-6597-push-from-shipped.groovy) correctly pushed the consignment process forward by restarting at isShippedComplete and moved the order to COMPLETED.\n\nThe invoice generation issue has two root causes:\n1. SMC external service (pk=9168691242923, provider=SMC, serviceProduct=10985570500609) is in UPDATE_ERROR state. The SMC registration/update failed during the replacement order flow. On the original order, the SMC service is in OK state with statusMessage=OK, confirming SMC worked for the original but failed for the replacement.\n2. The consignment externalBillingNumber and externalInvoiceNumber are both empty. The GERP billing number (3247304585) and GERP inbound billing number (5025341804) exist, but the external billing step never completed. The external invoice generation appears to depend on SMC service completion.\n\nThe original order's consignment also has empty externalBillingNumber and externalInvoiceNumber, but its SMC service is OK. This suggests either (a) external billing is a separate downstream process not yet triggered, or (b) external billing requires SMC to be in a terminal state (UPDATED/REGISTERED) before it can proceed.\n\nTwo consignment email processes are in ERROR state (tokoConsignmentDispatchEmailProcess and tokoConsignmentShippingPreparationEmailProcess), but these are non-blocking for the invoice issue.\n\nPossible remediation:\n1. Reset the SMC external service from UPDATE_ERROR to NEW and re-trigger ProcessExternalServicesOnConsignmentAction on the consignment process. Use the existing reusable PC-52678 (scplus-reset, script-AEME-6495-scplus-remediation.groovy) pattern adapted for this order.\n\n2. If the SMC UPDATE_ERROR requires clearing stale policy data first, use PC-53305 (smc-reregistration, script-AEME-6500-smc-reregistration-remediation.groovy) for SMC re-registration.\n\n3. After SMC moves to UPDATED/REGISTERED, monitor whether the external billing/invoice number populates automatically. If not, a separate consignment process retrigger may be needed (PC-52605, process-restart pattern).\n\n4. The two email processes in ERROR can be addressed by restarting them or suppressing the notification types, but these are non-blocking for the invoice issue.\n\nReusable PC tickets identified: PC-52596 (push-to-completed, already applied), PC-52678 (scplus-reset), PC-53305 (smc-reregistration), PC-52605 (process-restart).\n\nScript already applied: script-AEME-6597-push-from-shipped.groovy (PC-52596)",
+        "sections": {
+          "issue": "Replacement order AE260921-84726057 was stuck in SHIPPED status. The consignment was already COMPLETED in the warehouse with GERP billing number 3247304585 generated on 24-Sep, but the order-level status never transitioned to COMPLETED. After initial remediation (moving order to COMPLETED via PC-52596 push-from-shipped script), the reporter noted the order shows 0 value and invoice cannot be generated.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-05T07:16:57.446Z"
+      }
+    },
+    {
+      "key": "MHME-1434",
+      "summary": "missing gift for MA260902-74340282",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Morocco Maintenance & Enhancements",
+      "projectKey": "MHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-07T15:41:38.000+0900",
+      "created": "2026-09-14T20:59:40.000+0900",
+      "statusChangedAt": "2026-09-23T20:01:10.618+0900",
+      "assignedToMeAt": "",
+      "description": "I am reaching out to request an update to the SKU associated with voucher MA260902-74340282. The current SKU, EI-T5600BWEGMA, is causing an issue where the customer is unable to receive the intended free gift. To resolve this, I kindly request that the SKU be updated to EI-T5600BBEGMA. This change w",
+      "commentsCount": 9,
+      "recentComments": [
+        {
+          "author": "Ashwani Verma",
+          "date": "2026-10-06T19:58:30.641+0900",
+          "snippet": "Hi ~@email \n\ncould you please cancel EI-T5600BWEGMA for the order MA260902-74340282? \n\nThanks\n\n~@email"
+        },
+        {
+          "author": "Vaibhav Jain",
+          "date": "2026-09-24T16:19:24.782+0900",
+          "snippet": "~@email : Can you please confirm internally , Ops do not create specific vouchers.\n\n \n\nThanks & Regards\n\nVaibhav Jain"
+        }
+      ],
+      "lastCommentBy": "Ashwani Verma",
+      "lastCommentSnippet": "Hi ~@email \n\ncould you please cancel EI-T5600BWEGMA for the order MA260902-74340282? \n\nThanks\n\n~@email",
+      "lastCommentDate": "2026-10-06T19:58:30.641+0900",
+      "url": "https://jira.secext.samsung.net/browse/MHME-1434",
+      "linkedTickets": [
+        {
+          "key": "PC-54111",
+          "summary": "Update gift SKU and retrigger consignment for MA260902-74340282",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "# RCA: MHME-1434\nVoucher MA260902-74340282 — wrong SmartTag2 variant (white instead of black)\nGenerated: 2026-09-14T21:30:00+09:00\n\nHi Ashwani ,\n\nOrder MA260902-74340282 was placed on 2026-09-02 with two products: a Galaxy Ring (EF-RS936CBEGWW) at 399.00 MAD and a Galaxy SmartTag2 (EI-T5600BWEGMA) at 249.00 MAD, bundled at 1.00 MAD via coupon MA260427. The SmartTag2 on the order is the white variant (EI-T5600BWEGMA) but the customer was supposed to receive the black variant (EI-T5600BBEGMA).\n\nThe root cause is a configuration error in the promotion rule. Three PromotionSourceRule records for the Malaysia store have the wrong SmartTag2 SKU in their conditions JSON:\n\n1. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-4356_MissingGift_MA260427 (pk=8865856754671, coupon MA260427)\n2. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-3833-MA260427-60420457 (pk=8862974088175, coupon MA260427-60420457)\n3. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-3833-MA260427-60420457 (pk=8863267525615, coupon MA260427-60420457)\n\nIn all three rules, Container A qualifies on the Galaxy Ring (EF-RS936CBEGWW) and Container B qualifies on the SmartTag2. The conditions JSON for Container B specifies EI-T5600BWEGMA::maEstoreProductCatalog (white) instead of EI-T5600BBEGMA::maEstoreProductCatalog (black). When the customer applied coupon MA260427 at checkout, the promotion engine matched the rule and added the white SmartTag2 variant to the cart at the bundle price of 1 MAD. The action sets a y_target_bundle_price of 1 MAD with CHEAPEST selection strategy across containers A and B.\n\nThe order is currently in SHIPPING_REQUESTED status and has been split into two consignments. Consignment MA260902-74340282 contains the SmartTag2 (shipped 2026-09-11, status SHIPPING_REQUESTED). Consignment MA260902-74340282_1 contains the Galaxy Ring (status SHIPPING_PREPARATION). Payment is COD with both AUTHORIZATION and CAPTURE entries accepted at 1.00 MAD.\n\nTo fix this, the promotion rule conditions need to be updated in Backoffice to replace EI-T5600BWEGMA with EI-T5600BBEGMA in the qualifying products for Container B. This will prevent incorrect free gifts on future orders. For this specific order, the product reference on OrderEntry 1 (pk=9458182488110) and the corresponding ConsignmentEntry on consignment MA260902-74340282 need to be updated from EI-T5600BWEGMA to EI-T5600BBEGMA. Since the consignment is already in SHIPPING_REQUESTED, this should be coordinated with the logistics team to ensure the correct physical product is dispatched.\n\nKindly confirm if we should proceed with updating the promotion rules and the order entry product reference.\n\nThanks,\nAryan.\n\n## Remediation\n\n- **Type**: Promotion rule config fix + order entry product swap\n- **Affected PromotionSourceRules**: 3 (pk=8865856754671, 8862974088175, 8863267525615)\n- **Affected OrderEntry**: pk=9458182488110 (entry 1, order MA260902-74340282)\n- **Affected ConsignmentEntry**: consignment MA260902-74340282, entry 1\n- **Wrong SKU**: EI-T5600BWEGMA (white SmartTag2)\n- **Correct SKU**: EI-T5600BBEGMA (black SmartTag2)\n- **Coupons**: MA260427 (pk=8804448933144), MA260427-60420457 (pk=8801959351576)\n- **Reusable PC ticket**: None — this is a data/config fix, not a standard remediation type\n- **Script needed**: Groovy script to update PromotionSourceRule conditions JSON + OrderEntry product + ConsignmentEntry product",
+        "sections": {
+          "issue": "",
+          "rca": "# RCA: MHME-1434\nVoucher MA260902-74340282 — wrong SmartTag2 variant (white instead of black)\nGenerated: 2026-09-14T21:30:00+09:00\n\nHi Ashwani ,\n\nOrder MA260902-74340282 was placed on 2026-09-02 with two products: a Galaxy Ring (EF-RS936CBEGWW) at 399.00 MAD and a Galaxy SmartTag2 (EI-T5600BWEGMA) at 249.00 MAD, bundled at 1.00 MAD via coupon MA260427. The SmartTag2 on the order is the white variant (EI-T5600BWEGMA) but the customer was supposed to receive the black variant (EI-T5600BBEGMA).\n\nThe root cause is a configuration error in the promotion rule. Three PromotionSourceRule records for the Malaysia store have the wrong SmartTag2 SKU in their conditions JSON:\n\n1. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-4356_MissingGift_MA260427 (pk=8865856754671, coupon MA260427)\n2. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-3833-MA260427-60420457 (pk=8862974088175, coupon MA260427-60420457)\n3. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-3833-MA260427-60420457 (pk=8863267525615, coupon MA260427-60420457)\n\nIn all three rules, Container A qualifies on the Galaxy Ring (EF-RS936CBEGWW) and Container B qualifies on the SmartTag2. The conditions JSON for Container B specifies EI-T5600BWEGMA::maEstoreProductCatalog (white) instead of EI-T5600BBEGMA::maEstoreProductCatalog (black). When the customer applied coupon MA260427 at checkout, the promotion engine matched the rule and added the white SmartTag2 variant to the cart at the bundle price of 1 MAD. The action sets a y_target_bundle_price of 1 MAD with CHEAPEST selection strategy across containers A and B.\n\nThe order is currently in SHIPPING_REQUESTED status and has been split into two consignments. Consignment MA260902-74340282 contains the SmartTag2 (shipped 2026-09-11, status SHIPPING_REQUESTED). Consignment MA260902-74340282_1 contains the Galaxy Ring (status SHIPPING_PREPARATION). Payment is COD with both AUTHORIZATION and CAPTURE entries accepted at 1.00 MAD.\n\nTo fix this, the promotion rule conditions need to be updated in Backoffice to replace EI-T5600BWEGMA with EI-T5600BBEGMA in the qualifying products for Container B. This will prevent incorrect free gifts on future orders. For this specific order, the product reference on OrderEntry 1 (pk=9458182488110) and the corresponding ConsignmentEntry on consignment MA260902-74340282 need to be updated from EI-T5600BWEGMA to EI-T5600BBEGMA. Since the consignment is already in SHIPPING_REQUESTED, this should be coordinated with the logistics team to ensure the correct physical product is dispatched.\n\nKindly confirm if we should proceed with updating the promotion rules and the order entry product reference.\n\nThanks,\nAryan.\n\n## Remediation\n\n- **Type**: Promotion rule config fix + order entry product swap\n- **Affected PromotionSourceRules**: 3 (pk=8865856754671, 8862974088175, 8863267525615)\n- **Affected OrderEntry**: pk=9458182488110 (entry 1, order MA260902-74340282)\n- **Affected ConsignmentEntry**: consignment MA260902-74340282, entry 1\n- **Wrong SKU**: EI-T5600BWEGMA (white SmartTag2)\n- **Correct SKU**: EI-T5600BBEGMA (black SmartTag2)\n- **Coupons**: MA260427 (pk=8804448933144), MA260427-60420457 (pk=8801959351576)\n- **Reusable PC ticket**: None — this is a data/config fix, not a standard remediation type\n- **Script needed**: Groovy script to update PromotionSourceRule conditions JSON + OrderEntry product + ConsignmentEntry product",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-14T15:37:26.457Z"
+      }
+    },
     {
       "key": "MHME-1451",
       "summary": "Cancellation of MA260821-64994011 order",
@@ -314,50 +411,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-30T09:42:58.547Z"
-      }
-    },
-    {
-      "key": "AEME-6597",
-      "summary": "Stuck in Shipped Status || 29-Sep",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-05T15:58:25.000+0900",
-      "created": "2026-09-29T17:16:55.000+0900",
-      "statusChangedAt": "2026-10-05T15:58:25.179+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team\n\nThis is replacement order. The order has been delivered and compeleted in NERP. But the order status is being stuck in Shipped status. Please check and move the order status forward.\nAE260921-84726057 - SHIPPED\n\nBilling Number -3247304585\n\n \n\nRegards\n\nJaffar",
-      "commentsCount": 3,
-      "recentComments": [
-        {
-          "author": "Talib Raza Zaidi",
-          "date": "2026-10-05T15:58:16.338+0900",
-          "snippet": "Hi ~@email ,\n\n \n\nFor this order AE260921-84726057, the issue is still persists. The order is showing 0 value and invoice cannot be generated even after the order is updated.\n\nPlease assist to remedy this order in a way that we can download the invoice because it is needed by the VOC department to fo"
-        },
-        {
-          "author": "Jaffar Ali",
-          "date": "2026-09-30T00:36:40.062+0900",
-          "snippet": "Dear All,\n\nI am currently out of the office with no access to mail.\n\nIn my absence, please message Mr. Abdul, Mr. Dilip & Mr. Talib.\n\nThanks\nJaffar\nI'm currently out of the office until Oct-19.  Please reach out to Mr.Talib."
-        }
-      ],
-      "lastCommentBy": "Talib Raza Zaidi",
-      "lastCommentSnippet": "Hi ~@email ,\n\n \n\nFor this order AE260921-84726057, the issue is still persists. The order is showing 0 value and invoice cannot be generated even after the order is updated.\n\nPlease assist to remedy this order in a way that we can download the invoice because it is needed by the VOC department to fo",
-      "lastCommentDate": "2026-10-05T15:58:16.338+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6597",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: AEME-6597\n\nTicket Summary: Stuck in Shipped Status || 29-Sep\nOrder: AE260921-84726057 (Replacement Order)\nOriginal Order: AE260918-87269668\nGenerated: 2026-10-05T07:15:00.000Z\n\nIssue:\nReplacement order AE260921-84726057 was stuck in SHIPPED status. The consignment was already COMPLETED in the warehouse with GERP billing number 3247304585 generated on 24-Sep, but the order-level status never transitioned to COMPLETED. After initial remediation (moving order to COMPLETED via PC-52596 push-from-shipped script), the reporter noted the order shows 0 value and invoice cannot be generated.\n\nRCA:\nThe order is a ReplacementOrder created from original order AE260918-87269668 through return request 09280039. The 0 value is by design. The return request subtotal is 0.00 (exchange, not return-with-refund), and the replacement order entry (SM-F976BZWPMEA, Galaxy Z Fold8 Ultra 1TB Cream, qty=1) has basePrice=0 and totalPrice=0. The customer already paid 7899 AED on the original order (totalPrice=7899.00, totalTax=376.14), so the replacement carries no monetary charge. This is the standard Samsung Toko exchange/replacement flow confirmed by the business process return-replacement-order-process-v17 which completed all 18 tasks including checkReplacementOrder and processServicesForReplacement.\n\nThe order was stuck in SHIPPED because the consignment completed physically (warehouse delivered, GERP billed on 24-Sep) but the Hybris consignment business process did not detect completion and transition the order status. The initial remediation script (PC-52596, script-AEME-6597-push-from-shipped.groovy) correctly pushed the consignment process forward by restarting at isShippedComplete and moved the order to COMPLETED.\n\nThe invoice generation issue has two root causes:\n1. SMC external service (pk=9168691242923, provider=SMC, serviceProduct=10985570500609) is in UPDATE_ERROR state. The SMC registration/update failed during the replacement order flow. On the original order, the SMC service is in OK state with statusMessage=OK, confirming SMC worked for the original but failed for the replacement.\n2. The consignment externalBillingNumber and externalInvoiceNumber are both empty. The GERP billing number (3247304585) and GERP inbound billing number (5025341804) exist, but the external billing step never completed. The external invoice generation appears to depend on SMC service completion.\n\nThe original order's consignment also has empty externalBillingNumber and externalInvoiceNumber, but its SMC service is OK. This suggests either (a) external billing is a separate downstream process not yet triggered, or (b) external billing requires SMC to be in a terminal state (UPDATED/REGISTERED) before it can proceed.\n\nTwo consignment email processes are in ERROR state (tokoConsignmentDispatchEmailProcess and tokoConsignmentShippingPreparationEmailProcess), but these are non-blocking for the invoice issue.\n\nPossible remediation:\n1. Reset the SMC external service from UPDATE_ERROR to NEW and re-trigger ProcessExternalServicesOnConsignmentAction on the consignment process. Use the existing reusable PC-52678 (scplus-reset, script-AEME-6495-scplus-remediation.groovy) pattern adapted for this order.\n\n2. If the SMC UPDATE_ERROR requires clearing stale policy data first, use PC-53305 (smc-reregistration, script-AEME-6500-smc-reregistration-remediation.groovy) for SMC re-registration.\n\n3. After SMC moves to UPDATED/REGISTERED, monitor whether the external billing/invoice number populates automatically. If not, a separate consignment process retrigger may be needed (PC-52605, process-restart pattern).\n\n4. The two email processes in ERROR can be addressed by restarting them or suppressing the notification types, but these are non-blocking for the invoice issue.\n\nReusable PC tickets identified: PC-52596 (push-to-completed, already applied), PC-52678 (scplus-reset), PC-53305 (smc-reregistration), PC-52605 (process-restart).\n\nScript already applied: script-AEME-6597-push-from-shipped.groovy (PC-52596)",
-        "sections": {
-          "issue": "Replacement order AE260921-84726057 was stuck in SHIPPED status. The consignment was already COMPLETED in the warehouse with GERP billing number 3247304585 generated on 24-Sep, but the order-level status never transitioned to COMPLETED. After initial remediation (moving order to COMPLETED via PC-52596 push-from-shipped script), the reporter noted the order shows 0 value and invoice cannot be generated.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-05T07:16:57.446Z"
       }
     },
     {
@@ -1131,57 +1184,16 @@
         "responseSnippet": ""
       }
     ],
-    "pid": 26692,
-    "uptime": 53445,
+    "pid": 5308,
+    "uptime": 100,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
-    "startTime": "2026-10-06T15:35:04.060Z",
+    "startTime": "2026-10-07T09:01:56.346Z",
     "version": "v3",
     "lastResponseAt": "2026-10-07T05:22:30.927Z",
     "lastResponseIssue": 601,
-    "ideSessions": [
-      {
-        "pid": 33768,
-        "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 69146,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "a cmd window keeps opening up randomly. check why and its very annoying and keeps opening randomp...",
-        "lastExchange": "a cmd window keeps opening up randomly. check why and its very annoying and keeps opening randomply mutiple times.fix it. if its important, then make it open in a hidden window so it doesnt get between my work",
-        "sessionId": "aryan-v1"
-      },
-      {
-        "pid": 28676,
-        "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 69141,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "start working on each in-progress status ticekt in my bucket and draft a reply. First do deep RCA...",
-        "lastExchange": "start working on each in-progress status ticekt in my bucket and draft a reply. First do deep RCA. then verify each finding in that RCA bby cross questionining it. then give me drafts of these replies. make sure you make no assumptions and the RCA is robust. if it needs a fix, then be ready with a remediation plan as well and create PCs where you are sure a PC only would be ableto fix it. dont ask for my approval for the same. Also, do stg testing of those PC tickets.",
-        "sessionId": "bin"
-      },
-      {
-        "pid": 29064,
-        "cwd": "c:\\windows",
-        "ageSeconds": 69137,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "windows",
-        "lastExchange": null,
-        "sessionId": "windows"
-      },
-      {
-        "pid": 25828,
-        "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 69121,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "a cmd window keeps opening up randomly. check why and its very annoying and keeps opening randomp...",
-        "lastExchange": "a cmd window keeps opening up randomly. check why and its very annoying and keeps opening randomply mutiple times.fix it. if its important, then make it open in a hidden window so it doesnt get between my work",
-        "sessionId": "aryan-v1-1"
-      }
-    ],
+    "ideSessions": [],
     "activityLog": [
       {
         "id": "1791350550930-s6tr90",
@@ -4375,20 +4387,20 @@
         "lastOutput": "Let me look at the project structure and find the dashboard code.Let me read the rest of the HTML file to find the filter click handler.Let me read the key filter-related code sections.Now I have a clear picture. The current filters only filter by issue type (Bug, Task, etc.). I need to add a status filter row. Let me implement this.Now let me make the changes. First, add the status filter row HTML after the existing filter row.Good, the HTML is in place. Now I need to add the JavaScript for the"
       }
     },
-    "bridgeLogTail": "[2026-10-07T05:22:29.152Z] LIVE events write for #601: 240 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_601.txt\n[2026-10-07T05:22:29.156Z] STDOUT data for #601: 120 bytes\n[2026-10-07T05:22:29.158Z] LIVE events write for #601: 241 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_601.txt\n[2026-10-07T05:22:29.171Z] STDOUT data for #601: 110 bytes\n[2026-10-07T05:22:29.174Z] LIVE events write for #601: 242 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_601.txt\n[2026-10-07T05:22:29.189Z] STDOUT data for #601: 108 bytes\n[2026-10-07T05:22:29.192Z] LIVE events write for #601: 243 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_601.txt\n[2026-10-07T05:22:29.198Z] STDOUT data for #601: 108 bytes\n[2026-10-07T05:22:29.201Z] LIVE events write for #601: 244 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_601.txt\n[2026-10-07T05:22:29.250Z] STDOUT data for #601: 110 bytes\n[2026-10-07T05:22:29.252Z] LIVE events write for #601: 245 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_601.txt\n[2026-10-07T05:22:29.254Z] STDOUT data for #601: 356 bytes\n[2026-10-07T05:22:29.257Z] LIVE events write for #601: 248 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_601.txt\n[2026-10-07T05:22:29.267Z] STDOUT data for #601: 104 bytes\n[2026-10-07T05:22:29.269Z] LIVE events write for #601: 249 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_601.txt\n[2026-10-07T05:22:29.276Z] STDOUT data for #601: 342 bytes\n[2026-10-07T05:22:29.279Z] LIVE events write for #601: 250 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_601.txt\n[2026-10-07T05:22:30.117Z] aipro completed for #601 (2814 chars)\n[2026-10-07T05:22:30.917Z] Comment posted on #601\n[2026-10-07T00:55:24.544Z] ERROR poll #1: API returned 403 - backing off 10000ms",
+    "bridgeLogTail": "[2026-10-07T02:32:53.868Z] ==========================================\n[2026-10-07T02:32:53.871Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-07T02:32:53.873Z] === with Aipro Auto-Launch ===\n[2026-10-07T02:32:53.874Z] ==========================================\n[2026-10-07T02:32:53.876Z] PID: 21820\n[2026-10-07T02:32:53.877Z] Repo: aryanverma2410/agent-bridge\n[2026-10-07T02:32:53.878Z] Poll interval: 10000ms\n[2026-10-07T02:32:53.879Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-07T02:32:53.880Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-07T02:32:53.882Z] Waiting for messages...\n[2026-10-07T09:01:54.006Z] ==========================================\n[2026-10-07T09:01:55.360Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-07T09:01:55.801Z] === with Aipro Auto-Launch ===\n[2026-10-07T09:01:55.846Z] ==========================================\n[2026-10-07T09:01:55.980Z] PID: 5308\n[2026-10-07T09:01:56.103Z] Repo: aryanverma2410/agent-bridge\n[2026-10-07T09:01:56.110Z] Poll interval: 10000ms\n[2026-10-07T09:01:56.119Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-07T09:01:56.133Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-07T09:01:56.148Z] Waiting for messages...",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-07T00:55:27.210Z",
-      "ageMs": 23135
+      "lastWrite": "2026-10-07T03:34:08.349Z",
+      "ageMs": 77093
     },
-    "watchdogLogTail": "[2026-10-07T06:24:55.763Z] Stale threshold: 30000ms\n[2026-10-07T06:24:55.764Z] Max restarts: 50/hour\n[2026-10-07T06:24:55.765Z] Bridge script: C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\bridge.js\n[2026-10-07T06:24:55.768Z] Dashboard script: C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\jira-dashboard-server.js\n[2026-10-07T06:24:55.774Z] Bridge already running (PID 26692). Adopting.\n[2026-10-07T06:24:55.782Z] Dashboard already running (PID 33040). Adopting.\n[2026-10-07T06:25:05.739Z] DUPLICATE watchdog detected: PID 39128 — killing\n[2026-10-07T06:25:19.452Z] Clock sync: Checking drift against Jira server...\n[2026-10-07T06:25:19.823Z] Clock sync: VDI hw=2026-10-07T11:55:19.823Z Jira=2026-10-07T06:25:19.000Z drift=-19801s\n[2026-10-07T00:55:27.208Z] Clock sync: ADJUSTED by -19801s. Clock set to 2026-10-07 06:25:19"
+    "watchdogLogTail": "[2026-10-07T09:01:49.955Z] Bridge not running. Starting fresh.\n[2026-10-07T09:01:49.974Z] Starting bridge.js...\n[2026-10-07T09:01:50.241Z] Bridge started with PID 5308 (restart #1, 1 in last hour)\n[2026-10-07T09:01:52.050Z] Dashboard not running. Starting fresh.\n[2026-10-07T09:01:53.821Z] Starting jira-dashboard-server.js...\n[2026-10-07T09:01:54.187Z] Dashboard started with PID 13172 (restart #1, 1 in last hour)\n[2026-10-07T09:02:00.181Z] Clock sync: Checking drift against Jira server...\n[2026-10-07T09:02:00.659Z] Clock sync: VDI hw=2026-10-07T14:32:00.659Z Jira=2026-10-07T09:03:50.000Z drift=-19691s\n[2026-10-07T03:33:51.096Z] Clock sync: ADJUSTED by -19691s. Clock set to 2026-10-07 09:03:50\n[2026-10-07T03:34:08.348Z] DUPLICATE jira-dashboard-server detected: PID 8540 — killing"
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-07T06:24:57.398Z",
+      "lastCheck": "2026-10-07T03:34:44.847Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4397,7 +4409,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-07T06:24:57.398Z",
+      "lastCheck": "2026-10-07T03:34:44.847Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4406,10 +4418,10 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-07T06:24:57.398Z",
-      "downSince": "2026-10-07T04:32:43.160Z",
-      "downDuration": 6734238,
-      "alert": true
+      "lastCheck": "2026-10-07T03:34:44.847Z",
+      "downSince": "2026-10-07T09:01:57.814Z",
+      "downDuration": -19632967,
+      "alert": false
     }
   ],
   "hacReport": {
@@ -4531,6 +4543,18 @@
         "url": "https://jira.secext.samsung.net/browse/RT-722599",
         "updated": "2026-09-29T02:59:15.000+0900",
         "statusChangedAt": "2026-09-28T15:10:33.048+0900"
+      },
+      {
+        "key": "MHME-1434",
+        "summary": "missing gift for MA260902-74340282",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/MHME-1434",
+        "updated": "2026-10-07T15:41:38.000+0900",
+        "statusChangedAt": "2026-09-23T20:01:10.618+0900"
       },
       {
         "key": "AEME-6582",
@@ -4731,24 +4755,24 @@
     ],
     "queued": [
       {
-        "key": "MHME-1451",
-        "summary": "Cancellation of MA260821-64994011 order",
-        "priority": "None",
-        "status": "In Progress",
-        "queueActions": "pending",
-        "url": "https://jira.secext.samsung.net/browse/MHME-1451"
-      },
-      {
         "key": "AEME-6597",
         "summary": "Stuck in Shipped Status || 29-Sep",
         "priority": "None",
         "status": "In Progress",
         "queueActions": "pending",
         "url": "https://jira.secext.samsung.net/browse/AEME-6597"
+      },
+      {
+        "key": "MHME-1451",
+        "summary": "Cancellation of MA260821-64994011 order",
+        "priority": "None",
+        "status": "In Progress",
+        "queueActions": "pending",
+        "url": "https://jira.secext.samsung.net/browse/MHME-1451"
       }
     ],
     "totals": {
-      "zero": 8,
+      "zero": 9,
       "actionable": 3,
       "blocked": 6,
       "queued": 2
