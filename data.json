@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-07T15:03:07.056Z",
+  "generatedAt": "2026-10-07T15:03:45.595Z",
   "totalTickets": 20,
   "tickets": [
     {
@@ -1225,7 +1225,7 @@
       }
     ],
     "pid": 3816,
-    "uptime": 21324,
+    "uptime": 21364,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1237,7 +1237,7 @@
       {
         "pid": 20536,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 41117,
+        "ageSeconds": 41156,
         "status": "running",
         "isChild": false,
         "taskSummary": "login thing still opens jira and kibana links without #auto30",
@@ -1247,17 +1247,17 @@
       {
         "pid": 21768,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 40724,
+        "ageSeconds": 40763,
         "status": "running",
         "isChild": false,
-        "taskSummary": "would this script do it?: //NOTE ITGC_JIRA: PC-3603 (MYME-15152) import de.hybris.platform.servic...",
-        "lastExchange": "would this script do it?: //NOTE ITGC_JIRA: PC-3603 (MYME-15152)\n\nimport de.hybris.platform.servicelayer.search.FlexibleSearchService;\nimport java.util.ArrayList;\nimport de.hybris.platform.processengine.BusinessProcessService;\nimport org.apache.commons.collections.CollectionUtils;\nimport de.hybris.platform.commerceservices.impersonation.ImpersonationContext;\nimport com.samsung.toko.order.data.InvoiceData;\nimport de.hybris.platform.core.model.order.OrderModel;\nimport com.samsung.toko.core.strategies.TokoTaxInvoiceRetrievalStrategy;\nimport de.hybris.platform.servicelayer.dto.converter.Converter;\nimport de.hybris.platform.commerceservices.impersonation.ImpersonationService;\nimport de.hybris.platform.cms2.model.site.CMSSiteModel;\nimport de.hybris.platform.ordersplitting.model.ConsignmentProcessModel;\n\nbusinessProcessService = (BusinessProcessService) spring.getBean(\"businessProcessService\");\n\n \n\nfss = spring.getBean(\"flexibleSearchService\")\n\nmodelService = spring.getBean(\"modelService\")\n\nimpersonationService = spring.getBean(\"impersonationService\")\n\nregenerateTaxInvoiceAction = spring.getBean(\"regenerateTaxInvoiceAction\")\n\ntaxInvoiceGenerator = spring.getBean(\"tokoTaxInvoiceRetrievalStrategy\");\n\n \n\ndef list = new ArrayList<String>()\n//list.add(\"MY250223-95521758\")\n\nlist.add(\"MY260615-35392695\")\n\n\n\nfor (l in list)\n\n{ \nString query = \"select {pk} from {order} where {code}='$l'\";\n\norders = fss.search(query).result\n\nfor (order in orders) {\n\n// ConsignmentProcessModel process = order.getConsignments().getAt(0).getConsignmentProcesses().get(0)\n\n//final OrderModel order = (OrderModel) process.getConsignment().getOrder();\n\nfinal ImpersonationContext context = new ImpersonationContext();\ncontext.setSite(order.getSite());\ncontext.setLanguage(order.getLanguage());\ncontext.setCatalogVersions(Arrays.asList(((CMSSiteModel) order.getSite()).getDefaultCatalog().getActiveCatalogVersion()));\n\n \n\nfinal InvoiceData invoiceData = impersonationService.executeInContext(context,{ -> tokoTaxInvoiceConverter.convert(order) });\nout.println(order.code)\nprintln(\"check\" + invoiceData)\nprintln(taxInvoiceGenerator.generateTaxInvoice(invoiceData, order))\n\nregenerateTaxInvoiceAction.saveTaxInvoice(order, taxInvoiceGenerator.generateTaxInvoice(invoiceData, order), order.getConsignments().getAt(0));\n}\n}",
+        "taskSummary": "give the script with the PC of the reference script",
+        "lastExchange": "give the script with the PC of the reference script",
         "sessionId": "bin"
       },
       {
         "pid": 13300,
         "cwd": "c:\\windows",
-        "ageSeconds": 12798,
+        "ageSeconds": 12836,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1267,7 +1267,7 @@
       {
         "pid": 25524,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 10126,
+        "ageSeconds": 10164,
         "status": "running",
         "isChild": false,
         "taskSummary": "login thing still opens jira and kibana links without #auto30",
@@ -4517,7 +4517,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-07T11:44:53.739Z",
-      "ageMs": 11896024
+      "ageMs": 11934915
     },
     "watchdogLogTail": "[2026-10-07T03:51:49.352Z] Could not kill dashboard PID 25480: Command failed: taskkill /PID 25480 /F /T\n[2026-10-07T03:51:49.360Z] Starting jira-dashboard-server.js...\n[2026-10-07T03:51:49.536Z] Dashboard started with PID 8472 (restart #4, 4 in last hour)\n[2026-10-07T03:51:54.356Z] Starting jira-dashboard-server.js...\n[2026-10-07T03:51:54.540Z] Dashboard started with PID 4340 (restart #5, 5 in last hour)\n[2026-10-07T03:52:02.647Z] DUPLICATE jira-dashboard-server detected: PID 8472 — killing\n[2026-10-07T11:44:44.927Z] DASHBOARD RESTART NEEDED: No dashboard heartbeat file found\n[2026-10-07T11:44:46.976Z] Killed dashboard PID 4340\n[2026-10-07T11:44:53.562Z] Starting jira-dashboard-server.js...\n[2026-10-07T11:44:53.738Z] Dashboard started with PID 5716 (restart #6, 1 in last hour)"
   },
@@ -4526,7 +4526,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-07T15:02:20.409Z",
+      "lastCheck": "2026-10-07T15:03:20.813Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4535,18 +4535,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-07T15:02:20.409Z",
+      "lastCheck": "2026-10-07T15:03:20.813Z",
       "downSince": "2026-10-07T11:44:55.211Z",
-      "downDuration": 11845198,
+      "downDuration": 11905602,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-07T15:02:20.409Z",
+      "lastCheck": "2026-10-07T15:03:20.813Z",
       "downSince": "2026-10-07T11:44:55.211Z",
-      "downDuration": 11845198,
+      "downDuration": 11905602,
       "alert": true
     }
   ],
