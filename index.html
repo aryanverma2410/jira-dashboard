@@ -160,6 +160,65 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .wl-day-bar-lbl{font-size:8px;color:var(--text-dim);text-transform:uppercase;margin-top:1px}
 .wl-day-bar.today .wl-day-bar-lbl{color:var(--success);font-weight:700}
 
+/* F1: Tempo Approval Badge */
+.wl-approval-badge{display:inline-block;padding:2px 6px;border-radius:6px;font-size:9px;font-weight:700;margin-left:6px;vertical-align:middle;white-space:nowrap}
+.wl-approval-badge.open{background:rgba(255,159,64,0.2);color:var(--warning)}
+.wl-approval-badge.approved{background:rgba(63,185,80,0.2);color:var(--success)}
+.wl-approval-badge.review{background:rgba(255,159,64,0.15);color:var(--warning)}
+
+/* F2: Pending Approvals Badge */
+.approvals-badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:10px;background:rgba(255,68,68,0.2);color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap}
+.approvals-badge:hover{background:rgba(255,68,68,0.3)}
+.approvals-badge.zero{display:none}
+
+/* F3: Calendar Banner */
+.calendar-banner{padding:8px 12px;margin:4px 12px;border-radius:10px;background:rgba(88,166,255,0.08);border:1px solid rgba(88,166,255,0.2);font-size:12px;color:var(--text);display:flex;align-items:center;gap:6px}
+.calendar-banner.empty{display:none}
+
+/* F4: Error Scan Card */
+.error-scan-card{margin:4px 12px;border-radius:12px;overflow:hidden;border:1px solid var(--border)}
+.error-scan-header{padding:8px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-size:12px}
+.error-scan-header.warn{background:rgba(255,159,64,0.1);color:var(--warning)}
+.error-scan-header.ok{background:rgba(63,185,80,0.1);color:var(--success)}
+.error-scan-details{display:none;padding:8px 12px;background:rgba(255,159,64,0.05)}
+.error-scan-card.expanded .error-scan-details{display:block}
+.error-scan-row{display:flex;justify-content:space-between;padding:3px 0;font-size:11px;border-bottom:1px solid rgba(255,255,255,0.05)}
+.error-scan-correlation{margin-top:6px;padding:4px 8px;background:rgba(255,68,68,0.1);border-radius:6px;font-size:10px;color:var(--danger)}
+
+/* F8: Stuck Orders Card */
+.stuck-orders-card{margin:4px 12px;border-radius:12px;overflow:hidden;border:1px solid var(--border)}
+.stuck-orders-header{padding:8px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-size:12px}
+.stuck-orders-header.warn{background:rgba(255,159,64,0.1);color:var(--warning)}
+.stuck-orders-header.ok{background:rgba(63,185,80,0.1);color:var(--success)}
+.stuck-orders-details{display:none;padding:8px 12px}
+.stuck-orders-card.expanded .stuck-orders-details{display:block}
+.stuck-region-row{display:flex;justify-content:space-between;padding:3px 0;font-size:11px}
+
+/* F5: Plan overlay bars */
+.wl-plan-overlay{position:absolute;top:0;left:0;right:0;display:flex;align-items:flex-end;height:100%;pointer-events:none;z-index:0}
+.wl-day-bar{position:relative}
+.wl-day-bar-plan{position:absolute;bottom:0;left:0;right:0;background:rgba(88,166,255,0.15);border-top:2px dashed rgba(88,166,255,0.4);z-index:0;border-radius:3px 3px 0 0}
+.wl-plan-ticket-row{display:flex;justify-content:space-between;padding:2px 0;font-size:10px;border-bottom:1px solid rgba(255,255,255,0.03)}
+
+/* F6: SLA Badge */
+.sla-badge{display:inline-flex;align-items:center;gap:2px;padding:2px 6px;border-radius:6px;font-size:9px;font-weight:700;margin-left:4px}
+.sla-badge.breached{background:rgba(255,68,68,0.2);color:var(--danger)}
+.sla-badge.at-risk{background:rgba(255,159,64,0.2);color:var(--warning)}
+.sla-badge.on-track{background:rgba(63,185,80,0.15);color:var(--success)}
+
+/* F9: Standup Button + Modal */
+.standup-btn{padding:4px 10px;border:1px solid var(--border);background:rgba(88,166,255,0.15);color:var(--accent);border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap}
+.standup-btn:hover{background:rgba(88,166,255,0.25)}
+.standup-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:300;display:none;align-items:center;justify-content:center}
+.standup-modal.show{display:flex}
+.standup-content{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;max-width:90vw;max-height:70vh;overflow:auto}
+.standup-text{white-space:pre-wrap;font-size:13px;line-height:1.6;margin:12px 0;padding:12px;background:rgba(255,255,255,0.03);border-radius:8px}
+
+/* F10: Fill Suggestion */
+.wl-fill-suggestion{margin:4px 12px;padding:8px 12px;border-radius:8px;background:rgba(255,159,64,0.08);border:1px solid rgba(255,159,64,0.2);font-size:11px;color:var(--text);display:none;align-items:center;justify-content:space-between}
+.wl-fill-suggestion.show{display:flex}
+.wl-fill-btn{padding:3px 10px;border:1px solid var(--warning);background:rgba(255,159,64,0.15);color:var(--warning);border-radius:6px;font-size:10px;cursor:pointer;font-weight:600}
+
 /* FAB */
 .fab{position:fixed;bottom:calc(var(--nav-h) + 16px);right:16px;width:52px;height:52px;border-radius:50%;background:var(--accent);border:none;color:#fff;font-size:24px;cursor:pointer;box-shadow:0 4px 16px rgba(88,166,255,0.4);z-index:200;display:flex;align-items:center;justify-content:center;transition:transform 0.2s}
 .fab:active{transform:scale(0.9)}
@@ -725,7 +784,9 @@ body.has-status-bar .scroll{padding-top:28px}
       <h1>Tickets</h1>
     </div>
     <div class="topbar-right" style="display:flex;align-items:center;gap:8px">
+      <a class="approvals-badge zero" id="approvalsBadge" href="http://kor5.samsung.net/portalapp/home" target="_blank">&#128276; <span id="approvalsCount">0</span></a>
       <button id="autologinBtn" onclick="doAutologin()" style="padding:4px 10px;border:1px solid var(--border);background:rgba(63,185,80,0.15);color:var(--success);border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">&#128274; Auto-Login</button>
+      <button class="standup-btn" onclick="showStandupModal()">&#128203; Standup</button>
       <div class="refresh-time" id="refreshTime">Loading...</div>
     </div>
   </div>
@@ -735,6 +796,8 @@ body.has-status-bar .scroll{padding-top:28px}
   </div>
   <div class="scroll" id="ticketsScroll">
     <div id="dayStarter"></div>
+    <!-- CALENDAR BANNER -->
+    <div class="calendar-banner empty" id="calendarBanner"></div>
     <!-- WORKLOG TRACKER -->
     <div class="worklog-tracker" id="worklogTracker">
       <div class="worklog-tracker-header" onclick="toggleWorklogDetails()">
@@ -742,12 +805,32 @@ body.has-status-bar .scroll{padding-top:28px}
         <div class="worklog-tracker-stats">
           <span class="wl-stat"><span class="wl-stat-label">Today</span><span class="wl-stat-val" id="wlTodayVal">—</span></span>
           <span class="wl-stat"><span class="wl-stat-label">7-Day</span><span class="wl-stat-val" id="wlWeekVal">—</span></span>
+          <span id="wlApprovalBadge"></span>
         </div>
         <span class="worklog-tracker-arrow" id="wlArrow">&#9660;</span>
       </div>
       <div class="worklog-tracker-details" id="worklogDetails" style="display:none">
         <div class="wl-day-bars" id="wlDayBars"></div>
+        <div id="wlPlanTickets"></div>
       </div>
+    </div>
+    <!-- FILL SUGGESTION -->
+    <div class="wl-fill-suggestion" id="wlFillSuggestion"></div>
+    <!-- ERROR SCAN CARD -->
+    <div class="error-scan-card" id="errorScanCard" style="display:none">
+      <div class="error-scan-header" id="errorScanHeader" onclick="document.getElementById('errorScanCard').classList.toggle('expanded')">
+        <span id="errorScanTitle"></span>
+        <span id="errorScanArrow">&#9660;</span>
+      </div>
+      <div class="error-scan-details" id="errorScanDetails"></div>
+    </div>
+    <!-- STUCK ORDERS CARD -->
+    <div class="stuck-orders-card" id="stuckOrdersCard" style="display:none">
+      <div class="stuck-orders-header" id="stuckOrdersHeader" onclick="document.getElementById('stuckOrdersCard').classList.toggle('expanded')">
+        <span id="stuckOrdersTitle"></span>
+        <span id="stuckOrdersArrow">&#9660;</span>
+      </div>
+      <div class="stuck-orders-details" id="stuckOrdersDetails"></div>
     </div>
     <div class="watch-input-row">
       <input type="text" class="watch-input" id="watchInput" placeholder="Investigate ticket KEY (e.g. SAME-1234)">
@@ -1052,6 +1135,21 @@ body.has-status-bar .scroll{padding-top:28px}
 
 <div class="toast" id="toast"></div>
 
+<!-- STANDUP MODAL (F9) -->
+<div class="standup-modal" id="standupModal" onclick="if(event.target===this)closeStandupModal()">
+  <div class="standup-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-size:14px;font-weight:700">&#128203; Standup Report</span>
+      <button onclick="closeStandupModal()" style="background:none;border:none;color:var(--text-dim);font-size:20px;cursor:pointer">&times;</button>
+    </div>
+    <div class="standup-text" id="standupText">Generating standup report...</div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button onclick="copyStandup()" style="flex:1;padding:8px;border-radius:8px;background:var(--accent);border:none;color:#fff;font-size:13px;cursor:pointer">Copy to Clipboard</button>
+      <button onclick="closeStandupModal()" style="padding:8px 16px;border-radius:8px;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:13px;cursor:pointer">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- AI CONSOLE (Live Conversation) -->
 <div class="ai-console" id="aiConsole">
   <div class="ai-console-header">
@@ -1319,7 +1417,15 @@ function onData(data){
     if(tv){tv.textContent=wt.todayHours>0?wt.todayHours+'h':'0h';tv.classList.toggle('zero',wt.todayHours===0)}
     if(wv){wv.textContent=wt.weekHours>0?wt.weekHours+'h':'0h';wv.classList.toggle('zero',wt.weekHours===0)}
   }
-  try{renderFilters(data);renderStatusFilters(data);renderTickets(data,changedKeys)}catch(e){console.error('renderTickets err:',e)}
+  // F1-F10: New feature rendering
+  try{renderApprovalBadge()}catch(e){}
+  try{renderApprovalsBadge()}catch(e){}
+  try{renderCalendarBanner()}catch(e){}
+  try{renderErrorScanCard()}catch(e){}
+  try{renderStuckOrdersCard()}catch(e){}
+  try{renderFillSuggestion()}catch(e){}
+  try{renderPlanTickets()}catch(e){}
+  try{renderFilters(data);renderStatusFilters(data);renderTickets(data,changedKeys);renderSlaBadges()}catch(e){console.error('renderTickets err:',e)}
   try{renderRcaMatrix(data)}catch(e){console.error('renderRcaMatrix err:',e)}
   try{renderDayStarter(data)}catch(e){console.error('renderDayStarter err:',e)}
   try{renderActionItems(data)}catch(e){console.error('renderActionItems err:',e)}
@@ -4013,6 +4119,224 @@ function renderLookupResult(t,el){
   html+='<a class="lk-open-link" href="'+escapeHtml(t.url)+'" target="_blank">Open in Jira &#8599;</a>';
   html+='</div>';
   el.innerHTML=html;
+}
+
+// ===== FEATURE RENDERING FUNCTIONS (F1-F10) =====
+
+// F1: Tempo Approval Badge
+function renderApprovalBadge(){
+  var el=document.getElementById('wlApprovalBadge');
+  if(!el||!rawData||!rawData.tempoApproval)return;
+  var ta=rawData.tempoApproval;
+  var cls='open';
+  var txt='';
+  var st=(ta.status||'').toUpperCase();
+  if(st==='APPROVED'){cls='approved';txt='&#10003; Approved'}
+  else if(st==='IN_REVIEW'||st==='REVIEW'){cls='review';txt='&#9203; In Review'}
+  else{cls='open';txt='&#9888; Submit';if(ta.deficitHours>0)txt+=' ('+ta.deficitHours+'h short)'}
+  el.innerHTML='<span class="wl-approval-badge '+cls+'" title="'+(ta.requiredHours||0)+'h required, '+(ta.workedHours||0)+'h worked">'+txt+'</span>';
+}
+
+// F2: Pending Approvals Badge
+function renderApprovalsBadge(){
+  var el=document.getElementById('approvalsBadge');
+  var cnt=document.getElementById('approvalsCount');
+  if(!el||!rawData||rawData.pendingApprovals===null||rawData.pendingApprovals===undefined)return;
+  var c=rawData.pendingApprovals.count||0;
+  if(cnt)cnt.textContent=c;
+  el.classList.toggle('zero',c===0);
+}
+
+// F3: Calendar Banner
+function renderCalendarBanner(){
+  var el=document.getElementById('calendarBanner');
+  if(!el)return;
+  if(!rawData||!rawData.calendar||!Array.isArray(rawData.calendar)||rawData.calendar.length===0){
+    el.classList.add('empty');el.innerHTML='';return
+  }
+  el.classList.remove('empty');
+  var now=new Date();
+  var upcoming=rawData.calendar.filter(function(m){
+    if(m.allDay)return true;
+    if(!m.startTime)return false;
+    return new Date(m.startTime).getTime()>now.getTime()
+  });
+  if(upcoming.length===0){
+    el.innerHTML='&#128197; No more meetings today';
+    return
+  }
+  // Sort by startTime
+  upcoming.sort(function(a,b){
+    var at=a.startTime?new Date(a.startTime).getTime():0;
+    var bt=b.startTime?new Date(b.startTime).getTime():0;
+    return at-bt
+  });
+  if(upcoming.length===1){
+    var m=upcoming[0];
+    var timeStr=m.allDay?'all day':(m.startTime?new Date(m.startTime).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}):'');
+    el.innerHTML='&#128197; Next: '+escapeHtml(m.subject)+(timeStr?' at '+timeStr:'');
+  } else {
+    var next=upcoming[0];
+    var timeStr=next.allDay?'all day':(next.startTime?new Date(next.startTime).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}):'');
+    el.innerHTML='&#128197; '+upcoming.length+' meetings today — Next: '+escapeHtml(next.subject)+(timeStr?' at '+timeStr:'');
+  }
+}
+
+// F4+F7: Error Scan Card with Ticket Correlation
+function renderErrorScanCard(){
+  var card=document.getElementById('errorScanCard');
+  var hdr=document.getElementById('errorScanHeader');
+  var title=document.getElementById('errorScanTitle');
+  var det=document.getElementById('errorScanDetails');
+  if(!card)return;
+  if(!rawData||!rawData.meErrorScan){
+    card.style.display='none';return
+  }
+  var es=rawData.meErrorScan;
+  card.style.display='block';
+  if(es.totalErrors>0){
+    hdr.className='error-scan-header warn';
+    title.innerHTML='&#9888; '+es.totalErrors+' errors (1h)';
+  } else {
+    hdr.className='error-scan-header ok';
+    title.innerHTML='&#10003; No errors (1h)';
+  }
+  // Build details
+  var h='';
+  if(es.byCountry&&es.byCountry.length>0){
+    es.byCountry.forEach(function(c){
+      h+='<div class="error-scan-row"><span>'+escapeHtml(c.country)+'</span><span>'+c.count+'</span></div>'
+    })
+  }
+  // F7: Correlated tickets
+  if(es.correlatedTickets&&es.correlatedTickets.length>0){
+    h+='<div style="margin-top:8px;font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700">Correlated Tickets</div>';
+    es.correlatedTickets.forEach(function(cor){
+      h+='<div class="error-scan-correlation">&#128308; '+escapeHtml(cor.country)+': '+cor.count+' errors &rarr; '+cor.tickets.map(function(k){return '<a href="https://jira.secext.samsung.net/browse/'+encodeURIComponent(k)+'" target="_blank" style="color:var(--accent)">'+escapeHtml(k)+'</a>'}).join(', ')+'</div>'
+    })
+  }
+  det.innerHTML=h;
+}
+
+// F5: Plan Tickets (inside worklog expanded view)
+function renderPlanTickets(){
+  var el=document.getElementById('wlPlanTickets');
+  if(!el||!rawData||!rawData.tempoPlan||!rawData.tempoPlan.byTicket)return;
+  var pt=rawData.tempoPlan;
+  if(pt.byTicket.length===0){el.innerHTML='';return}
+  var h='<div style="padding:8px 4px 4px;border-top:1px solid var(--border);margin-top:8px">';
+  h+='<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-dim);margin-bottom:4px">Plan vs Actual</div>';
+  // Get actual hours per ticket from worklogTotals
+  var wt=rawData.worklogTotals||{};
+  pt.byTicket.forEach(function(t){
+    h+='<div class="wl-plan-ticket-row"><span style="color:var(--accent)">'+escapeHtml(t.key)+'</span><span>'+t.plannedHours+'h planned</span></div>'
+  });
+  h+='</div>';
+  el.innerHTML=h;
+}
+
+// F6: SLA Badges on ticket cards
+function renderSlaBadges(){
+  if(!rawData||!rawData.slaCards||!rawData.slaCards.byTicket)return;
+  var slaMap={};
+  rawData.slaCards.byTicket.forEach(function(s){slaMap[s.key]=s});
+  document.querySelectorAll('[data-ticket-key]').forEach(function(card){
+    var key=card.getAttribute('data-ticket-key');
+    var sla=slaMap[key];
+    var existing=card.querySelector('.sla-badge');
+    if(!sla){
+      if(existing)existing.remove();
+      return
+    }
+    var cls='on-track';
+    var txt='&#9201; '+escapeHtml(sla.remainingDuration||sla.slaStatus||'');
+    var st=(sla.slaStatus||'').toUpperCase();
+    if(st.indexOf('BREACH')>=0){cls='breached';txt='&#9203; SLA Breached'}
+    else if(st.indexOf('RISK')>=0||st.indexOf('AT RISK')>=0){cls='at-risk'}
+    if(existing){
+      existing.className='sla-badge '+cls;
+      existing.innerHTML=txt
+    } else {
+      var hdr=card.querySelector('.ticket-header');
+      if(hdr){var span=document.createElement('span');span.className='sla-badge '+cls;span.innerHTML=txt;hdr.appendChild(span)}
+    }
+  })
+}
+
+// F8: Stuck Orders Card
+function renderStuckOrdersCard(){
+  var card=document.getElementById('stuckOrdersCard');
+  var hdr=document.getElementById('stuckOrdersHeader');
+  var title=document.getElementById('stuckOrdersTitle');
+  var det=document.getElementById('stuckOrdersDetails');
+  if(!card)return;
+  if(!rawData||!rawData.stuckOrders){
+    card.style.display='none';return
+  }
+  var so=rawData.stuckOrders;
+  card.style.display='block';
+  if(so.count>0){
+    hdr.className='stuck-orders-header warn';
+    title.innerHTML='&#128315; '+so.count+' stuck orders (30 min)'
+  } else {
+    hdr.className='stuck-orders-header ok';
+    title.innerHTML='&#10003; No stuck orders'
+  }
+  var h='';
+  if(so.byRegion&&so.byRegion.length>0){
+    so.byRegion.forEach(function(r){
+      h+='<div class="stuck-region-row"><span>'+escapeHtml(r.region)+'</span><span>'+r.count+'</span></div>'
+      if(r.orderCodes&&r.orderCodes.length>0){
+        h+='<div style="font-size:9px;color:var(--text-dim);margin-left:8px;margin-bottom:2px">'+r.orderCodes.slice(0,5).join(', ')+(r.orderCodes.length>5?'...':'')+'</div>'
+      }
+    })
+  }
+  det.innerHTML=h;
+}
+
+// F9: Standup Modal
+function showStandupModal(){
+  var modal=document.getElementById('standupModal');
+  var txt=document.getElementById('standupText');
+  if(!modal)return;
+  if(rawData&&rawData.standupReport&&rawData.standupReport.standupText){
+    txt.textContent=rawData.standupReport.standupText
+  } else {
+    txt.textContent='Generating standup report...'
+  }
+  modal.classList.add('show')
+}
+function closeStandupModal(){
+  document.getElementById('standupModal').classList.remove('show')
+}
+function copyStandup(){
+  var ta=document.createElement('textarea');
+  ta.value=document.getElementById('standupText').textContent||'';
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');showToast('Copied to clipboard','success')}catch(e){showToast('Copy failed','error')}
+  document.body.removeChild(ta)
+}
+
+// F10: Fill Suggestion
+function renderFillSuggestion(){
+  var el=document.getElementById('wlFillSuggestion');
+  if(!el)return;
+  if(!rawData||!rawData.worklogTotals||!rawData.worklogTotals.fillSuggestion){
+    el.classList.remove('show');el.innerHTML='';return
+  }
+  var fs=rawData.worklogTotals.fillSuggestion;
+  el.classList.add('show');
+  el.innerHTML='<span>&#128221; '+fs.gapHours+'h unlogged — log on '+escapeHtml(fs.suggestedTicket)+'?</span>'+
+    '<button class="wl-fill-btn" onclick="fillSuggestionLog(\''+escapeHtml(fs.suggestedTicket)+'\')">Log</button>'
+}
+function fillSuggestionLog(key){
+  // Open the worklog inline action for this ticket
+  var card=document.querySelector('[data-ticket-key="'+key+'"]');
+  if(card){
+    if(!card.classList.contains('expanded'))card.classList.add('expanded');
+    var wlArea=document.getElementById('wl-'+key);
+    if(wlArea){wlArea.classList.add('show');var wt=document.getElementById('wt-'+key);if(wt)setTimeout(function(){wt.focus()},100)}
+  }
 }
 </script>
 </body>
