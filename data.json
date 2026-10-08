@@ -1,7 +1,60 @@
 {
-  "generatedAt": "2026-10-08T06:35:24.952Z",
+  "generatedAt": "2026-10-08T06:36:05.338Z",
   "totalTickets": 21,
   "tickets": [
+    {
+      "key": "MHME-1434",
+      "summary": "missing gift for MA260902-74340282",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Morocco Maintenance & Enhancements",
+      "projectKey": "MHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-08T15:37:37.000+0900",
+      "created": "2026-09-14T20:59:40.000+0900",
+      "statusChangedAt": "2026-09-23T20:01:10.618+0900",
+      "assignedToMeAt": "",
+      "description": "I am reaching out to request an update to the SKU associated with voucher MA260902-74340282. The current SKU, EI-T5600BWEGMA, is causing an issue where the customer is unable to receive the intended free gift. To resolve this, I kindly request that the SKU be updated to EI-T5600BBEGMA. This change w",
+      "commentsCount": 10,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-08T15:37:37.844+0900",
+          "snippet": "Hi Ashwani,\n\nChecked the current state of order MA260902-74340282 on PROD. Below are the details.\n\nOrder status: SHIPPING_REQUESTED\n\nOrder entries:\nEntry 0: EF-RS936CBEGWW, qty 1, price 399\nEntry 1: EI-T5600BWEGMA (Galaxy SmartTag2 White), qty 1, price 249\n\nThe SKU swap script from PC-54111 was test"
+        },
+        {
+          "author": "Ashwani Verma",
+          "date": "2026-10-06T19:58:30.641+0900",
+          "snippet": "Hi ~@email \n\ncould you please cancel EI-T5600BWEGMA for the order MA260902-74340282? \n\nThanks\n\n~@email"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Ashwani,\n\nChecked the current state of order MA260902-74340282 on PROD. Below are the details.\n\nOrder status: SHIPPING_REQUESTED\n\nOrder entries:\nEntry 0: EF-RS936CBEGWW, qty 1, price 399\nEntry 1: EI-T5600BWEGMA (Galaxy SmartTag2 White), qty 1, price 249\n\nThe SKU swap script from PC-54111 was test",
+      "lastCommentDate": "2026-10-08T15:37:37.844+0900",
+      "url": "https://jira.secext.samsung.net/browse/MHME-1434",
+      "linkedTickets": [
+        {
+          "key": "PC-54111",
+          "summary": "Update gift SKU and retrigger consignment for MA260902-74340282",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "# RCA: MHME-1434\nVoucher MA260902-74340282 — wrong SmartTag2 variant (white instead of black)\nGenerated: 2026-09-14T21:30:00+09:00\n\nHi Ashwani ,\n\nOrder MA260902-74340282 was placed on 2026-09-02 with two products: a Galaxy Ring (EF-RS936CBEGWW) at 399.00 MAD and a Galaxy SmartTag2 (EI-T5600BWEGMA) at 249.00 MAD, bundled at 1.00 MAD via coupon MA260427. The SmartTag2 on the order is the white variant (EI-T5600BWEGMA) but the customer was supposed to receive the black variant (EI-T5600BBEGMA).\n\nThe root cause is a configuration error in the promotion rule. Three PromotionSourceRule records for the Malaysia store have the wrong SmartTag2 SKU in their conditions JSON:\n\n1. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-4356_MissingGift_MA260427 (pk=8865856754671, coupon MA260427)\n2. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-3833-MA260427-60420457 (pk=8862974088175, coupon MA260427-60420457)\n3. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-3833-MA260427-60420457 (pk=8863267525615, coupon MA260427-60420457)\n\nIn all three rules, Container A qualifies on the Galaxy Ring (EF-RS936CBEGWW) and Container B qualifies on the SmartTag2. The conditions JSON for Container B specifies EI-T5600BWEGMA::maEstoreProductCatalog (white) instead of EI-T5600BBEGMA::maEstoreProductCatalog (black). When the customer applied coupon MA260427 at checkout, the promotion engine matched the rule and added the white SmartTag2 variant to the cart at the bundle price of 1 MAD. The action sets a y_target_bundle_price of 1 MAD with CHEAPEST selection strategy across containers A and B.\n\nThe order is currently in SHIPPING_REQUESTED status and has been split into two consignments. Consignment MA260902-74340282 contains the SmartTag2 (shipped 2026-09-11, status SHIPPING_REQUESTED). Consignment MA260902-74340282_1 contains the Galaxy Ring (status SHIPPING_PREPARATION). Payment is COD with both AUTHORIZATION and CAPTURE entries accepted at 1.00 MAD.\n\nTo fix this, the promotion rule conditions need to be updated in Backoffice to replace EI-T5600BWEGMA with EI-T5600BBEGMA in the qualifying products for Container B. This will prevent incorrect free gifts on future orders. For this specific order, the product reference on OrderEntry 1 (pk=9458182488110) and the corresponding ConsignmentEntry on consignment MA260902-74340282 need to be updated from EI-T5600BWEGMA to EI-T5600BBEGMA. Since the consignment is already in SHIPPING_REQUESTED, this should be coordinated with the logistics team to ensure the correct physical product is dispatched.\n\nKindly confirm if we should proceed with updating the promotion rules and the order entry product reference.\n\nThanks,\nAryan.\n\n## Remediation\n\n- **Type**: Promotion rule config fix + order entry product swap\n- **Affected PromotionSourceRules**: 3 (pk=8865856754671, 8862974088175, 8863267525615)\n- **Affected OrderEntry**: pk=9458182488110 (entry 1, order MA260902-74340282)\n- **Affected ConsignmentEntry**: consignment MA260902-74340282, entry 1\n- **Wrong SKU**: EI-T5600BWEGMA (white SmartTag2)\n- **Correct SKU**: EI-T5600BBEGMA (black SmartTag2)\n- **Coupons**: MA260427 (pk=8804448933144), MA260427-60420457 (pk=8801959351576)\n- **Reusable PC ticket**: None — this is a data/config fix, not a standard remediation type\n- **Script needed**: Groovy script to update PromotionSourceRule conditions JSON + OrderEntry product + ConsignmentEntry product",
+        "sections": {
+          "issue": "",
+          "rca": "# RCA: MHME-1434\nVoucher MA260902-74340282 — wrong SmartTag2 variant (white instead of black)\nGenerated: 2026-09-14T21:30:00+09:00\n\nHi Ashwani ,\n\nOrder MA260902-74340282 was placed on 2026-09-02 with two products: a Galaxy Ring (EF-RS936CBEGWW) at 399.00 MAD and a Galaxy SmartTag2 (EI-T5600BWEGMA) at 249.00 MAD, bundled at 1.00 MAD via coupon MA260427. The SmartTag2 on the order is the white variant (EI-T5600BWEGMA) but the customer was supposed to receive the black variant (EI-T5600BBEGMA).\n\nThe root cause is a configuration error in the promotion rule. Three PromotionSourceRule records for the Malaysia store have the wrong SmartTag2 SKU in their conditions JSON:\n\n1. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-4356_MissingGift_MA260427 (pk=8865856754671, coupon MA260427)\n2. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-3833-MA260427-60420457 (pk=8862974088175, coupon MA260427-60420457)\n3. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-3833-MA260427-60420457 (pk=8863267525615, coupon MA260427-60420457)\n\nIn all three rules, Container A qualifies on the Galaxy Ring (EF-RS936CBEGWW) and Container B qualifies on the SmartTag2. The conditions JSON for Container B specifies EI-T5600BWEGMA::maEstoreProductCatalog (white) instead of EI-T5600BBEGMA::maEstoreProductCatalog (black). When the customer applied coupon MA260427 at checkout, the promotion engine matched the rule and added the white SmartTag2 variant to the cart at the bundle price of 1 MAD. The action sets a y_target_bundle_price of 1 MAD with CHEAPEST selection strategy across containers A and B.\n\nThe order is currently in SHIPPING_REQUESTED status and has been split into two consignments. Consignment MA260902-74340282 contains the SmartTag2 (shipped 2026-09-11, status SHIPPING_REQUESTED). Consignment MA260902-74340282_1 contains the Galaxy Ring (status SHIPPING_PREPARATION). Payment is COD with both AUTHORIZATION and CAPTURE entries accepted at 1.00 MAD.\n\nTo fix this, the promotion rule conditions need to be updated in Backoffice to replace EI-T5600BWEGMA with EI-T5600BBEGMA in the qualifying products for Container B. This will prevent incorrect free gifts on future orders. For this specific order, the product reference on OrderEntry 1 (pk=9458182488110) and the corresponding ConsignmentEntry on consignment MA260902-74340282 need to be updated from EI-T5600BWEGMA to EI-T5600BBEGMA. Since the consignment is already in SHIPPING_REQUESTED, this should be coordinated with the logistics team to ensure the correct physical product is dispatched.\n\nKindly confirm if we should proceed with updating the promotion rules and the order entry product reference.\n\nThanks,\nAryan.\n\n## Remediation\n\n- **Type**: Promotion rule config fix + order entry product swap\n- **Affected PromotionSourceRules**: 3 (pk=8865856754671, 8862974088175, 8863267525615)\n- **Affected OrderEntry**: pk=9458182488110 (entry 1, order MA260902-74340282)\n- **Affected ConsignmentEntry**: consignment MA260902-74340282, entry 1\n- **Wrong SKU**: EI-T5600BWEGMA (white SmartTag2)\n- **Correct SKU**: EI-T5600BBEGMA (black SmartTag2)\n- **Coupons**: MA260427 (pk=8804448933144), MA260427-60420457 (pk=8801959351576)\n- **Reusable PC ticket**: None — this is a data/config fix, not a standard remediation type\n- **Script needed**: Groovy script to update PromotionSourceRule conditions JSON + OrderEntry product + ConsignmentEntry product",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-14T15:37:26.457Z"
+      }
+    },
     {
       "key": "PC-54929",
       "summary": "Script to reset NorthLadder ExternalService and retrigger deal creation",
@@ -442,59 +495,6 @@
       }
     },
     {
-      "key": "MHME-1434",
-      "summary": "missing gift for MA260902-74340282",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Morocco Maintenance & Enhancements",
-      "projectKey": "MHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-07T15:41:38.000+0900",
-      "created": "2026-09-14T20:59:40.000+0900",
-      "statusChangedAt": "2026-09-23T20:01:10.618+0900",
-      "assignedToMeAt": "",
-      "description": "I am reaching out to request an update to the SKU associated with voucher MA260902-74340282. The current SKU, EI-T5600BWEGMA, is causing an issue where the customer is unable to receive the intended free gift. To resolve this, I kindly request that the SKU be updated to EI-T5600BBEGMA. This change w",
-      "commentsCount": 9,
-      "recentComments": [
-        {
-          "author": "Ashwani Verma",
-          "date": "2026-10-06T19:58:30.641+0900",
-          "snippet": "Hi ~@email \n\ncould you please cancel EI-T5600BWEGMA for the order MA260902-74340282? \n\nThanks\n\n~@email"
-        },
-        {
-          "author": "Vaibhav Jain",
-          "date": "2026-09-24T16:19:24.782+0900",
-          "snippet": "~@email : Can you please confirm internally , Ops do not create specific vouchers.\n\n \n\nThanks & Regards\n\nVaibhav Jain"
-        }
-      ],
-      "lastCommentBy": "Ashwani Verma",
-      "lastCommentSnippet": "Hi ~@email \n\ncould you please cancel EI-T5600BWEGMA for the order MA260902-74340282? \n\nThanks\n\n~@email",
-      "lastCommentDate": "2026-10-06T19:58:30.641+0900",
-      "url": "https://jira.secext.samsung.net/browse/MHME-1434",
-      "linkedTickets": [
-        {
-          "key": "PC-54111",
-          "summary": "Update gift SKU and retrigger consignment for MA260902-74340282",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "blocks",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: MHME-1434\nVoucher MA260902-74340282 — wrong SmartTag2 variant (white instead of black)\nGenerated: 2026-09-14T21:30:00+09:00\n\nHi Ashwani ,\n\nOrder MA260902-74340282 was placed on 2026-09-02 with two products: a Galaxy Ring (EF-RS936CBEGWW) at 399.00 MAD and a Galaxy SmartTag2 (EI-T5600BWEGMA) at 249.00 MAD, bundled at 1.00 MAD via coupon MA260427. The SmartTag2 on the order is the white variant (EI-T5600BWEGMA) but the customer was supposed to receive the black variant (EI-T5600BBEGMA).\n\nThe root cause is a configuration error in the promotion rule. Three PromotionSourceRule records for the Malaysia store have the wrong SmartTag2 SKU in their conditions JSON:\n\n1. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-4356_MissingGift_MA260427 (pk=8865856754671, coupon MA260427)\n2. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-3833-MA260427-60420457 (pk=8862974088175, coupon MA260427-60420457)\n3. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-3833-MA260427-60420457 (pk=8863267525615, coupon MA260427-60420457)\n\nIn all three rules, Container A qualifies on the Galaxy Ring (EF-RS936CBEGWW) and Container B qualifies on the SmartTag2. The conditions JSON for Container B specifies EI-T5600BWEGMA::maEstoreProductCatalog (white) instead of EI-T5600BBEGMA::maEstoreProductCatalog (black). When the customer applied coupon MA260427 at checkout, the promotion engine matched the rule and added the white SmartTag2 variant to the cart at the bundle price of 1 MAD. The action sets a y_target_bundle_price of 1 MAD with CHEAPEST selection strategy across containers A and B.\n\nThe order is currently in SHIPPING_REQUESTED status and has been split into two consignments. Consignment MA260902-74340282 contains the SmartTag2 (shipped 2026-09-11, status SHIPPING_REQUESTED). Consignment MA260902-74340282_1 contains the Galaxy Ring (status SHIPPING_PREPARATION). Payment is COD with both AUTHORIZATION and CAPTURE entries accepted at 1.00 MAD.\n\nTo fix this, the promotion rule conditions need to be updated in Backoffice to replace EI-T5600BWEGMA with EI-T5600BBEGMA in the qualifying products for Container B. This will prevent incorrect free gifts on future orders. For this specific order, the product reference on OrderEntry 1 (pk=9458182488110) and the corresponding ConsignmentEntry on consignment MA260902-74340282 need to be updated from EI-T5600BWEGMA to EI-T5600BBEGMA. Since the consignment is already in SHIPPING_REQUESTED, this should be coordinated with the logistics team to ensure the correct physical product is dispatched.\n\nKindly confirm if we should proceed with updating the promotion rules and the order entry product reference.\n\nThanks,\nAryan.\n\n## Remediation\n\n- **Type**: Promotion rule config fix + order entry product swap\n- **Affected PromotionSourceRules**: 3 (pk=8865856754671, 8862974088175, 8863267525615)\n- **Affected OrderEntry**: pk=9458182488110 (entry 1, order MA260902-74340282)\n- **Affected ConsignmentEntry**: consignment MA260902-74340282, entry 1\n- **Wrong SKU**: EI-T5600BWEGMA (white SmartTag2)\n- **Correct SKU**: EI-T5600BBEGMA (black SmartTag2)\n- **Coupons**: MA260427 (pk=8804448933144), MA260427-60420457 (pk=8801959351576)\n- **Reusable PC ticket**: None — this is a data/config fix, not a standard remediation type\n- **Script needed**: Groovy script to update PromotionSourceRule conditions JSON + OrderEntry product + ConsignmentEntry product",
-        "sections": {
-          "issue": "",
-          "rca": "# RCA: MHME-1434\nVoucher MA260902-74340282 — wrong SmartTag2 variant (white instead of black)\nGenerated: 2026-09-14T21:30:00+09:00\n\nHi Ashwani ,\n\nOrder MA260902-74340282 was placed on 2026-09-02 with two products: a Galaxy Ring (EF-RS936CBEGWW) at 399.00 MAD and a Galaxy SmartTag2 (EI-T5600BWEGMA) at 249.00 MAD, bundled at 1.00 MAD via coupon MA260427. The SmartTag2 on the order is the white variant (EI-T5600BWEGMA) but the customer was supposed to receive the black variant (EI-T5600BBEGMA).\n\nThe root cause is a configuration error in the promotion rule. Three PromotionSourceRule records for the Malaysia store have the wrong SmartTag2 SKU in their conditions JSON:\n\n1. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-4356_MissingGift_MA260427 (pk=8865856754671, coupon MA260427)\n2. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-3833-MA260427-60420457 (pk=8862974088175, coupon MA260427-60420457)\n3. 2026-b2c-ma-web-mx-all_mx-all_mx-regular-voucher-open-none-SEMAG-3833-MA260427-60420457 (pk=8863267525615, coupon MA260427-60420457)\n\nIn all three rules, Container A qualifies on the Galaxy Ring (EF-RS936CBEGWW) and Container B qualifies on the SmartTag2. The conditions JSON for Container B specifies EI-T5600BWEGMA::maEstoreProductCatalog (white) instead of EI-T5600BBEGMA::maEstoreProductCatalog (black). When the customer applied coupon MA260427 at checkout, the promotion engine matched the rule and added the white SmartTag2 variant to the cart at the bundle price of 1 MAD. The action sets a y_target_bundle_price of 1 MAD with CHEAPEST selection strategy across containers A and B.\n\nThe order is currently in SHIPPING_REQUESTED status and has been split into two consignments. Consignment MA260902-74340282 contains the SmartTag2 (shipped 2026-09-11, status SHIPPING_REQUESTED). Consignment MA260902-74340282_1 contains the Galaxy Ring (status SHIPPING_PREPARATION). Payment is COD with both AUTHORIZATION and CAPTURE entries accepted at 1.00 MAD.\n\nTo fix this, the promotion rule conditions need to be updated in Backoffice to replace EI-T5600BWEGMA with EI-T5600BBEGMA in the qualifying products for Container B. This will prevent incorrect free gifts on future orders. For this specific order, the product reference on OrderEntry 1 (pk=9458182488110) and the corresponding ConsignmentEntry on consignment MA260902-74340282 need to be updated from EI-T5600BWEGMA to EI-T5600BBEGMA. Since the consignment is already in SHIPPING_REQUESTED, this should be coordinated with the logistics team to ensure the correct physical product is dispatched.\n\nKindly confirm if we should proceed with updating the promotion rules and the order entry product reference.\n\nThanks,\nAryan.\n\n## Remediation\n\n- **Type**: Promotion rule config fix + order entry product swap\n- **Affected PromotionSourceRules**: 3 (pk=8865856754671, 8862974088175, 8863267525615)\n- **Affected OrderEntry**: pk=9458182488110 (entry 1, order MA260902-74340282)\n- **Affected ConsignmentEntry**: consignment MA260902-74340282, entry 1\n- **Wrong SKU**: EI-T5600BWEGMA (white SmartTag2)\n- **Correct SKU**: EI-T5600BBEGMA (black SmartTag2)\n- **Coupons**: MA260427 (pk=8804448933144), MA260427-60420457 (pk=8801959351576)\n- **Reusable PC ticket**: None — this is a data/config fix, not a standard remediation type\n- **Script needed**: Groovy script to update PromotionSourceRule conditions JSON + OrderEntry product + ConsignmentEntry product",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-14T15:37:26.457Z"
-      }
-    },
-    {
       "key": "SAHME-3448",
       "summary": "Request to trigger a refund on the cancelled order.",
       "status": "QA Server Review",
@@ -507,7 +507,7 @@
       "created": "2026-09-28T23:26:58.000+0900",
       "statusChangedAt": "2026-10-06T14:59:16.162+0900",
       "assignedToMeAt": "",
-      "description": "Good day,\n\nThe refund did not trigger on the cancelled order. Please trigger the refund.\n\nZA260822-65631545\n\n!image-2026-09-28-16-26-25-478.png!\n\nKind regards,\n\nLerato\n\n��",
+      "description": "Good day,\n\nThe refund did not trigger on the cancelled order. Please trigger the refund.\n\nZA260822-65631545\n\n!image-2026-09-28-16-26-25-478.png!\n\nKind regards,\n\nLerato",
       "commentsCount": 3,
       "recentComments": [
         {
@@ -1282,7 +1282,7 @@
       }
     ],
     "pid": 21100,
-    "uptime": 28248,
+    "uptime": 28288,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1294,7 +1294,7 @@
       {
         "pid": 20536,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 97056,
+        "ageSeconds": 97096,
         "status": "running",
         "isChild": false,
         "taskSummary": "have we implemented the fetching of jira ticket with its name from dashboard thing?",
@@ -1304,17 +1304,17 @@
       {
         "pid": 21768,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 96663,
+        "ageSeconds": 96703,
         "status": "running",
         "isChild": false,
-        "taskSummary": "Toko6 Hybris platform",
-        "lastExchange": null,
+        "taskSummary": "AE - 9 order(s) 🔴 9 critical Order Number Order Date Order Status Issue AE261007-07342692 2026/1...",
+        "lastExchange": "AE - 9 order(s) 🔴 9 critical\nOrder Number\tOrder Date\tOrder Status\tIssue\nAE261007-07342692\t2026/10/07\tPAYMENT_CAPTURED\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@6d8c85ad]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment\nAE261007-07343707\t2026/10/07\tPAYMENT_CAPTURED\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@6d8c85ad]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment\nAE261007-07342571\t2026/10/07\tPAYMENT_CAPTURED\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@44d9c410]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment\nAE261007-07342464\t2026/10/07\tPAYMENT_CAPTURED\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@6d8c85ad]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment\nAE261007-07342465\t2026/10/07\tPAYMENT_CAPTURED\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@6d8c85ad]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment\nAE261006-06149939\t2026/10/06\tWAITING_FOR_FINANCIAL\tOrder process ERROR at [processNonFulfilledExternalServices] rc=NOK; STAGNANT: no activity for 38h (last process action 38h ago)\nAE261006-05864886\t2026/10/06\tPAYMENT_CAPTURED\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@222d645]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 43h (last process action 43h ago)\nAE261006-05815839\t2026/10/06\tWAITING_FOR_FINANCIAL\tOrder process ERROR at [isShortPicksFIV1Success] rc=ERROR; Cancel DO blocked by WMS; STAGNANT: no activity for 43h (last process action 43h ago)\nAE261005-05100791\t2026/10/05\tPAYMENT_CAPTURED\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@44d9c410]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 63h (last process action 63h ago)\n\nEG - 24 order(s) 🔴 24 critical\nOrder Number\tOrder Date\tOrder Status\tIssue\nEG261006-06090271\t2026/10/06\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: Unexpected transport error; STAGNANT: no activity for 40h (last process action 40h ago)\nEG261006-06090178\t2026/10/06\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: Unexpected transport error; STAGNANT: no activity for 40h (last process action 40h ago)\nEG261006-05888570\t2026/10/06\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: Unexpected transport error; STAGNANT: no activity for 44h (last process action 44h ago)\nEG261006-05888382\t2026/10/06\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: Unexpected transport error; STAGNANT: no activity for 44h (last process action 44h ago)\nEG261006-05888342\t2026/10/06\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: Unexpected transport error; STAGNANT: no activity for 44h (last process action 44h ago)\nEG261006-05888123\t2026/10/06\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: Unexpected transport error; STAGNANT: no activity for 44h (last process action 44h ago)\nEG261006-05888098\t2026/10/06\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: Unexpected transport error; STAGNANT: no activity for 44h (last process action 44h ago)\nEG261006-05888091\t2026/10/06\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: Unexpected transport error; STAGNANT: no activity for 44h (last process action 44h ago)\nEG261006-05846717\t2026/10/06\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: Unexpected transport error; STAGNANT: no activity for 44h (last process action 44h ago)\nEG261006-05846706\t2026/10/06\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: Unexpected transport error; STAGNANT: no activity for 44h (last process action 44h ago)\nEG261006-05846534\t2026/10/06\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: Unexpected transport error; STAGNANT: no activity for 44h (last process action 44h ago)\nEG261005-05204214\t2026/10/05\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: Unexpected transport error; STAGNANT: no activity for 61h (last process action 61h ago)\nEG261005-05102413\t2026/10/05\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: Unexpected transport error; STAGNANT: no activity for 63h (last process action 63h ago)\nEG261005-04784244\t2026/10/05\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: Unexpected transport error; STAGNANT: no activity for 69h (last process action 69h ago)\nEG261005-04784194\t2026/10/05\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: Unexpected transport error; STAGNANT: no activity for 69h (last process action 69h ago)\nEG261003-03364216\t2026/10/03\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: Not Found; STAGNANT: no activity for 108h (last process action 108h ago)\nEG261003-03364213\t2026/10/03\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: Not Found; STAGNANT: no activity for 108h (last process action 108h ago)\nEG261003-03364212\t2026/10/03\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: Not Found; STAGNANT: no activity for 108h (last process action 108h ago)\nEG261003-03364211\t2026/10/03\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: Not Found; STAGNANT: no activity for 108h (last process action 108h ago)\nEG261003-03364200\t2026/10/03\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: Not Found; STAGNANT: no activity for 108h (last process action 108h ago)\nEG261003-03364089\t2026/10/03\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: Not Found; STAGNANT: no activity for 108h (last process action 108h ago)\nEG260921-89891793\t2026/10/03\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: Not Found; STAGNANT: no activity for 108h (last process action 108h ago)\nEG261001-01593016\t2026/10/03\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: Not Found; STAGNANT: no activity for 108h (last process action 108h ago)\nEG261003-03293005\t2026/10/03\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: Not Found; STAGNANT: no activity for 108h (last process action 108h ago)\n\nIL - 1 order(s) 🔴 1 critical\nOrder Number\tOrder Date\tOrder Status\tIssue\nIL261003-03062360\t2026/10/03\tPAYMENT_CAPTURED\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@31e644a0]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 113h (last process action 113h ago)\n\nMA - 2 order(s) 🔴 2 critical\nOrder Number\tOrder Date\tOrder Status\tIssue\nMA261005-05345064\t2026/10/06\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: I/O error: Connection reset; nested exception is java.net.SocketException: Connection reset; STAGNANT: no activity for 43h (last process action 43h ago)\nMA261005-04664304\t2026/10/05\tPAYMENT_CAPTURED\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@44d9c410]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 39h (last process action 39h ago)\n\nSA - 3 order(s) 🔴 2 critical 🟠 1 warning\nOrder Number\tOrder Date\tOrder Status\tIssue\nSA260929-98710000\t2026/10/04\tRETURN_REFUNDED\tNo GERP Delivery Order Nr - DO not created in ERP (age: 3d); No shipping date (consignment age: 3d)\nSA261002-02398434\t2026/10/04\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: I/O error: cih.samsung.com:443 failed to respond; nested exception is org.apache.http.NoHttpResponseException: cih.samsung.com:443 failed to respond; STAGNANT: no activity for 100h (last process action 100h ago)\nSA261003-03035703\t2026/10/03\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@6d8c85ad]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 114h (last process action 114h ago)\n\nTR - 44 order(s) 🔴 40 critical 🟠 3 warning\nOrder Number\tOrder Date\tOrder Status\tIssue\nTR261007-07252202\t2026/10/07\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@222d645]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment\nTR260924-93732938\t2026/10/07\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@222d645]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment\nTR260930-00611689\t2026/10/07\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@222d645]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment\nTR260924-92790406\t2026/10/07\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@222d645]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment\nTR261007-07249534\t2026/10/07\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@222d645]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment\nTR261007-07251331\t2026/10/07\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@222d645]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment\nTR261007-07085201\t2026/10/07\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: I/O error: sec.divaportal.com:443 failed to respond; nested exception is org.apache.http.NoHttpResponseException: sec.divaportal.com:443 failed to respond\nTR261006-05949483\t2026/10/06\tREFUND_FAILED\tCancel DO blocked by WMS; STAGNANT: no activity for 40h (last process action 40h ago)\nTR261005-05026941\t2026/10/05\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: I/O error: Connection reset; nested exception is java.net.SocketException: Connection reset; STAGNANT: no activity for 62h (last process action 62h ago)\nTR261005-04822171\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@44d9c410]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 65h (last process action 65h ago)\nTR261005-04972599\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@6d8c85ad]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 65h (last process action 65h ago)\nTR260926-95360669\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@44d9c410]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 65h (last process action 65h ago)\nTR261003-02945533\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@6d8c85ad]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 65h (last process action 65h ago)\nTR261003-02888742\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@44d9c410]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 65h (last process action 65h ago)\nTR261002-02426981\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@44d9c410]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 65h (last process action 65h ago)\nTR261002-01969312\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@6d8c85ad]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 65h (last process action 65h ago)\nTR260923-92082612\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@6d8c85ad]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 65h (last process action 65h ago)\nTR260924-93714664\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@693135b1]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 65h (last process action 65h ago)\nTR260926-95425781\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@44d9c410]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 65h (last process action 65h ago)\nTR260930-99808596\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@44d9c410]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 65h (last process action 65h ago)\nTR260930-99698576\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@44d9c410]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 65h (last process action 65h ago)\nTR261002-02426312\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@6d8c85ad]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 65h (last process action 65h ago)\nTR261005-04964724\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@44d9c410]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 65h (last process action 65h ago)\nTR261005-04963026\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@693135b1]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 65h (last process action 65h ago)\nTR261003-02855730\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@693135b1]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 65h (last process action 65h ago)\nTR261005-04943170\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@693135b1]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 65h (last process action 65h ago)\nTR261005-04962363\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@44d9c410]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 65h (last process action 65h ago)\nTR260930-99860034\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@44d9c410]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 65h (last process action 65h ago)\nTR260924-93240720\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@44d9c410]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 65h (last process action 65h ago)\nTR261005-04641381\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@44d9c410]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 65h (last process action 65h ago)\nTR261002-01965794\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@6d8c85ad]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 65h (last process action 65h ago)\nTR260927-96477996\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@44d9c410]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 65h (last process action 65h ago)\nTR261005-04946932\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@44d9c410]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 65h (last process action 65h ago)\nTR261002-02027549\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@693135b1]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 65h (last process action 65h ago)\nTR260910-80000389\t2026/10/05\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: I/O error: Connection reset; nested exception is java.net.SocketException: Connection reset; STAGNANT: no activity for 68h (last process action 68h ago)\nTR261005-04730492\t2026/10/05\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: I/O error: Connection reset; nested exception is java.net.SocketException: Connection reset; STAGNANT: no activity for 69h (last process action 69h ago)\nTR261005-04750108\t2026/10/05\tPARTIAL_RETURN_SHIPPING_PREPARATION\tNo shipping date (consignment age: 2d)\nTR261005-04750108\t2026/10/05\tPARTIAL_RETURN_SHIPPING_PREPARATION\tNo GERP Sales Order Nr - ERP SO not created (age: 2d); No shipping date (consignment age: 2d)\nTR261005-04753135\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@44d9c410]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 69h (last process action 69h ago)\nTR261005-04707846\t2026/10/05\tWAITING_FOR_SEND_FINANCIAL\tOrder process ERROR at [splitOrder] rc= - [splitOrder]: [de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator@44d9c410]:missing values for [warehouse] in model ConsignmentModel () to create a new Consignment; STAGNANT: no activity for 69h (last process action 69h ago)\nTR261004-03956543\t2026/10/04\tREFUND_FAILED\tPayment entry status: REFUND_FOLLOW_ON:ERROR; STAGNANT: no activity for 88h (last process action 88h ago)\nTR261003-03162379\t2026/10/04\tWAITING_FOR_FINANCIAL\tOrder process ERROR at [completeFinancialUpdate] rc= - [completeFinancialUpdate]: I/O error: Read timed out; nested exception is java.net.SocketTimeoutException: Read timed out; STAGNANT: no activity for 41h (last process action 40h ago)\nTR261003-03141265\t2026/10/03\tORDER_SPLIT\tConsignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: I/O error: cih.samsung.com:443 failed to respond; nested exception is org.apache.http.NoHttpResponseException: cih.samsung.com:443 failed to respond; STAGNANT: no activity for 111h (last process action 111h ago)\nTR261003-02931434\t2026/10/03\tREFUND_FAILED\tCancel DO blocked by WMS; STAGNANT: no activity for 73h (last process action 73h ago)",
         "sessionId": "bin"
       },
       {
         "pid": 13300,
         "cwd": "c:\\windows",
-        "ageSeconds": 68737,
+        "ageSeconds": 68776,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1324,7 +1324,7 @@
       {
         "pid": 25524,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 66065,
+        "ageSeconds": 66104,
         "status": "running",
         "isChild": false,
         "taskSummary": "have we implemented the fetching of jira ticket with its name from dashboard thing?",
@@ -4589,7 +4589,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-08T05:27:41.732Z",
-      "ageMs": 4068016
+      "ageMs": 4108362
     },
     "watchdogLogTail": "[2026-10-07T21:43:42.924Z] Dashboard started with PID 10436 (restart #9, 1 in last hour)\n[2026-10-07T21:43:47.758Z] Starting jira-dashboard-server.js...\n[2026-10-07T21:43:47.931Z] Dashboard started with PID 5892 (restart #10, 2 in last hour)\n[2026-10-07T21:43:53.541Z] DUPLICATE jira-dashboard-server detected: PID 10436 — killing\n[2026-10-07T22:44:28.771Z] RESTART NEEDED: No heartbeat file found\n[2026-10-07T22:44:30.898Z] Killed bridge PID 3816\n[2026-10-07T22:44:36.580Z] Starting bridge.js...\n[2026-10-07T22:44:36.748Z] Bridge started with PID 21100 (restart #2, 1 in last hour)\n[2026-10-08T04:57:41.459Z] DUPLICATE watchdog detected: PID 27684 — killing\n[2026-10-08T05:27:41.732Z] DUPLICATE watchdog detected: PID 12184 — killing"
   },
@@ -4598,7 +4598,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-08T06:34:40.221Z",
+      "lastCheck": "2026-10-08T06:35:39.814Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4607,7 +4607,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-08T06:34:40.221Z",
+      "lastCheck": "2026-10-08T06:35:39.814Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4616,9 +4616,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-08T06:34:40.221Z",
+      "lastCheck": "2026-10-08T06:35:39.814Z",
       "downSince": "2026-10-08T02:02:11.302Z",
-      "downDuration": 16348919,
+      "downDuration": 16408512,
       "alert": true
     }
   ],
@@ -4740,18 +4740,6 @@
         "statusChangedAt": "2026-09-29T01:09:10.990+0900"
       },
       {
-        "key": "MHME-1434",
-        "summary": "missing gift for MA260902-74340282",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/MHME-1434",
-        "updated": "2026-10-07T15:41:38.000+0900",
-        "statusChangedAt": "2026-09-23T20:01:10.618+0900"
-      },
-      {
         "key": "AEME-6582",
         "summary": "RCA Request || 24-Sep",
         "priority": "None",
@@ -4864,6 +4852,18 @@
         "statusChangedAt": "2026-10-07T20:51:41.893+0900"
       },
       {
+        "key": "MHME-1434",
+        "summary": "missing gift for MA260902-74340282",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "blocked",
+        "reason": "Waiting for PC-54111 approval (not assigned to you)",
+        "whatToDo": "",
+        "url": "https://jira.secext.samsung.net/browse/MHME-1434",
+        "updated": "2026-10-08T15:37:37.000+0900",
+        "statusChangedAt": "2026-09-23T20:01:10.618+0900"
+      },
+      {
         "key": "PC-53923",
         "summary": "Update SC+ Automated Report — column renames, initial order payment mode, Payment Cycle reorder, recipient update, Qatar",
         "priority": "Low",
@@ -4974,9 +4974,9 @@
     ],
     "queued": [],
     "totals": {
-      "zero": 7,
+      "zero": 6,
       "actionable": 3,
-      "blocked": 11,
+      "blocked": 12,
       "queued": 0
     }
   }
