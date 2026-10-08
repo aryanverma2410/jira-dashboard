@@ -3822,26 +3822,27 @@ function doLookup(){
   var key=inp.value.trim().toUpperCase();
   if(!key){el.innerHTML='<div class="lk-error">Please enter a ticket key.</div>';return}
   
-  // Try direct server fetch first (works on PC)
+  // On phone (HTTPS page, not localhost): skip direct server fetch (mixed content blocking hangs it)
+  // Go straight to bridge path
+  var isPhone = (location.protocol === 'https:' && location.hostname !== '127.0.0.1' && location.hostname !== 'localhost');
+  
+  if(isPhone){
+    el.innerHTML='<div class="lk-loading">Looking up '+escapeHtml(key)+' via bridge (~5-10s)...</div>';
+    doLookupViaBridge(key,el);
+    return;
+  }
+  
+  // On PC: try direct server fetch first (fast, 2-3s)
   el.innerHTML='<div class="lk-loading">Fetching '+escapeHtml(key)+' from Jira...</div>';
   
-  // Timeout after 3s — if no response, fall back to bridge
-  var directTimedOut=false;
-  var directResolved=false;
-  
   var timeoutId=setTimeout(function(){
-    if(!directResolved){
-      directTimedOut=true;
-      el.innerHTML='<div class="lk-loading">Connecting via bridge (slower, ~15s)...</div>';
-      doLookupViaBridge(key,el);
-    }
+    el.innerHTML='<div class="lk-loading">Connecting via bridge (slower, ~15s)...</div>';
+    doLookupViaBridge(key,el);
   },3000);
   
   fetch(''+SERVER_URL+'/lookup?key='+encodeURIComponent(key))
     .then(function(r){return r.json()})
     .then(function(d){
-      if(directTimedOut)return; // already fell back to bridge
-      directResolved=true;
       clearTimeout(timeoutId);
       if(!d.ok){
         el.innerHTML='<div class="lk-error">'+escapeHtml(d.error||'Ticket not found')+'</div>';
@@ -3850,10 +3851,7 @@ function doLookup(){
       renderLookupResult(d.ticket,el);
     })
     .catch(function(e){
-      if(directTimedOut)return; // already fell back to bridge
-      directResolved=true;
       clearTimeout(timeoutId);
-      // Direct fetch failed — fall back to bridge
       el.innerHTML='<div class="lk-loading">Connecting via bridge (slower, ~15s)...</div>';
       doLookupViaBridge(key,el);
     });
@@ -3872,7 +3870,7 @@ function doLookupViaBridge(key,el){
     
     // Poll for [LOOKUP-RESULT] comment every 3s, up to 30s
     var attempts=0;
-    var maxAttempts=12; // 12 * 3s = 36s
+    var maxAttempts=20; // 20 * 2s = 40s max wait
     if(lookupPollInterval)clearInterval(lookupPollInterval);
     
     lookupPollInterval=setInterval(function(){
@@ -3880,7 +3878,7 @@ function doLookupViaBridge(key,el){
       if(attempts>maxAttempts){
         clearInterval(lookupPollInterval);
         lookupPollInterval=null;
-        el.innerHTML='<div class="lk-error">Timed out waiting for bridge response. Bridge may be offline.</div>';
+        el.innerHTML='<div class="lk-error">Timed out after 40s. Bridge may be busy or offline.</div>';
         return;
       }
       
@@ -3922,7 +3920,7 @@ function doLookupViaBridge(key,el){
           }
         })
         .catch(function(){/* ignore, will retry */});
-    },3000);
+    },2000);
   });
 }
 
