@@ -745,22 +745,8 @@ body.has-status-bar .scroll{padding-top:28px}
         </div>
         <span class="worklog-tracker-arrow" id="wlArrow">&#9660;</span>
       </div>
-      <div class="wl-day-bars" id="wlDayBars"></div>
       <div class="worklog-tracker-details" id="worklogDetails" style="display:none">
-        <div class="wl-week-nav">
-          <div class="wl-week-nav-btns">
-            <button class="wl-nav-btn" onclick="changeWorklogWeek(-1)">&#9664;</button>
-            <span class="wl-week-label" id="wlWeekLabel">—</span>
-            <button class="wl-nav-btn" onclick="changeWorklogWeek(1)">&#9654;</button>
-          </div>
-          <button class="wl-nav-btn" onclick="changeWorklogWeek(0)">Today</button>
-        </div>
-        <div class="wl-grid-wrap">
-          <table class="wl-grid" id="wlGrid">
-            <thead><tr><th class="wl-col-ticket">Ticket</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th><th>Sun</th><th class="wl-col-total">Total</th></tr></thead>
-            <tbody id="wlGridBody"><tr class="wl-empty-row"><td colspan="9">Loading...</td></tr></tbody>
-          </table>
-        </div>
+        <div class="wl-day-bars" id="wlDayBars"></div>
       </div>
     </div>
     <div class="watch-input-row">
@@ -1327,31 +1313,13 @@ function onData(data){
   renderRcaMatrix(data);renderDayStarter(data);renderActionItems(data);
   renderSessions(data);renderActivity(data);renderMcps(data);renderCmdHistory();
   pollCmdResponses(data);updateNavBadges(data);
-  // Update worklog header stats + per-day bars from data.json (works on phone — no local server needed)
+  // Update worklog header stats from data.json (works on phone — no local server needed)
   if(data.worklogTotals){
     var wt=data.worklogTotals;
     var tv=document.getElementById('wlTodayVal');
     var wv=document.getElementById('wlWeekVal');
     if(tv){tv.textContent=wt.todayHours>0?wt.todayHours+'h':'0h';tv.classList.toggle('zero',wt.todayHours===0)}
     if(wv){wv.textContent=wt.weekHours>0?wt.weekHours+'h':'0h';wv.classList.toggle('zero',wt.weekHours===0)}
-    // Render per-day mini bars
-    var dl=wt.dayLabels||['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-    var dh=wt.dailyHours||[0,0,0,0,0,0,0];
-    var ti=wt.todayIndex!==undefined?wt.todayIndex:-1;
-    var barEl=document.getElementById('wlDayBars');
-    if(barEl){
-      var maxH=Math.max.apply(null,dh.concat([1]));
-      var bh='';
-      for(var i=0;i<7;i++){
-        var h=dh[i];
-        var pct=maxH>0?Math.round(h/maxH*100):0;
-        var cls='wl-day-bar';
-        if(i===ti)cls+=' today';
-        if(h===0)cls+=' empty';
-        bh+='<div class="'+cls+'"><div class="wl-day-bar-fill" style="height:'+pct+'%"></div><span class="wl-day-bar-val">'+(h>0?h+'h':'')+'</span><span class="wl-day-bar-lbl">'+dl[i]+'</span></div>';
-      }
-      barEl.innerHTML=bh;
-    }
   }
 }
 
@@ -3761,7 +3729,7 @@ function toggleWorklogDetails(){
   if(wlExpanded){
     tracker.classList.add('expanded');
     details.style.display='block';
-    fetchWorklogStats();
+    applyWorklogHeader(); // render day bars instantly from cached data
   } else {
     tracker.classList.remove('expanded');
     details.style.display='none';
@@ -3860,7 +3828,7 @@ function applyWorklogHeader(){
   var dh=wt.dailyHours||[0,0,0,0,0,0,0];
   var ti=wt.todayIndex!==undefined?wt.todayIndex:-1;
   var barEl=document.getElementById('wlDayBars');
-  if(barEl&&barEl.children.length!==7){
+  if(barEl&&wlExpanded&&barEl.children.length!==7){
     var maxH=Math.max.apply(null,dh.concat([1]));
     var bh='';
     for(var i=0;i<7;i++){
