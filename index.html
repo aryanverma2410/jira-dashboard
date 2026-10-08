@@ -106,7 +106,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .status-option{padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);font-size:13px;cursor:pointer;text-align:center}
 .status-option:active{background:rgba(88,166,255,0.2)}
 
-/* WORKLOG TRACKER */
+/* WORKLOG TRACKER — Tempo-style weekly timesheet grid */
 .worklog-tracker{background:var(--card);border:1px solid var(--border);border-radius:12px;margin:0 16px 12px;overflow:hidden}
 .worklog-tracker-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;user-select:none}
 .worklog-tracker-title{font-size:13px;font-weight:600;color:var(--text)}
@@ -117,19 +117,32 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .wl-stat-val.zero{color:var(--text-dim)}
 .worklog-tracker-arrow{font-size:10px;color:var(--text-dim);transition:transform 0.2s}
 .worklog-tracker.expanded .worklog-tracker-arrow{transform:rotate(180deg)}
-.worklog-tracker-details{padding:0 14px 12px;border-top:1px solid var(--border)}
-.wl-day-breakdown{display:flex;gap:4px;margin-top:10px;overflow-x:auto;scrollbar-width:none}
-.wl-day-bar{flex:1;min-width:40px;display:flex;flex-direction:column;align-items:center;gap:2px}
-.wl-day-bar-fill{width:100%;background:var(--accent);border-radius:3px 3px 0 0;min-height:2px;transition:height 0.3s}
-.wl-day-bar-fill.zero{background:rgba(88,166,255,0.15)}
-.wl-day-bar-label{font-size:9px;color:var(--text-dim)}
-.wl-day-bar-val{font-size:10px;font-weight:600;color:var(--text)}
-.wl-ticket-breakdown{margin-top:12px}
-.wl-ticket-breakdown-title{font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px}
-.wl-ticket-row{display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px}
-.wl-ticket-key{font-family:monospace;font-weight:600;color:var(--accent);flex-shrink:0}
-.wl-ticket-hours{color:var(--text);font-weight:600;flex-shrink:0}
-.wl-ticket-summary{color:var(--text-dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
+.worklog-tracker-details{padding:0;border-top:1px solid var(--border)}
+
+/* Week navigation */
+.wl-week-nav{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid var(--border)}
+.wl-week-nav-btns{display:flex;gap:8px;align-items:center}
+.wl-nav-btn{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;user-select:none}
+.wl-nav-btn:active{opacity:0.7}
+.wl-week-label{font-size:11px;color:var(--text-dim);font-weight:500}
+
+/* Timesheet grid */
+.wl-grid-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.wl-grid{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}
+.wl-grid th,.wl-grid td{padding:6px 4px;text-align:center;border-bottom:1px solid var(--border)}
+.wl-grid th{background:var(--bg);font-weight:600;color:var(--text-dim);font-size:9px;text-transform:uppercase;position:sticky;top:0;z-index:1}
+.wl-grid th.wl-col-ticket{text-align:left;padding-left:14px;width:160px;min-width:160px}
+.wl-grid th.wl-col-total,.wl-grid td.wl-cell-total{width:50px;min-width:50px;font-weight:700;color:var(--accent)}
+.wl-grid td.wl-cell-ticket{text-align:left;padding-left:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wl-grid td.wl-cell-ticket .wl-tkey{font-family:monospace;font-weight:600;color:var(--accent);font-size:11px}
+.wl-grid td.wl-cell-ticket .wl-tsum{font-size:9px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;display:inline-block;vertical-align:middle}
+.wl-grid td.wl-cell-day{color:var(--text)}
+.wl-grid td.wl-cell-day.has-hours{font-weight:600;color:var(--accent)}
+.wl-grid td.wl-cell-day.today{background:rgba(88,166,255,0.08);border-radius:4px}
+.wl-grid tr.wl-total-row td{border-top:2px solid var(--border);font-weight:700;color:var(--accent);background:var(--bg);padding-top:8px}
+.wl-grid tr.wl-total-row td.wl-cell-ticket{text-align:right;padding-right:8px;font-size:9px;color:var(--text-dim);text-transform:uppercase}
+.wl-grid tr.wl-ticket-row:active{background:rgba(88,166,255,0.06)}
+.wl-empty-row td{text-align:center;padding:20px;color:var(--text-dim);font-size:12px}
 .wl-loading{text-align:center;padding:12px;color:var(--text-dim);font-size:12px}
 
 /* FAB */
@@ -718,8 +731,20 @@ body.has-status-bar .scroll{padding-top:28px}
         <span class="worklog-tracker-arrow" id="wlArrow">&#9660;</span>
       </div>
       <div class="worklog-tracker-details" id="worklogDetails" style="display:none">
-        <div class="wl-day-breakdown" id="wlDayBreakdown"></div>
-        <div class="wl-ticket-breakdown" id="wlTicketBreakdown"></div>
+        <div class="wl-week-nav">
+          <div class="wl-week-nav-btns">
+            <button class="wl-nav-btn" onclick="changeWorklogWeek(-1)">&#9664;</button>
+            <span class="wl-week-label" id="wlWeekLabel">—</span>
+            <button class="wl-nav-btn" onclick="changeWorklogWeek(1)">&#9654;</button>
+          </div>
+          <button class="wl-nav-btn" onclick="changeWorklogWeek(0)">Today</button>
+        </div>
+        <div class="wl-grid-wrap">
+          <table class="wl-grid" id="wlGrid">
+            <thead><tr><th class="wl-col-ticket">Ticket</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th><th>Sun</th><th class="wl-col-total">Total</th></tr></thead>
+            <tbody id="wlGridBody"><tr class="wl-empty-row"><td colspan="9">Loading...</td></tr></tbody>
+          </table>
+        </div>
       </div>
     </div>
     <div class="watch-input-row">
@@ -3673,9 +3698,9 @@ function deleteTemplate(idx,e){
   showToast('Template deleted','');
 }
 
-// ===== WORKLOG TRACKER =====
+// ===== WORKLOG TRACKER (Tempo-style weekly timesheet grid) =====
 var wlExpanded=false;
-var wlPollTimer=null;
+var wlWeekOffset=0; // 0=current week, -1=last week, etc.
 
 function toggleWorklogDetails(){
   wlExpanded=!wlExpanded;
@@ -3692,59 +3717,85 @@ function toggleWorklogDetails(){
   }
 }
 
+function changeWorklogWeek(dir){
+  if(dir===0){wlWeekOffset=0}
+  else{wlWeekOffset+=dir}
+  fetchWorklogStats();
+}
+
 function fetchWorklogStats(){
-  fetch(''+SERVER_URL+'/worklog-stats')
+  var tbody=document.getElementById('wlGridBody');
+  var weekLabel=document.getElementById('wlWeekLabel');
+  if(!tbody)return;
+  tbody.innerHTML='<tr class="wl-empty-row"><td colspan="9">Loading...</td></tr>';
+  
+  fetch(''+SERVER_URL+'/worklog-stats?week='+wlWeekOffset)
     .then(function(r){return r.json()})
     .then(function(d){
       if(!d.ok){
         document.getElementById('wlTodayVal').textContent='—';
         document.getElementById('wlWeekVal').textContent='—';
-        document.getElementById('wlDayBreakdown').innerHTML='<div class="wl-loading">'+escapeHtml(d.error||'Failed to fetch')+'</div>';
+        tbody.innerHTML='<tr class="wl-empty-row"><td colspan="9">'+escapeHtml(d.error||'Failed to fetch')+'</td></tr>';
+        if(weekLabel)weekLabel.textContent='Error';
         return;
       }
+      
       // Header stats
       var tv=document.getElementById('wlTodayVal');
       var wv=document.getElementById('wlWeekVal');
-      tv.textContent=d.today.hours>0?d.today.hours+'h':'0h';
-      tv.classList.toggle('zero',d.today.hours===0);
-      wv.textContent=d.week.hours>0?d.week.hours+'h':'0h';
-      wv.classList.toggle('zero',d.week.hours===0);
+      tv.textContent=d.todayTotal>0?d.todayTotal+'h':'0h';
+      tv.classList.toggle('zero',d.todayTotal===0);
+      wv.textContent=d.weekTotal>0?d.weekTotal+'h':'0h';
+      wv.classList.toggle('zero',d.weekTotal===0);
       
-      // Day breakdown bars
-      var maxHours=0;
-      d.dayBreakdown.forEach(function(day){if(day.hours>maxHours)maxHours=day.hours});
-      var dbHtml='';
-      d.dayBreakdown.forEach(function(day){
-        var pct=maxHours>0?Math.round((day.hours/maxHours)*100):0;
-        var dayLabel=day.date.split('-')[2]; // DD
-        var dayName=['S','M','T','W','T','F','S'][new Date(day.date).getDay()];
-        dbHtml+='<div class="wl-day-bar">'+
-          '<div class="wl-day-bar-val">'+(day.hours>0?day.hours+'h':'')+'</div>'+
-          '<div class="wl-day-bar-fill'+(day.hours===0?' zero':'')+'" style="height:'+(pct>0?Math.max(4,pct):2)+'px"></div>'+
-          '<div class="wl-day-bar-label">'+dayName+' '+dayLabel+'</div>'+
-        '</div>';
-      });
-      document.getElementById('wlDayBreakdown').innerHTML=dbHtml;
-      
-      // Per-ticket breakdown
-      var tbHtml='';
-      if(d.ticketBreakdown.length===0){
-        tbHtml='<div class="wl-loading">No worklogs in last 7 days</div>';
-      } else {
-        tbHtml='<div class="wl-ticket-breakdown-title">By Ticket ('+d.ticketBreakdown.length+')</div>';
-        d.ticketBreakdown.forEach(function(t){
-          tbHtml+='<div class="wl-ticket-row" onclick="doLookupById(\''+escapeHtml(t.key)+'\')">'+
-            '<span class="wl-ticket-key">'+escapeHtml(t.key)+'</span>'+
-            '<span class="wl-ticket-hours">'+t.hours+'h</span>'+
-            '<span class="wl-ticket-summary">'+escapeHtml(t.summary||'')+'</span>'+
-          '</div>';
-        });
+      // Week label
+      if(weekLabel){
+        weekLabel.textContent=d.weekLabel+(d.isCurrentWeek?' (This Week)':'');
       }
-      document.getElementById('wlTicketBreakdown').innerHTML=tbHtml;
+      
+      // Build grid
+      if(d.tickets.length===0){
+        tbody.innerHTML='<tr class="wl-empty-row"><td colspan="9">No worklogs for this week</td></tr>';
+        return;
+      }
+      
+      var html='';
+      d.tickets.forEach(function(t){
+        html+='<tr class="wl-ticket-row" onclick="doLookupById(\''+escapeHtml(t.key)+'\')">';
+        // Ticket cell
+        html+='<td class="wl-cell-ticket"><div class="wl-tkey">'+escapeHtml(t.key)+'</div><div class="wl-tsum">'+escapeHtml(t.summary||'')+'</div></td>';
+        // Day cells
+        for(var di=0;di<7;di++){
+          var hrs=t.days[di];
+          var dayCol=d.dayColumns[di];
+          var cls='wl-cell-day';
+          if(hrs>0)cls+=' has-hours';
+          if(dayCol.isToday)cls+=' today';
+          html+='<td class="'+cls+'">'+(hrs>0?hrs+'h':'')+'</td>';
+        }
+        // Row total
+        html+='<td class="wl-cell-total">'+t.total+'h</td>';
+        html+='</tr>';
+      });
+      
+      // Totals row
+      html+='<tr class="wl-total-row"><td class="wl-cell-ticket">Total</td>';
+      for(var di=0;di<7;di++){
+        var hrs=d.dayTotals[di];
+        var dayCol=d.dayColumns[di];
+        var cls='wl-cell-day';
+        if(dayCol.isToday)cls+=' today';
+        html+='<td class="'+cls+'">'+(hrs>0?hrs+'h':'')+'</td>';
+      }
+      html+='<td class="wl-cell-total">'+d.weekTotal+'h</td>';
+      html+='</tr>';
+      
+      tbody.innerHTML=html;
     })
     .catch(function(e){
       document.getElementById('wlTodayVal').textContent='—';
       document.getElementById('wlWeekVal').textContent='—';
+      tbody.innerHTML='<tr class="wl-empty-row"><td colspan="9">Connection error</td></tr>';
     });
 }
 
