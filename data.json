@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-08T04:05:32.979Z",
+  "generatedAt": "2026-10-08T04:06:11.592Z",
   "totalTickets": 19,
   "tickets": [
     {
@@ -44,9 +44,15 @@
         }
       ],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-10-08T03:49:33.304Z"
+        "status": "found",
+        "excerpt": "Ticket Summary: Stuck order on Hybris - ORDER_SPLIT\r\nGenerated: 2026-10-08T00:00:00Z\r\n\r\nIssue:\r\n\r\n6 TR-region orders reported stuck in ORDER_SPLIT status on 2026-09-25. All orders are buyback orders containing OmniChannelProduct, assigned to DIVA-Istanbul warehouse. Upon DB verification, 4 of the 6 orders have already self-resolved to COMPLETED status. One order (TR260925-94453037) remains genuinely stuck in ORDER_SPLIT, waiting for DIVA shipment status. One order (TR260925-94514044) progressed to REFUND_FAILED after its consignments were cancelled but the MasterPass refund of 450,000 TRY failed with ERROR status.\r\n\r\nRCA:\r\n\r\nTR260925-94249237, TR260925-94292417, TR260925-94546058, TR260925-94640512:\r\nThese 4 orders have fully completed. All consignments are COMPLETED, GERP billing numbers assigned, all order and consignment processes SUCCEEDED. No action needed — these progressed after the ticket was raised, likely as DIVA sent shipment confirmations.\r\n\r\nTR260925-94453037 (ORDER_SPLIT — genuinely stuck):\r\nThe order was split into 3 consignments (products: AR60F24C1KW/SK, ACL-RF50, FRH1458Z4) after checkout via the splitOrder action in order-process-v25-69. All 3 consignments are assigned to DIVA-Istanbul warehouse and are in READY status. The order process reached the isDelayedFiRequired action node, which checks IsDelayedFiPostingRequiredAction.executeAction() — this calls RentalPaymentUtil.isRentalPaymentMode() on the order's payment mode. Since the payment mode is MasterPass (tr-masterpassPaymentMode, not a rental payment mode), the action returns NO, transitioning to waitForWarehouseSubprocessEnd. The order process is now waiting for the event ${process.code}_ConsignmentSubprocessEnd.\r\n\r\nThe 3 consignment subprocesses (omnichannel-consignment-sub-process-v1) are all in RUNNING state. These subprocesses are waiting for DIVA to send the shipment status for each consignment. DIVA has not yet sent the shipment confirmation for this order, so the consignment processes remain RUNNING, which means the ConsignmentSubprocessEnd event is never fired, and the order process stays stuck at waitForWarehouseSubprocessEnd.\r\n\r\nThis matches the pattern seen in TKME-2028 (15 TR-region orders stuck at ORDER_SPLIT, resolved after confirming with DIVA and manually updating status) and RT-349680 (DIVA orders stuck at Order Split, fixed by DIVA 3rd party). The Jira comment from Rajeshbabu Yatirajula confirms: \"Only one order is still pending with DIVA, it will be moved further when hybris receives the shipment status from DIVA system.\"\r\n\r\nTR260925-94514044 (REFUND_FAILED — partially stuck):\r\nBoth consignments were CANCELLED (one at WC12-S751, one at DIVA-Istanbul). The order was cancelled and a REFUND_FOLLOW_ON transaction for 450,000 TRY was initiated on 2026-10-05 11:30:31, but it failed with ERROR status. The order process (order-process-v25-69) is in RUNNING state, waiting at the financial completion path — the process expects the refund to complete before the order can reach a terminal state. The failed refund transaction will not retry automatically. The order process is stuck at the isWaitForFinancialCompletionRequired / waitForFinancialCompletion stage because the financial system never posts the WaitForFinancialComplete event.\r\n\r\nPossible remediation:\r\n\r\nTR260925-94249237, TR260925-94292417, TR260925-94546058, TR260925-94640512:\r\nNo action required. These orders are fully COMPLETED.\r\n\r\nTR260925-94453037:\r\nConfirm with the DIVA team whether this order has been fulfilled on their end. If DIVA confirms fulfillment and the shipment status was sent but not processed by Hybris, the consignment statuses need to be manually updated (READY to SHIPPED/COMPLETED) and the omnichannel-consignment-sub-process needs to be retriggered. This follows the remediation pattern from TKME-2028 where orders were manually pushed to COMPLETED after DIVA confirmed fulfillment. If DIVA has not yet fulfilled the order, this is an external dependency — the order will remain in ORDER_SPLIT until DIVA sends the shipment status.\r\n\r\nTR260925-94514044:\r\nThe MasterPass REFUND_FOLLOW_ON transaction (450,000 TRY) is in ERROR status. The refund needs to be retried. This can be done by creating a new refund transaction entry or by resetting the failed transaction status and retriggering the refund flow via HAC script. The order process will remain in RUNNING state until the financial completion event is posted. Alternatively, if the refund cannot be retried, the order process can be manually advanced past the financial completion stage, but the refund failure should be resolved first to ensure the customer receives their money back.\r\n\r\nFor both stuck orders, no single reusable PC ticket covers this exact scenario. The closest existing reusable tickets are PC-44946 (TR Order Split — update external service status + retrigger consignment, manual, no script) and PC-52605 (generic process restart for stuck business processes, has script script-TKME-2279-retrigger-business-process.groovy). A new PC ticket may be needed if a HAC script is required for remediation.",
+        "sections": {
+          "issue": "6 TR-region orders reported stuck in ORDER_SPLIT status on 2026-09-25. All orders are buyback orders containing OmniChannelProduct, assigned to DIVA-Istanbul warehouse. Upon DB verification, 4 of the 6 orders have already self-resolved to COMPLETED status. One order (TR260925-94453037) remains genuinely stuck in ORDER_SPLIT, waiting for DIVA shipment status. One order (TR260925-94514044) progressed to REFUND_FAILED after its consignments were cancelled but the MasterPass refund of 450,000 TRY failed with ERROR status.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-08T04:06:09.800Z"
       }
     },
     {
@@ -1175,7 +1181,7 @@
       }
     ],
     "pid": 21100,
-    "uptime": 19252,
+    "uptime": 19293,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -1184,7 +1190,7 @@
         "issueTitle": "Investigate ticket TKME-2350",
         "snippet": "Auto-triggered investigation for new ticket TKME-2350.\n\nTicket: TKME-2350\nSummary: Stuck order on Hybris- ORDER_SPLIT\n\nU",
         "pid": 15872,
-        "elapsed": 1027
+        "elapsed": 1067
       }
     ],
     "startTime": "2026-10-07T22:44:37.053Z",
@@ -1195,7 +1201,7 @@
       {
         "pid": 20536,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 88063,
+        "ageSeconds": 88102,
         "status": "running",
         "isChild": false,
         "taskSummary": "login thing still opens jira and kibana links without #auto30",
@@ -1205,7 +1211,7 @@
       {
         "pid": 21768,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 87670,
+        "ageSeconds": 87709,
         "status": "running",
         "isChild": false,
         "taskSummary": "give the script with the PC of the reference script",
@@ -1215,7 +1221,7 @@
       {
         "pid": 13300,
         "cwd": "c:\\windows",
-        "ageSeconds": 59744,
+        "ageSeconds": 59782,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1225,7 +1231,7 @@
       {
         "pid": 25524,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 57072,
+        "ageSeconds": 57110,
         "status": "running",
         "isChild": false,
         "taskSummary": "login thing still opens jira and kibana links without #auto30",
@@ -4484,11 +4490,11 @@
         ]
       }
     },
-    "bridgeLogTail": "    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-10-08T04:05:12.902Z] STDOUT data for #621: 248 bytes\n[2026-10-08T04:05:12.904Z] LIVE events write for #621: 116 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_621.txt\n[2026-10-08T04:05:13.214Z] aipro stderr for #621: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-10-08T04:05:15.083Z] STDOUT data for #621: 369 bytes\n[2026-10-08T04:05:15.085Z] LIVE events write for #621: 117 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_621.txt",
+    "bridgeLogTail": "[2026-10-08T04:06:05.540Z] STDOUT data for #621: 110 bytes\n[2026-10-08T04:06:05.542Z] LIVE events write for #621: 198 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_621.txt\n[2026-10-08T04:06:05.549Z] STDOUT data for #621: 119 bytes\n[2026-10-08T04:06:05.552Z] LIVE events write for #621: 199 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_621.txt\n[2026-10-08T04:06:05.563Z] STDOUT data for #621: 107 bytes\n[2026-10-08T04:06:05.566Z] LIVE events write for #621: 200 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_621.txt\n[2026-10-08T04:06:05.568Z] STDOUT data for #621: 117 bytes\n[2026-10-08T04:06:05.571Z] LIVE events write for #621: 201 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_621.txt\n[2026-10-08T04:06:09.791Z] STDOUT data for #621: 5366 bytes\n[2026-10-08T04:06:09.794Z] LIVE events write for #621: 202 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_621.txt\n[2026-10-08T04:06:09.815Z] STDOUT data for #621: 124 bytes\n[2026-10-08T04:06:09.818Z] LIVE events write for #621: 203 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_621.txt\n[2026-10-08T04:06:11.322Z] STDOUT data for #621: 119 bytes\n[2026-10-08T04:06:11.325Z] LIVE events write for #621: 204 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_621.txt\n[2026-10-08T04:06:11.327Z] STDOUT data for #621: 122 bytes\n[2026-10-08T04:06:11.330Z] LIVE events write for #621: 205 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_621.txt\n[2026-10-08T04:06:11.342Z] STDOUT data for #621: 124 bytes\n[2026-10-08T04:06:11.345Z] LIVE events write for #621: 206 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_621.txt\n[2026-10-08T04:06:11.358Z] STDOUT data for #621: 104 bytes\n[2026-10-08T04:06:11.361Z] LIVE events write for #621: 207 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_621.txt",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-07T22:44:36.749Z",
-      "ageMs": 19259375
+      "ageMs": 19297928
     },
     "watchdogLogTail": "[2026-10-07T21:43:41.257Z] Could not kill dashboard PID 14536: Command failed: taskkill /PID 14536 /F /T\n[2026-10-07T21:43:42.756Z] Starting jira-dashboard-server.js...\n[2026-10-07T21:43:42.924Z] Dashboard started with PID 10436 (restart #9, 1 in last hour)\n[2026-10-07T21:43:47.758Z] Starting jira-dashboard-server.js...\n[2026-10-07T21:43:47.931Z] Dashboard started with PID 5892 (restart #10, 2 in last hour)\n[2026-10-07T21:43:53.541Z] DUPLICATE jira-dashboard-server detected: PID 10436 — killing\n[2026-10-07T22:44:28.771Z] RESTART NEEDED: No heartbeat file found\n[2026-10-07T22:44:30.898Z] Killed bridge PID 3816\n[2026-10-07T22:44:36.580Z] Starting bridge.js...\n[2026-10-07T22:44:36.748Z] Bridge started with PID 21100 (restart #2, 1 in last hour)",
     "jobOutputs": {}
