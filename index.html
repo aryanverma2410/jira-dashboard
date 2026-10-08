@@ -1889,27 +1889,24 @@ function assignToMe(key){
     .catch(function(e){showToast('Request failed: '+e.message,'error')})
 }
 
-// ===== AUTOLOGIN (via GitHub Issue — bridge picks up and runs on desktop) =====
+// ===== AUTOLOGIN (direct HTTP call to dashboard server — instant, no bridge/aipro) =====
 function doAutologin(){
   var btn=document.querySelector('[onclick*="doAutologin"]');
-  if(btn){btn.textContent='\u23F3 Sending...';btn.disabled=true}
-  createIssue('AUTOLOGIN: Run Samsung Auto Login',
-        'Run the Samsung Auto Login script immediately.\n'+
-        'Execute one of these commands (pick whichever works):\n'+
-        '1. Run: python "C:\\Users\\aryan.v1\\.gemini\\tmp\\bin\\samsung-autologin-bundle\\samsung_auto_login.py"\n'+
-        '2. Or trigger the Windows Scheduled Task: schtasks /Run /TN "SamsungAutoLogin"\n'+
-        '3. Or run: powershell -NoProfile -ExecutionPolicy Bypass -File "C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\startup_edge.ps1"\n'+
-        'This triggers autologin on the desktop. Just run the command, no investigation needed.\n'+
-        'Sent from dashboard',
-        function(e,d){
-          if(btn){btn.textContent='\uD83D\uDD12 Auto-Login';btn.disabled=false}
-          if(e||!d||!d.number){
-            console.error('Autologin createIssue error:',e);
-            showToast('Autologin failed — '+((e&&e.message)?e.message:'GitHub Issue creation failed'),'error');
-            return
-          }
-          showToast('Autologin sent via bridge (Issue #'+d.number+'). Check desktop in ~30s.','success')
-        })
+  if(btn){btn.textContent='\u23F3 Starting...';btn.disabled=true}
+  fetch(SERVER_URL+'/autologin',{method:'GET'})
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if(btn){btn.textContent='\uD83D\uDD12 Auto-Login';btn.disabled=false}
+      if(d.ok){
+        showToast('Autologin started — Edge launching with 5 tabs (~35s)','success')
+      } else {
+        showToast('Autologin failed — '+((d&&d.error)?d.error:'unknown error'),'error')
+      }
+    })
+    .catch(function(e){
+      if(btn){btn.textContent='\uD83D\uDD12 Auto-Login';btn.disabled=false}
+      showToast('Autologin request failed — '+e.message,'error')
+    })
 }
 
 function investigateTicket(key){
