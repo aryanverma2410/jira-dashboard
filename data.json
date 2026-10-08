@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-08T08:27:59.524Z",
+  "generatedAt": "2026-10-08T08:29:09.582Z",
   "totalTickets": 15,
   "tickets": [
     {
@@ -986,7 +986,7 @@
       }
     ],
     "pid": 21100,
-    "uptime": 35003,
+    "uptime": 35068,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -998,7 +998,7 @@
       {
         "pid": 20536,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 103811,
+        "ageSeconds": 103880,
         "status": "running",
         "isChild": false,
         "taskSummary": "have we implemented the fetching of jira ticket with its name from dashboard thing?",
@@ -1008,17 +1008,17 @@
       {
         "pid": 21768,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 103418,
+        "ageSeconds": 103487,
         "status": "running",
         "isChild": false,
-        "taskSummary": "check for aeme-6602, if this script would be able to process a chargeback for the orders and has ...",
-        "lastExchange": "check for aeme-6602, if this script would be able to process a chargeback for the orders and has no issues. verify each line from db and code: //NOTE ITGC_JIRA:PC-54827(AEME-6602)\n// Manual chargeback for trade-in rejected orders\n// Orders: AE260814-59413370 (chargeback=270), AE260803-49001795 (chargeback=3035)\n// Pattern: Based on AEME-6540 clawback retrigger (PC-53902/PC-53768) + TokoChargeBackServiceImpl.createChargeBack\n// 1. Check if ClawbackProcess already exists — restart if ERROR/FAILED (AEME-6540 pattern)\n// 2. If not, create TokoChargeBack entry using service field pattern + call tokoChargeBackService.sendProcess()\n\nimport de.hybris.platform.servicelayer.search.FlexibleSearchQuery\nimport de.hybris.platform.processengine.enums.ProcessState\n\ndef ORDER_DATA = [\n    [\"AE260814-59413370\", 270.00],\n    [\"AE260803-49001795\", 3035.00]\n]\n\ndef flexibleSearchService = spring.getBean(\"flexibleSearchService\")\ndef businessProcessService = spring.getBean(\"businessProcessService\")\ndef modelService = spring.getBean(\"modelService\")\ndef tokoChargeBackService = spring.getBean(\"tokoChargeBackService\")\n\nORDER_DATA.each { orderCode, chargeBackAmount ->\n    println \"\"\n    println \"=== Order: \" + orderCode + \" ===\"\n\n    // Step 1: Check for existing ClawbackProcess — restart if ERROR/FAILED (AEME-6540 pattern)\n    def bpQuery = new FlexibleSearchQuery(\"SELECT {pk}, {code}, {state} FROM {BusinessProcess} WHERE {code} LIKE ?pattern\")\n    bpQuery.addQueryParameter(\"pattern\", \"%\" + orderCode + \"%Clawback%\")\n    def bpResult = flexibleSearchService.search(bpQuery)\n\n    if (!bpResult.getResult().isEmpty()) {\n        bpResult.getResult().each { bp ->\n            def stateCode = bp.getState() != null ? bp.getState().getCode() : \"null\"\n            println \"Existing ClawbackProcess: \" + bp.getCode() + \" | state=\" + stateCode\n            if (ProcessState.ERROR.equals(bp.getState()) || ProcessState.FAILED.equals(bp.getState())) {\n                bp.setState(bp.getState().getClass().valueOf(\"CREATED\"))\n                modelService.save(bp)\n                println \"  Set state to CREATED\"\n                businessProcessService.restartProcess(bp, \"reAuthorizeIfNeeded\")\n                println \"  Restarted at reAuthorizeIfNeeded\"\n            } else {\n                println \"  Already running or waiting — skipping\"\n            }\n        }\n        println \"=== Done (existing process found) ===\"\n        return\n    }\n\n    // Step 2: No existing process — create TokoChargeBack and trigger via service\n    println \"No existing ClawbackProcess — creating TokoChargeBack\"\n\n    // Find order\n    def orderQuery = new FlexibleSearchQuery(\"SELECT {pk} FROM {Order} WHERE {code} = ?code AND {originalversion} IS NULL\")\n    orderQuery.addQueryParameter(\"code\", orderCode)\n    def orderResult = flexibleSearchService.search(orderQuery)\n    if (orderResult.getResult().isEmpty()) {\n        println \"ERROR: Order not found!\"\n        return\n    }\n    def order = orderResult.getResult().get(0)\n\n    // Find FOC entry (SC+ / giveaway entry) and main entry from order entries\n    def entries = order.getEntries()\n    def focEntry = entries.find { it.getGiveAway() != null && it.getGiveAway() == Boolean.TRUE }\n    if (!focEntry) {\n        // Fallback: find SMC-ADH entry (Samsung Care+)\n        focEntry = entries.find { it.getProduct() != null && it.getProduct().getCode() != null && it.getProduct().getCode().startsWith(\"SMC-ADH\") }\n    }\n    if (!focEntry) {\n        println \"ERROR: No FOC/SC+ entry found on order\"\n        return\n    }\n    def mainEntry = entries.find { it.getEntryNumber() != null && it.getEntryNumber() == 0 && it != focEntry }\n    if (!mainEntry) {\n        mainEntry = entries.find { it != focEntry && it.getProduct() != null && !it.getProduct().getCode().startsWith(\"SMC-ADH\") }\n    }\n    println \"FOC entry: #\" + focEntry.getEntryNumber() + \" \" + focEntry.getProduct().getCode()\n    println \"Main entry: #\" + (mainEntry != null ? mainEntry.getEntryNumber() : \"null\") + \" \" + (mainEntry != null ? mainEntry.getProduct().getCode() : \"null\")\n\n    // Check if TokoChargeBack already exists for this order\n    def cbQuery = new FlexibleSearchQuery(\"SELECT {pk} FROM {TokoChargeBack} WHERE {orderCode} = ?code\")\n    cbQuery.addQueryParameter(\"code\", orderCode)\n    def cbResult = flexibleSearchService.search(cbQuery)\n    if (!cbResult.getResult().isEmpty()) {\n        println \"TokoChargeBack already exists — calling sendProcess on existing entry\"\n        tokoChargeBackService.sendProcess(cbResult.getResult().get(0))\n        println \"sendProcess called\"\n        println \"=== Done ===\"\n        return\n    }\n\n    // Create TokoChargeBack (same field pattern as TokoChargeBackServiceImpl.createChargeBack)\n    def chargeBackModel = modelService.create(TokoChargeBackModel.class)\n    chargeBackModel.setChargeBackAmount(chargeBackAmount)\n    chargeBackModel.setFocEntry(focEntry)\n    chargeBackModel.setOrderCode(orderCode)\n    if (mainEntry != null) {\n        chargeBackModel.setMainEntry(mainEntry)\n    }\n    chargeBackModel.setEmailSent(Boolean.FALSE)\n    chargeBackModel.setPaid(Boolean.FALSE)\n    chargeBackModel.setReturned(Boolean.FALSE)\n    modelService.save(chargeBackModel)\n    println \"Created TokoChargeBack: PK=\" + chargeBackModel.getPk() + \" amount=\" + chargeBackAmount\n\n    // Trigger clawback process via service (creates ClawbackProcess + starts it)\n    tokoChargeBackService.sendProcess(chargeBackModel)\n    println \"sendProcess called — clawback process started\"\n\n    println \"=== Done ===\"\n}\n\nprintln \"\"\nprintln \"All orders processed.\"",
+        "taskSummary": "yes, also check could it be a co incidence that the knoxguard thing was fired at the same time",
+        "lastExchange": "yes, also check could it be a co incidence that the knoxguard thing was fired at the same time",
         "sessionId": "bin"
       },
       {
         "pid": 13300,
         "cwd": "c:\\windows",
-        "ageSeconds": 75492,
+        "ageSeconds": 75561,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1028,7 +1028,7 @@
       {
         "pid": 32364,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 1143,
+        "ageSeconds": 1213,
         "status": "running",
         "isChild": false,
         "taskSummary": "have we implemented the fetching of jira ticket with its name from dashboard thing?",
@@ -4292,17 +4292,17 @@
     "bridgeLogTail": "[2026-10-08T04:06:49.082Z] STDOUT data for #621: 110 bytes\n[2026-10-08T04:06:49.085Z] LIVE events write for #621: 289 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_621.txt\n[2026-10-08T04:06:49.147Z] STDOUT data for #621: 114 bytes\n[2026-10-08T04:06:49.150Z] LIVE events write for #621: 290 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_621.txt\n[2026-10-08T04:06:49.152Z] STDOUT data for #621: 350 bytes\n[2026-10-08T04:06:49.154Z] LIVE events write for #621: 293 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_621.txt\n[2026-10-08T04:06:49.155Z] STDOUT data for #621: 123 bytes\n[2026-10-08T04:06:49.157Z] LIVE events write for #621: 294 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_621.txt\n[2026-10-08T04:06:49.173Z] STDOUT data for #621: 117 bytes\n[2026-10-08T04:06:49.176Z] LIVE events write for #621: 295 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_621.txt\n[2026-10-08T04:06:49.186Z] STDOUT data for #621: 114 bytes\n[2026-10-08T04:06:49.188Z] LIVE events write for #621: 296 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_621.txt\n[2026-10-08T04:06:49.246Z] STDOUT data for #621: 122 bytes\n[2026-10-08T04:06:49.250Z] LIVE events write for #621: 297 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_621.txt\n[2026-10-08T04:06:49.251Z] STDOUT data for #621: 216 bytes\n[2026-10-08T04:06:49.253Z] LIVE events write for #621: 299 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_621.txt\n[2026-10-08T04:06:49.255Z] STDOUT data for #621: 348 bytes\n[2026-10-08T04:06:49.257Z] LIVE events write for #621: 300 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_621.txt\n[2026-10-08T04:06:50.985Z] aipro completed for #621 (3290 chars)\n[2026-10-08T04:06:51.767Z] Comment posted on #621",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-08T08:22:44.197Z",
-      "ageMs": 320289
+      "lastWrite": "2026-10-08T08:29:10.794Z",
+      "ageMs": 3478
     },
-    "watchdogLogTail": "[2026-10-08T07:41:48.919Z] Starting jira-dashboard-server.js...\n[2026-10-08T07:42:34.589Z] Dashboard started with PID 15044 (restart #17, 7 in last hour)\n[2026-10-08T07:44:23.766Z] DASHBOARD RESTART NEEDED: Dashboard heartbeat is stale (408s old)\n[2026-10-08T07:44:31.616Z] Killed dashboard PID 15044\n[2026-10-08T07:44:32.382Z] Starting jira-dashboard-server.js...\n[2026-10-08T07:44:39.911Z] Dashboard started with PID 35108 (restart #18, 8 in last hour)\n[2026-10-08T07:44:54.833Z] Starting jira-dashboard-server.js...\n[2026-10-08T07:44:55.857Z] Dashboard started with PID 34852 (restart #19, 9 in last hour)\n[2026-10-08T07:45:06.251Z] DUPLICATE jira-dashboard-server detected: PID 35108 — killing\n[2026-10-08T08:22:44.195Z] DUPLICATE watchdog detected: PID 32600 — killing"
+    "watchdogLogTail": "[2026-10-08T07:45:06.251Z] DUPLICATE jira-dashboard-server detected: PID 35108 — killing\n[2026-10-08T08:22:44.195Z] DUPLICATE watchdog detected: PID 32600 — killing\n[2026-10-08T08:28:30.983Z] DASHBOARD RESTART NEEDED: No dashboard heartbeat file found\n[2026-10-08T08:28:47.818Z] Killed dashboard PID 34852\n[2026-10-08T08:29:00.273Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 34852) not found\n[2026-10-08T08:29:05.504Z] Could not kill dashboard PID 34852: Command failed: taskkill /PID 34852 /F /T\n[2026-10-08T08:29:05.514Z] Starting jira-dashboard-server.js...\n[2026-10-08T08:29:05.718Z] Dashboard started with PID 31912 (restart #20, 6 in last hour)\n[2026-10-08T08:29:10.523Z] Starting jira-dashboard-server.js...\n[2026-10-08T08:29:10.791Z] Dashboard started with PID 32828 (restart #21, 7 in last hour)"
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-08T08:27:08.471Z",
+      "lastCheck": "2026-10-08T08:29:07.728Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4311,7 +4311,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-08T08:27:08.471Z",
+      "lastCheck": "2026-10-08T08:29:07.728Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4320,10 +4320,10 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-08T08:27:08.471Z",
-      "downSince": "2026-10-08T07:44:57.597Z",
-      "downDuration": 2530874,
-      "alert": true
+      "lastCheck": "2026-10-08T08:29:07.728Z",
+      "downSince": "2026-10-08T08:29:07.728Z",
+      "downDuration": 0,
+      "alert": false
     }
   ],
   "hacReport": {
