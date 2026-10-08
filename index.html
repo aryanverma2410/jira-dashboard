@@ -3762,66 +3762,161 @@ setInterval(function(){
 setTimeout(fetchWorklogStats,3000);
 
 // ===== TICKET LOOKUP =====
+var lookupPollInterval=null;
+
 function doLookup(){
   var inp=document.getElementById('lookupInput');
   var el=document.getElementById('lookupResults');
   if(!inp||!el)return;
   var key=inp.value.trim().toUpperCase();
   if(!key){el.innerHTML='<div class="lk-error">Please enter a ticket key.</div>';return}
+  
+  // Try direct server fetch first (works on PC)
   el.innerHTML='<div class="lk-loading">Fetching '+escapeHtml(key)+' from Jira...</div>';
+  
+  // Timeout after 3s — if no response, fall back to bridge
+  var directTimedOut=false;
+  var directResolved=false;
+  
+  var timeoutId=setTimeout(function(){
+    if(!directResolved){
+      directTimedOut=true;
+      el.innerHTML='<div class="lk-loading">Connecting via bridge (slower, ~15s)...</div>';
+      doLookupViaBridge(key,el);
+    }
+  },3000);
+  
   fetch(''+SERVER_URL+'/lookup?key='+encodeURIComponent(key))
     .then(function(r){return r.json()})
     .then(function(d){
+      if(directTimedOut)return; // already fell back to bridge
+      directResolved=true;
+      clearTimeout(timeoutId);
       if(!d.ok){
         el.innerHTML='<div class="lk-error">'+escapeHtml(d.error||'Ticket not found')+'</div>';
         return;
       }
-      var t=d.ticket;
-      var sc=statusClass(t.status,t.statusCategory);
-      var pc=priorityColor(t.priority);
-      var priCls=(t.priority==='Highest'||t.priority==='Critical'||t.priority==='High')?'priority-high':'priority-med';
-      var html='<div class="lk-card">'+
-        '<div class="lk-card-header">'+
-          '<div class="lk-card-key">'+escapeHtml(t.key)+'</div>'+
-          '<div class="lk-card-summary">'+escapeHtml(t.summary)+'</div>'+
-          '<div class="lk-card-meta">'+
-            '<span class="lk-chip status">'+escapeHtml(t.status)+'</span>'+
-            '<span class="lk-chip '+priCls+'">'+escapeHtml(t.priority)+'</span>'+
-            '<span class="lk-chip">'+escapeHtml(t.project)+'</span>'+
-            '<span class="lk-chip">'+escapeHtml(t.issuetype)+'</span>'+
-            '<span class="lk-chip">Assignee: '+escapeHtml(t.assignee)+'</span>'+
-            '<span class="lk-chip">Reporter: '+escapeHtml(t.reporter)+'</span>'+
-            '<span class="lk-chip">Updated '+relTime(t.updated)+'</span>'+
-          '</div>'+
-        '</div>';
-      if(t.labels&&t.labels.length>0){
-        html+='<div class="lk-card-meta" style="padding:6px 14px">'+t.labels.map(function(l){return '<span class="lk-chip">'+escapeHtml(l)+'</span>'}).join('')+'</div>';
-      }
-      if(t.description){
-        html+='<div class="lk-card-desc">'+escapeHtml(t.description)+'</div>';
-      }
-      if(t.comments&&t.comments.length>0){
-        html+='<div class="lk-card-section-title">Comments ('+t.commentsCount+')</div>';
-        t.comments.forEach(function(c){
-          html+='<div class="lk-comment">'+
-            '<div class="lk-comment-head"><span class="lk-comment-author">'+escapeHtml(c.author)+'</span><span class="lk-comment-date">'+relTime(c.date)+'</span></div>'+
-            '<div class="lk-comment-body">'+escapeHtml(c.body)+'</div>'+
-          '</div>';
-        });
-      }
-      if(t.linkedTickets&&t.linkedTickets.length>0){
-        html+='<div class="lk-card-section-title">Linked Tickets ('+t.linkedTickets.length+')</div>';
-        t.linkedTickets.forEach(function(l){
-          html+='<div class="lk-link-row"><span class="lk-link-key">'+escapeHtml(l.key)+'</span>'+escapeHtml(l.relation)+' — '+escapeHtml(l.summary)+' ('+escapeHtml(l.status)+')</div>';
-        });
-      }
-      html+='<a class="lk-open-link" href="'+escapeHtml(t.url)+'" target="_blank">Open in Jira &#8599;</a>';
-      html+='</div>';
-      el.innerHTML=html;
+      renderLookupResult(d.ticket,el);
     })
     .catch(function(e){
-      el.innerHTML='<div class="lk-error">Request failed: '+escapeHtml(e.message)+'</div>';
+      if(directTimedOut)return; // already fell back to bridge
+      directResolved=true;
+      clearTimeout(timeoutId);
+      // Direct fetch failed — fall back to bridge
+      el.innerHTML='<div class="lk-loading">Connecting via bridge (slower, ~15s)...</div>';
+      doLookupViaBridge(key,el);
     });
+}
+
+function doLookupViaBridge(key,el){
+  // Create a GitHub Issue with title "LOOKUP: KEY"
+  // Bridge will fetch via cookies and post [LOOKUP-RESULT] comment
+  createIssue('LOOKUP: '+key,'Ticket lookup from dashboard',function(err,data){
+    if(err||!data||!data.number){
+      el.innerHTML='<div class="lk-error">Failed to create lookup request: '+escapeHtml(err?err.message:'unknown')+'</div>';
+      return;
+    }
+    var issueNum=data.number;
+    el.innerHTML='<div class="lk-loading">Request sent to bridge (#'+issueNum+'). Waiting for response...</div>';
+    
+    // Poll for [LOOKUP-RESULT] comment every 3s, up to 30s
+    var attempts=0;
+    var maxAttempts=12; // 12 * 3s = 36s
+    if(lookupPollInterval)clearInterval(lookupPollInterval);
+    
+    lookupPollInterval=setInterval(function(){
+      attempts++;
+      if(attempts>maxAttempts){
+        clearInterval(lookupPollInterval);
+        lookupPollInterval=null;
+        el.innerHTML='<div class="lk-error">Timed out waiting for bridge response. Bridge may be offline.</div>';
+        return;
+      }
+      
+      // Fetch comments on the issue
+      fetch('https://api.github.com/repos/'+GH_OWNER+'/'+BRIDGE_REPO+'/issues/'+issueNum+'/comments?per_page=50',{
+        headers:{'Authorization':'Bearer '+GH_TOKEN,'Accept':'application/vnd.github.v3+json'}
+      })
+        .then(function(r){return r.json()})
+        .then(function(comments){
+          if(!Array.isArray(comments))return;
+          // Find [LOOKUP-RESULT] comment
+          for(var i=0;i<comments.length;i++){
+            if(comments[i].body && comments[i].body.indexOf('[LOOKUP-RESULT]')!==-1){
+              clearInterval(lookupPollInterval);
+              lookupPollInterval=null;
+              
+              // Check for error
+              if(comments[i].body.indexOf('ERROR:')!==-1){
+                var errMatch=comments[i].body.match(/ERROR:\s*(.+)/);
+                el.innerHTML='<div class="lk-error">'+escapeHtml(errMatch?errMatch[1]:'Lookup failed')+'</div>';
+                return;
+              }
+              
+              // Extract JSON from code block
+              var jsonMatch=comments[i].body.match(/```json\n([\s\S]+?)\n```/);
+              if(jsonMatch){
+                try{
+                  var ticket=JSON.parse(jsonMatch[1]);
+                  renderLookupResult(ticket,el);
+                  return;
+                }catch(pe){
+                  el.innerHTML='<div class="lk-error">Failed to parse bridge response.</div>';
+                  return;
+                }
+              }
+              el.innerHTML='<div class="lk-error">No ticket data in bridge response.</div>';
+              return;
+            }
+          }
+        })
+        .catch(function(){/* ignore, will retry */});
+    },3000);
+  });
+}
+
+function renderLookupResult(t,el){
+  var sc=statusClass(t.status,t.statusCategory);
+  var pc=priorityColor(t.priority);
+  var priCls=(t.priority==='Highest'||t.priority==='Critical'||t.priority==='High')?'priority-high':'priority-med';
+  var html='<div class="lk-card">'+
+    '<div class="lk-card-header">'+
+      '<div class="lk-card-key">'+escapeHtml(t.key)+'</div>'+
+      '<div class="lk-card-summary">'+escapeHtml(t.summary)+'</div>'+
+      '<div class="lk-card-meta">'+
+        '<span class="lk-chip status">'+escapeHtml(t.status)+'</span>'+
+        '<span class="lk-chip '+priCls+'">'+escapeHtml(t.priority)+'</span>'+
+        '<span class="lk-chip">'+escapeHtml(t.project)+'</span>'+
+        '<span class="lk-chip">'+escapeHtml(t.issuetype)+'</span>'+
+        '<span class="lk-chip">Assignee: '+escapeHtml(t.assignee)+'</span>'+
+        '<span class="lk-chip">Reporter: '+escapeHtml(t.reporter)+'</span>'+
+        '<span class="lk-chip">Updated '+relTime(t.updated)+'</span>'+
+      '</div>'+
+    '</div>';
+  if(t.labels&&t.labels.length>0){
+    html+='<div class="lk-card-meta" style="padding:6px 14px">'+t.labels.map(function(l){return '<span class="lk-chip">'+escapeHtml(l)+'</span>'}).join('')+'</div>';
+  }
+  if(t.description){
+    html+='<div class="lk-card-desc">'+escapeHtml(t.description)+'</div>';
+  }
+  if(t.comments&&t.comments.length>0){
+    html+='<div class="lk-card-section-title">Comments ('+t.commentsCount+')</div>';
+    t.comments.forEach(function(c){
+      html+='<div class="lk-comment">'+
+        '<div class="lk-comment-head"><span class="lk-comment-author">'+escapeHtml(c.author)+'</span><span class="lk-comment-date">'+relTime(c.date)+'</span></div>'+
+        '<div class="lk-comment-body">'+escapeHtml(c.body)+'</div>'+
+      '</div>';
+    });
+  }
+  if(t.linkedTickets&&t.linkedTickets.length>0){
+    html+='<div class="lk-card-section-title">Linked Tickets ('+t.linkedTickets.length+')</div>';
+    t.linkedTickets.forEach(function(l){
+      html+='<div class="lk-link-row"><span class="lk-link-key">'+escapeHtml(l.key)+'</span>'+escapeHtml(l.relation)+' — '+escapeHtml(l.summary)+' ('+escapeHtml(l.status)+')</div>';
+    });
+  }
+  html+='<a class="lk-open-link" href="'+escapeHtml(t.url)+'" target="_blank">Open in Jira &#8599;</a>';
+  html+='</div>';
+  el.innerHTML=html;
 }
 </script>
 </body>
