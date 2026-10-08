@@ -1,7 +1,56 @@
 {
-  "generatedAt": "2026-10-08T09:47:05.192Z",
-  "totalTickets": 17,
+  "generatedAt": "2026-10-08T09:47:45.700Z",
+  "totalTickets": 18,
   "tickets": [
+    {
+      "key": "PC-55140",
+      "summary": "Script to fix secondGI on ConsignmentEntry for return creation",
+      "status": "Approved-ES",
+      "statusCategory": "To Do",
+      "priority": "Low",
+      "project": "PROD Change",
+      "projectKey": "PC",
+      "issuetype": "Hybris Platform",
+      "updated": "2026-10-08T18:49:09.000+0900",
+      "created": "2026-10-07T20:48:44.000+0900",
+      "statusChangedAt": "2026-10-08T14:54:07.430+0900",
+      "assignedToMeAt": "",
+      "description": "For orders mentioned in ticket : TKME-2349\n\nFix secondGI on ConsignmentEntry for consignment TR260831-72936144. secondGI is currently 00000000000000 (null placeholder), preventing return creation. Correct value derived from consignment gerpBillingDate (20260904164037).\n\nScript: ^script-TKME-2349-sec",
+      "commentsCount": 3,
+      "recentComments": [
+        {
+          "author": "Vamseedhara Reddy Dhonadula",
+          "date": "2026-10-08T18:49:03.287+0900",
+          "snippet": "Approved by D2C\n\nPlease validate in production, then update the comments and also monitor the performance impact as well."
+        },
+        {
+          "author": "Brajesh Kumar Singh",
+          "date": "2026-10-07T21:33:06.114+0900",
+          "snippet": "Reviewed."
+        }
+      ],
+      "lastCommentBy": "Vamseedhara Reddy Dhonadula",
+      "lastCommentSnippet": "Approved by D2C\n\nPlease validate in production, then update the comments and also monitor the performance impact as well.",
+      "lastCommentDate": "2026-10-08T18:49:03.287+0900",
+      "url": "https://jira.secext.samsung.net/browse/PC-55140",
+      "linkedTickets": [
+        {
+          "key": "TKME-2349",
+          "summary": "Return Creation Issue",
+          "status": "Launch Verification",
+          "statusCategory": "Done",
+          "relation": "is blocked by",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "none",
+        "excerpt": "",
+        "source": "",
+        "foundAt": "",
+        "issueNumber": null
+      }
+    },
     {
       "key": "PC-55141",
       "summary": "Script to process manual chargeback refund and push CHECKED_INVALID order",
@@ -605,14 +654,14 @@
       "linkedTickets": [],
       "solution": {
         "status": "found",
-        "excerpt": "RCA Request || 24-Sep\r\nGenerated: 2026-09-24T07:40:00Z\r\n\r\nIssue:\r\nFor order AE260804-50056392 (COMPLETED, created 04-Aug-2026), the GERP advance (ADV) FI posting correctly splits the order product entries and SC+ (Samsung Care+) external service entries into separate FI posting documents. However, the refund FI posting combines the order product refund and SC+ refund amounts into a single FI posting document instead of separating them like the ADV FI does. The reporter (Jaffar Ali) requests that the refund FI posting also split order and SC+ entries separately, matching the ADV FI behaviour.\r\n\r\nRCA:\r\nThis is expected behaviour based on the current architecture of the GERP FI posting framework, not a bug or system error.\r\n\r\nThe FI posting system uses two separate code paths for advance (initial) and refund postings:\r\n\r\n1. ADV (Initial) FI Posting:\r\nThe initial FI posting is orchestrated by TokoConsignmentFIStrategy (tokofulfilmentprocess/src/com/samsung/toko/fulfilmentprocess/strategy/impl/TokoConsignmentFIStrategy.java, line 143). It iterates over all external services on the consignment and calls sendInitialFinancialUpdateOnConsignmentForExternalService once per external service, in addition to the main sendInitialFinancialUpdateOnConsignment call for the order product entries. This produces one FI document for the order products and a separate FI document for each SC+ external service. The NERP implementation (TokoNerpConsignmentFinancialsServiceImpl, line 142) creates a separate GerpFIRequestWrapper per external service, each carrying its own externalServices list (Collections.singletonList(externalService)), and each triggers a separate initiateFinancialRequestOnConsignmentForExternalService call to the NERP FI client. This is why the ADV FI posting shows split entries.\r\n\r\n2. Refund FI Posting:\r\nThe refund FI posting is orchestrated by SendFIUpdateExternalServiceRefundAction (tokofulfilmentprocess/src/com/samsung/toko/fulfilmentprocess/actions/returns/SendFIUpdateExternalServiceRefundAction.java). The main refund FI is sent via sendRefundFinancialUpdate (TokoNerpConsignmentFinancialsServiceImpl, line 593), which calls completeRefundFinancialUpdateRequestV2 on the NERP FI client. This single call covers all order product return entries in one combined FI document.\r\n\r\nFor external services (SC+), the action iterates through FI-eligible external services and calls sendAdditionalExternalServiceRefundFinancialUpdate per service (line 96-104 of SendFIUpdateExternalServiceRefundAction), but only when the store configuration flag SUPPORTED_EXTERNAL_SERVICE_FI_POSTING is enabled for that service type and provider. If this flag is not set for the SC+ service on the UAE store, no separate SC+ refund FI is triggered, and the SC+ refund amount remains embedded in the main combined refund FI.\r\n\r\nAdditionally, for trade-in external services specifically, a separate sendExternalServiceRefundFinancialUpdate call is made (line 77), but only when the trade-in service does not support FI posting natively (hasTradeInExternalService and not isTradeInFIPostingSupported).\r\n\r\nThe key difference is:\r\n- ADV FI: Always creates separate FI documents for order products and each external service by design.\r\n- Refund FI: Creates one combined refund FI for all order return entries, then conditionally creates separate FIs for external services only if the store-level configuration (SUPPORTED_EXTERNAL_SERVICE_FI_POSTING) is enabled.\r\n\r\nThe SC+ refund FI split depends on the TokoConfigProperty / added-service configuration for the UAE store. If SUPPORTED_EXTERNAL_SERVICE_FI_POSTING is not enabled for the SC+ service type on the UAE store, the refund FI will combine SC+ amounts into the main refund document. The ADV path does not have this conditional check — it always splits.\r\n\r\nHAC database verification was limited because the production HAC endpoint (cc.commerce.ondemand.com) was not resolvable from the investigation environment. Kibana MENA cookies were available but the order is from the UAE store which falls under the MENA Kibana cluster — no error-level logs were found because this is a configuration/design gap, not a runtime error. No exceptions were thrown during the FI posting; the system behaved as designed.\r\n\r\nPossible remediation:\r\nThis is a design enhancement request, not a bug fix. Two approaches:\r\n\r\nOption A (configuration-only, no code change):\r\nVerify whether the SUPPORTED_EXTERNAL_SERVICE_FI_POSTING config is enabled for the SC+ service type on the UAE store. If it is disabled, enabling it via TokoConfigProperty or AddedServiceConfigParam would cause the refund FI posting to trigger a separate FI document for SC+ refunds via sendAdditionalExternalServiceRefundFinancialUpdate. This is the fastest fix if the config is simply missing. Requires checking the AddedServiceConfigParam table for the UAE store, SC+ service type, and the SUPPORTED_EXTERNAL_SERVICE_FI_POSTING parameter.\r\n\r\nOption B (code change, permanent fix):\r\nModify the refund FI posting flow in SendFIUpdateExternalServiceRefundAction to always split external service refunds into separate FI documents regardless of the SUPPORTED_EXTERNAL_SERVICE_FI_POSTING flag, matching the ADV FI behaviour which unconditionally splits. This would mean removing or bypassing the isExternalServiceFIPostingSupported check for the refund path, or adding a new config property to control refund-specific FI splitting independently. This requires a PC ticket and code deployment.\r\n\r\nRecommendation: Start with Option A — check the store configuration. If the flag is simply not set for SC+ on UAE, enabling it would immediately resolve the issue without code changes. If the flag is already enabled and the split still does not occur, then Option B is needed and a PC ticket should be created for the code change.\r\n\r\n## Remediation\r\nNo script needed — this is a configuration/design issue, not a data remediation. The order is COMPLETED and the FI postings have already been sent to GERP. Any fix would apply to future orders only. For the existing order, a manual GERP-side adjustment would be needed to split the refund FI posting retroactively, which is outside Hybris platform scope.",
+        "excerpt": "# RCA: AEME-6582\nTicket Summary: ADV FI posting splits Order & SC+ entries, but refund FI posting combines them. Need split consistency.\nOrder: AE260804-50056392 (COMPLETED, 8764 AED, AE region, Tabby payment)\nGenerated: 2026-10-08T00:00:00Z\n\nHi [~jaffar.a@samsung.com] ,\n\nOrder AE260804-50056392 was placed on Aug 4 with a device (SM-F976BDGIMEA), charger (EP-T6010NBEGAE), and SC+ subscription (SMC-ADH2-AE-MOB-58). The order total was 8764 AED, captured via Tabby payment mode. The order was fully refunded on Aug 10 (REFUND_FOLLOW_ON 8764 AED) and moved to COMPLETED. The SMC external service was cancelled on Aug 9 (status confirmed as CANCELLED in DB).\n\nThe ADV FI posting correctly split the order and SC+ into separate document lines. The refund (reverse) FI posting combined them into a single entry. This inconsistency is caused by an asymmetric gating condition in the reverse FI posting code path.\n\nBoth ADV and reverse FI postings use the same populator chain defined in tokogerpfulfilmentservices-spring.xml. The SMC split is handled by TokoSMCSplitCreditFIMessagePopulator.populateInternal(), which branches based on whether the FI is positive (ADV) or negative (reverse/refund):\n\n1. For positive FI (ADV): the SMC split is created unconditionally when smcSplitInitialFIDoclines is set on the external service and the order contains SMC. Since the ADV FI split correctly, smcSplitInitialFIDoclines is confirmed as set on this order's external service.\n\n2. For negative FI (reverse/refund): the SMC split requires three additional conditions that are not checked for ADV FI: (a) smcRefundByProvider must NOT be set on the external service, (b) at least one of hasSMCinReturnRequest or isSMCCancelled must be true, and (c) for AE specifically, TokoAESMCMessagePopulator.validRequestForSMC() checks that the external service status equals CANCELLED.\n\nThe DB confirms the external service status is CANCELLED, so condition (b) and the AE-specific check (c) should pass. However, condition (a) is the most likely blocker. The config toko.cancel.smc.via.scplus.server.v2.ae is set to true, meaning SMC cancellation for AE goes through the SC+ server v2 API. When the SC+ server v2 cancellation path is used, the smcRefundByProvider flag is typically set on the external service to indicate the refund is handled by the provider. When this flag is set, TokoSMCSplitCreditFIMessagePopulator intentionally skips the SMC doc line creation in reverse FI, resulting in a combined refund entry instead of a split.\n\nThis is a known asymmetry in the FI posting design. The same issue was reported in RT-408885 for the KW region, where smcSplitInitialFIDoclines was initially false. After setting it to true, both ADV and reverse FI split correctly in KW. However, for AE, smcSplitInitialFIDoclines is already true (ADV FI splits), so the issue is specifically in the reverse FI path where the smcRefundByProvider check blocks the split.\n\nThe AEME-5430 enhancement (deployed Dec 2025) added reverse FI posting for SC+ standalone cancellation for GCC countries including AE. The reverse FI implementation reuses the same populator chain as ADV FI, inheriting the smcRefundByProvider gating that was originally designed for scenarios where the SMC provider handles refunds externally. For SC+ server v2 cancellations in AE, this flag appears to be set incorrectly, causing the reverse FI to skip the SMC split.\n\nThis is a code-level issue in TokoSMCSplitCreditFIMessagePopulator. The reverse FI path should create the SMC doc line whenever smcSplitInitialFIDoclines is set and the external service is cancelled, regardless of whether smcRefundByProvider is set. The smcRefundByProvider flag was intended for scenarios where the SMC provider issues a separate refund FI to the finance system directly. When the SC+ server v2 cancellation is used, the refund is processed within Hybris (REFUND_FOLLOW_ON), so the reverse FI should still include the SMC split.\n\nKibana logs from the original Aug 4-10 timeframe have rotated out of the retention window, so log-level verification of the FI posting payloads could not be performed. The RCA is based on DB state, codebase analysis, and cross-reference with similar resolved tickets.\n\nWe are checking further on the same.\n\nThanks,\n\nAryan.\n\n## Remediation\nThis is a code-level fix, not a data remediation. No HAC script is needed. The fix would be in TokoSMCSplitCreditFIMessagePopulator to not gate the reverse FI SMC split on smcRefundByProvider when the SMC cancellation goes through SC+ server v2 and the refund is processed within Hybris. Alternatively, a separate code change in the SC+ server v2 cancellation path could avoid setting smcRefundByProvider on the ES when the refund is not actually handled by the provider.\n\n## Data Sources\n- DB (hac-direct.cjs / flexi-order-full.cjs): Order COMPLETED, 3 entries, ES SMC CANCELLED, full refund 8764 AED, no ReturnRequest\n- Codebase: TokoSMCSplitCreditFIMessagePopulator, TokoAESMCMessagePopulator, GerpFiReturnRefundMessageTransformation in tokogerpfulfilmentservices\n- Jira cross-ref: RT-408885 (exact match, KW region), HKHME-4349 (ES status check), AEME-5430 (GCC reverse FI enhancement)\n- Config: toko.cancel.smc.via.scplus.server.v2.ae=true, no smcRefundByProvider or smcSplitInitialFIDoclines in TokoConfigProperty (per-ES config)\n- Kibana: No logs from Aug 4-10 timeframe (rotated out, 90d retention only covers Sep 9+)",
         "sections": {
-          "issue": "For order AE260804-50056392 (COMPLETED, created 04-Aug-2026), the GERP advance (ADV) FI posting correctly splits the order product entries and SC+ (Samsung Care+) external service entries into separate FI posting documents. However, the refund FI posting combines the order product refund and SC+ refund amounts into a single FI posting document instead of separating them like the ADV FI does. The reporter (Jaffar Ali) requests that the refund FI posting also split order and SC+ entries separately, matching the ADV FI behaviour.",
-          "rca": "",
+          "issue": "",
+          "rca": "# RCA: AEME-6582\nTicket Summary: ADV FI posting splits Order & SC+ entries, but refund FI posting combines them. Need split consistency.\nOrder: AE260804-50056392 (COMPLETED, 8764 AED, AE region, Tabby payment)\nGenerated: 2026-10-08T00:00:00Z\n\nHi [~jaffar.a@samsung.com] ,\n\nOrder AE260804-50056392 was placed on Aug 4 with a device (SM-F976BDGIMEA), charger (EP-T6010NBEGAE), and SC+ subscription (SMC-ADH2-AE-MOB-58). The order total was 8764 AED, captured via Tabby payment mode. The order was fully refunded on Aug 10 (REFUND_FOLLOW_ON 8764 AED) and moved to COMPLETED. The SMC external service was cancelled on Aug 9 (status confirmed as CANCELLED in DB).\n\nThe ADV FI posting correctly split the order and SC+ into separate document lines. The refund (reverse) FI posting combined them into a single entry. This inconsistency is caused by an asymmetric gating condition in the reverse FI posting code path.\n\nBoth ADV and reverse FI postings use the same populator chain defined in tokogerpfulfilmentservices-spring.xml. The SMC split is handled by TokoSMCSplitCreditFIMessagePopulator.populateInternal(), which branches based on whether the FI is positive (ADV) or negative (reverse/refund):\n\n1. For positive FI (ADV): the SMC split is created unconditionally when smcSplitInitialFIDoclines is set on the external service and the order contains SMC. Since the ADV FI split correctly, smcSplitInitialFIDoclines is confirmed as set on this order's external service.\n\n2. For negative FI (reverse/refund): the SMC split requires three additional conditions that are not checked for ADV FI: (a) smcRefundByProvider must NOT be set on the external service, (b) at least one of hasSMCinReturnRequest or isSMCCancelled must be true, and (c) for AE specifically, TokoAESMCMessagePopulator.validRequestForSMC() checks that the external service status equals CANCELLED.\n\nThe DB confirms the external service status is CANCELLED, so condition (b) and the AE-specific check (c) should pass. However, condition (a) is the most likely blocker. The config toko.cancel.smc.via.scplus.server.v2.ae is set to true, meaning SMC cancellation for AE goes through the SC+ server v2 API. When the SC+ server v2 cancellation path is used, the smcRefundByProvider flag is typically set on the external service to indicate the refund is handled by the provider. When this flag is set, TokoSMCSplitCreditFIMessagePopulator intentionally skips the SMC doc line creation in reverse FI, resulting in a combined refund entry instead of a split.\n\nThis is a known asymmetry in the FI posting design. The same issue was reported in RT-408885 for the KW region, where smcSplitInitialFIDoclines was initially false. After setting it to true, both ADV and reverse FI split correctly in KW. However, for AE, smcSplitInitialFIDoclines is already true (ADV FI splits), so the issue is specifically in the reverse FI path where the smcRefundByProvider check blocks the split.\n\nThe AEME-5430 enhancement (deployed Dec 2025) added reverse FI posting for SC+ standalone cancellation for GCC countries including AE. The reverse FI implementation reuses the same populator chain as ADV FI, inheriting the smcRefundByProvider gating that was originally designed for scenarios where the SMC provider handles refunds externally. For SC+ server v2 cancellations in AE, this flag appears to be set incorrectly, causing the reverse FI to skip the SMC split.\n\nThis is a code-level issue in TokoSMCSplitCreditFIMessagePopulator. The reverse FI path should create the SMC doc line whenever smcSplitInitialFIDoclines is set and the external service is cancelled, regardless of whether smcRefundByProvider is set. The smcRefundByProvider flag was intended for scenarios where the SMC provider issues a separate refund FI to the finance system directly. When the SC+ server v2 cancellation is used, the refund is processed within Hybris (REFUND_FOLLOW_ON), so the reverse FI should still include the SMC split.\n\nKibana logs from the original Aug 4-10 timeframe have rotated out of the retention window, so log-level verification of the FI posting payloads could not be performed. The RCA is based on DB state, codebase analysis, and cross-reference with similar resolved tickets.\n\nWe are checking further on the same.\n\nThanks,\n\nAryan.\n\n## Remediation\nThis is a code-level fix, not a data remediation. No HAC script is needed. The fix would be in TokoSMCSplitCreditFIMessagePopulator to not gate the reverse FI SMC split on smcRefundByProvider when the SMC cancellation goes through SC+ server v2 and the refund is processed within Hybris. Alternatively, a separate code change in the SC+ server v2 cancellation path could avoid setting smcRefundByProvider on the ES when the refund is not actually handled by the provider.\n\n## Data Sources\n- DB (hac-direct.cjs / flexi-order-full.cjs): Order COMPLETED, 3 entries, ES SMC CANCELLED, full refund 8764 AED, no ReturnRequest\n- Codebase: TokoSMCSplitCreditFIMessagePopulator, TokoAESMCMessagePopulator, GerpFiReturnRefundMessageTransformation in tokogerpfulfilmentservices\n- Jira cross-ref: RT-408885 (exact match, KW region), HKHME-4349 (ES status check), AEME-5430 (GCC reverse FI enhancement)\n- Config: toko.cancel.smc.via.scplus.server.v2.ae=true, no smcRefundByProvider or smcSplitInitialFIDoclines in TokoConfigProperty (per-ES config)\n- Kibana: No logs from Aug 4-10 timeframe (rotated out, 90d retention only covers Sep 9+)",
           "remediation": ""
         },
         "source": "RCA MD",
-        "foundAt": "2026-09-24T07:59:19.092Z"
+        "foundAt": "2026-10-08T09:47:19.525Z"
       }
     },
     {
@@ -1084,7 +1133,7 @@
       }
     ],
     "pid": 21100,
-    "uptime": 39747,
+    "uptime": 39787,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1096,7 +1145,7 @@
       {
         "pid": 20536,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 108555,
+        "ageSeconds": 108598,
         "status": "running",
         "isChild": false,
         "taskSummary": "cant you keep a script ready that uses the bridge cookies and fetches through there and comes bac...",
@@ -1106,17 +1155,17 @@
       {
         "pid": 21768,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 108163,
+        "ageSeconds": 108205,
         "status": "running",
         "isChild": false,
-        "taskSummary": "how can I activate gcic external service in AEME-6596",
-        "lastExchange": "how can I activate gcic external service in AEME-6596",
+        "taskSummary": "i triggered processExternalServices on consignment, it didnt activate it. check whyin logs",
+        "lastExchange": "i triggered processExternalServices on consignment, it didnt activate it. check whyin logs",
         "sessionId": "bin"
       },
       {
         "pid": 13300,
         "cwd": "c:\\windows",
-        "ageSeconds": 80236,
+        "ageSeconds": 80279,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1126,7 +1175,7 @@
       {
         "pid": 32364,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 5888,
+        "ageSeconds": 5930,
         "status": "running",
         "isChild": false,
         "taskSummary": "cant you keep a script ready that uses the bridge cookies and fetches through there and comes bac...",
@@ -4391,7 +4440,7 @@
     "watchdog": {
       "alive": true,
       "lastWrite": "2026-10-08T09:41:56.441Z",
-      "ageMs": 312571
+      "ageMs": 355798
     },
     "watchdogLogTail": "[2026-10-08T08:32:46.854Z] DUPLICATE watchdog detected: PID 32384 — killing\n[2026-10-08T09:41:17.069Z] DASHBOARD RESTART NEEDED: No dashboard heartbeat file found\n[2026-10-08T09:41:19.713Z] Killed dashboard PID 32828\n[2026-10-08T09:41:30.105Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 32828) not found\n[2026-10-08T09:41:33.779Z] Could not kill dashboard PID 32828: Command failed: taskkill /PID 32828 /F /T\n[2026-10-08T09:41:33.797Z] Starting jira-dashboard-server.js...\n[2026-10-08T09:41:34.100Z] Dashboard started with PID 16108 (restart #22, 1 in last hour)\n[2026-10-08T09:41:45.113Z] Starting jira-dashboard-server.js...\n[2026-10-08T09:41:45.337Z] Dashboard started with PID 31240 (restart #23, 2 in last hour)\n[2026-10-08T09:41:56.440Z] DUPLICATE jira-dashboard-server detected: PID 16108 — killing"
   },
@@ -4616,6 +4665,18 @@
         "statusChangedAt": "2026-09-03T19:16:47.372+0900"
       },
       {
+        "key": "PC-55140",
+        "summary": "Script to fix secondGI on ConsignmentEntry for return creation",
+        "priority": "Low",
+        "status": "Approved-ES",
+        "category": "actionable",
+        "reason": "",
+        "whatToDo": "Execute on PROD or validate",
+        "url": "https://jira.secext.samsung.net/browse/PC-55140",
+        "updated": "2026-10-08T18:49:09.000+0900",
+        "statusChangedAt": "2026-10-08T14:54:07.430+0900"
+      },
+      {
         "key": "TKME-2350",
         "summary": "Stuck order on Hybris- ORDER_SPLIT",
         "priority": "None",
@@ -4729,7 +4790,7 @@
     "queued": [],
     "totals": {
       "zero": 6,
-      "actionable": 3,
+      "actionable": 4,
       "blocked": 8,
       "queued": 0
     }
