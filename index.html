@@ -729,6 +729,7 @@ body.has-status-bar .scroll{padding-top:28px}
     <div class="controls">
       <input type="text" class="search-input" id="searchInput" placeholder="Search by key, summary, or project...">
       <div class="filter-row" id="filterRow"></div>
+      <div class="filter-row" id="statusFilterRow" style="margin-top:6px"></div>
     </div>
     <div id="ticketsList">
       <div class="loading-state">Loading tickets...</div>
@@ -1134,6 +1135,14 @@ var _p=['ghp_2','JfmDbE','rUdypU','SSwCOC','HQ2eoO','0X3Zb2','OXyGU'];
 var GH_TOKEN=_p.join('');
 var GH_OWNER='aryanverma2410';
 var BRIDGE_REPO='agent-bridge';
+
+// Local dashboard server URL — auto-detect based on access context
+// PC browser: 127.0.0.1:9293 works directly
+// Phone: needs PC's LAN IP (Windows firewall must allow port 9293 inbound)
+var PC_LAN_IP='107.96.106.219';
+var SERVER_URL = (location.protocol === 'https:' && location.hostname !== '127.0.0.1' && location.hostname !== 'localhost')
+  ? 'http://' + PC_LAN_IP + ':9293'   // Phone via GitHub Pages HTTPS → PC LAN IP
+  : 'http://127.0.0.1:9293';           // PC browser or local file
 var PRIMARY_URL='data.json';
 var FALLBACK_URL='https://raw.githubusercontent.com/aryanverma2410/jira-dashboard/main/data.json';
 
@@ -1142,6 +1151,7 @@ var ticketState={};
 var expandedTickets=new Set();
 var expandedSessions=new Set();
 var currentFilter='All';
+var currentStatusFilter='All';
 var searchTerm='';
 var lastFetchOk=false;
 var lastFetchTime=null;
@@ -1193,7 +1203,7 @@ function wakeUpServer(){
     'Please restart it immediately:\n'+
     '1. Kill any existing instance: Stop-Process -Name node -Force (or find the PID using port 9293)\n'+
     '2. Start new instance: node "C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\jira-dashboard-server.js"\n'+
-    '3. Verify it started: curl http://127.0.0.1:9293/health\n'+
+    '3. Verify it started: curl '+SERVER_URL+'/health\n'+
     'This is urgent — the dashboard is offline. Just restart the server, no investigation needed.\n'+
     'Sent from dashboard',
     function(e,d){
@@ -1272,7 +1282,7 @@ function onData(data){
   localStorage.setItem('lastVisit',Date.now().toString());
   ticketState=newState;
   rawData=data;
-  renderFilters(data);renderTickets(data,changedKeys);
+  renderFilters(data);renderStatusFilters(data);renderTickets(data,changedKeys);
   renderRcaMatrix(data);renderDayStarter(data);renderActionItems(data);
   renderSessions(data);renderActivity(data);renderMcps(data);renderCmdHistory();
   pollCmdResponses(data);updateNavBadges(data);
@@ -1303,10 +1313,27 @@ function renderFilters(data){
   Object.keys(types).forEach(function(tk){var a=(currentFilter===tk)?' active':'';var cnt=counts[tk]||0;h+='<div class="filter-chip'+a+'" data-filter="'+escapeHtml(tk)+'">'+escapeHtml(tk)+' <span class="filter-count">'+cnt+'</span></div>'});
   row.innerHTML=h
 }
-function setFilter(f){currentFilter=f;if(rawData){renderFilters(rawData);renderTickets(rawData,[])}}
+function renderStatusFilters(data){
+  var row=document.getElementById('statusFilterRow');
+  if(!row)return;
+  var ts=(data&&data.tickets)||[];
+  // Count statuses within the issue-type-filtered set (so counts reflect current view)
+  var typeFiltered=ts.filter(function(t){return currentFilter==='All'||t.issuetype===currentFilter});
+  var counts={All:typeFiltered.length};
+  var statuses={All:true};
+  typeFiltered.forEach(function(t){if(t.status){statuses[t.status]=true;counts[t.status]=(counts[t.status]||0)+1}});
+  var h='';
+  // Sort: All first, then alphabetical
+  var keys=Object.keys(statuses).sort(function(a,b){if(a==='All')return -1;if(b==='All')return 1;return a.localeCompare(b)});
+  keys.forEach(function(sk){var a=(currentStatusFilter===sk)?' active':'';var cnt=counts[sk]||0;h+='<div class="filter-chip'+a+'" data-status-filter="'+escapeHtml(sk)+'">'+escapeHtml(sk)+' <span class="filter-count">'+cnt+'</span></div>'});
+  row.innerHTML=h
+}
+function setFilter(f){currentFilter=f;currentStatusFilter='All';if(rawData){renderFilters(rawData);renderStatusFilters(rawData);renderTickets(rawData,[])}}
+function setStatusFilter(f){currentStatusFilter=f;if(rawData){renderStatusFilters(rawData);renderTickets(rawData,[])}}
 function getFiltered(data){
   return ((data&&data.tickets)||[]).filter(function(t){
     if(currentFilter!=='All'&&t.issuetype!==currentFilter)return false;
+    if(currentStatusFilter!=='All'&&t.status!==currentStatusFilter)return false;
     if(searchTerm){var s=searchTerm.toLowerCase();if((t.key||'').toLowerCase().indexOf(s)<0&&(t.summary||'').toLowerCase().indexOf(s)<0&&(t.project||'').toLowerCase().indexOf(s)<0)return false}
     return true
   })
@@ -1735,7 +1762,7 @@ function createIssue(title,body,cb){
 
 function directJiraAction(action,key,value,okMsg,errMsg){
   var body=JSON.stringify({action:action,key:key,value:value||''});
-  fetch('http://127.0.0.1:9293/jira-action',{method:'POST',headers:{'Content-Type':'application/json'},body:body})
+  fetch(''+SERVER_URL+'/jira-action',{method:'POST',headers:{'Content-Type':'application/json'},body:body})
     .then(function(r){return r.json()})
     .then(function(d){
       if(d.ok){showToast(okMsg||'Done','success')}
@@ -1750,7 +1777,7 @@ function submitComment(key){
   var c=ta.value.trim();
   showToast('Posting comment...','');
   var body=JSON.stringify({action:'comment',key:key,value:c});
-  fetch('http://127.0.0.1:9293/jira-action',{method:'POST',headers:{'Content-Type':'application/json'},body:body})
+  fetch(''+SERVER_URL+'/jira-action',{method:'POST',headers:{'Content-Type':'application/json'},body:body})
     .then(function(r){return r.json()})
     .then(function(d){
       if(d.ok){showToast('Comment posted to '+key,'success');ta.value='';document.getElementById('ca-'+key).classList.remove('show')}
@@ -1762,7 +1789,7 @@ function submitComment(key){
 function submitStatus(key,status){
   showToast('Finding transition for '+status+'...','');
   var trBody=JSON.stringify({action:'transitions',key:key});
-  fetch('http://127.0.0.1:9293/jira-action',{method:'POST',headers:{'Content-Type':'application/json'},body:trBody})
+  fetch(''+SERVER_URL+'/jira-action',{method:'POST',headers:{'Content-Type':'application/json'},body:trBody})
     .then(function(r){return r.json()})
     .then(function(d){
       if(!d.ok||!d.transitions){showToast('Cannot get transitions: '+(d.error||'unknown'),'error');return}
@@ -1770,7 +1797,7 @@ function submitStatus(key,status){
       if(!found){showToast('No transition to "'+status+'" available','error');return}
       showToast('Transitioning to '+status+'...','');
       var transBody=JSON.stringify({action:'transition',key:key,value:found.id});
-      return fetch('http://127.0.0.1:9293/jira-action',{method:'POST',headers:{'Content-Type':'application/json'},body:transBody}).then(function(r){return r.json()});
+      return fetch(''+SERVER_URL+'/jira-action',{method:'POST',headers:{'Content-Type':'application/json'},body:transBody}).then(function(r){return r.json()});
     })
     .then(function(d){
       if(d&&d.ok){showToast(key+' → '+status,'success');document.getElementById('sd-'+key).classList.remove('show')}
@@ -1785,7 +1812,7 @@ function submitLabel(key){
   var label=inp.value.trim();
   showToast('Adding label "'+label+'"...','');
   var body=JSON.stringify({action:'label',key:key,value:label});
-  fetch('http://127.0.0.1:9293/jira-action',{method:'POST',headers:{'Content-Type':'application/json'},body:body})
+  fetch(''+SERVER_URL+'/jira-action',{method:'POST',headers:{'Content-Type':'application/json'},body:body})
     .then(function(r){return r.json()})
     .then(function(d){
       if(d.ok){showToast('Label "'+label+'" added to '+key,'success');inp.value='';document.getElementById('la-'+key).classList.remove('show')}
@@ -1816,7 +1843,7 @@ function submitWorklog(key){
   var comment=ci?ci.value.trim():'';
   showToast('Logging '+time+' to '+key+'...','');
   var body=JSON.stringify({key:key,timeSpent:time,comment:comment});
-  fetch('http://127.0.0.1:9293/jira-worklog',{method:'POST',headers:{'Content-Type':'application/json'},body:body})
+  fetch(''+SERVER_URL+'/jira-worklog',{method:'POST',headers:{'Content-Type':'application/json'},body:body})
     .then(function(r){return r.json()})
     .then(function(d){
       if(d.ok){showToast(time+' logged to '+key,'success');ti.value='';if(ci)ci.value='';document.getElementById('wl-'+key).classList.remove('show')}
@@ -1828,7 +1855,7 @@ function submitWorklog(key){
 function assignToMe(key){
   showToast('Assigning '+key+' to you...','');
   var body=JSON.stringify({action:'assign',key:key});
-  fetch('http://127.0.0.1:9293/jira-action',{method:'POST',headers:{'Content-Type':'application/json'},body:body})
+  fetch(''+SERVER_URL+'/jira-action',{method:'POST',headers:{'Content-Type':'application/json'},body:body})
     .then(function(r){return r.json()})
     .then(function(d){
       if(d.ok){showToast(key+' assigned to '+(d.assignee||'you'),'success')}
@@ -1960,7 +1987,7 @@ function startLivePolling(issueNum){
   if(livePollTimers[issueNum])return;
   livePollTimers[issueNum]=true;
   function poll(){
-    fetch('http://127.0.0.1:9293/live/'+issueNum)
+    fetch(''+SERVER_URL+'/live/'+issueNum)
       .then(function(r){return r.json()})
       .then(function(d){
         var el=document.getElementById('cmdLive_'+issueNum);
@@ -2019,7 +2046,7 @@ function updateAiConsoleStatus(state){
 function pollAiConsole(){
   if(!aiConsoleState.issueNum) return;
   var num=aiConsoleState.issueNum;
-  fetch('http://127.0.0.1:9293/live/'+num)
+  fetch(''+SERVER_URL+'/live/'+num)
     .then(function(r){return r.json()})
     .then(function(data){
       aiConsoleState.isActive=data.active;
@@ -2142,7 +2169,7 @@ function sendAiFollowup(){
   el.scrollTop=el.scrollHeight;
   
   // POST to /live/:issueNum/send
-  fetch('http://127.0.0.1:9293/live/'+aiConsoleState.issueNum+'/send',{
+  fetch(''+SERVER_URL+'/live/'+aiConsoleState.issueNum+'/send',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({message:msg})
@@ -2480,9 +2507,12 @@ document.getElementById('sessionsList').addEventListener('click',function(e){
 document.getElementById('filterRow').addEventListener('click',function(e){
   var c=e.target.closest('[data-filter]');if(c)setFilter(c.getAttribute('data-filter'))
 })
+document.getElementById('statusFilterRow').addEventListener('click',function(e){
+  var c=e.target.closest('[data-status-filter]');if(c)setStatusFilter(c.getAttribute('data-status-filter'))
+})
 
 // Search
-document.getElementById('searchInput').addEventListener('input',function(e){searchTerm=e.target.value;if(rawData)renderTickets(rawData,[])})
+document.getElementById('searchInput').addEventListener('input',function(e){searchTerm=e.target.value;if(rawData){renderStatusFilters(rawData);renderTickets(rawData,[])}})
 
 // ===== INIT =====
 fetchData();
@@ -3663,7 +3693,7 @@ function toggleWorklogDetails(){
 }
 
 function fetchWorklogStats(){
-  fetch('http://127.0.0.1:9293/worklog-stats')
+  fetch(''+SERVER_URL+'/worklog-stats')
     .then(function(r){return r.json()})
     .then(function(d){
       if(!d.ok){
@@ -3739,7 +3769,7 @@ function doLookup(){
   var key=inp.value.trim().toUpperCase();
   if(!key){el.innerHTML='<div class="lk-error">Please enter a ticket key.</div>';return}
   el.innerHTML='<div class="lk-loading">Fetching '+escapeHtml(key)+' from Jira...</div>';
-  fetch('http://127.0.0.1:9293/lookup?key='+encodeURIComponent(key))
+  fetch(''+SERVER_URL+'/lookup?key='+encodeURIComponent(key))
     .then(function(r){return r.json()})
     .then(function(d){
       if(!d.ok){
