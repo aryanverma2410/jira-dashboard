@@ -3891,9 +3891,9 @@ function doLookupViaBridge(key,el){
         return;
       }
       
-      // Fetch comments on the issue
-      fetch('https://api.github.com/repos/'+GH_OWNER+'/'+BRIDGE_REPO+'/issues/'+issueNum+'/comments?per_page=50',{
-        headers:{'Authorization':'Bearer '+GH_TOKEN,'Accept':'application/vnd.github.v3+json'}
+      // Fetch comments on the issue (cache-bust with timestamp to prevent stale CDN responses)
+      fetch('https://api.github.com/repos/'+GH_OWNER+'/'+BRIDGE_REPO+'/issues/'+issueNum+'/comments?per_page=50&_='+Date.now(),{
+        headers:{'Authorization':'Bearer '+GH_TOKEN,'Accept':'application/vnd.github.v3+json','Cache-Control':'no-cache'}
       })
         .then(function(r){return r.json()})
         .then(function(comments){
