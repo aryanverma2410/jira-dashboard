@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-08T15:19:16.638Z",
+  "generatedAt": "2026-10-08T15:19:57.902Z",
   "totalTickets": 19,
   "tickets": [
     {
@@ -1035,9 +1035,23 @@
     "online": true,
     "activeSessions": [],
     "stats": {
-      "totalProcessed": 207
+      "totalProcessed": 209
     },
     "recentActivity": [
+      {
+        "issueNum": 651,
+        "title": "🔴 MCP Alert: Confluence down for 5m 2s",
+        "received": "2026-10-08T15:19:24.492Z",
+        "responded": "2026-10-08T15:19:45.310Z",
+        "responseSnippet": "This is an authentication failure (HTTP 401 = Unauthorized), not a server outage. The Confluence instance itself is likely up — the MCP server's API token or credentials have expired or been revoked.\n\n**Action needed:** Refresh the Confluence API token used by the MCP server configuration. Check the MCP server's auth config (likely a PAT or OAuth token) and rotate it. Once the new token is in place, the 401s should clear immediately.\n\nNo codebase or infra action needed from my end — this is a cr"
+      },
+      {
+        "issueNum": 652,
+        "title": "🔴 MCP Alert: Kibana down for 5m 2s",
+        "received": "2026-10-08T15:19:23.037Z",
+        "responded": "2026-10-08T15:19:43.163Z",
+        "responseSnippet": "Acknowledged. A **401 Unauthorized** on the Kibana MCP server means the auth token has expired or been revoked — the Kibana instance itself is likely still running fine. This is different from a 502/503 (server unreachable) alert.\n\n**Likely cause:** The API key or bearer token used by the MCP Kibana integration has expired. 5 minutes of 401s suggests a token rotation or session timeout kicked in.\n\n**What to check:**\n1. The Kibana API key / token configured in your MCP server settings — regenerat"
+      },
       {
         "issueNum": 638,
         "title": "Fire Action Queue item #4: AEME-6527",
@@ -1163,36 +1177,22 @@
         "received": "2026-10-02T11:32:35.172Z",
         "responded": "2026-10-02T06:09:58.853Z",
         "responseSnippet": "The queue file is currently empty (`[]`) — but the issue provides all the action details. I'll execute the 4 Jira actions directly: post comment, log 1h worklog, assign to rajeshbabu.y, and add labels.Now executing all 4 Jira actions. Comment and worklog are independent, but assign and labels are also independent — running all in parallel:PowerShell doesn't support `&&`. Using `;` separator instead:3 of 4 succeeded. Assign failed — `rajeshbabu.y` didn't resolve. Let me try email format:The searc"
-      },
-      {
-        "issueNum": 473,
-        "title": "Investigate ticket SAHME-3456",
-        "received": "2026-09-30T10:30:09.427Z",
-        "responded": "2026-09-30T10:39:24.031Z",
-        "responseSnippet": "I'll follow the investigate workflow. Starting with Phase 0 pre-flight checks — reading past learnings, checking for existing RCA/cache files, and fetching the Aryantone style guide.Lock file exists but no RCA yet — this is a fresh investigation. Let me check the lock content, find the Aryantone style guide, and fetch the Jira ticket.Good. I have the ticket details. Three orders:\n1. ZA260928-97498808 — WAITING FOR SEND FINANCIAL\n2. ZA260822-65638688 — WAITING FOR SEND FINANCIAL (unit has been GR"
-      },
-      {
-        "issueNum": 472,
-        "title": "Investigate ticket AEME-6602",
-        "received": "2026-09-30T09:11:34.407Z",
-        "responded": "2026-09-30T09:43:52.728Z",
-        "responseSnippet": "Starting the investigation workflow for AEME-6602. Let me begin Phase 0 — reading past learnings, checking for existing cache/RCA files, and fetching the Jira ticket.Lock file already exists. Let me check it and fix the PowerShell command syntax.Now I know the correct operation is `fetch`. Let me fetch the ticket and also check if MCP tools are available.Good. I have the ticket details. Three orders to investigate:\n1. AE260814-59413370 (REJECTED trade-in, chargeback 270)\n2. AE260803-49001795 (RE"
       }
     ],
     "pid": 35244,
-    "uptime": 9470,
+    "uptime": 9515,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
     "startTime": "2026-10-08T12:41:22.102Z",
     "version": "v3",
-    "lastResponseAt": "2026-10-08T12:25:33.803Z",
-    "lastResponseIssue": 638,
+    "lastResponseAt": "2026-10-08T15:19:45.323Z",
+    "lastResponseIssue": 651,
     "ideSessions": [
       {
         "pid": 20536,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 128487,
+        "ageSeconds": 128528,
         "status": "running",
         "isChild": false,
         "taskSummary": "implement the previous ones and 2, 6, 12, 13",
@@ -1202,7 +1202,7 @@
       {
         "pid": 21768,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 128094,
+        "ageSeconds": 128135,
         "status": "running",
         "isChild": false,
         "taskSummary": "implement only 5 and 7",
@@ -1212,7 +1212,7 @@
       {
         "pid": 13300,
         "cwd": "c:\\windows",
-        "ageSeconds": 100167,
+        "ageSeconds": 100209,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1222,7 +1222,7 @@
       {
         "pid": 32364,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 25819,
+        "ageSeconds": 25860,
         "status": "running",
         "isChild": false,
         "taskSummary": "implement the previous ones and 2, 6, 12, 13",
@@ -1231,6 +1231,42 @@
       }
     ],
     "activityLog": [
+      {
+        "id": "1791472785326-xcl7kl",
+        "timestamp": "2026-10-08T15:19:45.326Z",
+        "type": "agent-response",
+        "source": "bridge",
+        "title": "🔴 MCP Alert: Confluence down for 5m 2s",
+        "detail": "This is an authentication failure (HTTP 401 = Unauthorized), not a server outage. The Confluence instance itself is likely up — the MCP server's API token or credentials have expired or been revoked.\n",
+        "status": "success"
+      },
+      {
+        "id": "1791472783177-1q00u4",
+        "timestamp": "2026-10-08T15:19:43.177Z",
+        "type": "agent-response",
+        "source": "bridge",
+        "title": "🔴 MCP Alert: Kibana down for 5m 2s",
+        "detail": "Acknowledged. A **401 Unauthorized** on the Kibana MCP server means the auth token has expired or been revoked — the Kibana instance itself is likely still running fine. This is different from a 502/5",
+        "status": "success"
+      },
+      {
+        "id": "1791472765647-szcav7",
+        "timestamp": "2026-10-08T15:19:25.647Z",
+        "type": "command",
+        "source": "aryanverma2410",
+        "title": "🔴 MCP Alert: Confluence down for 5m 2s",
+        "detail": "#651",
+        "status": "pending"
+      },
+      {
+        "id": "1791472764306-s8egv8",
+        "timestamp": "2026-10-08T15:19:24.306Z",
+        "type": "command",
+        "source": "aryanverma2410",
+        "title": "🔴 MCP Alert: Kibana down for 5m 2s",
+        "detail": "#652",
+        "status": "pending"
+      },
       {
         "id": "1791466787290-x17aup",
         "timestamp": "2026-10-08T13:39:47.290Z",
@@ -1464,42 +1500,6 @@
         "title": "Remove action queue item #2",
         "detail": "#610",
         "status": "pending"
-      },
-      {
-        "id": "1791378739751-aex866",
-        "timestamp": "2026-10-07T13:12:19.751Z",
-        "type": "command",
-        "source": "aryanverma2410",
-        "title": "Remove action queue item #1",
-        "detail": "#611",
-        "status": "pending"
-      },
-      {
-        "id": "1791367587741-7ymcu1",
-        "timestamp": "2026-10-07T10:06:27.741Z",
-        "type": "agent-response",
-        "source": "bridge",
-        "title": "Hiii",
-        "detail": "Hey Aryan! 👋 What can I help you with today?",
-        "status": "success"
-      },
-      {
-        "id": "1791367566846-uya5qe",
-        "timestamp": "2026-10-07T10:06:06.846Z",
-        "type": "command",
-        "source": "aryanverma2410",
-        "title": "Hiii",
-        "detail": "#606",
-        "status": "pending"
-      },
-      {
-        "id": "1791350550930-s6tr90",
-        "timestamp": "2026-10-07T05:22:30.930Z",
-        "type": "agent-response",
-        "source": "bridge",
-        "title": "In the tickets section of dashboard, there should be filters for tickets statuses as well so its easier for me to check and know how many tickets are on which status",
-        "detail": "Let me look at the project structure and find the dashboard code.Let me read the rest of the HTML file to find the filter click handler.Let me read the key filter-related code sections.Now I have a cl",
-        "status": "success"
       }
     ],
     "sessionMeta": {
@@ -4511,22 +4511,52 @@
         ],
         "endTime": "2026-10-08T12:25:33.807Z",
         "lastOutput": "Got it. I have all the details from the issue body. Let me write the comment to a temp file and execute all Jira operations.Now executing all four Jira operations in sequence: comment → worklog → assign → labels.Comment posted and verified. Now executing worklog, assign, and labels in sequence.Assignee resolution failed for `t.zaidi`. Let me search for the correct username.Assignment succeeded with the full email. Now adding labels.All four Jira operations completed successfully. Now removing it"
+      },
+      "651": {
+        "sessionId": "c32f688e-2e6e-4053-a8cf-578e14cd9648",
+        "issueNum": 651,
+        "title": "🔴 MCP Alert: Confluence down for 5m 2s",
+        "startTime": "2026-10-08T15:19:25.823Z",
+        "status": "done",
+        "commandHistory": [
+          {
+            "title": "🔴 MCP Alert: Confluence down for 5m 2s",
+            "time": "2026-10-08T15:19:25.823Z"
+          }
+        ],
+        "endTime": "2026-10-08T15:19:45.327Z",
+        "lastOutput": "This is an authentication failure (HTTP 401 = Unauthorized), not a server outage. The Confluence instance itself is likely up — the MCP server's API token or credentials have expired or been revoked.\n\n**Action needed:** Refresh the Confluence API token used by the MCP server configuration. Check the MCP server's auth config (likely a PAT or OAuth token) and rotate it. Once the new token is in place, the 401s should clear immediately.\n\nNo codebase or infra action needed from my end — this is a cr"
+      },
+      "652": {
+        "sessionId": "ec81eec8-199e-4e8e-9628-dc4bb3b3efb1",
+        "issueNum": 652,
+        "title": "🔴 MCP Alert: Kibana down for 5m 2s",
+        "startTime": "2026-10-08T15:19:24.488Z",
+        "status": "done",
+        "commandHistory": [
+          {
+            "title": "🔴 MCP Alert: Kibana down for 5m 2s",
+            "time": "2026-10-08T15:19:24.488Z"
+          }
+        ],
+        "endTime": "2026-10-08T15:19:43.178Z",
+        "lastOutput": "Acknowledged. A **401 Unauthorized** on the Kibana MCP server means the auth token has expired or been revoked — the Kibana instance itself is likely still running fine. This is different from a 502/503 (server unreachable) alert.\n\n**Likely cause:** The API key or bearer token used by the MCP Kibana integration has expired. 5 minutes of 401s suggests a token rotation or session timeout kicked in.\n\n**What to check:**\n1. The Kibana API key / token configured in your MCP server settings — regenerat"
       }
     },
-    "bridgeLogTail": "[2026-10-08T13:11:20.041Z] LOOKUP failed: Jira returned 404\n[2026-10-08T13:11:20.923Z] Comment posted on #642\n[2026-10-08T13:11:22.361Z] Issue #642 closed.\n[2026-10-08T13:11:22.368Z] 1 new message(s) added to inbox.\n[2026-10-08T13:15:12.845Z] INBOX <- #643 from aryanverma2410: \"LOOKUP: SAME-4000\"\n[2026-10-08T13:15:13.747Z] Comment posted on #643\n[2026-10-08T13:15:13.749Z] Auto-ack posted on #643\n[2026-10-08T13:15:13.751Z] LOOKUP received: #643 for ticket SAME-4000\n[2026-10-08T13:15:15.465Z] Comment posted on #643\n[2026-10-08T13:15:15.467Z] LOOKUP success: posted ticket data for SAME-4000 on #643\n[2026-10-08T13:15:16.762Z] Issue #643 closed.\n[2026-10-08T13:15:16.770Z] 1 new message(s) added to inbox.\n[2026-10-08T13:39:44.628Z] INBOX <- #645 from aryanverma2410: \"LOOKUP: SAME-4000\"\n[2026-10-08T13:39:45.529Z] Comment posted on #645\n[2026-10-08T13:39:45.531Z] Auto-ack posted on #645\n[2026-10-08T13:39:45.532Z] LOOKUP received: #645 for ticket SAME-4000\n[2026-10-08T13:39:47.286Z] Comment posted on #645\n[2026-10-08T13:39:47.288Z] LOOKUP success: posted ticket data for SAME-4000 on #645\n[2026-10-08T13:39:48.880Z] Issue #645 closed.\n[2026-10-08T13:39:48.887Z] 1 new message(s) added to inbox.",
+    "bridgeLogTail": "[2026-10-08T15:19:42.995Z] LIVE events write for #651: 47 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.001Z] STDOUT data for #651: 117 bytes\n[2026-10-08T15:19:43.002Z] LIVE events write for #651: 48 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.013Z] STDOUT data for #651: 114 bytes\n[2026-10-08T15:19:43.015Z] LIVE events write for #651: 49 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.026Z] STDOUT data for #651: 109 bytes\n[2026-10-08T15:19:43.029Z] LIVE events write for #651: 50 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.031Z] STDOUT data for #651: 117 bytes\n[2026-10-08T15:19:43.033Z] LIVE events write for #651: 51 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.040Z] STDOUT data for #651: 116 bytes\n[2026-10-08T15:19:43.043Z] LIVE events write for #651: 52 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.051Z] STDOUT data for #651: 122 bytes\n[2026-10-08T15:19:43.053Z] LIVE events write for #651: 53 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.062Z] STDOUT data for #651: 104 bytes\n[2026-10-08T15:19:43.064Z] LIVE events write for #651: 54 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.068Z] STDOUT data for #651: 325 bytes\n[2026-10-08T15:19:43.070Z] LIVE events write for #651: 55 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.161Z] Comment posted on #652\n[2026-10-08T15:19:43.793Z] aipro completed for #651 (586 chars)\n[2026-10-08T15:19:45.309Z] Comment posted on #651",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-08T15:19:11.767Z",
-      "ageMs": 7932
+      "lastWrite": "2026-10-08T15:19:56.793Z",
+      "ageMs": 3939
     },
-    "watchdogLogTail": "[2026-10-08T15:16:56.685Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T15:17:11.685Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T15:17:26.694Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T15:17:41.698Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T15:17:56.706Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T15:18:11.720Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T15:18:26.728Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T15:18:41.741Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T15:18:56.753Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T15:19:11.766Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-08T15:17:41.698Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T15:17:56.706Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T15:18:11.720Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T15:18:26.728Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T15:18:41.741Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T15:18:56.753Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T15:19:11.766Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T15:19:26.771Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T15:19:41.789Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T15:19:56.790Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-08T15:18:15.496Z",
+      "lastCheck": "2026-10-08T15:19:15.503Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4535,19 +4565,19 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-08T15:18:15.496Z",
+      "lastCheck": "2026-10-08T15:19:15.503Z",
       "downSince": "2026-10-08T15:14:12.905Z",
-      "downDuration": 242591,
-      "alert": false
+      "downDuration": 302598,
+      "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-08T15:18:15.496Z",
+      "lastCheck": "2026-10-08T15:19:15.503Z",
       "downSince": "2026-10-08T15:14:12.905Z",
-      "downDuration": 242591,
-      "alert": false
+      "downDuration": 302598,
+      "alert": true
     }
   ],
   "hacReport": {
