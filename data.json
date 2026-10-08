@@ -1,7 +1,68 @@
 {
-  "generatedAt": "2026-10-08T09:27:19.956Z",
+  "generatedAt": "2026-10-08T09:27:59.656Z",
   "totalTickets": 14,
   "tickets": [
+    {
+      "key": "AEME-6602",
+      "summary": "[PROD] | Manual Chargeback | 30th Sept",
+      "status": "QA Server Review",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "UAE Maintenance & Enhancements",
+      "projectKey": "AEME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-08T18:29:38.000+0900",
+      "created": "2026-09-30T15:07:08.000+0900",
+      "statusChangedAt": "2026-10-07T20:51:41.893+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\n \n\nEnv: PROD Env\n\nBackground:\n\nPlease trigger the manual chargeback for the trade-in amount, as the trade-in orders were rejected.\n|Order Code|Trade-in Status|Charge Back Amount|\n|AE260814-59413370|REJECTED|270|\n|AE260803-49001795|REJECTED|3035|\n\n \n\nAlso, the below order is stuck in checke",
+      "commentsCount": 5,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-08T18:29:38.062+0900",
+          "snippet": "Hi Talib,\n\nAE260803-49001795 (Checkout.com, 3035 AED):\nPayment authorization succeeded. Checkout.com returned approved and the 3035 AED clawback amount was captured. The process completed through takePayment, FI messages (GERP financial numbers 710M20261008D0836225 and 710M20261008D0837083), fiscali"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-07T21:23:25.702+0900",
+          "snippet": "Hi Talib,\n\nWe have raised PC-55141 for the remediation script covering both actions: setting isChargeBackRefundDone=true for AE260814-59413370 and AE260803-49001795, and pushing AE260928-97453028 from CHECKED_INVALID to CHECKED with the order process restarted at isOrderChecked.\n\nPC ticket: [Jira Li"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Talib,\n\nAE260803-49001795 (Checkout.com, 3035 AED):\nPayment authorization succeeded. Checkout.com returned approved and the 3035 AED clawback amount was captured. The process completed through takePayment, FI messages (GERP financial numbers 710M20261008D0836225 and 710M20261008D0837083), fiscali",
+      "lastCommentDate": "2026-10-08T18:29:38.062+0900",
+      "url": "https://jira.secext.samsung.net/browse/AEME-6602",
+      "linkedTickets": [
+        {
+          "key": "PC-54827",
+          "summary": "Manual chargeback for trade-in rejected orders (AE260814-59413370, AE260803-49001795)",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        },
+        {
+          "key": "PC-55141",
+          "summary": "Script to process manual chargeback refund and push CHECKED_INVALID order",
+          "status": "Approved-ES",
+          "statusCategory": "To Do",
+          "relation": "blocks",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "[PROD] | Manual Chargeback | 30th Sept\r\nGenerated: 2026-09-30T09:11:22Z\r\n\r\nIssue:\r\n\r\nTwo distinct issues are reported in this ticket.\r\n\r\nPart 1 - Manual Chargeback for Trade-In Rejected Orders:\r\nOrders AE260814-59413370 (chargeback amount 270 AED) and AE260803-49001795 (chargeback amount 3035 AED) have completed delivery, but their trade-in devices were rejected by Northladder (ExternalService status = CANCELLED). The automated clawback/chargeback process should debit the trade-in discount amount back from the customer's card approximately 19 days after consignment completion. The automated clawback was attempted but failed, requiring manual intervention to retrigger.\r\n\r\nPart 2 - Order Stuck at CHECKED_INVALID:\r\nOrder AE260928-97453028 (created 28th Sept, total 186.01 AED, Checkout.com payment) is stuck at CHECKED_INVALID status. No consignments were created, order processes are in FAILED state looping at the checkOrder action (50+ retries), and the order cannot progress to fulfilment.\r\n\r\nRCA:\r\n\r\nPart 1 - Chargeback Failure (AE260814-59413370, AE260803-49001795):\r\n\r\nBoth orders are COMPLETED with consignments delivered and GERP billing completed. The NORTHLADDER trade-in ExternalService is CANCELLED on both, confirming trade-in rejection. The field isChargeBackRefundDone is false (0) on both orders, and paymentStatus is NULL.\r\n\r\nDB evidence shows a second PaymentTransaction on each order with an AUTHORIZATION entry in ERROR state:\r\n- AE260814-59413370: AUTHORIZATION ERROR at 2026-09-18 02:01:46 (consignment completed 2026-08-29, ~19 day clawback trigger aligns)\r\n- AE260803-49001795: AUTHORIZATION ERROR at 2026-09-13 02:01:52 (consignment completed 2026-08-20, ~19 day clawback trigger aligns)\r\n\r\nThis matches the pattern documented in the prior chargeback ticket AEME-6540 (closed, PC-53902). The RCA from that ticket states: \"Clawback PaymentTransaction records lacked paymentInfo and requestId, causing the automated re-authorization to fail and requiring manual chargeback.\" The clawback process creates a new PaymentTransaction to perform an unscheduled MIT (Merchant Initiated Transaction) payment using the saved card credentials. When the paymentInfo or requestId is missing on the clawback PaymentTransaction, the re-authorization call to Checkout.com fails with PROCESSOR_DECLINE, and the clawback BusinessProcess enters ERROR state.\r\n\r\nRoot cause: The clawback PaymentTransaction for both orders lacks the required paymentInfo reference and requestId needed for the unscheduled MIT re-authorization. The automated clawback attempted after the 19-day window, but Checkout.com declined the payment because the card tokenization data was incomplete on the clawback PaymentTransaction. This is the same platform issue seen in AEME-6540, AEME-6362, and AEME-6286.\r\n\r\nPart 2 - CHECKED_INVALID (AE260928-97453028):\r\n\r\nThe order was created on 2026-09-28 at 10:20:28 with payment mode ae-CheckoutDotComFlowPaymentMode. Two PaymentTransactions exist with AUTHORIZATION ACCEPTED entries (64.00 AED and 186.01 AED), confirming payment was authorized successfully. However, the order status is CHECKED_INVALID, zero consignments exist, and both order-process-v25-69 instances are in FAILED state.\r\n\r\nTask logs show the checkOrder action executing 50+ times, indicating the order validation at the checkOrder action node is repeatedly failing. The order has an ExternalService for GCIC_EXPERT_CARE_STANDALONE in NEW status, suggesting the order contains a standalone service product that may be contributing to the validation failure.\r\n\r\nThe paymentStatus field is NULL on this order, and deliveryMode is also NULL, which are required fields for order validation. The checkOrder action in the order-process-v25-69 workflow validates order integrity (payment info, delivery mode, consignment creation prerequisites) before allowing the order to proceed to fulfilment. When this validation fails, the order is set to CHECKED_INVALID and the process enters FAILED state.\r\n\r\nRoot cause: The order failed validation at the checkOrder action node during the order-process-v25-69 workflow. The missing paymentStatus and deliveryMode fields, combined with the standalone Expert Care service (GCIC_EXPERT_CARE_STANDALONE) in NEW state, likely caused the checkOrder validation to reject the order and mark it CHECKED_INVALID. The process then entered a retry loop at checkOrder but cannot self-remediate because the underlying field gaps persist.\r\n\r\nPossible remediation:\r\n\r\nPart 1 - Chargeback Retrigger:\r\n\r\nReuse the existing approved script from AEME-6540 (PC-53902): script-AEME-6540-clawback-retrigger.groovy. This script:\r\n1. Finds the clawback BusinessProcess for each order (WHERE code LIKE '%{orderCode}%Clawback%')\r\n2. Sets the ERROR state process to CREATED (Hybris restartProcess fails on ERROR state)\r\n3. Calls businessProcessService.restartProcess(bp, \"reAuthorizeIfNeeded\") to retrigger the clawback authorization\r\n\r\nThe script needs to be copied and updated with the new order codes (AE260814-59413370, AE260803-49001795) and the new ticket reference (AEME-6602). If the clawback fails again with PROCESSOR_DECLINE (as happened in AEME-6540), the paymentInfo and requestId on the clawback PaymentTransaction may need to be populated from the original order's PaymentTransaction before retriggering.\r\n\r\nNote: The chargeback amounts (270 AED and 3035 AED) specified in the ticket should be verified against the trade-in discount amounts on the orders to ensure the clawback charges the correct amount.\r\n\r\nPart 2 - CHECKED_INVALID Remediation:\r\n\r\nReuse the existing pattern from AEME-6548 (PC-52605): script-AEME-6548-order1-checked-invalid-retrigger.groovy. This script:\r\n1. Sets order status from CHECKED_INVALID to CREATED\r\n2. Restarts the FAILED order-process-v25-69 processes from the checkOrder action (last failed action)\r\n3. Clears current tasks and forces process state to ERROR before restartProcess\r\n\r\nBefore running this, verify:\r\n- That paymentStatus can be set (it is currently NULL — may need to set to PAID since AUTHORIZATION was ACCEPTED)\r\n- That deliveryMode is available for this order's delivery address and can be set\r\n- That the GCIC_EXPERT_CARE_STANDALONE external service in NEW status is not blocking order progression\r\n\r\nIf the checkOrder action fails again after restart (because the underlying field gaps are not fixed), a deeper investigation into the specific validation failure at checkOrder is needed. Kibana logs for AE260928-97453028 would reveal the exact exception message from the checkOrder action, but Kibana MCP was unavailable during this investigation.\r\n\r\nReferences:\r\n- AEME-6540 (Closed): Previous manual chargeback ticket with same root cause. Script: script-AEME-6540-clawback-retrigger.groovy (PC-53902)\r\n- AEME-6362 (Closed): First manual chargeback ticket. Documented that the 19-day chargeback trigger cannot be overridden.\r\n- AEME-6286 (Closed): Trade-in re-trigger chargeback ticket.\r\n- AEME-6548 (Closed): CHECKED_INVALID remediation. Script: script-AEME-6548-order1-checked-invalid-retrigger.groovy (PC-52605 pattern)\r\n- PC-53902: Approved PC ticket for clawback retrigger (AEME-6540)\r\n- PC-52605: Approved PC ticket for CHECKED_INVALID retrigger (AEME-6548 pattern)\r\n\r\nLimitations:\r\n- Kibana MCP was unavailable during this investigation. Log analysis could not be performed. Root cause for Part 2 (CHECKED_INVALID) is based on DB state analysis and code pattern correlation only.\r\n- Clawback BusinessProcess could not be queried directly via HAC (timeout). The clawback process existence is inferred from the ERROR-state PaymentTransactionEntry on both chargeback orders.",
+        "sections": {
+          "issue": "Two distinct issues are reported in this ticket.\r\n\r\nPart 1 - Manual Chargeback for Trade-In Rejected Orders:\r\nOrders AE260814-59413370 (chargeback amount 270 AED) and AE260803-49001795 (chargeback amount 3035 AED) have completed delivery, but their trade-in devices were rejected by Northladder (ExternalService status = CANCELLED). The automated clawback/chargeback process should debit the trade-in discount amount back from the customer's card approximately 19 days after consignment completion. The automated clawback was attempted but failed, requiring manual intervention to retrigger.\r\n\r\nPart 2 - Order Stuck at CHECKED_INVALID:\r\nOrder AE260928-97453028 (created 28th Sept, total 186.01 AED, Checkout.com payment) is stuck at CHECKED_INVALID status. No consignments were created, order processes are in FAILED state looping at the checkOrder action (50+ retries), and the order cannot progress to fulfilment.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-30T09:42:58.547Z"
+      }
+    },
     {
       "key": "MHME-1434",
       "summary": "missing gift for MA260902-74340282",
@@ -228,67 +289,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-10-08T04:06:09.800Z"
-      }
-    },
-    {
-      "key": "AEME-6602",
-      "summary": "[PROD] | Manual Chargeback | 30th Sept",
-      "status": "QA Server Review",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-07T21:23:25.000+0900",
-      "created": "2026-09-30T15:07:08.000+0900",
-      "statusChangedAt": "2026-10-07T20:51:41.893+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\n \n\nEnv: PROD Env\n\nBackground:\n\nPlease trigger the manual chargeback for the trade-in amount, as the trade-in orders were rejected.\n|Order Code|Trade-in Status|Charge Back Amount|\n|AE260814-59413370|REJECTED|270|\n|AE260803-49001795|REJECTED|3035|\n\n \n\nAlso, the below order is stuck in checke",
-      "commentsCount": 4,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-07T21:23:25.702+0900",
-          "snippet": "Hi Talib,\n\nWe have raised PC-55141 for the remediation script covering both actions: setting isChargeBackRefundDone=true for AE260814-59413370 and AE260803-49001795, and pushing AE260928-97453028 from CHECKED_INVALID to CHECKED with the order process restarted at isOrderChecked.\n\nPC ticket: [Jira Li"
-        },
-        {
-          "author": "Talib Raza Zaidi",
-          "date": "2026-10-05T16:22:10.380+0900",
-          "snippet": "Hi ~@email,\n\n \n\nFor order AE260928-97453028, the Payment is captured and the Request id is - urncsgqb4dtyhorfmqnrrhh4li\n\nPlease use this and push the order.\n\n \n\nRegards\n\nTalib\n\nCC: ~@email"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Talib,\n\nWe have raised PC-55141 for the remediation script covering both actions: setting isChargeBackRefundDone=true for AE260814-59413370 and AE260803-49001795, and pushing AE260928-97453028 from CHECKED_INVALID to CHECKED with the order process restarted at isOrderChecked.\n\nPC ticket: [Jira Li",
-      "lastCommentDate": "2026-10-07T21:23:25.702+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6602",
-      "linkedTickets": [
-        {
-          "key": "PC-54827",
-          "summary": "Manual chargeback for trade-in rejected orders (AE260814-59413370, AE260803-49001795)",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "blocks",
-          "assignee": null
-        },
-        {
-          "key": "PC-55141",
-          "summary": "Script to process manual chargeback refund and push CHECKED_INVALID order",
-          "status": "Approved-ES",
-          "statusCategory": "To Do",
-          "relation": "blocks",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "[PROD] | Manual Chargeback | 30th Sept\r\nGenerated: 2026-09-30T09:11:22Z\r\n\r\nIssue:\r\n\r\nTwo distinct issues are reported in this ticket.\r\n\r\nPart 1 - Manual Chargeback for Trade-In Rejected Orders:\r\nOrders AE260814-59413370 (chargeback amount 270 AED) and AE260803-49001795 (chargeback amount 3035 AED) have completed delivery, but their trade-in devices were rejected by Northladder (ExternalService status = CANCELLED). The automated clawback/chargeback process should debit the trade-in discount amount back from the customer's card approximately 19 days after consignment completion. The automated clawback was attempted but failed, requiring manual intervention to retrigger.\r\n\r\nPart 2 - Order Stuck at CHECKED_INVALID:\r\nOrder AE260928-97453028 (created 28th Sept, total 186.01 AED, Checkout.com payment) is stuck at CHECKED_INVALID status. No consignments were created, order processes are in FAILED state looping at the checkOrder action (50+ retries), and the order cannot progress to fulfilment.\r\n\r\nRCA:\r\n\r\nPart 1 - Chargeback Failure (AE260814-59413370, AE260803-49001795):\r\n\r\nBoth orders are COMPLETED with consignments delivered and GERP billing completed. The NORTHLADDER trade-in ExternalService is CANCELLED on both, confirming trade-in rejection. The field isChargeBackRefundDone is false (0) on both orders, and paymentStatus is NULL.\r\n\r\nDB evidence shows a second PaymentTransaction on each order with an AUTHORIZATION entry in ERROR state:\r\n- AE260814-59413370: AUTHORIZATION ERROR at 2026-09-18 02:01:46 (consignment completed 2026-08-29, ~19 day clawback trigger aligns)\r\n- AE260803-49001795: AUTHORIZATION ERROR at 2026-09-13 02:01:52 (consignment completed 2026-08-20, ~19 day clawback trigger aligns)\r\n\r\nThis matches the pattern documented in the prior chargeback ticket AEME-6540 (closed, PC-53902). The RCA from that ticket states: \"Clawback PaymentTransaction records lacked paymentInfo and requestId, causing the automated re-authorization to fail and requiring manual chargeback.\" The clawback process creates a new PaymentTransaction to perform an unscheduled MIT (Merchant Initiated Transaction) payment using the saved card credentials. When the paymentInfo or requestId is missing on the clawback PaymentTransaction, the re-authorization call to Checkout.com fails with PROCESSOR_DECLINE, and the clawback BusinessProcess enters ERROR state.\r\n\r\nRoot cause: The clawback PaymentTransaction for both orders lacks the required paymentInfo reference and requestId needed for the unscheduled MIT re-authorization. The automated clawback attempted after the 19-day window, but Checkout.com declined the payment because the card tokenization data was incomplete on the clawback PaymentTransaction. This is the same platform issue seen in AEME-6540, AEME-6362, and AEME-6286.\r\n\r\nPart 2 - CHECKED_INVALID (AE260928-97453028):\r\n\r\nThe order was created on 2026-09-28 at 10:20:28 with payment mode ae-CheckoutDotComFlowPaymentMode. Two PaymentTransactions exist with AUTHORIZATION ACCEPTED entries (64.00 AED and 186.01 AED), confirming payment was authorized successfully. However, the order status is CHECKED_INVALID, zero consignments exist, and both order-process-v25-69 instances are in FAILED state.\r\n\r\nTask logs show the checkOrder action executing 50+ times, indicating the order validation at the checkOrder action node is repeatedly failing. The order has an ExternalService for GCIC_EXPERT_CARE_STANDALONE in NEW status, suggesting the order contains a standalone service product that may be contributing to the validation failure.\r\n\r\nThe paymentStatus field is NULL on this order, and deliveryMode is also NULL, which are required fields for order validation. The checkOrder action in the order-process-v25-69 workflow validates order integrity (payment info, delivery mode, consignment creation prerequisites) before allowing the order to proceed to fulfilment. When this validation fails, the order is set to CHECKED_INVALID and the process enters FAILED state.\r\n\r\nRoot cause: The order failed validation at the checkOrder action node during the order-process-v25-69 workflow. The missing paymentStatus and deliveryMode fields, combined with the standalone Expert Care service (GCIC_EXPERT_CARE_STANDALONE) in NEW state, likely caused the checkOrder validation to reject the order and mark it CHECKED_INVALID. The process then entered a retry loop at checkOrder but cannot self-remediate because the underlying field gaps persist.\r\n\r\nPossible remediation:\r\n\r\nPart 1 - Chargeback Retrigger:\r\n\r\nReuse the existing approved script from AEME-6540 (PC-53902): script-AEME-6540-clawback-retrigger.groovy. This script:\r\n1. Finds the clawback BusinessProcess for each order (WHERE code LIKE '%{orderCode}%Clawback%')\r\n2. Sets the ERROR state process to CREATED (Hybris restartProcess fails on ERROR state)\r\n3. Calls businessProcessService.restartProcess(bp, \"reAuthorizeIfNeeded\") to retrigger the clawback authorization\r\n\r\nThe script needs to be copied and updated with the new order codes (AE260814-59413370, AE260803-49001795) and the new ticket reference (AEME-6602). If the clawback fails again with PROCESSOR_DECLINE (as happened in AEME-6540), the paymentInfo and requestId on the clawback PaymentTransaction may need to be populated from the original order's PaymentTransaction before retriggering.\r\n\r\nNote: The chargeback amounts (270 AED and 3035 AED) specified in the ticket should be verified against the trade-in discount amounts on the orders to ensure the clawback charges the correct amount.\r\n\r\nPart 2 - CHECKED_INVALID Remediation:\r\n\r\nReuse the existing pattern from AEME-6548 (PC-52605): script-AEME-6548-order1-checked-invalid-retrigger.groovy. This script:\r\n1. Sets order status from CHECKED_INVALID to CREATED\r\n2. Restarts the FAILED order-process-v25-69 processes from the checkOrder action (last failed action)\r\n3. Clears current tasks and forces process state to ERROR before restartProcess\r\n\r\nBefore running this, verify:\r\n- That paymentStatus can be set (it is currently NULL — may need to set to PAID since AUTHORIZATION was ACCEPTED)\r\n- That deliveryMode is available for this order's delivery address and can be set\r\n- That the GCIC_EXPERT_CARE_STANDALONE external service in NEW status is not blocking order progression\r\n\r\nIf the checkOrder action fails again after restart (because the underlying field gaps are not fixed), a deeper investigation into the specific validation failure at checkOrder is needed. Kibana logs for AE260928-97453028 would reveal the exact exception message from the checkOrder action, but Kibana MCP was unavailable during this investigation.\r\n\r\nReferences:\r\n- AEME-6540 (Closed): Previous manual chargeback ticket with same root cause. Script: script-AEME-6540-clawback-retrigger.groovy (PC-53902)\r\n- AEME-6362 (Closed): First manual chargeback ticket. Documented that the 19-day chargeback trigger cannot be overridden.\r\n- AEME-6286 (Closed): Trade-in re-trigger chargeback ticket.\r\n- AEME-6548 (Closed): CHECKED_INVALID remediation. Script: script-AEME-6548-order1-checked-invalid-retrigger.groovy (PC-52605 pattern)\r\n- PC-53902: Approved PC ticket for clawback retrigger (AEME-6540)\r\n- PC-52605: Approved PC ticket for CHECKED_INVALID retrigger (AEME-6548 pattern)\r\n\r\nLimitations:\r\n- Kibana MCP was unavailable during this investigation. Log analysis could not be performed. Root cause for Part 2 (CHECKED_INVALID) is based on DB state analysis and code pattern correlation only.\r\n- Clawback BusinessProcess could not be queried directly via HAC (timeout). The clawback process existence is inferred from the ERROR-state PaymentTransactionEntry on both chargeback orders.",
-        "sections": {
-          "issue": "Two distinct issues are reported in this ticket.\r\n\r\nPart 1 - Manual Chargeback for Trade-In Rejected Orders:\r\nOrders AE260814-59413370 (chargeback amount 270 AED) and AE260803-49001795 (chargeback amount 3035 AED) have completed delivery, but their trade-in devices were rejected by Northladder (ExternalService status = CANCELLED). The automated clawback/chargeback process should debit the trade-in discount amount back from the customer's card approximately 19 days after consignment completion. The automated clawback was attempted but failed, requiring manual intervention to retrigger.\r\n\r\nPart 2 - Order Stuck at CHECKED_INVALID:\r\nOrder AE260928-97453028 (created 28th Sept, total 186.01 AED, Checkout.com payment) is stuck at CHECKED_INVALID status. No consignments were created, order processes are in FAILED state looping at the checkOrder action (50+ retries), and the order cannot progress to fulfilment.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-30T09:42:58.547Z"
       }
     },
     {
@@ -909,7 +909,7 @@
       }
     ],
     "pid": 21100,
-    "uptime": 38561,
+    "uptime": 38601,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -921,7 +921,7 @@
       {
         "pid": 20536,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 107370,
+        "ageSeconds": 107411,
         "status": "running",
         "isChild": false,
         "taskSummary": "have we implemented the fetching of jira ticket with its name from dashboard thing?",
@@ -931,7 +931,7 @@
       {
         "pid": 21768,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 106977,
+        "ageSeconds": 107019,
         "status": "running",
         "isChild": false,
         "taskSummary": "post this with 1h logs, assign back and update labels",
@@ -941,7 +941,7 @@
       {
         "pid": 13300,
         "cwd": "c:\\windows",
-        "ageSeconds": 79051,
+        "ageSeconds": 79092,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -951,7 +951,7 @@
       {
         "pid": 32364,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 4703,
+        "ageSeconds": 4744,
         "status": "running",
         "isChild": false,
         "taskSummary": "have we implemented the fetching of jira ticket with its name from dashboard thing?",
@@ -4216,7 +4216,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-08T08:32:46.855Z",
-      "ageMs": 3276469
+      "ageMs": 3317656
     },
     "watchdogLogTail": "[2026-10-08T08:28:30.983Z] DASHBOARD RESTART NEEDED: No dashboard heartbeat file found\n[2026-10-08T08:28:47.818Z] Killed dashboard PID 34852\n[2026-10-08T08:29:00.273Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 34852) not found\n[2026-10-08T08:29:05.504Z] Could not kill dashboard PID 34852: Command failed: taskkill /PID 34852 /F /T\n[2026-10-08T08:29:05.514Z] Starting jira-dashboard-server.js...\n[2026-10-08T08:29:05.718Z] Dashboard started with PID 31912 (restart #20, 6 in last hour)\n[2026-10-08T08:29:10.523Z] Starting jira-dashboard-server.js...\n[2026-10-08T08:29:10.791Z] Dashboard started with PID 32828 (restart #21, 7 in last hour)\n[2026-10-08T08:29:15.744Z] DUPLICATE jira-dashboard-server detected: PID 31912 — killing\n[2026-10-08T08:32:46.854Z] DUPLICATE watchdog detected: PID 32384 — killing"
   },
@@ -4225,7 +4225,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-08T09:26:28.869Z",
+      "lastCheck": "2026-10-08T09:27:28.775Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4234,7 +4234,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-08T09:26:28.869Z",
+      "lastCheck": "2026-10-08T09:27:28.775Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4243,9 +4243,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-08T09:26:28.869Z",
+      "lastCheck": "2026-10-08T09:27:28.775Z",
       "downSince": "2026-10-08T08:29:13.312Z",
-      "downDuration": 3435557,
+      "downDuration": 3495463,
       "alert": true
     }
   ],
@@ -4463,7 +4463,7 @@
         "reason": "Waiting for QA/review team",
         "whatToDo": "",
         "url": "https://jira.secext.samsung.net/browse/AEME-6602",
-        "updated": "2026-10-07T21:23:25.000+0900",
+        "updated": "2026-10-08T18:29:38.000+0900",
         "statusChangedAt": "2026-10-07T20:51:41.893+0900"
       },
       {
