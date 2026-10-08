@@ -1889,24 +1889,36 @@ function assignToMe(key){
     .catch(function(e){showToast('Request failed: '+e.message,'error')})
 }
 
-// ===== AUTOLOGIN (direct HTTP call to dashboard server — instant, no bridge/aipro) =====
+// ===== AUTOLOGIN =====
+// On PC: direct HTTP call to dashboard server (instant)
+// On phone: GitHub Issue → bridge AUTOLOGIN: handler (mixed content blocks direct fetch)
 function doAutologin(){
   var btn=document.querySelector('[onclick*="doAutologin"]');
   if(btn){btn.textContent='\u23F3 Starting...';btn.disabled=true}
-  fetch(SERVER_URL+'/autologin',{method:'GET'})
-    .then(function(r){return r.json()})
-    .then(function(d){
-      if(btn){btn.textContent='\uD83D\uDD12 Auto-Login';btn.disabled=false}
-      if(d.ok){
-        showToast('Autologin started — Edge launching with 5 tabs (~35s)','success')
-      } else {
-        showToast('Autologin failed — '+((d&&d.error)?d.error:'unknown error'),'error')
-      }
-    })
-    .catch(function(e){
-      if(btn){btn.textContent='\uD83D\uDD12 Auto-Login';btn.disabled=false}
-      showToast('Autologin request failed — '+e.message,'error')
-    })
+  var isPhone=(location.protocol==='https:'&&location.hostname!=='127.0.0.1'&&location.hostname!=='localhost');
+  if(isPhone){
+    // Phone: mixed content blocks HTTP fetch, use bridge
+    createIssue('AUTOLOGIN: Run Samsung Auto Login',
+      'Run the Samsung Auto Login script immediately.\nSent from dashboard',
+      function(e,d){
+        if(btn){btn.textContent='\uD83D\uDD12 Auto-Login';btn.disabled=false}
+        if(e||!d||!d.number){showToast('Autologin failed — '+((e&&e.message)?e.message:'GitHub Issue creation failed'),'error');return}
+        showToast('Autologin sent via bridge (Issue #'+d.number+'). Check desktop in ~35s.','success')
+      })
+  } else {
+    // PC: direct fetch to local server
+    fetch(SERVER_URL+'/autologin',{method:'GET'})
+      .then(function(r){return r.json()})
+      .then(function(d){
+        if(btn){btn.textContent='\uD83D\uDD12 Auto-Login';btn.disabled=false}
+        if(d.ok){showToast('Autologin started — Edge launching with 5 tabs (~35s)','success')}
+        else{showToast('Autologin failed — '+((d&&d.error)?d.error:'unknown error'),'error')}
+      })
+      .catch(function(e){
+        if(btn){btn.textContent='\uD83D\uDD12 Auto-Login';btn.disabled=false}
+        showToast('Autologin request failed — '+e.message,'error')
+      })
+  }
 }
 
 function investigateTicket(key){
