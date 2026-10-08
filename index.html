@@ -1174,6 +1174,7 @@ var PRIMARY_URL='data.json';
 var FALLBACK_URL='https://raw.githubusercontent.com/aryanverma2410/jira-dashboard/main/data.json';
 
 var rawData=null;
+var lastWorklogTotals=null;
 var ticketState={};
 var expandedTickets=new Set();
 var expandedSessions=new Set();
@@ -1309,18 +1310,21 @@ function onData(data){
   localStorage.setItem('lastVisit',Date.now().toString());
   ticketState=newState;
   rawData=data;
-  renderFilters(data);renderStatusFilters(data);renderTickets(data,changedKeys);
-  renderRcaMatrix(data);renderDayStarter(data);renderActionItems(data);
-  renderSessions(data);renderActivity(data);renderMcps(data);renderCmdHistory();
-  pollCmdResponses(data);updateNavBadges(data);
-  // Update worklog header stats from data.json (works on phone — no local server needed)
+  // Worklog header FIRST — so even if render functions throw, values are set
   if(data.worklogTotals){
+    lastWorklogTotals=data.worklogTotals;
     var wt=data.worklogTotals;
     var tv=document.getElementById('wlTodayVal');
     var wv=document.getElementById('wlWeekVal');
     if(tv){tv.textContent=wt.todayHours>0?wt.todayHours+'h':'0h';tv.classList.toggle('zero',wt.todayHours===0)}
     if(wv){wv.textContent=wt.weekHours>0?wt.weekHours+'h':'0h';wv.classList.toggle('zero',wt.weekHours===0)}
   }
+  try{renderFilters(data);renderStatusFilters(data);renderTickets(data,changedKeys)}catch(e){console.error('renderTickets err:',e)}
+  try{renderRcaMatrix(data)}catch(e){console.error('renderRcaMatrix err:',e)}
+  try{renderDayStarter(data)}catch(e){console.error('renderDayStarter err:',e)}
+  try{renderActionItems(data)}catch(e){console.error('renderActionItems err:',e)}
+  try{renderSessions(data);renderActivity(data);renderMcps(data);renderCmdHistory()}catch(e){console.error('renderActivity err:',e)}
+  try{pollCmdResponses(data);updateNavBadges(data)}catch(e){console.error('updateNavBadges err:',e)}
 }
 
 function updateNavBadges(data){
@@ -3818,8 +3822,8 @@ setInterval(function(){
 
 // Re-apply worklog header from cached data every 2s — prevents flash from any other code clearing DOM
 function applyWorklogHeader(){
-  if(!rawData||!rawData.worklogTotals)return;
-  var wt=rawData.worklogTotals;
+  var wt=lastWorklogTotals||(rawData&&rawData.worklogTotals);
+  if(!wt)return;
   var tv=document.getElementById('wlTodayVal');
   var wv=document.getElementById('wlWeekVal');
   if(tv){var tTxt=wt.todayHours>0?wt.todayHours+'h':'0h';if(tv.textContent!==tTxt)tv.textContent=tTxt;tv.classList.toggle('zero',wt.todayHours===0)}
@@ -3842,7 +3846,7 @@ function applyWorklogHeader(){
     barEl.innerHTML=bh;
   }
 }
-setInterval(applyWorklogHeader,2000);
+setInterval(applyWorklogHeader,1000);
 
 // ===== TICKET LOOKUP =====
 var lookupPollInterval=null;
