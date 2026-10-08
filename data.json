@@ -1,7 +1,113 @@
 {
-  "generatedAt": "2026-10-08T06:44:39.721Z",
+  "generatedAt": "2026-10-08T06:45:18.722Z",
   "totalTickets": 20,
   "tickets": [
+    {
+      "key": "PKHME-942",
+      "summary": "Stuck order on Hybris",
+      "status": "QA Server Review",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Pakistan Maintenance & Enhancements",
+      "projectKey": "PKHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-08T15:47:03.000+0900",
+      "created": "2026-09-29T01:08:53.000+0900",
+      "statusChangedAt": "2026-09-30T17:26:21.320+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n||Order Number||Order Date||Order Status||Issue||\n|PK260926-95338783|2026/09/26|ORDER_SPLIT|Consignment process ERROR at sendConsignmentToWarehouse - null|\n|PK260925-94057775|2026/09/25|ORDER_SPLIT|Con",
+      "commentsCount": 4,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-08T15:47:02.291+0900",
+          "snippet": "Hi Sairam,\n\nWe have executed the consignment process retrigger script on PROD. All 3 orders had already auto-progressed past the failure point and no restart was required.\n\nPK260926-95338783 is in COMPLETED status with the consignment process SUCCEEDED. PK260925-94057775 is in SHIPPING_REQUESTED wit"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-09-30T17:29:41.142+0900",
+          "snippet": "Hi Team,\n\nPC ticket raised for retriggering the 3 consignment processes stuck at sendConsignmentToWarehouse.\n\nPC-54800: [Jira Link]\n\nOrders covered:\nPK260926-95338783, PK260925-94057775, PK260924-93115047\n\nThe script reuses the approved pattern from PC-54582. Will execute once the PC is approved.\n\nR"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Sairam,\n\nWe have executed the consignment process retrigger script on PROD. All 3 orders had already auto-progressed past the failure point and no restart was required.\n\nPK260926-95338783 is in COMPLETED status with the consignment process SUCCEEDED. PK260925-94057775 is in SHIPPING_REQUESTED wit",
+      "lastCommentDate": "2026-10-08T15:47:02.291+0900",
+      "url": "https://jira.secext.samsung.net/browse/PKHME-942",
+      "linkedTickets": [
+        {
+          "key": "PC-54800",
+          "summary": "Retrigger consignment processes stuck at sendConsignmentToWarehouse",
+          "status": "Approved-ES",
+          "statusCategory": "To Do",
+          "relation": "blocks",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "# RCA: PKHME-942\nStuck order on Hybris\nGenerated: 2026-09-28T16:30:00Z\n\nHi shop.sds@samsung.com ,\n\nFour PK-region COD orders are stuck in the fulfilment pipeline. Two distinct failure modes were identified after checking DB state and tracing the codebase.\n\nPK260926-95338783, PK260925-94057775, PK260924-93115047:\nAll three orders reached ORDER_SPLIT successfully. Consignments were created with warehouse pkOnline assigned and delivery modes set. Payment authorisation and capture both completed (ACCEPTED). The consignment process (consignment-process-v11-36) started but failed at the sendConsignmentToWarehouse action with a NullPointerException.\n\nThe sendConsignmentToWarehouse action in consignment-process-v11-36 uses the bean sendConsignmentToWarehouseActionV2 (SendConsignmentToWarehouseActionV2). This action calls tokoWarehouseAdapter.sendConsignmentToWarehouse(process.getConsignment()), which delegates to the configured warehouse adapter for the PK region. For PK (Samsung Pakistan), the GERP warehouse adapter (TokoGerpWarehouseAdapterImpl) handles the consignment by creating a sales order in GERP via tokoGerpSdClient. The NullPointerException occurs inside this GERP integration call. The V2 action catches IntegrationException, WebServiceIOException, and several custom exceptions, but a raw NullPointerException is not caught by any of these handlers. It propagates up to the process engine, which places the process in ERROR state.\n\nThe consignment status remains WAITING_FOR_TRANSFER. No external service entries were created, no GERP sales order number was assigned, and no tracking information exists. The order process (order-process-v25-69) is still RUNNING and waiting on the consignment subprocess to complete.\n\nPK260923-92678345:\nThis order is stuck at PAYMENT_CAPTURED, which means it never reached the splitOrder step. The order process (order-process-v25-69) is in ERROR state. The task logs show splitOrder was retried 50 times in a loop without success.\n\nThe SplitOrderAction calls orderSplittingService.splitOrderForConsignment(order, entriesToSplit). The splitting service assigns warehouses to consignments based on the BaseStore warehouse configuration. The error \"missing values for [warehouse] in ConsignmentModel\" indicates that the order splitting service created a ConsignmentModel but could not assign a warehouse to it. This happens when the warehouse resolution strategy fails to find a valid warehouse for the product on the PK base store.\n\nThe key difference from the other three orders is that PK260923-92678345 failed during consignment creation (splitOrder), while the other three failed after consignment creation (sendConsignmentToWarehouse). No consignments exist for this order in the database, confirming splitOrder never succeeded.\n\nRoot cause for orders 1-3: NullPointerException thrown inside the GERP warehouse adapter during the sendConsignmentToWarehouse action of the consignment process. The GERP integration call to create a sales order failed with an uncaught NPE, which the V2 action does not handle. The process went to ERROR state.\n\nRoot cause for order 4: The splitOrder action failed because the order splitting service could not resolve a warehouse for the product during consignment creation on the PK base store. The process retried splitOrder 50 times but the warehouse resolution failure is deterministic, so each retry produced the same failure.\n\nPossible remediation:\nFor orders 1-3 (consignment process ERROR): Restart the consignment process from the sendConsignmentToWarehouse action. The GERP integration NPE is likely transient (could be a timeout, connection issue, or null response from GERP). Restarting the consignment process will re-attempt the GERP sales order creation. Use the process-restart pattern from PC-52605 (script-TKME-2279-retrigger-business-process.groovy), adapting it to target the consignment process instead of the order process.\n\nFor order 4 (order process ERROR at splitOrder): The order process needs to be restarted from the splitOrder action. Since the warehouse resolution failure appears deterministic, check if the BaseStore warehouse configuration for PK has been updated recently or if the product (SM-A576BLBVPKD) has a valid warehouse assignment. If the warehouse config is now correct, restarting the order process from splitOrder should create the consignment and proceed. If the config is still broken, fix the warehouse assignment first, then restart.\n\nBoth remediation types can use the process-restart reusable PC ticket PC-52605 (script-TKME-2279-retrigger-business-process.groovy), adapting the script for PKHME-942 with the four order codes.\n\nThanks,\n\nAryan",
+        "sections": {
+          "issue": "",
+          "rca": "# RCA: PKHME-942\nStuck order on Hybris\nGenerated: 2026-09-28T16:30:00Z\n\nHi shop.sds@samsung.com ,\n\nFour PK-region COD orders are stuck in the fulfilment pipeline. Two distinct failure modes were identified after checking DB state and tracing the codebase.\n\nPK260926-95338783, PK260925-94057775, PK260924-93115047:\nAll three orders reached ORDER_SPLIT successfully. Consignments were created with warehouse pkOnline assigned and delivery modes set. Payment authorisation and capture both completed (ACCEPTED). The consignment process (consignment-process-v11-36) started but failed at the sendConsignmentToWarehouse action with a NullPointerException.\n\nThe sendConsignmentToWarehouse action in consignment-process-v11-36 uses the bean sendConsignmentToWarehouseActionV2 (SendConsignmentToWarehouseActionV2). This action calls tokoWarehouseAdapter.sendConsignmentToWarehouse(process.getConsignment()), which delegates to the configured warehouse adapter for the PK region. For PK (Samsung Pakistan), the GERP warehouse adapter (TokoGerpWarehouseAdapterImpl) handles the consignment by creating a sales order in GERP via tokoGerpSdClient. The NullPointerException occurs inside this GERP integration call. The V2 action catches IntegrationException, WebServiceIOException, and several custom exceptions, but a raw NullPointerException is not caught by any of these handlers. It propagates up to the process engine, which places the process in ERROR state.\n\nThe consignment status remains WAITING_FOR_TRANSFER. No external service entries were created, no GERP sales order number was assigned, and no tracking information exists. The order process (order-process-v25-69) is still RUNNING and waiting on the consignment subprocess to complete.\n\nPK260923-92678345:\nThis order is stuck at PAYMENT_CAPTURED, which means it never reached the splitOrder step. The order process (order-process-v25-69) is in ERROR state. The task logs show splitOrder was retried 50 times in a loop without success.\n\nThe SplitOrderAction calls orderSplittingService.splitOrderForConsignment(order, entriesToSplit). The splitting service assigns warehouses to consignments based on the BaseStore warehouse configuration. The error \"missing values for [warehouse] in ConsignmentModel\" indicates that the order splitting service created a ConsignmentModel but could not assign a warehouse to it. This happens when the warehouse resolution strategy fails to find a valid warehouse for the product on the PK base store.\n\nThe key difference from the other three orders is that PK260923-92678345 failed during consignment creation (splitOrder), while the other three failed after consignment creation (sendConsignmentToWarehouse). No consignments exist for this order in the database, confirming splitOrder never succeeded.\n\nRoot cause for orders 1-3: NullPointerException thrown inside the GERP warehouse adapter during the sendConsignmentToWarehouse action of the consignment process. The GERP integration call to create a sales order failed with an uncaught NPE, which the V2 action does not handle. The process went to ERROR state.\n\nRoot cause for order 4: The splitOrder action failed because the order splitting service could not resolve a warehouse for the product during consignment creation on the PK base store. The process retried splitOrder 50 times but the warehouse resolution failure is deterministic, so each retry produced the same failure.\n\nPossible remediation:\nFor orders 1-3 (consignment process ERROR): Restart the consignment process from the sendConsignmentToWarehouse action. The GERP integration NPE is likely transient (could be a timeout, connection issue, or null response from GERP). Restarting the consignment process will re-attempt the GERP sales order creation. Use the process-restart pattern from PC-52605 (script-TKME-2279-retrigger-business-process.groovy), adapting it to target the consignment process instead of the order process.\n\nFor order 4 (order process ERROR at splitOrder): The order process needs to be restarted from the splitOrder action. Since the warehouse resolution failure appears deterministic, check if the BaseStore warehouse configuration for PK has been updated recently or if the product (SM-A576BLBVPKD) has a valid warehouse assignment. If the warehouse config is now correct, restarting the order process from splitOrder should create the consignment and proceed. If the config is still broken, fix the warehouse assignment first, then restart.\n\nBoth remediation types can use the process-restart reusable PC ticket PC-52605 (script-TKME-2279-retrigger-business-process.groovy), adapting the script for PKHME-942 with the four order codes.\n\nThanks,\n\nAryan",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-28T16:44:25.295Z"
+      }
+    },
+    {
+      "key": "TKME-2349",
+      "summary": "Return Creation Issue",
+      "status": "QA Server Review",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Turkey Maintenance & Enhancements",
+      "projectKey": "TKME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-08T15:47:03.000+0900",
+      "created": "2026-09-29T14:53:58.000+0900",
+      "statusChangedAt": "2026-10-07T20:51:57.036+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nFor the below orders, CS team couldn't not able to create the return request as one of the entry is not visible during the return creation. Only VG-SCFH65TKBZN is available for the return but the other entry is not available/displaying. Please check further and let us know why the other en",
+      "commentsCount": 6,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-08T15:47:02.350+0900",
+          "snippet": "Hi Rajesh,\n\nWe have executed the secondGI fix script on PROD. The secondGI field on ConsignmentEntry for consignment TR260831-72936144 (entry 0, QE65LS03HWUXTK) has been updated from 00000000000000 to 20260904164037.\n\nThe entry should now be visible in the return creation UI. You can proceed with cr"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-07T21:23:26.465+0900",
+          "snippet": "Hi Rajesh,\n\nWe have raised PC-55140 for the data fix script to update the secondGI field on the ConsignmentEntry for TR260831-72936144 from 00000000000000 to 20260904164037. Once executed, the entry will become returnable in backoffice and you can proceed with creating the new return.\n\nPC ticket: [J"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Rajesh,\n\nWe have executed the secondGI fix script on PROD. The secondGI field on ConsignmentEntry for consignment TR260831-72936144 (entry 0, QE65LS03HWUXTK) has been updated from 00000000000000 to 20260904164037.\n\nThe entry should now be visible in the return creation UI. You can proceed with cr",
+      "lastCommentDate": "2026-10-08T15:47:02.350+0900",
+      "url": "https://jira.secext.samsung.net/browse/TKME-2349",
+      "linkedTickets": [
+        {
+          "key": "PC-55140",
+          "summary": "Script to fix secondGI on ConsignmentEntry for return creation",
+          "status": "Approved-ES",
+          "statusCategory": "To Do",
+          "relation": "blocks",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "Return Creation Issue\r\nGenerated: 2026-10-02T22:50:00Z\r\n\r\nIssue:\r\nFor order TR260831-72936144, the CS team cannot create a return for entry 0 (product QE65LS03HWUXTK) because it is not visible during return creation. Only entry 1 (VG-SCFH65TKBZN) appears as returnable. The order has two consignments — TR260831-72936144 (entry 0) and TR260831-72936144_1 (entry 1) — both in COMPLETED status.\r\n\r\nRCA:\r\nThe ConsignmentEntry for entry 0 (consignment TR260831-72936144, product QE65LS03HWUXTK) has secondGI = 00000000000000 (all zeros), while entry 1 (consignment TR260831-72936144_1, product VG-SCFH65TKBZN) has secondGI = 20260904074157 (a valid timestamp).\r\n\r\nTokoFullfillmentUtils.isSecondGIValid() at line 1365 of TokoFullfillmentUtils.java checks:\r\n  StringUtils.isNotBlank(secondGI) && !secondGI.trim().matches(\"[0]+\")\r\n\r\nThe value 00000000000000 fails the regex check [0]+ (all zeros), so isSecondGIValid() returns false for entry 0.\r\n\r\nTokoSecondGIReturnableCheckImpl.perform() implements the ReturnableCheck interface. For stores in its includedStores list (which includes the TR store), it calls hasValidSecondGI(), which:\r\n1. Iterates all ConsignmentEntry objects for the order entry\r\n2. Filters by isSecondGIValid(entry.getSecondGI())\r\n3. Sums the shippedQuantity of entries with valid secondGI\r\n4. Compares total valid quantity against the requested return quantity\r\n\r\nSince entry 0 has secondGI = 00000000000000, it is filtered out by isSecondGIValid(). The total quantity with valid secondGI becomes 0, which is less than the requested return quantity of 1. The ReturnableCheck returns false, and the entry is excluded from the return creation UI.\r\n\r\nThe consignment entry received a zero-valued secondGI instead of a proper GERP goods issue timestamp. The GERP billing date for consignment TR260831-72936144 is 2026-09-04 16:40:37, confirming the goods issue was processed, but the secondGI field on the consignment entry was populated with all-zeros instead of the formatted date string. The second consignment (TR260831-72936144_1) received the correct value 20260904074157.\r\n\r\nThis is the same issue documented in NUKME-11321 (closed, code fix deployed June 2025) where return creation fails when one consignment entry has a zero-value secondGI. The TR store is included in the SecondGIReturnableCheck includedStores list, so the check is enforced.\r\n\r\nKibana logs were unavailable during this investigation (expired SAML session). No log-based evidence was gathered. The root cause is confirmed via DB state (secondGI values verified directly) and code trace (isSecondGIValid regex and ReturnableCheck logic).\r\n\r\nPossible remediation:\r\nUpdate the ConsignmentEntry.secondGI for entry 0 (pk=9142550890452) from 00000000000000 to the correct GERP goods issue date. The consignment's GERP billing date is 2026-09-04 16:40:37, and the sibling consignment's secondGI is 20260904074157 (format: yyyyMMddHHmmss). Set the secondGI to 20260904164037 to match the GERP billing date for this consignment.\r\n\r\nA HAC Groovy script can set this value:\r\n  1. Load the ConsignmentEntry by PK (9142550890452)\r\n  2. Set secondGI = \"20260904164037\"\r\n  3. Save the model\r\n\r\nOnce the secondGI is corrected, TokoFullfillmentUtils.isSecondGIValid() will return true, TokoSecondGIReturnableCheckImpl will include entry 0 in the returnable quantity, and the CS team will be able to see entry 0 during return creation.\r\n\r\nAn approved precedent exists in PC-21107 (CSME-4711) which contains a Groovy script that sets ConsignmentEntry.secondGI on consignment entries. That script can be adapted for this order.\r\n\r\nThe same pattern was fixed via code in NUKME-11321, but this order appears to have slipped through — the secondGI was written as all-zeros despite the goods issue being completed. A deeper investigation into why GERP sent a zero-value secondGI for this specific consignment may be warranted to prevent recurrence.\r\n\r\n## Remediation\r\n- Remediation type: Set ConsignmentEntry.secondGI from 00000000000000 to valid GERP date\r\n- Reusable PC ticket: PC-21107 (CSME-4711) — contains approved script for setting secondGI\r\n- Script approach: Load ConsignmentEntry by PK, set secondGI to 20260904164037, save\r\n- Order: TR260831-72936144, ConsignmentEntry PK: 9142550890452",
+        "sections": {
+          "issue": "For order TR260831-72936144, the CS team cannot create a return for entry 0 (product QE65LS03HWUXTK) because it is not visible during return creation. Only entry 1 (VG-SCFH65TKBZN) appears as returnable. The order has two consignments — TR260831-72936144 (entry 0) and TR260831-72936144_1 (entry 1) — both in COMPLETED status.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-02T08:17:58.081Z"
+      }
+    },
     {
       "key": "PC-54929",
       "summary": "Script to reset NorthLadder ExternalService and retrigger deal creation",
@@ -215,59 +321,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-10-08T04:06:09.800Z"
-      }
-    },
-    {
-      "key": "TKME-2349",
-      "summary": "Return Creation Issue",
-      "status": "QA Server Review",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Turkey Maintenance & Enhancements",
-      "projectKey": "TKME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-07T21:23:26.000+0900",
-      "created": "2026-09-29T14:53:58.000+0900",
-      "statusChangedAt": "2026-10-07T20:51:57.036+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFor the below orders, CS team couldn't not able to create the return request as one of the entry is not visible during the return creation. Only VG-SCFH65TKBZN is available for the return but the other entry is not available/displaying. Please check further and let us know why the other en",
-      "commentsCount": 5,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-07T21:23:26.465+0900",
-          "snippet": "Hi Rajesh,\n\nWe have raised PC-55140 for the data fix script to update the secondGI field on the ConsignmentEntry for TR260831-72936144 from 00000000000000 to 20260904164037. Once executed, the entry will become returnable in backoffice and you can proceed with creating the new return.\n\nPC ticket: [J"
-        },
-        {
-          "author": "Rajeshbabu Yatirajula",
-          "date": "2026-10-02T22:32:19.799+0900",
-          "snippet": "Hi ~@email \n\nPlease proceed further, once done let us know. We'll create a new return.\n\nRegards,\nRajesh"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Rajesh,\n\nWe have raised PC-55140 for the data fix script to update the secondGI field on the ConsignmentEntry for TR260831-72936144 from 00000000000000 to 20260904164037. Once executed, the entry will become returnable in backoffice and you can proceed with creating the new return.\n\nPC ticket: [J",
-      "lastCommentDate": "2026-10-07T21:23:26.465+0900",
-      "url": "https://jira.secext.samsung.net/browse/TKME-2349",
-      "linkedTickets": [
-        {
-          "key": "PC-55140",
-          "summary": "Script to fix secondGI on ConsignmentEntry for return creation",
-          "status": "Approved-ES",
-          "statusCategory": "To Do",
-          "relation": "blocks",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "Return Creation Issue\r\nGenerated: 2026-10-02T22:50:00Z\r\n\r\nIssue:\r\nFor order TR260831-72936144, the CS team cannot create a return for entry 0 (product QE65LS03HWUXTK) because it is not visible during return creation. Only entry 1 (VG-SCFH65TKBZN) appears as returnable. The order has two consignments — TR260831-72936144 (entry 0) and TR260831-72936144_1 (entry 1) — both in COMPLETED status.\r\n\r\nRCA:\r\nThe ConsignmentEntry for entry 0 (consignment TR260831-72936144, product QE65LS03HWUXTK) has secondGI = 00000000000000 (all zeros), while entry 1 (consignment TR260831-72936144_1, product VG-SCFH65TKBZN) has secondGI = 20260904074157 (a valid timestamp).\r\n\r\nTokoFullfillmentUtils.isSecondGIValid() at line 1365 of TokoFullfillmentUtils.java checks:\r\n  StringUtils.isNotBlank(secondGI) && !secondGI.trim().matches(\"[0]+\")\r\n\r\nThe value 00000000000000 fails the regex check [0]+ (all zeros), so isSecondGIValid() returns false for entry 0.\r\n\r\nTokoSecondGIReturnableCheckImpl.perform() implements the ReturnableCheck interface. For stores in its includedStores list (which includes the TR store), it calls hasValidSecondGI(), which:\r\n1. Iterates all ConsignmentEntry objects for the order entry\r\n2. Filters by isSecondGIValid(entry.getSecondGI())\r\n3. Sums the shippedQuantity of entries with valid secondGI\r\n4. Compares total valid quantity against the requested return quantity\r\n\r\nSince entry 0 has secondGI = 00000000000000, it is filtered out by isSecondGIValid(). The total quantity with valid secondGI becomes 0, which is less than the requested return quantity of 1. The ReturnableCheck returns false, and the entry is excluded from the return creation UI.\r\n\r\nThe consignment entry received a zero-valued secondGI instead of a proper GERP goods issue timestamp. The GERP billing date for consignment TR260831-72936144 is 2026-09-04 16:40:37, confirming the goods issue was processed, but the secondGI field on the consignment entry was populated with all-zeros instead of the formatted date string. The second consignment (TR260831-72936144_1) received the correct value 20260904074157.\r\n\r\nThis is the same issue documented in NUKME-11321 (closed, code fix deployed June 2025) where return creation fails when one consignment entry has a zero-value secondGI. The TR store is included in the SecondGIReturnableCheck includedStores list, so the check is enforced.\r\n\r\nKibana logs were unavailable during this investigation (expired SAML session). No log-based evidence was gathered. The root cause is confirmed via DB state (secondGI values verified directly) and code trace (isSecondGIValid regex and ReturnableCheck logic).\r\n\r\nPossible remediation:\r\nUpdate the ConsignmentEntry.secondGI for entry 0 (pk=9142550890452) from 00000000000000 to the correct GERP goods issue date. The consignment's GERP billing date is 2026-09-04 16:40:37, and the sibling consignment's secondGI is 20260904074157 (format: yyyyMMddHHmmss). Set the secondGI to 20260904164037 to match the GERP billing date for this consignment.\r\n\r\nA HAC Groovy script can set this value:\r\n  1. Load the ConsignmentEntry by PK (9142550890452)\r\n  2. Set secondGI = \"20260904164037\"\r\n  3. Save the model\r\n\r\nOnce the secondGI is corrected, TokoFullfillmentUtils.isSecondGIValid() will return true, TokoSecondGIReturnableCheckImpl will include entry 0 in the returnable quantity, and the CS team will be able to see entry 0 during return creation.\r\n\r\nAn approved precedent exists in PC-21107 (CSME-4711) which contains a Groovy script that sets ConsignmentEntry.secondGI on consignment entries. That script can be adapted for this order.\r\n\r\nThe same pattern was fixed via code in NUKME-11321, but this order appears to have slipped through — the secondGI was written as all-zeros despite the goods issue being completed. A deeper investigation into why GERP sent a zero-value secondGI for this specific consignment may be warranted to prevent recurrence.\r\n\r\n## Remediation\r\n- Remediation type: Set ConsignmentEntry.secondGI from 00000000000000 to valid GERP date\r\n- Reusable PC ticket: PC-21107 (CSME-4711) — contains approved script for setting secondGI\r\n- Script approach: Load ConsignmentEntry by PK, set secondGI to 20260904164037, save\r\n- Order: TR260831-72936144, ConsignmentEntry PK: 9142550890452",
-        "sections": {
-          "issue": "For order TR260831-72936144, the CS team cannot create a return for entry 0 (product QE65LS03HWUXTK) because it is not visible during return creation. Only entry 1 (VG-SCFH65TKBZN) appears as returnable. The order has two consignments — TR260831-72936144 (entry 0) and TR260831-72936144_1 (entry 1) — both in COMPLETED status.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-02T08:17:58.081Z"
       }
     },
     {
@@ -752,59 +805,6 @@
       }
     },
     {
-      "key": "PKHME-942",
-      "summary": "Stuck order on Hybris",
-      "status": "QA Server Review",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Pakistan Maintenance & Enhancements",
-      "projectKey": "PKHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-09-30T17:29:41.000+0900",
-      "created": "2026-09-29T01:08:53.000+0900",
-      "statusChangedAt": "2026-09-30T17:26:21.320+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n||Order Number||Order Date||Order Status||Issue||\n|PK260926-95338783|2026/09/26|ORDER_SPLIT|Consignment process ERROR at sendConsignmentToWarehouse - null|\n|PK260925-94057775|2026/09/25|ORDER_SPLIT|Con",
-      "commentsCount": 3,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-30T17:29:41.142+0900",
-          "snippet": "Hi Team,\n\nPC ticket raised for retriggering the 3 consignment processes stuck at sendConsignmentToWarehouse.\n\nPC-54800: [Jira Link]\n\nOrders covered:\nPK260926-95338783, PK260925-94057775, PK260924-93115047\n\nThe script reuses the approved pattern from PC-54582. Will execute once the PC is approved.\n\nR"
-        },
-        {
-          "author": "Sai Ram Kosuru",
-          "date": "2026-09-30T15:51:53.907+0900",
-          "snippet": "Hi ~@email,\n\nPlease proceed with the remediation.\n\nPK260926-95338783, PK260925-94057775, PK260924-93115047\n\n \n\nRegards,\n\nSairam K.\n\ncc ~@email"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Team,\n\nPC ticket raised for retriggering the 3 consignment processes stuck at sendConsignmentToWarehouse.\n\nPC-54800: [Jira Link]\n\nOrders covered:\nPK260926-95338783, PK260925-94057775, PK260924-93115047\n\nThe script reuses the approved pattern from PC-54582. Will execute once the PC is approved.\n\nR",
-      "lastCommentDate": "2026-09-30T17:29:41.142+0900",
-      "url": "https://jira.secext.samsung.net/browse/PKHME-942",
-      "linkedTickets": [
-        {
-          "key": "PC-54800",
-          "summary": "Retrigger consignment processes stuck at sendConsignmentToWarehouse",
-          "status": "Approved-ES",
-          "statusCategory": "To Do",
-          "relation": "blocks",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: PKHME-942\nStuck order on Hybris\nGenerated: 2026-09-28T16:30:00Z\n\nHi shop.sds@samsung.com ,\n\nFour PK-region COD orders are stuck in the fulfilment pipeline. Two distinct failure modes were identified after checking DB state and tracing the codebase.\n\nPK260926-95338783, PK260925-94057775, PK260924-93115047:\nAll three orders reached ORDER_SPLIT successfully. Consignments were created with warehouse pkOnline assigned and delivery modes set. Payment authorisation and capture both completed (ACCEPTED). The consignment process (consignment-process-v11-36) started but failed at the sendConsignmentToWarehouse action with a NullPointerException.\n\nThe sendConsignmentToWarehouse action in consignment-process-v11-36 uses the bean sendConsignmentToWarehouseActionV2 (SendConsignmentToWarehouseActionV2). This action calls tokoWarehouseAdapter.sendConsignmentToWarehouse(process.getConsignment()), which delegates to the configured warehouse adapter for the PK region. For PK (Samsung Pakistan), the GERP warehouse adapter (TokoGerpWarehouseAdapterImpl) handles the consignment by creating a sales order in GERP via tokoGerpSdClient. The NullPointerException occurs inside this GERP integration call. The V2 action catches IntegrationException, WebServiceIOException, and several custom exceptions, but a raw NullPointerException is not caught by any of these handlers. It propagates up to the process engine, which places the process in ERROR state.\n\nThe consignment status remains WAITING_FOR_TRANSFER. No external service entries were created, no GERP sales order number was assigned, and no tracking information exists. The order process (order-process-v25-69) is still RUNNING and waiting on the consignment subprocess to complete.\n\nPK260923-92678345:\nThis order is stuck at PAYMENT_CAPTURED, which means it never reached the splitOrder step. The order process (order-process-v25-69) is in ERROR state. The task logs show splitOrder was retried 50 times in a loop without success.\n\nThe SplitOrderAction calls orderSplittingService.splitOrderForConsignment(order, entriesToSplit). The splitting service assigns warehouses to consignments based on the BaseStore warehouse configuration. The error \"missing values for [warehouse] in ConsignmentModel\" indicates that the order splitting service created a ConsignmentModel but could not assign a warehouse to it. This happens when the warehouse resolution strategy fails to find a valid warehouse for the product on the PK base store.\n\nThe key difference from the other three orders is that PK260923-92678345 failed during consignment creation (splitOrder), while the other three failed after consignment creation (sendConsignmentToWarehouse). No consignments exist for this order in the database, confirming splitOrder never succeeded.\n\nRoot cause for orders 1-3: NullPointerException thrown inside the GERP warehouse adapter during the sendConsignmentToWarehouse action of the consignment process. The GERP integration call to create a sales order failed with an uncaught NPE, which the V2 action does not handle. The process went to ERROR state.\n\nRoot cause for order 4: The splitOrder action failed because the order splitting service could not resolve a warehouse for the product during consignment creation on the PK base store. The process retried splitOrder 50 times but the warehouse resolution failure is deterministic, so each retry produced the same failure.\n\nPossible remediation:\nFor orders 1-3 (consignment process ERROR): Restart the consignment process from the sendConsignmentToWarehouse action. The GERP integration NPE is likely transient (could be a timeout, connection issue, or null response from GERP). Restarting the consignment process will re-attempt the GERP sales order creation. Use the process-restart pattern from PC-52605 (script-TKME-2279-retrigger-business-process.groovy), adapting it to target the consignment process instead of the order process.\n\nFor order 4 (order process ERROR at splitOrder): The order process needs to be restarted from the splitOrder action. Since the warehouse resolution failure appears deterministic, check if the BaseStore warehouse configuration for PK has been updated recently or if the product (SM-A576BLBVPKD) has a valid warehouse assignment. If the warehouse config is now correct, restarting the order process from splitOrder should create the consignment and proceed. If the config is still broken, fix the warehouse assignment first, then restart.\n\nBoth remediation types can use the process-restart reusable PC ticket PC-52605 (script-TKME-2279-retrigger-business-process.groovy), adapting the script for PKHME-942 with the four order codes.\n\nThanks,\n\nAryan",
-        "sections": {
-          "issue": "",
-          "rca": "# RCA: PKHME-942\nStuck order on Hybris\nGenerated: 2026-09-28T16:30:00Z\n\nHi shop.sds@samsung.com ,\n\nFour PK-region COD orders are stuck in the fulfilment pipeline. Two distinct failure modes were identified after checking DB state and tracing the codebase.\n\nPK260926-95338783, PK260925-94057775, PK260924-93115047:\nAll three orders reached ORDER_SPLIT successfully. Consignments were created with warehouse pkOnline assigned and delivery modes set. Payment authorisation and capture both completed (ACCEPTED). The consignment process (consignment-process-v11-36) started but failed at the sendConsignmentToWarehouse action with a NullPointerException.\n\nThe sendConsignmentToWarehouse action in consignment-process-v11-36 uses the bean sendConsignmentToWarehouseActionV2 (SendConsignmentToWarehouseActionV2). This action calls tokoWarehouseAdapter.sendConsignmentToWarehouse(process.getConsignment()), which delegates to the configured warehouse adapter for the PK region. For PK (Samsung Pakistan), the GERP warehouse adapter (TokoGerpWarehouseAdapterImpl) handles the consignment by creating a sales order in GERP via tokoGerpSdClient. The NullPointerException occurs inside this GERP integration call. The V2 action catches IntegrationException, WebServiceIOException, and several custom exceptions, but a raw NullPointerException is not caught by any of these handlers. It propagates up to the process engine, which places the process in ERROR state.\n\nThe consignment status remains WAITING_FOR_TRANSFER. No external service entries were created, no GERP sales order number was assigned, and no tracking information exists. The order process (order-process-v25-69) is still RUNNING and waiting on the consignment subprocess to complete.\n\nPK260923-92678345:\nThis order is stuck at PAYMENT_CAPTURED, which means it never reached the splitOrder step. The order process (order-process-v25-69) is in ERROR state. The task logs show splitOrder was retried 50 times in a loop without success.\n\nThe SplitOrderAction calls orderSplittingService.splitOrderForConsignment(order, entriesToSplit). The splitting service assigns warehouses to consignments based on the BaseStore warehouse configuration. The error \"missing values for [warehouse] in ConsignmentModel\" indicates that the order splitting service created a ConsignmentModel but could not assign a warehouse to it. This happens when the warehouse resolution strategy fails to find a valid warehouse for the product on the PK base store.\n\nThe key difference from the other three orders is that PK260923-92678345 failed during consignment creation (splitOrder), while the other three failed after consignment creation (sendConsignmentToWarehouse). No consignments exist for this order in the database, confirming splitOrder never succeeded.\n\nRoot cause for orders 1-3: NullPointerException thrown inside the GERP warehouse adapter during the sendConsignmentToWarehouse action of the consignment process. The GERP integration call to create a sales order failed with an uncaught NPE, which the V2 action does not handle. The process went to ERROR state.\n\nRoot cause for order 4: The splitOrder action failed because the order splitting service could not resolve a warehouse for the product during consignment creation on the PK base store. The process retried splitOrder 50 times but the warehouse resolution failure is deterministic, so each retry produced the same failure.\n\nPossible remediation:\nFor orders 1-3 (consignment process ERROR): Restart the consignment process from the sendConsignmentToWarehouse action. The GERP integration NPE is likely transient (could be a timeout, connection issue, or null response from GERP). Restarting the consignment process will re-attempt the GERP sales order creation. Use the process-restart pattern from PC-52605 (script-TKME-2279-retrigger-business-process.groovy), adapting it to target the consignment process instead of the order process.\n\nFor order 4 (order process ERROR at splitOrder): The order process needs to be restarted from the splitOrder action. Since the warehouse resolution failure appears deterministic, check if the BaseStore warehouse configuration for PK has been updated recently or if the product (SM-A576BLBVPKD) has a valid warehouse assignment. If the warehouse config is now correct, restarting the order process from splitOrder should create the consignment and proceed. If the config is still broken, fix the warehouse assignment first, then restart.\n\nBoth remediation types can use the process-restart reusable PC ticket PC-52605 (script-TKME-2279-retrigger-business-process.groovy), adapting the script for PKHME-942 with the four order codes.\n\nThanks,\n\nAryan",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-28T16:44:25.295Z"
-      }
-    },
-    {
       "key": "RT-722599",
       "summary": "[STG2] Multiple Samsung Care+ services per order | Subscription Values Token",
       "status": "In Progress",
@@ -1229,7 +1229,7 @@
       }
     ],
     "pid": 21100,
-    "uptime": 28801,
+    "uptime": 28840,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1241,7 +1241,7 @@
       {
         "pid": 20536,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 97610,
+        "ageSeconds": 97649,
         "status": "running",
         "isChild": false,
         "taskSummary": "have we implemented the fetching of jira ticket with its name from dashboard thing?",
@@ -1251,7 +1251,7 @@
       {
         "pid": 21768,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 97217,
+        "ageSeconds": 97256,
         "status": "running",
         "isChild": false,
         "taskSummary": "post comments for TKME-2349and PKHME-942 with 45m logs each and assign back and update labels",
@@ -1261,7 +1261,7 @@
       {
         "pid": 13300,
         "cwd": "c:\\windows",
-        "ageSeconds": 69291,
+        "ageSeconds": 69330,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1271,7 +1271,7 @@
       {
         "pid": 25524,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 66619,
+        "ageSeconds": 66658,
         "status": "running",
         "isChild": false,
         "taskSummary": "have we implemented the fetching of jira ticket with its name from dashboard thing?",
@@ -4536,17 +4536,17 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-08T05:27:41.732Z",
-      "ageMs": 4621768
+      "ageMs": 4661529
     },
     "watchdogLogTail": "[2026-10-07T21:43:42.924Z] Dashboard started with PID 10436 (restart #9, 1 in last hour)\n[2026-10-07T21:43:47.758Z] Starting jira-dashboard-server.js...\n[2026-10-07T21:43:47.931Z] Dashboard started with PID 5892 (restart #10, 2 in last hour)\n[2026-10-07T21:43:53.541Z] DUPLICATE jira-dashboard-server detected: PID 10436 — killing\n[2026-10-07T22:44:28.771Z] RESTART NEEDED: No heartbeat file found\n[2026-10-07T22:44:30.898Z] Killed bridge PID 3816\n[2026-10-07T22:44:36.580Z] Starting bridge.js...\n[2026-10-07T22:44:36.748Z] Bridge started with PID 21100 (restart #2, 1 in last hour)\n[2026-10-08T04:57:41.459Z] DUPLICATE watchdog detected: PID 27684 — killing\n[2026-10-08T05:27:41.732Z] DUPLICATE watchdog detected: PID 12184 — killing"
   },
   "mcps": [
     {
       "name": "Jira",
-      "status": "down",
-      "httpStatus": 401,
-      "lastCheck": "2026-10-08T06:44:06.231Z",
-      "downSince": "2026-10-08T06:44:06.231Z",
+      "status": "up",
+      "httpStatus": 200,
+      "lastCheck": "2026-10-08T06:45:06.170Z",
+      "downSince": null,
       "downDuration": 0,
       "alert": false
     },
@@ -4554,7 +4554,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-08T06:44:06.231Z",
+      "lastCheck": "2026-10-08T06:45:06.170Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4563,9 +4563,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-08T06:44:06.231Z",
+      "lastCheck": "2026-10-08T06:45:06.170Z",
       "downSince": "2026-10-08T02:02:11.302Z",
-      "downDuration": 16914929,
+      "downDuration": 16974868,
       "alert": true
     }
   ],
@@ -4855,7 +4855,7 @@
         "reason": "Waiting for QA/review team",
         "whatToDo": "",
         "url": "https://jira.secext.samsung.net/browse/PKHME-942",
-        "updated": "2026-09-30T17:29:41.000+0900",
+        "updated": "2026-10-08T15:47:03.000+0900",
         "statusChangedAt": "2026-09-30T17:26:21.320+0900"
       },
       {
@@ -4903,7 +4903,7 @@
         "reason": "Waiting for QA/review team",
         "whatToDo": "",
         "url": "https://jira.secext.samsung.net/browse/TKME-2349",
-        "updated": "2026-10-07T21:23:26.000+0900",
+        "updated": "2026-10-08T15:47:03.000+0900",
         "statusChangedAt": "2026-10-07T20:51:57.036+0900"
       }
     ],
