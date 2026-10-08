@@ -3894,13 +3894,20 @@ function doLookupViaBridge(key,el){
         return;
       }
       
-      // Fetch comments on the issue (cache-bust with timestamp to prevent stale CDN responses)
+      // Fetch comments on the issue (cache-bust + no-store to prevent any caching)
       fetch('https://api.github.com/repos/'+GH_OWNER+'/'+BRIDGE_REPO+'/issues/'+issueNum+'/comments?per_page=50&_='+Date.now(),{
-        headers:{'Authorization':'Bearer '+GH_TOKEN,'Accept':'application/vnd.github.v3+json','Cache-Control':'no-cache'}
+        headers:{'Authorization':'Bearer '+GH_TOKEN,'Accept':'application/vnd.github.v3+json'},
+        cache:'no-store'
       })
-        .then(function(r){return r.json()})
+        .then(function(r){
+          if(!r.ok){throw new Error('HTTP '+r.status)}
+          return r.json()
+        })
         .then(function(comments){
-          if(!Array.isArray(comments))return;
+          if(!Array.isArray(comments)){
+            el.innerHTML='<div class="lk-loading">Poll '+attempts+'/20 — got non-array response. Retrying...</div>';
+            return;
+          }
           // Find [LOOKUP-RESULT] comment
           for(var i=0;i<comments.length;i++){
             if(comments[i].body && comments[i].body.indexOf('[LOOKUP-RESULT]')!==-1){
@@ -3930,8 +3937,12 @@ function doLookupViaBridge(key,el){
               return;
             }
           }
+          // Comments fetched but no LOOKUP-RESULT yet
+          el.innerHTML='<div class="lk-loading">Poll '+attempts+'/20 — bridge working... ('+comments.length+' comments so far)</div>';
         })
-        .catch(function(){/* ignore, will retry */});
+        .catch(function(e){
+          el.innerHTML='<div class="lk-loading">Poll '+attempts+'/20 — fetch error: '+escapeHtml(e.message)+' (retrying...)</div>';
+        });
     },2000);
   });
 }
