@@ -1314,6 +1314,13 @@ function onData(data){
   renderRcaMatrix(data);renderDayStarter(data);renderActionItems(data);
   renderSessions(data);renderActivity(data);renderMcps(data);renderCmdHistory();
   pollCmdResponses(data);updateNavBadges(data);
+  // Update worklog header stats from data.json (works on phone — no local server needed)
+  if(data.worklogTotals){
+    var tv=document.getElementById('wlTodayVal');
+    var wv=document.getElementById('wlWeekVal');
+    if(tv){tv.textContent=data.worklogTotals.todayHours>0?data.worklogTotals.todayHours+'h':'0h';tv.classList.toggle('zero',data.worklogTotals.todayHours===0)}
+    if(wv){wv.textContent=data.worklogTotals.weekHours>0?data.worklogTotals.weekHours+'h':'0h';wv.classList.toggle('zero',data.worklogTotals.weekHours===0)}
+  }
 }
 
 function updateNavBadges(data){
