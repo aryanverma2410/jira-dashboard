@@ -3848,6 +3848,34 @@ setInterval(function(){
   if(wlExpanded)fetchWorklogStats();
 },300000);
 
+// Re-apply worklog header from cached data every 2s — prevents flash from any other code clearing DOM
+function applyWorklogHeader(){
+  if(!rawData||!rawData.worklogTotals)return;
+  var wt=rawData.worklogTotals;
+  var tv=document.getElementById('wlTodayVal');
+  var wv=document.getElementById('wlWeekVal');
+  if(tv){var tTxt=wt.todayHours>0?wt.todayHours+'h':'0h';if(tv.textContent!==tTxt)tv.textContent=tTxt;tv.classList.toggle('zero',wt.todayHours===0)}
+  if(wv){var wTxt=wt.weekHours>0?wt.weekHours+'h':'0h';if(wv.textContent!==wTxt)wv.textContent=wTxt;wv.classList.toggle('zero',wt.weekHours===0)}
+  var dl=wt.dayLabels||['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  var dh=wt.dailyHours||[0,0,0,0,0,0,0];
+  var ti=wt.todayIndex!==undefined?wt.todayIndex:-1;
+  var barEl=document.getElementById('wlDayBars');
+  if(barEl&&barEl.children.length!==7){
+    var maxH=Math.max.apply(null,dh.concat([1]));
+    var bh='';
+    for(var i=0;i<7;i++){
+      var h=dh[i];
+      var pct=maxH>0?Math.round(h/maxH*100):0;
+      var cls='wl-day-bar';
+      if(i===ti)cls+=' today';
+      if(h===0)cls+=' empty';
+      bh+='<div class="'+cls+'"><div class="wl-day-bar-fill" style="height:'+pct+'%"></div><span class="wl-day-bar-val">'+(h>0?h+'h':'')+'</span><span class="wl-day-bar-lbl">'+dl[i]+'</span></div>';
+    }
+    barEl.innerHTML=bh;
+  }
+}
+setInterval(applyWorklogHeader,2000);
+
 // ===== TICKET LOOKUP =====
 var lookupPollInterval=null;
 
