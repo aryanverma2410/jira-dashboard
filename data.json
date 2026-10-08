@@ -1,7 +1,84 @@
 {
-  "generatedAt": "2026-10-08T12:22:02.742Z",
+  "generatedAt": "2026-10-08T12:22:42.060Z",
   "totalTickets": 21,
   "tickets": [
+    {
+      "key": "AEME-6527",
+      "summary": "Stuck Order || 31-Aug",
+      "status": "QA Server Review",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "UAE Maintenance & Enhancements",
+      "projectKey": "AEME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-08T21:24:20.000+0900",
+      "created": "2026-08-31T16:46:21.000+0900",
+      "statusChangedAt": "2026-10-06T14:05:18.355+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\n \n\nPlease find the SC+ activation error order and fix the issue.\n\n \n|Order ID|Order Status|Order Creation Date|Sale Type|Activation Status|\n|AE260823-66529054|COMPLETED|23-08-26|Bundle|UPDATE_ERROR|\n\n \n|AE260826-69146168|WAITING_FOR_EXTERNAL_FRAUD_RESULT|28/08/2026|\n|KW260830-72315746|WAIT",
+      "commentsCount": 46,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-08T21:24:20.544+0900",
+          "snippet": "Hi Talib,\n\nAE260804-50056392 (SMC FI Split Missing in Short Pick):\n\nInvestigation complete. The SMC credit doc line is missing from the short pick FI posting because both conditions in the OR check inside TokoSMCSplitCreditFIMessagePopulator.populateInternal() fail.\n\nThe first condition checks hasSM"
+        },
+        {
+          "author": "Talib Raza Zaidi",
+          "date": "2026-10-08T18:48:19.580+0900",
+          "snippet": "Hi ~@email,\n\n \n\nSkip the knoxGuard as we already registered the IMEI and try once.\n\n \n\nRegards\n\nTalib\n\nCC: ~@email"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Talib,\n\nAE260804-50056392 (SMC FI Split Missing in Short Pick):\n\nInvestigation complete. The SMC credit doc line is missing from the short pick FI posting because both conditions in the OR check inside TokoSMCSplitCreditFIMessagePopulator.populateInternal() fail.\n\nThe first condition checks hasSM",
+      "lastCommentDate": "2026-10-08T21:24:20.544+0900",
+      "url": "https://jira.secext.samsung.net/browse/AEME-6527",
+      "linkedTickets": [
+        {
+          "key": "PC-54713",
+          "summary": "Script to fix delivery address country + retrigger SC+ and push NL trade-in consignments to COMPLETED",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        },
+        {
+          "key": "PC-54929",
+          "summary": "Script to reset NorthLadder ExternalService and retrigger deal creation",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        },
+        {
+          "key": "PC-53355",
+          "summary": "AEME-6527 : To retrigger the Order Process",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "is blocked by",
+          "assignee": null
+        },
+        {
+          "key": "PC-53570",
+          "summary": "AEME-6527 | Change trade-in status to REGISTERED",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "relates to",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "Agent encountered an error while processing your request. Please try again or rephrase. Exit code: 1",
+        "sections": {
+          "issue": "",
+          "rca": "Agent encountered an error while processing your request. Please try again or rephrase. Exit code: 1",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-14T12:18:37.301Z"
+      }
+    },
     {
       "key": "AEME-6596",
       "summary": "Expert Care Orders Stuck || 29-Sep",
@@ -314,83 +391,6 @@
         "source": "",
         "foundAt": "",
         "issueNumber": null
-      }
-    },
-    {
-      "key": "AEME-6527",
-      "summary": "Stuck Order || 31-Aug",
-      "status": "QA Server Review",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-08T18:48:26.000+0900",
-      "created": "2026-08-31T16:46:21.000+0900",
-      "statusChangedAt": "2026-10-06T14:05:18.355+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\n \n\nPlease find the SC+ activation error order and fix the issue.\n\n \n|Order ID|Order Status|Order Creation Date|Sale Type|Activation Status|\n|AE260823-66529054|COMPLETED|23-08-26|Bundle|UPDATE_ERROR|\n\n \n|AE260826-69146168|WAITING_FOR_EXTERNAL_FRAUD_RESULT|28/08/2026|\n|KW260830-72315746|WAIT",
-      "commentsCount": 45,
-      "recentComments": [
-        {
-          "author": "Talib Raza Zaidi",
-          "date": "2026-10-08T18:48:19.580+0900",
-          "snippet": "Hi ~@email,\n\n \n\nSkip the knoxGuard as we already registered the IMEI and try once.\n\n \n\nRegards\n\nTalib\n\nCC: ~@email"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-08T17:57:09.253+0900",
-          "snippet": "Hi Talib,\n\nThe deviceList is empty because the device IMEI (353577823064175) was already successfully registered with KnoxGuard in the first run when the order was placed on Jul 23. We can confirm this in the database — the TokoDeviceFraudClaim record for consignment AE260723-36597333 has status DEV"
-        }
-      ],
-      "lastCommentBy": "Talib Raza Zaidi",
-      "lastCommentSnippet": "Hi ~@email,\n\n \n\nSkip the knoxGuard as we already registered the IMEI and try once.\n\n \n\nRegards\n\nTalib\n\nCC: ~@email",
-      "lastCommentDate": "2026-10-08T18:48:19.580+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6527",
-      "linkedTickets": [
-        {
-          "key": "PC-54713",
-          "summary": "Script to fix delivery address country + retrigger SC+ and push NL trade-in consignments to COMPLETED",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "blocks",
-          "assignee": null
-        },
-        {
-          "key": "PC-54929",
-          "summary": "Script to reset NorthLadder ExternalService and retrigger deal creation",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "blocks",
-          "assignee": null
-        },
-        {
-          "key": "PC-53355",
-          "summary": "AEME-6527 : To retrigger the Order Process",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "is blocked by",
-          "assignee": null
-        },
-        {
-          "key": "PC-53570",
-          "summary": "AEME-6527 | Change trade-in status to REGISTERED",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "relates to",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "Agent encountered an error while processing your request. Please try again or rephrase. Exit code: 1",
-        "sections": {
-          "issue": "",
-          "rca": "Agent encountered an error while processing your request. Please try again or rephrase. Exit code: 1",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-14T12:18:37.301Z"
       }
     },
     {
@@ -1296,7 +1296,7 @@
       }
     ],
     "pid": 27920,
-    "uptime": 9240,
+    "uptime": 9280,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -1305,7 +1305,7 @@
         "issueTitle": "Fire Action Queue item #4: AEME-6527",
         "snippet": "Execute /logQueue for a single item now.\nFile: C:\\Users\\aryan.v1\\.gemini\\tmp\\bin\\memory\\jira-action-queue.json\nProcess O",
         "pid": 16944,
-        "elapsed": 5
+        "elapsed": 45
       }
     ],
     "startTime": "2026-10-08T09:48:02.606Z",
@@ -1316,7 +1316,7 @@
       {
         "pid": 20536,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 117853,
+        "ageSeconds": 117893,
         "status": "running",
         "isChild": false,
         "taskSummary": "test the dashboard autologin button thoroughly. check its flow thoroughly and look for nay logica...",
@@ -1326,7 +1326,7 @@
       {
         "pid": 21768,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 117460,
+        "ageSeconds": 117500,
         "status": "running",
         "isChild": false,
         "taskSummary": "update",
@@ -1336,7 +1336,7 @@
       {
         "pid": 13300,
         "cwd": "c:\\windows",
-        "ageSeconds": 89534,
+        "ageSeconds": 89574,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1346,7 +1346,7 @@
       {
         "pid": 32364,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 15185,
+        "ageSeconds": 15225,
         "status": "running",
         "isChild": false,
         "taskSummary": "test the dashboard autologin button thoroughly. check its flow thoroughly and look for nay logica...",
@@ -4635,13 +4635,13 @@
         ]
       }
     },
-    "bridgeLogTail": "    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-10-08T11:51:51.581Z] aipro completed for #633 (145 chars)\n[2026-10-08T11:51:52.798Z] Comment posted on #633\n[2026-10-08T11:54:36.972Z] INBOX <- #636 from aryanverma2410: \"LOOKUP: SAME-4005\"\n[2026-10-08T11:54:37.913Z] Comment posted on #636\n[2026-10-08T11:54:37.915Z] Auto-ack posted on #636\n[2026-10-08T11:54:37.916Z] LOOKUP received: #636 for ticket SAME-4005\n[2026-10-08T11:54:39.906Z] Comment posted on #636\n[2026-10-08T11:54:39.908Z] LOOKUP success: posted ticket data for SAME-4005 on #636\n[2026-10-08T11:54:41.050Z] Issue #636 closed.\n[2026-10-08T11:54:41.056Z] 1 new message(s) added to inbox.\n[2026-10-08T12:21:55.786Z] INBOX <- #638 from aryanverma2410: \"Fire Action Queue item #4: AEME-6527\"\n[2026-10-08T12:21:56.886Z] Comment posted on #638\n[2026-10-08T12:21:56.887Z] Auto-ack posted on #638\n[2026-10-08T12:21:56.891Z] Spawning aipro for #638: \"Fire Action Queue item #4: AEME-6527\"\n[2026-10-08T12:21:56.895Z] Created new session ff2c172e-4f1d-4031-aabd-c526e7fd93f5 for #638\n[2026-10-08T12:21:57.105Z] 1 new message(s) added to inbox.",
+    "bridgeLogTail": "    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-10-08T12:22:35.920Z] STDOUT data for #638: 145 bytes\n[2026-10-08T12:22:35.923Z] LIVE events write for #638: 33 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_638.txt\n[2026-10-08T12:22:35.927Z] STDOUT data for #638: 108 bytes\n[2026-10-08T12:22:35.929Z] LIVE events write for #638: 34 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_638.txt\n[2026-10-08T12:22:35.934Z] STDOUT data for #638: 115 bytes\n[2026-10-08T12:22:35.936Z] LIVE events write for #638: 35 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_638.txt\n[2026-10-08T12:22:35.943Z] STDOUT data for #638: 126 bytes\n[2026-10-08T12:22:35.946Z] LIVE events write for #638: 36 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_638.txt\n[2026-10-08T12:22:35.955Z] STDOUT data for #638: 104 bytes\n[2026-10-08T12:22:35.958Z] LIVE events write for #638: 37 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_638.txt\n[2026-10-08T12:22:36.182Z] STDOUT data for #638: 364 bytes\n[2026-10-08T12:22:36.184Z] LIVE events write for #638: 38 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_638.txt\n[2026-10-08T12:22:44.993Z] STDOUT data for #638: 124 bytes\n[2026-10-08T12:22:44.997Z] LIVE events write for #638: 39 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_638.txt",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-08T12:21:59.369Z",
-      "ageMs": 6883
+      "lastWrite": "2026-10-08T12:22:44.387Z",
+      "ageMs": 2212
     },
-    "watchdogLogTail": "[2026-10-08T12:19:44.322Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T12:19:59.326Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T12:20:14.326Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T12:20:29.340Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T12:20:44.346Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T12:20:59.356Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T12:21:14.357Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T12:21:29.358Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T12:21:44.359Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T12:21:59.369Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.",
+    "watchdogLogTail": "[2026-10-08T12:20:29.340Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T12:20:44.346Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T12:20:59.356Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T12:21:14.357Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T12:21:29.358Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T12:21:44.359Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T12:21:59.369Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T12:22:14.380Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T12:22:29.387Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-08T12:22:44.387Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.",
     "jobOutputs": {}
   },
   "mcps": [
@@ -4649,7 +4649,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-08T12:21:10.051Z",
+      "lastCheck": "2026-10-08T12:22:10.422Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4658,7 +4658,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-08T12:21:10.052Z",
+      "lastCheck": "2026-10-08T12:22:10.422Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4667,9 +4667,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-08T12:21:10.052Z",
+      "lastCheck": "2026-10-08T12:22:10.422Z",
       "downSince": "2026-10-08T12:11:08.931Z",
-      "downDuration": 601121,
+      "downDuration": 661491,
       "alert": true
     }
   ],
