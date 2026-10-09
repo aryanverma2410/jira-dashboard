@@ -1,7 +1,60 @@
 {
-  "generatedAt": "2026-10-09T04:23:32.498Z",
-  "totalTickets": 19,
+  "generatedAt": "2026-10-09T04:24:12.259Z",
+  "totalTickets": 20,
   "tickets": [
+    {
+      "key": "TKME-2349",
+      "summary": "Return Creation Issue",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Turkey Maintenance & Enhancements",
+      "projectKey": "TKME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-09T13:25:40.000+0900",
+      "created": "2026-09-29T14:53:58.000+0900",
+      "statusChangedAt": "2026-10-09T13:25:40.479+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nFor the below orders, CS team couldn't not able to create the return request as one of the entry is not visible during the return creation. Only VG-SCFH65TKBZN is available for the return but the other entry is not available/displaying. Please check further and let us know why the other en",
+      "commentsCount": 7,
+      "recentComments": [
+        {
+          "author": "Rajeshbabu Yatirajula",
+          "date": "2026-10-09T13:25:31.155+0900",
+          "snippet": "Hi ~@email \n\nStill it is displaying a single product, check the screen-shot below. Please ensure you verify via CS agent before confirming.\n\n!image-2026-10-09-08-24-12-708.png!\n\nRegards,\nRajesh"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-08T15:47:02.350+0900",
+          "snippet": "Hi Rajesh,\n\nWe have executed the secondGI fix script on PROD. The secondGI field on ConsignmentEntry for consignment TR260831-72936144 (entry 0, QE65LS03HWUXTK) has been updated from 00000000000000 to 20260904164037.\n\nThe entry should now be visible in the return creation UI. You can proceed with cr"
+        }
+      ],
+      "lastCommentBy": "Rajeshbabu Yatirajula",
+      "lastCommentSnippet": "Hi ~@email \n\nStill it is displaying a single product, check the screen-shot below. Please ensure you verify via CS agent before confirming.\n\n!image-2026-10-09-08-24-12-708.png!\n\nRegards,\nRajesh",
+      "lastCommentDate": "2026-10-09T13:25:31.155+0900",
+      "url": "https://jira.secext.samsung.net/browse/TKME-2349",
+      "linkedTickets": [
+        {
+          "key": "PC-55140",
+          "summary": "Script to fix secondGI on ConsignmentEntry for return creation",
+          "status": "Approved-ES",
+          "statusCategory": "To Do",
+          "relation": "blocks",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "Return Creation Issue\r\nGenerated: 2026-10-02T22:50:00Z\r\n\r\nIssue:\r\nFor order TR260831-72936144, the CS team cannot create a return for entry 0 (product QE65LS03HWUXTK) because it is not visible during return creation. Only entry 1 (VG-SCFH65TKBZN) appears as returnable. The order has two consignments — TR260831-72936144 (entry 0) and TR260831-72936144_1 (entry 1) — both in COMPLETED status.\r\n\r\nRCA:\r\nThe ConsignmentEntry for entry 0 (consignment TR260831-72936144, product QE65LS03HWUXTK) has secondGI = 00000000000000 (all zeros), while entry 1 (consignment TR260831-72936144_1, product VG-SCFH65TKBZN) has secondGI = 20260904074157 (a valid timestamp).\r\n\r\nTokoFullfillmentUtils.isSecondGIValid() at line 1365 of TokoFullfillmentUtils.java checks:\r\n  StringUtils.isNotBlank(secondGI) && !secondGI.trim().matches(\"[0]+\")\r\n\r\nThe value 00000000000000 fails the regex check [0]+ (all zeros), so isSecondGIValid() returns false for entry 0.\r\n\r\nTokoSecondGIReturnableCheckImpl.perform() implements the ReturnableCheck interface. For stores in its includedStores list (which includes the TR store), it calls hasValidSecondGI(), which:\r\n1. Iterates all ConsignmentEntry objects for the order entry\r\n2. Filters by isSecondGIValid(entry.getSecondGI())\r\n3. Sums the shippedQuantity of entries with valid secondGI\r\n4. Compares total valid quantity against the requested return quantity\r\n\r\nSince entry 0 has secondGI = 00000000000000, it is filtered out by isSecondGIValid(). The total quantity with valid secondGI becomes 0, which is less than the requested return quantity of 1. The ReturnableCheck returns false, and the entry is excluded from the return creation UI.\r\n\r\nThe consignment entry received a zero-valued secondGI instead of a proper GERP goods issue timestamp. The GERP billing date for consignment TR260831-72936144 is 2026-09-04 16:40:37, confirming the goods issue was processed, but the secondGI field on the consignment entry was populated with all-zeros instead of the formatted date string. The second consignment (TR260831-72936144_1) received the correct value 20260904074157.\r\n\r\nThis is the same issue documented in NUKME-11321 (closed, code fix deployed June 2025) where return creation fails when one consignment entry has a zero-value secondGI. The TR store is included in the SecondGIReturnableCheck includedStores list, so the check is enforced.\r\n\r\nKibana logs were unavailable during this investigation (expired SAML session). No log-based evidence was gathered. The root cause is confirmed via DB state (secondGI values verified directly) and code trace (isSecondGIValid regex and ReturnableCheck logic).\r\n\r\nPossible remediation:\r\nUpdate the ConsignmentEntry.secondGI for entry 0 (pk=9142550890452) from 00000000000000 to the correct GERP goods issue date. The consignment's GERP billing date is 2026-09-04 16:40:37, and the sibling consignment's secondGI is 20260904074157 (format: yyyyMMddHHmmss). Set the secondGI to 20260904164037 to match the GERP billing date for this consignment.\r\n\r\nA HAC Groovy script can set this value:\r\n  1. Load the ConsignmentEntry by PK (9142550890452)\r\n  2. Set secondGI = \"20260904164037\"\r\n  3. Save the model\r\n\r\nOnce the secondGI is corrected, TokoFullfillmentUtils.isSecondGIValid() will return true, TokoSecondGIReturnableCheckImpl will include entry 0 in the returnable quantity, and the CS team will be able to see entry 0 during return creation.\r\n\r\nAn approved precedent exists in PC-21107 (CSME-4711) which contains a Groovy script that sets ConsignmentEntry.secondGI on consignment entries. That script can be adapted for this order.\r\n\r\nThe same pattern was fixed via code in NUKME-11321, but this order appears to have slipped through — the secondGI was written as all-zeros despite the goods issue being completed. A deeper investigation into why GERP sent a zero-value secondGI for this specific consignment may be warranted to prevent recurrence.\r\n\r\n## Remediation\r\n- Remediation type: Set ConsignmentEntry.secondGI from 00000000000000 to valid GERP date\r\n- Reusable PC ticket: PC-21107 (CSME-4711) — contains approved script for setting secondGI\r\n- Script approach: Load ConsignmentEntry by PK, set secondGI to 20260904164037, save\r\n- Order: TR260831-72936144, ConsignmentEntry PK: 9142550890452",
+        "sections": {
+          "issue": "For order TR260831-72936144, the CS team cannot create a return for entry 0 (product QE65LS03HWUXTK) because it is not visible during return creation. Only entry 1 (VG-SCFH65TKBZN) appears as returnable. The order has two consignments — TR260831-72936144 (entry 0) and TR260831-72936144_1 (entry 1) — both in COMPLETED status.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-02T08:17:58.081Z"
+      }
+    },
     {
       "key": "SAHME-3448",
       "summary": "Request to trigger a refund on the cancelled order.",
@@ -355,8 +408,8 @@
         {
           "key": "TKME-2349",
           "summary": "Return Creation Issue",
-          "status": "Launch Verification",
-          "statusCategory": "Done",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
           "relation": "is blocked by",
           "assignee": null
         }
@@ -1192,7 +1245,7 @@
       {
         "pid": 20536,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 175543,
+        "ageSeconds": 175582,
         "status": "running",
         "isChild": false,
         "taskSummary": "implement the previous ones and 2, 6, 12, 13",
@@ -1202,7 +1255,7 @@
       {
         "pid": 21768,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 175150,
+        "ageSeconds": 175189,
         "status": "running",
         "isChild": false,
         "taskSummary": "implement only 5 and 7",
@@ -1212,7 +1265,7 @@
       {
         "pid": 13300,
         "cwd": "c:\\windows",
-        "ageSeconds": 147223,
+        "ageSeconds": 147263,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1222,7 +1275,7 @@
       {
         "pid": 32364,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 72875,
+        "ageSeconds": 72915,
         "status": "running",
         "isChild": false,
         "taskSummary": "implement the previous ones and 2, 6, 12, 13",
@@ -4546,10 +4599,10 @@
     "bridgeLogTail": "[2026-10-08T15:19:43.001Z] STDOUT data for #651: 117 bytes\n[2026-10-08T15:19:43.002Z] LIVE events write for #651: 48 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.013Z] STDOUT data for #651: 114 bytes\n[2026-10-08T15:19:43.015Z] LIVE events write for #651: 49 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.026Z] STDOUT data for #651: 109 bytes\n[2026-10-08T15:19:43.029Z] LIVE events write for #651: 50 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.031Z] STDOUT data for #651: 117 bytes\n[2026-10-08T15:19:43.033Z] LIVE events write for #651: 51 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.040Z] STDOUT data for #651: 116 bytes\n[2026-10-08T15:19:43.043Z] LIVE events write for #651: 52 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.051Z] STDOUT data for #651: 122 bytes\n[2026-10-08T15:19:43.053Z] LIVE events write for #651: 53 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.062Z] STDOUT data for #651: 104 bytes\n[2026-10-08T15:19:43.064Z] LIVE events write for #651: 54 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.068Z] STDOUT data for #651: 325 bytes\n[2026-10-08T15:19:43.070Z] LIVE events write for #651: 55 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.161Z] Comment posted on #652\n[2026-10-08T15:19:43.793Z] aipro completed for #651 (586 chars)\n[2026-10-08T15:19:45.309Z] Comment posted on #651\n[2026-10-08T22:33:37.129Z] ERROR poll #1: API returned 502 - backing off 10000ms",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-09T04:23:30.570Z",
-      "ageMs": 5231
+      "lastWrite": "2026-10-09T04:24:00.593Z",
+      "ageMs": 13905
     },
-    "watchdogLogTail": "[2026-10-09T04:21:15.497Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T04:21:30.496Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T04:21:45.497Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T04:22:00.511Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T04:22:15.519Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T04:22:30.527Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T04:22:45.538Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T04:23:00.546Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T04:23:15.553Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T04:23:30.568Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-09T04:21:45.497Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T04:22:00.511Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T04:22:15.519Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T04:22:30.527Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T04:22:45.538Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T04:23:00.546Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T04:23:15.553Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T04:23:30.568Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T04:23:45.577Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T04:24:00.593Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
@@ -4682,6 +4735,18 @@
   "actionItems": {
     "zero": [
       {
+        "key": "TKME-2349",
+        "summary": "Return Creation Issue",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/TKME-2349",
+        "updated": "2026-10-09T13:25:40.000+0900",
+        "statusChangedAt": "2026-10-09T13:25:40.479+0900"
+      },
+      {
         "key": "MHME-1439",
         "summary": "SMI - List of MENA Extracts",
         "priority": "None",
@@ -4768,18 +4833,6 @@
         "statusChangedAt": "2026-10-08T14:54:05.744+0900"
       },
       {
-        "key": "PC-55140",
-        "summary": "Script to fix secondGI on ConsignmentEntry for return creation",
-        "priority": "Low",
-        "status": "Approved-ES",
-        "category": "actionable",
-        "reason": "",
-        "whatToDo": "Execute on PROD or validate",
-        "url": "https://jira.secext.samsung.net/browse/PC-55140",
-        "updated": "2026-10-08T18:49:09.000+0900",
-        "statusChangedAt": "2026-10-08T14:54:07.430+0900"
-      },
-      {
         "key": "TKME-2350",
         "summary": "Stuck order on Hybris- ORDER_SPLIT",
         "priority": "None",
@@ -4854,6 +4907,18 @@
         "statusChangedAt": "2026-10-08T14:54:11.603+0900"
       },
       {
+        "key": "PC-55140",
+        "summary": "Script to fix secondGI on ConsignmentEntry for return creation",
+        "priority": "Low",
+        "status": "Approved-ES",
+        "category": "blocked",
+        "reason": "Blocked by TKME-2349 (In Progress)",
+        "whatToDo": "Execute on PROD or validate",
+        "url": "https://jira.secext.samsung.net/browse/PC-55140",
+        "updated": "2026-10-08T18:49:09.000+0900",
+        "statusChangedAt": "2026-10-08T14:54:07.430+0900"
+      },
+      {
         "key": "PC-55179",
         "summary": "SC+ remediation - reset ERROR/UPDATE_ERROR to NEW and retrigger processExternalServices for ZA orders",
         "priority": "Low",
@@ -4913,9 +4978,9 @@
       }
     ],
     "totals": {
-      "zero": 3,
-      "actionable": 6,
-      "blocked": 9,
+      "zero": 4,
+      "actionable": 5,
+      "blocked": 10,
       "queued": 1
     }
   },
@@ -4970,6 +5035,6 @@
   "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 0.33h on TKME-2348, 0.42h on AEME-6596, 3.92h on AEME-6527, 1.33h on SAM-18530, 1h on SAM-18531, 1.5h on PC-55179, 0.75h on MHME-1434, 0.75h on TKME-2349, 0.75h on PKHME-942, 1h on SAME-4005, 1h on PC-55196, 1.5h on PC-55204\nToday: MHME-1434, TKME-2350, MHME-1439, RT-722599, GMT-21163\nBlockers: PC-54800, PC-55196, PC-55035, PC-55037, PC-55140, PC-55179, PC-53923"
+    "standupText": "Yesterday: 0.33h on TKME-2348, 0.42h on AEME-6596, 3.92h on AEME-6527, 1.33h on SAM-18530, 1h on SAM-18531, 1.5h on PC-55179, 0.75h on MHME-1434, 0.75h on TKME-2349, 0.75h on PKHME-942, 1h on SAME-4005, 1h on PC-55196, 1.5h on PC-55204\nToday: TKME-2349, MHME-1434, TKME-2350, MHME-1439, RT-722599\nBlockers: PC-54800, PC-55196, PC-55035, PC-55037, PC-55140, PC-55179, PC-53923"
   }
 }
