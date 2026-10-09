@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-09T08:54:59.414Z",
-  "totalTickets": 21,
+  "generatedAt": "2026-10-09T08:55:43.156Z",
+  "totalTickets": 20,
   "tickets": [
     {
       "key": "AEME-6602",
@@ -405,59 +405,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-14T12:18:37.301Z"
-      }
-    },
-    {
-      "key": "TKME-2349",
-      "summary": "Return Creation Issue",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Turkey Maintenance & Enhancements",
-      "projectKey": "TKME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-09T13:25:40.000+0900",
-      "created": "2026-09-29T14:53:58.000+0900",
-      "statusChangedAt": "2026-10-09T13:25:40.479+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFor the below orders, CS team couldn't not able to create the return request as one of the entry is not visible during the return creation. Only VG-SCFH65TKBZN is available for the return but the other entry is not available/displaying. Please check further and let us know why the other en",
-      "commentsCount": 7,
-      "recentComments": [
-        {
-          "author": "Rajeshbabu Yatirajula",
-          "date": "2026-10-09T13:25:31.155+0900",
-          "snippet": "Hi ~@email \n\nStill it is displaying a single product, check the screen-shot below. Please ensure you verify via CS agent before confirming.\n\n!image-2026-10-09-08-24-12-708.png!\n\nRegards,\nRajesh"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-08T15:47:02.350+0900",
-          "snippet": "Hi Rajesh,\n\nWe have executed the secondGI fix script on PROD. The secondGI field on ConsignmentEntry for consignment TR260831-72936144 (entry 0, QE65LS03HWUXTK) has been updated from 00000000000000 to 20260904164037.\n\nThe entry should now be visible in the return creation UI. You can proceed with cr"
-        }
-      ],
-      "lastCommentBy": "Rajeshbabu Yatirajula",
-      "lastCommentSnippet": "Hi ~@email \n\nStill it is displaying a single product, check the screen-shot below. Please ensure you verify via CS agent before confirming.\n\n!image-2026-10-09-08-24-12-708.png!\n\nRegards,\nRajesh",
-      "lastCommentDate": "2026-10-09T13:25:31.155+0900",
-      "url": "https://jira.secext.samsung.net/browse/TKME-2349",
-      "linkedTickets": [
-        {
-          "key": "PC-55140",
-          "summary": "Script to fix secondGI on ConsignmentEntry for return creation",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "blocks",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "Return Creation Issue\r\nGenerated: 2026-10-02T22:50:00Z\r\n\r\nIssue:\r\nFor order TR260831-72936144, the CS team cannot create a return for entry 0 (product QE65LS03HWUXTK) because it is not visible during return creation. Only entry 1 (VG-SCFH65TKBZN) appears as returnable. The order has two consignments — TR260831-72936144 (entry 0) and TR260831-72936144_1 (entry 1) — both in COMPLETED status.\r\n\r\nRCA:\r\nThe ConsignmentEntry for entry 0 (consignment TR260831-72936144, product QE65LS03HWUXTK) has secondGI = 00000000000000 (all zeros), while entry 1 (consignment TR260831-72936144_1, product VG-SCFH65TKBZN) has secondGI = 20260904074157 (a valid timestamp).\r\n\r\nTokoFullfillmentUtils.isSecondGIValid() at line 1365 of TokoFullfillmentUtils.java checks:\r\n  StringUtils.isNotBlank(secondGI) && !secondGI.trim().matches(\"[0]+\")\r\n\r\nThe value 00000000000000 fails the regex check [0]+ (all zeros), so isSecondGIValid() returns false for entry 0.\r\n\r\nTokoSecondGIReturnableCheckImpl.perform() implements the ReturnableCheck interface. For stores in its includedStores list (which includes the TR store), it calls hasValidSecondGI(), which:\r\n1. Iterates all ConsignmentEntry objects for the order entry\r\n2. Filters by isSecondGIValid(entry.getSecondGI())\r\n3. Sums the shippedQuantity of entries with valid secondGI\r\n4. Compares total valid quantity against the requested return quantity\r\n\r\nSince entry 0 has secondGI = 00000000000000, it is filtered out by isSecondGIValid(). The total quantity with valid secondGI becomes 0, which is less than the requested return quantity of 1. The ReturnableCheck returns false, and the entry is excluded from the return creation UI.\r\n\r\nThe consignment entry received a zero-valued secondGI instead of a proper GERP goods issue timestamp. The GERP billing date for consignment TR260831-72936144 is 2026-09-04 16:40:37, confirming the goods issue was processed, but the secondGI field on the consignment entry was populated with all-zeros instead of the formatted date string. The second consignment (TR260831-72936144_1) received the correct value 20260904074157.\r\n\r\nThis is the same issue documented in NUKME-11321 (closed, code fix deployed June 2025) where return creation fails when one consignment entry has a zero-value secondGI. The TR store is included in the SecondGIReturnableCheck includedStores list, so the check is enforced.\r\n\r\nKibana logs were unavailable during this investigation (expired SAML session). No log-based evidence was gathered. The root cause is confirmed via DB state (secondGI values verified directly) and code trace (isSecondGIValid regex and ReturnableCheck logic).\r\n\r\nPossible remediation:\r\nUpdate the ConsignmentEntry.secondGI for entry 0 (pk=9142550890452) from 00000000000000 to the correct GERP goods issue date. The consignment's GERP billing date is 2026-09-04 16:40:37, and the sibling consignment's secondGI is 20260904074157 (format: yyyyMMddHHmmss). Set the secondGI to 20260904164037 to match the GERP billing date for this consignment.\r\n\r\nA HAC Groovy script can set this value:\r\n  1. Load the ConsignmentEntry by PK (9142550890452)\r\n  2. Set secondGI = \"20260904164037\"\r\n  3. Save the model\r\n\r\nOnce the secondGI is corrected, TokoFullfillmentUtils.isSecondGIValid() will return true, TokoSecondGIReturnableCheckImpl will include entry 0 in the returnable quantity, and the CS team will be able to see entry 0 during return creation.\r\n\r\nAn approved precedent exists in PC-21107 (CSME-4711) which contains a Groovy script that sets ConsignmentEntry.secondGI on consignment entries. That script can be adapted for this order.\r\n\r\nThe same pattern was fixed via code in NUKME-11321, but this order appears to have slipped through — the secondGI was written as all-zeros despite the goods issue being completed. A deeper investigation into why GERP sent a zero-value secondGI for this specific consignment may be warranted to prevent recurrence.\r\n\r\n## Remediation\r\n- Remediation type: Set ConsignmentEntry.secondGI from 00000000000000 to valid GERP date\r\n- Reusable PC ticket: PC-21107 (CSME-4711) — contains approved script for setting secondGI\r\n- Script approach: Load ConsignmentEntry by PK, set secondGI to 20260904164037, save\r\n- Order: TR260831-72936144, ConsignmentEntry PK: 9142550890452",
-        "sections": {
-          "issue": "For order TR260831-72936144, the CS team cannot create a return for entry 0 (product QE65LS03HWUXTK) because it is not visible during return creation. Only entry 1 (VG-SCFH65TKBZN) appears as returnable. The order has two consignments — TR260831-72936144 (entry 0) and TR260831-72936144_1 (entry 1) — both in COMPLETED status.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-02T08:17:58.081Z"
       }
     },
     {
@@ -1271,7 +1218,7 @@
       {
         "pid": 20536,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 191830,
+        "ageSeconds": 191874,
         "status": "running",
         "isChild": false,
         "taskSummary": "implement the previous ones and 2, 6, 12, 13",
@@ -1281,7 +1228,7 @@
       {
         "pid": 21768,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 191437,
+        "ageSeconds": 191481,
         "status": "running",
         "isChild": false,
         "taskSummary": "search directly for now",
@@ -1291,7 +1238,7 @@
       {
         "pid": 32364,
         "cwd": "c:\\windows",
-        "ageSeconds": 89162,
+        "ageSeconds": 89206,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1301,7 +1248,7 @@
       {
         "pid": 39608,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 455,
+        "ageSeconds": 499,
         "status": "running",
         "isChild": false,
         "taskSummary": "implement the previous ones and 2, 6, 12, 13",
@@ -4625,10 +4572,10 @@
     "bridgeLogTail": "[2026-10-08T15:19:43.001Z] STDOUT data for #651: 117 bytes\n[2026-10-08T15:19:43.002Z] LIVE events write for #651: 48 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.013Z] STDOUT data for #651: 114 bytes\n[2026-10-08T15:19:43.015Z] LIVE events write for #651: 49 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.026Z] STDOUT data for #651: 109 bytes\n[2026-10-08T15:19:43.029Z] LIVE events write for #651: 50 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.031Z] STDOUT data for #651: 117 bytes\n[2026-10-08T15:19:43.033Z] LIVE events write for #651: 51 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.040Z] STDOUT data for #651: 116 bytes\n[2026-10-08T15:19:43.043Z] LIVE events write for #651: 52 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.051Z] STDOUT data for #651: 122 bytes\n[2026-10-08T15:19:43.053Z] LIVE events write for #651: 53 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.062Z] STDOUT data for #651: 104 bytes\n[2026-10-08T15:19:43.064Z] LIVE events write for #651: 54 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.068Z] STDOUT data for #651: 325 bytes\n[2026-10-08T15:19:43.070Z] LIVE events write for #651: 55 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.161Z] Comment posted on #652\n[2026-10-08T15:19:43.793Z] aipro completed for #651 (586 chars)\n[2026-10-08T15:19:45.309Z] Comment posted on #651\n[2026-10-08T22:33:37.129Z] ERROR poll #1: API returned 502 - backing off 10000ms",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-09T08:55:02.323Z",
-      "ageMs": 1308
+      "lastWrite": "2026-10-09T08:55:47.355Z",
+      "ageMs": 53
     },
-    "watchdogLogTail": "[2026-10-09T08:52:47.251Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:53:02.252Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:53:17.263Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:53:32.274Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:53:47.280Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:54:02.289Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:54:17.294Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:54:32.304Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:54:47.309Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:55:02.319Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-09T08:53:32.274Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:53:47.280Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:54:02.289Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:54:17.294Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:54:32.304Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:54:47.309Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:55:02.319Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:55:17.324Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:55:32.342Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:55:47.355Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
@@ -4783,18 +4730,6 @@
         "url": "https://jira.secext.samsung.net/browse/TKME-2348",
         "updated": "2026-10-09T16:11:59.000+0900",
         "statusChangedAt": "2026-09-29T01:09:10.990+0900"
-      },
-      {
-        "key": "TKME-2349",
-        "summary": "Return Creation Issue",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/TKME-2349",
-        "updated": "2026-10-09T13:25:40.000+0900",
-        "statusChangedAt": "2026-10-09T13:25:40.479+0900"
       },
       {
         "key": "MHME-1439",
@@ -5016,21 +4951,21 @@
       }
     ],
     "totals": {
-      "zero": 6,
+      "zero": 5,
       "actionable": 5,
       "blocked": 9,
       "queued": 1
     }
   },
   "worklogTotals": {
-    "todayHours": 7.67,
-    "weekHours": 39.72,
+    "todayHours": 8.25,
+    "weekHours": 40.31,
     "dailyHours": [
       0.02,
       9.44,
       8.35,
       14.25,
-      7.67,
+      8.25,
       0,
       0
     ],
@@ -5048,9 +4983,9 @@
   },
   "tempoApproval": {
     "status": "open",
-    "workedHours": 60.56,
+    "workedHours": 61.14,
     "requiredHours": 176,
-    "deficitHours": 115.44,
+    "deficitHours": 114.86,
     "periodStart": "2026-10-01",
     "periodEnd": "2026-10-31"
   },
@@ -5070,7 +5005,150 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "AEME-6602",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 84145,
+        "targetDate": "2026-10-01T06:07:13.196000001Z"
+      },
+      {
+        "key": "AEME-6602",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 843411,
+        "targetDate": "2026-10-23T03:14:26.046168304Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86397,
+        "targetDate": "2026-09-29T16:09:08.750000001Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2516136,
+        "targetDate": "2026-11-19T11:53:11.870000038Z"
+      },
+      {
+        "key": "AEME-6595",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86334,
+        "targetDate": "2026-09-30T07:32:47.469000001Z"
+      },
+      {
+        "key": "AEME-6595",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 766353,
+        "targetDate": "2026-10-22T05:50:08.242681874Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86179,
+        "targetDate": "2026-09-30T08:16:57.595000001Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1269633,
+        "targetDate": "2026-10-20T08:16:57.595000015Z"
+      },
+      {
+        "key": "SAHME-3435",
+        "slaName": "Maintenance Response (GMT+2)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85910,
+        "targetDate": "2026-09-17T09:08:01.990000001Z"
+      },
+      {
+        "key": "SAHME-3435",
+        "slaName": "Maintenance Resolution (GMT+2)",
+        "slaStatus": "STILL",
+        "remainingDuration": 676353,
+        "targetDate": "2026-10-21T04:50:08.730179271Z"
+      },
+      {
+        "key": "AEME-6527",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86020,
+        "targetDate": "2026-09-01T07:46:25.907000001Z"
+      },
+      {
+        "key": "AEME-6527",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 990365,
+        "targetDate": "2026-10-18T21:25:13.757000035Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85937,
+        "targetDate": "2026-09-17T08:08:38.502000001Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1120263,
+        "targetDate": "2026-10-28T08:08:38.502000030Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86254,
+        "targetDate": "2026-09-21T04:19:58.710000001Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1357022,
+        "targetDate": "2026-11-02T02:54:37.529000031Z"
+      },
+      {
+        "key": "MHME-1434",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86298,
+        "targetDate": "2026-09-15T11:59:43.700000001Z"
+      },
+      {
+        "key": "MHME-1434",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 970111,
+        "targetDate": "2026-10-26T15:26:06.699000030Z"
+      },
+      {
+        "key": "TKME-2350",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86388,
+        "targetDate": "2026-10-01T10:37:23.449000001Z"
+      },
+      {
+        "key": "TKME-2350",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 2591572,
+        "targetDate": "2026-11-18T11:46:56.172000035Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
     "standupText": "Yesterday: 0.33h on TKME-2348, 0.42h on AEME-6596, 3.92h on AEME-6527, 1.33h on SAM-18530, 1h on SAM-18531, 1.5h on PC-55179, 0.75h on MHME-1434, 0.75h on TKME-2349, 0.75h on PKHME-942, 1h on SAME-4005, 1h on PC-55196, 1.5h on PC-55204\nToday: PC-55239, AUTEU-41862, PC-55234, TKME-2348, AEME-6597\nBlockers: PC-55239, PC-55234, AEME-6527, PC-55035, PC-55179, PC-53923"
