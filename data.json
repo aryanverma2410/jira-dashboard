@@ -1,58 +1,58 @@
 {
-  "generatedAt": "2026-10-09T12:15:24.191Z",
-  "totalTickets": 19,
+  "generatedAt": "2026-10-09T12:16:08.134Z",
+  "totalTickets": 18,
   "tickets": [
     {
-      "key": "TKME-2348",
-      "summary": "Stuck order on Hybris",
+      "key": "TKME-2350",
+      "summary": "Stuck order on Hybris- ORDER_SPLIT",
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "None",
       "project": "Turkey Maintenance & Enhancements",
       "projectKey": "TKME",
       "issuetype": "Maintenance Request",
-      "updated": "2026-10-09T21:15:50.000+0900",
-      "created": "2026-09-29T01:09:08.000+0900",
-      "statusChangedAt": "2026-09-29T01:09:10.990+0900",
+      "updated": "2026-10-09T21:17:33.000+0900",
+      "created": "2026-09-30T19:37:21.000+0900",
+      "statusChangedAt": "2026-10-07T20:54:41.704+0900",
       "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n||Order Number||Order Date||Order Status||Issue||\n|TR260924-93500425|2026/09/28|REFUND_FAILED|Payment entry status: REFUND_FOLLOW_ON:ERROR|\n|TR260915-84759375|2026/09/27|ORDER_SPLIT|Consignment process",
-      "commentsCount": 5,
+      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n|Subsidiary|Order Nr|Order Status|\n|tr|TR260925-94249237|ORDER_SPLIT|\n|tr|TR260925-94292417|ORDER_SPLIT|\n|tr|TR260925-94453037|ORDER_SPLIT|\n|tr|TR260925-94514044|ORDER_SPLIT|\n|tr|TR260925-94546058|ORDE",
+      "commentsCount": 3,
       "recentComments": [
         {
           "author": "Aryan Verma",
-          "date": "2026-10-09T21:15:29.762+0900",
-          "snippet": "Hi ~@email ,\n\nAs discussed ,\n\nsendConsignmentToWarehouse  is a consignment process, it will be included in the new cronjob.\n\nFor the mentioned cronjob we will be including splitOrder and completeFinancialUpdate statuses to the existing cronjob query.\n\nKindly confirm on the same.\n\nRegards\n\nAryan"
+          "date": "2026-10-09T21:17:33.257+0900",
+          "snippet": "Hi ~@email ,\n\nWe will update as soon as the order has moved forward and close the ticket.\n\nNo actions are remaining from our end.\n\nRegards\n\nAryan"
         },
         {
           "author": "Rajeshbabu Yatirajula",
-          "date": "2026-10-09T16:11:53.098+0900",
-          "snippet": "Hi ~@email \n\nThe ticket TKME-2362 is created for a new cronjob to retrigger the consignment orders, the request here is to update the existing autoheal cronjob to include sendConsignmentToWarehouse into it.\n\nRegards,\nRajesh"
+          "date": "2026-10-07T20:51:47.375+0900",
+          "snippet": "Hi ~@email \n\nOnly one order is still pending with DIVA, it will be moved further when hybris received the shipment status from DIVA system.\n\nRegards,\nRajesh"
         }
       ],
       "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi ~@email ,\n\nAs discussed ,\n\nsendConsignmentToWarehouse  is a consignment process, it will be included in the new cronjob.\n\nFor the mentioned cronjob we will be including splitOrder and completeFinancialUpdate statuses to the existing cronjob query.\n\nKindly confirm on the same.\n\nRegards\n\nAryan",
-      "lastCommentDate": "2026-10-09T21:15:29.762+0900",
-      "url": "https://jira.secext.samsung.net/browse/TKME-2348",
+      "lastCommentSnippet": "Hi ~@email ,\n\nWe will update as soon as the order has moved forward and close the ticket.\n\nNo actions are remaining from our end.\n\nRegards\n\nAryan",
+      "lastCommentDate": "2026-10-09T21:17:33.257+0900",
+      "url": "https://jira.secext.samsung.net/browse/TKME-2350",
       "linkedTickets": [
         {
-          "key": "TKME-2350",
-          "summary": "Stuck order on Hybris- ORDER_SPLIT",
+          "key": "TKME-2348",
+          "summary": "Stuck order on Hybris",
           "status": "In Progress",
           "statusCategory": "In Progress",
-          "relation": "is cloned by",
+          "relation": "clones",
           "assignee": null
         }
       ],
       "solution": {
         "status": "found",
-        "excerpt": "Stuck order on Hybris - 16 TR-region orders\r\nGenerated: 2026-09-28T00:00:00Z\r\n\r\nIssue:\r\n\r\nTKME-2348 reports 16 stuck orders from the Turkey (TR) region across 5 distinct error patterns. All orders have payments captured (AUTH + CAPTURE accepted) but are stalled at various stages of the fulfilment, financial, or refund pipelines. The orders span dates from 2026-09-17 to 2026-09-28 and are stagnating for up to 98 hours.\r\n\r\nThe 5 patterns are:\r\n\r\n1. Connection reset at sendConsignmentToWarehouse (6 orders): TR260915-84759375, TR260927-96594178, TR260927-96494681, TR260926-95689021, TR260926-95561694, TR260925-94199293\r\n2. Cancel DO blocked by WMS with refund failure (6 orders): TR260924-93308617, TR260924-93147668, TR260923-92226009, TR260917-86921245, TR260919-88229034, TR260925-94514044\r\n3. Financial process I/O error (2 orders): TR260925-94391432, TR260922-91038821\r\n4. Refund FOLLOW_ON payment gateway error (1 order): TR260924-93500425\r\n5. Completed but missing shipping date (1 order): TR260926-95654349\r\n\r\nRCA:\r\n\r\nPattern 1: Connection reset at sendConsignmentToWarehouse (6 orders)\r\n\r\nThe consignment process (consignment-process-v11-36) reached the sendConsignmentToWarehouse action node, which calls SendConsignmentToWarehouseAction.executeAction() (com.samsung.toko.fulfilmentprocess.actions.consignment.SendConsignmentToWarehouseAction, line 38). This delegates to TokoBifrostWarehouseAdapterImpl.sendConsignmentToWarehouse() (line 217), which converts the consignment to a Bifrost sales order request via tokoBifrostSalesOrderRequestConverter and sends it to the WMS through TokoBifrostWebClient.\r\n\r\nThe WMS endpoint dropped the TCP connection mid-request (java.net.SocketException: Connection reset), causing the process engine to catch the RuntimeException at ActionNode.handleActionExecutionRuntimeException (line 163) and set the consignment process to ERROR state.\r\n\r\nDB verification confirms all 6 orders have:\r\n- Order process: RUNNING (waiting for warehouse subprocess to end)\r\n- Consignment process: ERROR (consignment-process-v11-36)\r\n- Consignment status: WAITING_FOR_TRANSFER (no tracking, no shipping date, no GERP bill)\r\n- Payment: AUTH and CAPTURE both ACCEPTED\r\n\r\nOrders TR260926-95689021 and TR260925-94199293 are partial - one consignment completed successfully and one is stuck. The stuck consignments in these orders also have ERROR state on their consignment processes.\r\n\r\n4 of 6 stuck consignments route to warehouse WC17-S751 (cross-dock), 2 route to DIVA warehouses (ce-xdock). The Connection reset is a transient network-level failure between Hybris and the WMS/Bifrost integration layer, not a code defect.\r\n\r\nThis is a recurring platform issue confirmed by Jira cross-reference: PC-54225 (Closed) documents the same error pattern for AE region order AE260908-78324187, remediated by re-triggering the consignment process. TKME-2055 and TKME-2089 are similar TR-region tickets.\r\n\r\nPattern 2: Cancel DO blocked by WMS with refund failure (6 orders)\r\n\r\n5 of 6 orders (TR260924-93308617, TR260924-93147668, TR260923-92226009, TR260917-86921245, TR260919-88229034) have the same lifecycle: consignment was CANCELLED at the warehouse (WC12-S751 or WC17-S751), consignment process SUCCEEDED, but the refund FOLLOW_ON call to the Masterpass payment gateway returned ERROR. All order totals are zeroed out (0E-8 TRY). The order process is stuck at RUNNING state, cycling through isWaitForFinancialCompletionRequired, isSecondFIRequired, and isFinancialUpdateRequired task actions.\r\n\r\nThe refund failure is in the PaymentTransactionEntry with type REFUND_FOLLOW_ON and status ERROR. The Masterpass payment gateway rejected the follow-on refund request. Orders TR260923-92226009, TR260917-86921245, and TR260919-88229034 share the same refund error timestamp (2026-09-25 07:30:26) and the same product (UE32H5000FUXTK x3), indicating a batch refund processing failure.\r\n\r\nThe 6th order (TR260925-94514044) has a different profile: first consignment CANCELLED at WC12-S751, second consignment stuck at READY status with consignment process RUNNING. The WMS did not process the cancel delivery order for the second consignment. Order total dropped to 1.00 TRY. Payment captured at 450,000 TRY but no refund has been initiated. The cancel email process SUCCEEDED but the second consignment remains blocked.\r\n\r\nJira cross-reference found PC-48853 (Closed) documenting REFUND_FOLLOW_ON PTE update remediation and PC-35580 (Closed) for refund follow-on entry to success. These PC tickets confirm that the standard remediation is to update the PTE status and re-trigger the refund flow.\r\n\r\nPattern 3: Financial process I/O error (2 orders)\r\n\r\nTR260925-94391432 (WAITING_FOR_SEND_FINANCIAL): The order process (order-process-v25-69) failed at the splitOrder action with an I/O error: sec.divaportal.com:443 failed to respond. The DIVA portal is the financial integration endpoint for TR region. No consignments were ever created. Payment was captured (69,999 TRY) but the initial FI posting to SAP/GERP through the DIVA portal failed. The order process is in ERROR state.\r\n\r\nTR260922-91038821 (WAITING_FOR_FINANCIAL): The consignment was fully completed and delivered (shipped 2026-09-25, GERP bill 3247490146, completed 2026-09-26), but the order process failed at the completeFinancialUpdate action with Connection reset. The order process is in ERROR state. Payment was captured (83,579.99 TRY across 2 transactions) but the second FI (completion FI) failed.\r\n\r\nCode trace: SendOrderCompleteFinancialUpdateAction (extends SendInitialFinancialUpdateAction) calls tokoConsignmentFinancialsService.sendInitialFinancialUpdate() at line 22. For TR region, this connects to sec.divaportal.com:443 (DIVA portal). The I/O error occurs when the DIVA portal is unreachable or drops the connection during the FI posting.\r\n\r\nJira cross-reference found TKME-1979 (DIVA portal failure) and TKME-1610 (DIVA services HTTPS update), confirming DIVA portal instability is a known TR-region issue. Monitoring alerts HTCK-4443, HTCK-4048, HTCK-4564 track high failure rates for divaportal.com.\r\n\r\nPattern 4: Refund FOLLOW_ON payment gateway error (1 order)\r\n\r\nTR260924-93500425 (REFUND_FAILED): No consignments were ever created. The order process is in FAILED state (not RUNNING). The payment transaction has AUTH=ACCEPTED, CAPTURE=ACCEPTED, and REFUND_FOLLOW_ON=ERROR for 27,139.65 TRY. The order was cancelled before fulfilment and the refund to the Masterpass payment gateway failed immediately. Task logs show the refund path was entered: refundCancelOrder, isChargeBackRefundProcessed, releaseVirtualStock, cancelNonActivatedExternalService, isInstantRefundEnabledCheckBeforeFinancialUpdate.\r\n\r\nThe REFUND_FOLLOW_ON failure is a payment gateway rejection, not a Hybris code defect. The Masterpass gateway may have rejected the refund due to a processing window restriction, duplicate refund attempt, or gateway-side issue.\r\n\r\nPattern 5: Completed but missing shipping date (1 order)\r\n\r\nTR260926-95654349 (COMPLETED): The order is fully COMPLETED. All 5 consignments are COMPLETED, all processes (order, consignment, omnichannel, store email, dispatch email) are SUCCEEDED. GERP bills exist for all consignments. Payment AUTH and CAPTURE accepted (85,119 TRY). However, the first consignment (entry 0, product WW90DG6U25LEAH, a washing machine) has no shipping date despite having a completion date and GERP bill. No tracking IDs exist on any of the 5 consignments.\r\n\r\nThis is a data integrity issue, not a process error. The consignment was physically delivered and GERP billed, but the shipping date field was never populated by the warehouse subsystem. The order itself is COMPLETED and the process is SUCCEEDED, so no process remediation is needed.\r\n\r\nNote: Kibana log analysis was not performed (Kibana MCP was unavailable during this investigation). The error messages cited in the ticket description and the DB state verification provide sufficient evidence for the root cause analysis above. If Kibana becomes available, log analysis could confirm the exact exception stack traces and timestamps.\r\n\r\nPossible remediation:\r\n\r\nPattern 1 (Connection reset at sendConsignmentToWarehouse) - 6 orders:\r\nRe-trigger the consignment process from the sendConsignmentToWarehouse action. The consignment data is intact and the WMS connection reset was transient. Reusable PC ticket: PC-52605 (process-restart, REUSABLE, parent TKME-2279, script: script-TKME-2279-retrigger-business-process.groovy). Adapt the script to target these 6 orders' consignment processes, resetting the ERROR state and re-triggering from the sendConsignmentToWarehouse action node. For the 2 partial orders (TR260926-95689021, TR260925-94199293), only retrigger the stuck consignment process (the one in ERROR state), not the completed one.\r\n\r\nPattern 2 (Cancel DO blocked by WMS with refund failure) - 6 orders:\r\nFor the 5 REFUND_FAILED orders (TR260924-93308617, TR260924-93147668, TR260923-92226009, TR260917-86921245, TR260919-88229034): The consignments are already CANCELLED and the consignment process SUCCEEDED. The issue is the REFUND_FOLLOW_ON PTE in ERROR state. Remediation: update the PTE status from ERROR to SUCCESS (if the refund was actually processed by the gateway) or re-trigger the refund (if the refund was not processed). Reference: PC-48853 (Closed) and PC-35580 (Closed) document the PTE update approach. Reusable PC ticket: PC-52765 (refund-retrigger, REUSABLE, parent SAME-3941, script: script-SAME-3941-sa260722-return-refund-retrigger.groovy) may be adaptable for the refund retrigger.\r\n\r\nFor TR260925-94514044 (Cancel DO blocked by WMS without refund): The second consignment is stuck at READY with the consignment process RUNNING. This requires WMS team intervention to either cancel the delivery order or confirm fulfilment. The WMS has blocked the cancel DO and Hybris cannot force this. Once WMS resolves the DO, the consignment process should advance. If WMS confirms the cancel, the refund flow will need to be triggered. This order may need escalation to the WMS/warehouse operations team.\r\n\r\nPattern 3 (Financial process I/O error) - 2 orders:\r\nTR260925-94391432: Re-trigger the order process from the splitOrder action. The DIVA portal timeout was transient. Reusable PC ticket: PC-52605 (process-restart, REUSABLE). The script should target the order process and reset from the splitOrder action node.\r\n\r\nTR260922-91038821: Re-trigger the order process from the completeFinancialUpdate action. The consignment is already COMPLETED and delivered. Reusable PC ticket: PC-52605 (process-restart, REUSABLE). The script should target the order process and reset from the completeFinancialUpdate action node.\r\n\r\nPattern 4 (Refund FOLLOW_ON payment gateway error) - 1 order:\r\nTR260924-93500425: The order process is in FAILED state (not ERROR), so process retrigger alone may not work. The refund FOLLOW_ON PTE needs to be investigated. Check with the payment team whether the Masterpass gateway actually processed the refund despite returning ERROR. If the refund was processed, update the PTE to SUCCESS. If not, re-trigger the refund. Reference: PC-48853 (Closed) for PTE update approach.\r\n\r\nPattern 5 (Completed but missing shipping date) - 1 order:\r\nTR260926-95654349: The order is fully COMPLETED and all processes SUCCEEDED. This is a data integrity issue only. If the missing shipping date causes downstream reporting or tracking issues, update the consignment shipping date field to match the completion date. This is a minor data fix and does not require process remediation.\r\n\r\n## Remediation\r\n\r\nReusable PC tickets identified:\r\n1. PC-52605 (REUSABLE) - Process restart for Connection reset and Financial I/O errors (Patterns 1 and 3). Script: script-TKME-2279-retrigger-business-process.groovy. Parent: TKME-2279.\r\n2. PC-52765 (REUSABLE) - Refund retrigger for REFUND_FOLLOW_ON errors (Pattern 2). Script: script-SAME-3941-sa260722-return-refund-retrigger.groovy. Parent: SAME-3941.\r\n3. PC-48853 (Closed) - PTE REFUND_FOLLOW_ON update (Pattern 4). Manual approach documented in ticket.\r\n4. PC-54225 (Closed) - Connection reset remediation precedent (AE region).\r\n\r\nOrders requiring WMS team escalation:\r\n- TR260925-94514044 (second consignment DO blocked by WMS at READY status)\r\n\r\nOrders requiring no remediation:\r\n- TR260926-95654349 (COMPLETED, data integrity issue only)\r\n\r\nInvestigation gaps:\r\n- Kibana log analysis was not performed (Kibana MCP unavailable). Log confirmation of exact exception stack traces and timestamps is recommended if Kibana becomes available.\r\n- DIVA portal (sec.divaportal.com) connectivity should be verified - TKME-1979 and TKME-1610 document known instability.",
+        "excerpt": "Ticket Summary: Stuck order on Hybris - ORDER_SPLIT\r\nGenerated: 2026-10-08T00:00:00Z\r\n\r\nIssue:\r\n\r\n6 TR-region orders reported stuck in ORDER_SPLIT status on 2026-09-25. All orders are buyback orders containing OmniChannelProduct, assigned to DIVA-Istanbul warehouse. Upon DB verification, 4 of the 6 orders have already self-resolved to COMPLETED status. One order (TR260925-94453037) remains genuinely stuck in ORDER_SPLIT, waiting for DIVA shipment status. One order (TR260925-94514044) progressed to REFUND_FAILED after its consignments were cancelled but the MasterPass refund of 450,000 TRY failed with ERROR status.\r\n\r\nRCA:\r\n\r\nTR260925-94249237, TR260925-94292417, TR260925-94546058, TR260925-94640512:\r\nThese 4 orders have fully completed. All consignments are COMPLETED, GERP billing numbers assigned, all order and consignment processes SUCCEEDED. No action needed — these progressed after the ticket was raised, likely as DIVA sent shipment confirmations.\r\n\r\nTR260925-94453037 (ORDER_SPLIT — genuinely stuck):\r\nThe order was split into 3 consignments (products: AR60F24C1KW/SK, ACL-RF50, FRH1458Z4) after checkout via the splitOrder action in order-process-v25-69. All 3 consignments are assigned to DIVA-Istanbul warehouse and are in READY status. The order process reached the isDelayedFiRequired action node, which checks IsDelayedFiPostingRequiredAction.executeAction() — this calls RentalPaymentUtil.isRentalPaymentMode() on the order's payment mode. Since the payment mode is MasterPass (tr-masterpassPaymentMode, not a rental payment mode), the action returns NO, transitioning to waitForWarehouseSubprocessEnd. The order process is now waiting for the event ${process.code}_ConsignmentSubprocessEnd.\r\n\r\nThe 3 consignment subprocesses (omnichannel-consignment-sub-process-v1) are all in RUNNING state. These subprocesses are waiting for DIVA to send the shipment status for each consignment. DIVA has not yet sent the shipment confirmation for this order, so the consignment processes remain RUNNING, which means the ConsignmentSubprocessEnd event is never fired, and the order process stays stuck at waitForWarehouseSubprocessEnd.\r\n\r\nThis matches the pattern seen in TKME-2028 (15 TR-region orders stuck at ORDER_SPLIT, resolved after confirming with DIVA and manually updating status) and RT-349680 (DIVA orders stuck at Order Split, fixed by DIVA 3rd party). The Jira comment from Rajeshbabu Yatirajula confirms: \"Only one order is still pending with DIVA, it will be moved further when hybris receives the shipment status from DIVA system.\"\r\n\r\nTR260925-94514044 (REFUND_FAILED — partially stuck):\r\nBoth consignments were CANCELLED (one at WC12-S751, one at DIVA-Istanbul). The order was cancelled and a REFUND_FOLLOW_ON transaction for 450,000 TRY was initiated on 2026-10-05 11:30:31, but it failed with ERROR status. The order process (order-process-v25-69) is in RUNNING state, waiting at the financial completion path — the process expects the refund to complete before the order can reach a terminal state. The failed refund transaction will not retry automatically. The order process is stuck at the isWaitForFinancialCompletionRequired / waitForFinancialCompletion stage because the financial system never posts the WaitForFinancialComplete event.\r\n\r\nPossible remediation:\r\n\r\nTR260925-94249237, TR260925-94292417, TR260925-94546058, TR260925-94640512:\r\nNo action required. These orders are fully COMPLETED.\r\n\r\nTR260925-94453037:\r\nConfirm with the DIVA team whether this order has been fulfilled on their end. If DIVA confirms fulfillment and the shipment status was sent but not processed by Hybris, the consignment statuses need to be manually updated (READY to SHIPPED/COMPLETED) and the omnichannel-consignment-sub-process needs to be retriggered. This follows the remediation pattern from TKME-2028 where orders were manually pushed to COMPLETED after DIVA confirmed fulfillment. If DIVA has not yet fulfilled the order, this is an external dependency — the order will remain in ORDER_SPLIT until DIVA sends the shipment status.\r\n\r\nTR260925-94514044:\r\nThe MasterPass REFUND_FOLLOW_ON transaction (450,000 TRY) is in ERROR status. The refund needs to be retried. This can be done by creating a new refund transaction entry or by resetting the failed transaction status and retriggering the refund flow via HAC script. The order process will remain in RUNNING state until the financial completion event is posted. Alternatively, if the refund cannot be retried, the order process can be manually advanced past the financial completion stage, but the refund failure should be resolved first to ensure the customer receives their money back.\r\n\r\nFor both stuck orders, no single reusable PC ticket covers this exact scenario. The closest existing reusable tickets are PC-44946 (TR Order Split — update external service status + retrigger consignment, manual, no script) and PC-52605 (generic process restart for stuck business processes, has script script-TKME-2279-retrigger-business-process.groovy). A new PC ticket may be needed if a HAC script is required for remediation.",
         "sections": {
-          "issue": "TKME-2348 reports 16 stuck orders from the Turkey (TR) region across 5 distinct error patterns. All orders have payments captured (AUTH + CAPTURE accepted) but are stalled at various stages of the fulfilment, financial, or refund pipelines. The orders span dates from 2026-09-17 to 2026-09-28 and are stagnating for up to 98 hours.\r\n\r\nThe 5 patterns are:\r\n\r\n1. Connection reset at sendConsignmentToWarehouse (6 orders): TR260915-84759375, TR260927-96594178, TR260927-96494681, TR260926-95689021, TR260926-95561694, TR260925-94199293\r\n2. Cancel DO blocked by WMS with refund failure (6 orders): TR260924-93308617, TR260924-93147668, TR260923-92226009, TR260917-86921245, TR260919-88229034, TR260925-94514044\r\n3. Financial process I/O error (2 orders): TR260925-94391432, TR260922-91038821\r\n4. Refund FOLLOW_ON payment gateway error (1 order): TR260924-93500425\r\n5. Completed but missing shipping date (1 order): TR260926-95654349",
+          "issue": "6 TR-region orders reported stuck in ORDER_SPLIT status on 2026-09-25. All orders are buyback orders containing OmniChannelProduct, assigned to DIVA-Istanbul warehouse. Upon DB verification, 4 of the 6 orders have already self-resolved to COMPLETED status. One order (TR260925-94453037) remains genuinely stuck in ORDER_SPLIT, waiting for DIVA shipment status. One order (TR260925-94514044) progressed to REFUND_FAILED after its consignments were cancelled but the MasterPass refund of 450,000 TRY failed with ERROR status.",
           "rca": "",
           "remediation": ""
         },
         "source": "RCA MD",
-        "foundAt": "2026-09-28T16:38:55.087Z"
+        "foundAt": "2026-10-08T04:06:09.800Z"
       }
     },
     {
@@ -557,59 +557,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-16T09:29:59.696Z"
-      }
-    },
-    {
-      "key": "TKME-2350",
-      "summary": "Stuck order on Hybris- ORDER_SPLIT",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Turkey Maintenance & Enhancements",
-      "projectKey": "TKME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-08T12:49:46.000+0900",
-      "created": "2026-09-30T19:37:21.000+0900",
-      "statusChangedAt": "2026-10-07T20:54:41.704+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n|Subsidiary|Order Nr|Order Status|\n|tr|TR260925-94249237|ORDER_SPLIT|\n|tr|TR260925-94292417|ORDER_SPLIT|\n|tr|TR260925-94453037|ORDER_SPLIT|\n|tr|TR260925-94514044|ORDER_SPLIT|\n|tr|TR260925-94546058|ORDE",
-      "commentsCount": 2,
-      "recentComments": [
-        {
-          "author": "Rajeshbabu Yatirajula",
-          "date": "2026-10-07T20:51:47.375+0900",
-          "snippet": "Hi ~@email \n\nOnly one order is still pending with DIVA, it will be moved further when hybris received the shipment status from DIVA system.\n\nRegards,\nRajesh"
-        },
-        {
-          "author": "Naveen Chauhan",
-          "date": "2026-09-30T19:41:25.063+0900",
-          "snippet": "Hi ~@email,\nThe given orders are buyback orders containing OmniChannelProduct. Please check and let us know if we should proceed with processing them.\n \n\ncc: ~@email \n\nthank you"
-        }
-      ],
-      "lastCommentBy": "Rajeshbabu Yatirajula",
-      "lastCommentSnippet": "Hi ~@email \n\nOnly one order is still pending with DIVA, it will be moved further when hybris received the shipment status from DIVA system.\n\nRegards,\nRajesh",
-      "lastCommentDate": "2026-10-07T20:51:47.375+0900",
-      "url": "https://jira.secext.samsung.net/browse/TKME-2350",
-      "linkedTickets": [
-        {
-          "key": "TKME-2348",
-          "summary": "Stuck order on Hybris",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
-          "relation": "clones",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "Ticket Summary: Stuck order on Hybris - ORDER_SPLIT\r\nGenerated: 2026-10-08T00:00:00Z\r\n\r\nIssue:\r\n\r\n6 TR-region orders reported stuck in ORDER_SPLIT status on 2026-09-25. All orders are buyback orders containing OmniChannelProduct, assigned to DIVA-Istanbul warehouse. Upon DB verification, 4 of the 6 orders have already self-resolved to COMPLETED status. One order (TR260925-94453037) remains genuinely stuck in ORDER_SPLIT, waiting for DIVA shipment status. One order (TR260925-94514044) progressed to REFUND_FAILED after its consignments were cancelled but the MasterPass refund of 450,000 TRY failed with ERROR status.\r\n\r\nRCA:\r\n\r\nTR260925-94249237, TR260925-94292417, TR260925-94546058, TR260925-94640512:\r\nThese 4 orders have fully completed. All consignments are COMPLETED, GERP billing numbers assigned, all order and consignment processes SUCCEEDED. No action needed — these progressed after the ticket was raised, likely as DIVA sent shipment confirmations.\r\n\r\nTR260925-94453037 (ORDER_SPLIT — genuinely stuck):\r\nThe order was split into 3 consignments (products: AR60F24C1KW/SK, ACL-RF50, FRH1458Z4) after checkout via the splitOrder action in order-process-v25-69. All 3 consignments are assigned to DIVA-Istanbul warehouse and are in READY status. The order process reached the isDelayedFiRequired action node, which checks IsDelayedFiPostingRequiredAction.executeAction() — this calls RentalPaymentUtil.isRentalPaymentMode() on the order's payment mode. Since the payment mode is MasterPass (tr-masterpassPaymentMode, not a rental payment mode), the action returns NO, transitioning to waitForWarehouseSubprocessEnd. The order process is now waiting for the event ${process.code}_ConsignmentSubprocessEnd.\r\n\r\nThe 3 consignment subprocesses (omnichannel-consignment-sub-process-v1) are all in RUNNING state. These subprocesses are waiting for DIVA to send the shipment status for each consignment. DIVA has not yet sent the shipment confirmation for this order, so the consignment processes remain RUNNING, which means the ConsignmentSubprocessEnd event is never fired, and the order process stays stuck at waitForWarehouseSubprocessEnd.\r\n\r\nThis matches the pattern seen in TKME-2028 (15 TR-region orders stuck at ORDER_SPLIT, resolved after confirming with DIVA and manually updating status) and RT-349680 (DIVA orders stuck at Order Split, fixed by DIVA 3rd party). The Jira comment from Rajeshbabu Yatirajula confirms: \"Only one order is still pending with DIVA, it will be moved further when hybris receives the shipment status from DIVA system.\"\r\n\r\nTR260925-94514044 (REFUND_FAILED — partially stuck):\r\nBoth consignments were CANCELLED (one at WC12-S751, one at DIVA-Istanbul). The order was cancelled and a REFUND_FOLLOW_ON transaction for 450,000 TRY was initiated on 2026-10-05 11:30:31, but it failed with ERROR status. The order process (order-process-v25-69) is in RUNNING state, waiting at the financial completion path — the process expects the refund to complete before the order can reach a terminal state. The failed refund transaction will not retry automatically. The order process is stuck at the isWaitForFinancialCompletionRequired / waitForFinancialCompletion stage because the financial system never posts the WaitForFinancialComplete event.\r\n\r\nPossible remediation:\r\n\r\nTR260925-94249237, TR260925-94292417, TR260925-94546058, TR260925-94640512:\r\nNo action required. These orders are fully COMPLETED.\r\n\r\nTR260925-94453037:\r\nConfirm with the DIVA team whether this order has been fulfilled on their end. If DIVA confirms fulfillment and the shipment status was sent but not processed by Hybris, the consignment statuses need to be manually updated (READY to SHIPPED/COMPLETED) and the omnichannel-consignment-sub-process needs to be retriggered. This follows the remediation pattern from TKME-2028 where orders were manually pushed to COMPLETED after DIVA confirmed fulfillment. If DIVA has not yet fulfilled the order, this is an external dependency — the order will remain in ORDER_SPLIT until DIVA sends the shipment status.\r\n\r\nTR260925-94514044:\r\nThe MasterPass REFUND_FOLLOW_ON transaction (450,000 TRY) is in ERROR status. The refund needs to be retried. This can be done by creating a new refund transaction entry or by resetting the failed transaction status and retriggering the refund flow via HAC script. The order process will remain in RUNNING state until the financial completion event is posted. Alternatively, if the refund cannot be retried, the order process can be manually advanced past the financial completion stage, but the refund failure should be resolved first to ensure the customer receives their money back.\r\n\r\nFor both stuck orders, no single reusable PC ticket covers this exact scenario. The closest existing reusable tickets are PC-44946 (TR Order Split — update external service status + retrigger consignment, manual, no script) and PC-52605 (generic process restart for stuck business processes, has script script-TKME-2279-retrigger-business-process.groovy). A new PC ticket may be needed if a HAC script is required for remediation.",
-        "sections": {
-          "issue": "6 TR-region orders reported stuck in ORDER_SPLIT status on 2026-09-25. All orders are buyback orders containing OmniChannelProduct, assigned to DIVA-Istanbul warehouse. Upon DB verification, 4 of the 6 orders have already self-resolved to COMPLETED status. One order (TR260925-94453037) remains genuinely stuck in ORDER_SPLIT, waiting for DIVA shipment status. One order (TR260925-94514044) progressed to REFUND_FAILED after its consignments were cancelled but the MasterPass refund of 450,000 TRY failed with ERROR status.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-08T04:06:09.800Z"
       }
     },
     {
@@ -1150,7 +1097,7 @@
       {
         "pid": 20536,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 203855,
+        "ageSeconds": 203898,
         "status": "running",
         "isChild": false,
         "taskSummary": "implement the previous ones and 2, 6, 12, 13",
@@ -1160,7 +1107,7 @@
       {
         "pid": 32364,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 101187,
+        "ageSeconds": 101231,
         "status": "running",
         "isChild": false,
         "taskSummary": "run the script on prod with code 2410 then check logs on kibana to check if the orders moved forward",
@@ -1170,7 +1117,7 @@
       {
         "pid": 39608,
         "cwd": "c:\\windows",
-        "ageSeconds": 12480,
+        "ageSeconds": 12524,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1180,7 +1127,7 @@
       {
         "pid": 34396,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 3793,
+        "ageSeconds": 3837,
         "status": "running",
         "isChild": false,
         "taskSummary": "implement the previous ones and 2, 6, 12, 13",
@@ -4504,17 +4451,17 @@
     "bridgeLogTail": "[2026-10-08T15:19:43.001Z] STDOUT data for #651: 117 bytes\n[2026-10-08T15:19:43.002Z] LIVE events write for #651: 48 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.013Z] STDOUT data for #651: 114 bytes\n[2026-10-08T15:19:43.015Z] LIVE events write for #651: 49 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.026Z] STDOUT data for #651: 109 bytes\n[2026-10-08T15:19:43.029Z] LIVE events write for #651: 50 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.031Z] STDOUT data for #651: 117 bytes\n[2026-10-08T15:19:43.033Z] LIVE events write for #651: 51 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.040Z] STDOUT data for #651: 116 bytes\n[2026-10-08T15:19:43.043Z] LIVE events write for #651: 52 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.051Z] STDOUT data for #651: 122 bytes\n[2026-10-08T15:19:43.053Z] LIVE events write for #651: 53 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.062Z] STDOUT data for #651: 104 bytes\n[2026-10-08T15:19:43.064Z] LIVE events write for #651: 54 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.068Z] STDOUT data for #651: 325 bytes\n[2026-10-08T15:19:43.070Z] LIVE events write for #651: 55 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.161Z] Comment posted on #652\n[2026-10-08T15:19:43.793Z] aipro completed for #651 (586 chars)\n[2026-10-08T15:19:45.309Z] Comment posted on #651\n[2026-10-08T22:33:37.129Z] ERROR poll #1: API returned 502 - backing off 10000ms",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-09T12:15:24.050Z",
-      "ageMs": 3867
+      "lastWrite": "2026-10-09T12:16:09.084Z",
+      "ageMs": 3390
     },
-    "watchdogLogTail": "[2026-10-09T12:13:08.980Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T12:13:23.996Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T12:13:39.006Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T12:13:54.015Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T12:14:09.027Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T12:14:24.030Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T12:14:39.040Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T12:14:54.039Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T12:15:09.039Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T12:15:24.049Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-09T12:13:54.015Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T12:14:09.027Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T12:14:24.030Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T12:14:39.040Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T12:14:54.039Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T12:15:09.039Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T12:15:24.049Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T12:15:39.062Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T12:15:54.068Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T12:16:09.084Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-09T12:14:37.815Z",
+      "lastCheck": "2026-10-09T12:15:37.811Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4523,7 +4470,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-09T12:14:37.815Z",
+      "lastCheck": "2026-10-09T12:15:37.811Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4532,9 +4479,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-09T12:14:37.815Z",
+      "lastCheck": "2026-10-09T12:15:37.811Z",
       "downSince": "2026-10-09T12:11:38.702Z",
-      "downDuration": 179113,
+      "downDuration": 239109,
       "alert": false
     }
   ],
@@ -4652,16 +4599,16 @@
         "statusChangedAt": "2026-10-09T18:07:10.311+0900"
       },
       {
-        "key": "TKME-2348",
-        "summary": "Stuck order on Hybris",
+        "key": "TKME-2350",
+        "summary": "Stuck order on Hybris- ORDER_SPLIT",
         "priority": "None",
         "status": "In Progress",
         "category": "zero",
         "reason": "",
         "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/TKME-2348",
-        "updated": "2026-10-09T21:15:50.000+0900",
-        "statusChangedAt": "2026-09-29T01:09:10.990+0900"
+        "url": "https://jira.secext.samsung.net/browse/TKME-2350",
+        "updated": "2026-10-09T21:17:33.000+0900",
+        "statusChangedAt": "2026-10-07T20:54:41.704+0900"
       },
       {
         "key": "AUTEU-41862",
@@ -4760,18 +4707,6 @@
         "url": "https://jira.secext.samsung.net/browse/AEME-6597",
         "updated": "2026-10-09T20:18:00.000+0900",
         "statusChangedAt": "2026-10-09T20:18:00.142+0900"
-      },
-      {
-        "key": "TKME-2350",
-        "summary": "Stuck order on Hybris- ORDER_SPLIT",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "actionable",
-        "reason": "",
-        "whatToDo": "Respond to Rajeshbabu Yatirajula",
-        "url": "https://jira.secext.samsung.net/browse/TKME-2350",
-        "updated": "2026-10-08T12:49:46.000+0900",
-        "statusChangedAt": "2026-10-07T20:54:41.704+0900"
       }
     ],
     "blocked": [
@@ -4872,7 +4807,7 @@
     ],
     "totals": {
       "zero": 7,
-      "actionable": 4,
+      "actionable": 3,
       "blocked": 7,
       "queued": 1
     }
@@ -4925,9 +4860,138 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "TKME-2350",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86388,
+        "targetDate": "2026-10-01T10:37:23.449000001Z"
+      },
+      {
+        "key": "TKME-2350",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 2591572,
+        "targetDate": "2026-11-18T11:46:56.172000035Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85660,
+        "targetDate": "2026-09-15T08:21:25.088000001Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1211372,
+        "targetDate": "2026-10-13T12:51:05.986000021Z"
+      },
+      {
+        "key": "SAHME-3449",
+        "slaName": "Maintenance Response (GMT+2)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86398,
+        "targetDate": "2026-09-29T16:09:15.925000001Z"
+      },
+      {
+        "key": "SAHME-3449",
+        "slaName": "Maintenance Resolution (GMT+2)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2579994,
+        "targetDate": "2026-11-20T09:57:54.421000039Z"
+      },
+      {
+        "key": "AEME-6602",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 84145,
+        "targetDate": "2026-10-01T06:07:13.196000001Z"
+      },
+      {
+        "key": "AEME-6602",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 843411,
+        "targetDate": "2026-10-23T06:34:50.678479120Z"
+      },
+      {
+        "key": "AEME-6595",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86334,
+        "targetDate": "2026-09-30T07:32:47.469000001Z"
+      },
+      {
+        "key": "AEME-6595",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 766353,
+        "targetDate": "2026-10-22T09:10:32.762872925Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86179,
+        "targetDate": "2026-09-30T08:16:57.595000001Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1269633,
+        "targetDate": "2026-10-20T08:16:57.595000015Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85937,
+        "targetDate": "2026-09-17T08:08:38.502000001Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1108238,
+        "targetDate": "2026-10-28T08:08:38.502000030Z"
+      },
+      {
+        "key": "SAHME-3435",
+        "slaName": "Maintenance Response (GMT+2)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85910,
+        "targetDate": "2026-09-17T09:08:01.990000001Z"
+      },
+      {
+        "key": "SAHME-3435",
+        "slaName": "Maintenance Resolution (GMT+2)",
+        "slaStatus": "STILL",
+        "remainingDuration": 676353,
+        "targetDate": "2026-10-21T08:10:33.518814066Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86254,
+        "targetDate": "2026-09-21T04:19:58.710000001Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1344997,
+        "targetDate": "2026-11-02T02:54:37.529000031Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 0.33h on TKME-2348, 0.42h on AEME-6596, 3.92h on AEME-6527, 1.33h on SAM-18530, 1h on SAM-18531, 1.5h on PC-55179, 0.75h on MHME-1434, 0.75h on TKME-2349, 0.75h on PKHME-942, 1h on SAME-4005, 1h on PC-55196, 1.5h on PC-55204\nToday: TKME-2348, AUTEU-41862, SAHME-3449, RT-657502, PC-55234\nBlockers: PC-55234, PC-55179, PC-53923"
+    "standupText": "Yesterday: 0.33h on TKME-2348, 0.42h on AEME-6596, 3.92h on AEME-6527, 1.33h on SAM-18530, 1h on SAM-18531, 1.5h on PC-55179, 0.75h on MHME-1434, 0.75h on TKME-2349, 0.75h on PKHME-942, 1h on SAME-4005, 1h on PC-55196, 1.5h on PC-55204\nToday: TKME-2350, AUTEU-41862, SAHME-3449, RT-657502, PC-55234\nBlockers: PC-55234, PC-55179, PC-53923"
   }
 }
