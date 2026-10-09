@@ -1,7 +1,51 @@
 {
-  "generatedAt": "2026-10-09T09:07:49.769Z",
-  "totalTickets": 19,
+  "generatedAt": "2026-10-09T09:08:40.227Z",
+  "totalTickets": 20,
   "tickets": [
+    {
+      "key": "SAHME-3449",
+      "summary": "Stuck order on Hybris",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "South Africa Maintenance & Enhancements",
+      "projectKey": "SAHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-09T18:10:05.000+0900",
+      "created": "2026-09-29T01:09:15.000+0900",
+      "statusChangedAt": "2026-09-29T01:09:17.840+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n||Order Number||Order Date||Order Status||Issue||\n|ZA260910-80402150|2026/09/27|EXTERNAL_FRAUD_RESULT_PROCESSED|Order process ERROR at reserveVirtualStock - amount must be greater than zero; STAGNANT f",
+      "commentsCount": 2,
+      "recentComments": [
+        {
+          "author": "Lerato Mbambisa",
+          "date": "2026-10-09T18:09:51.921+0900",
+          "snippet": "Good day ~@email ,\n # Please remove the SC+ Product on the order and process the remote for order ZA260910-80402150.\n # For Order ZA260924-93112936 I am still checking with the PayGate.\n\n!image-2026-10-09-11-09-34-956.png!\n\nKind regards,\n\nLerato"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-09-29T01:12:28.524+0900",
+          "snippet": "Hi Team,\n\nKindly check if remediation is required for these orders.\n\nZA260910-80402150 is stuck at reserveVirtualStock with amount must be greater than zero.\nZA260924-93112936 has payment status CAPTURE:REJECTED.\n\nPlease confirm if we can retrigger the stuck process and if the payment-rejected order"
+        }
+      ],
+      "lastCommentBy": "Lerato Mbambisa",
+      "lastCommentSnippet": "Good day ~@email ,\n # Please remove the SC+ Product on the order and process the remote for order ZA260910-80402150.\n # For Order ZA260924-93112936 I am still checking with the PayGate.\n\n!image-2026-10-09-11-09-34-956.png!\n\nKind regards,\n\nLerato",
+      "lastCommentDate": "2026-10-09T18:09:51.921+0900",
+      "url": "https://jira.secext.samsung.net/browse/SAHME-3449",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "Summary: Stuck order on Hybris - two ZA-region orders stuck at different stages\r\nGenerated: 2026-09-28T16:30:00Z\r\n\r\nIssue:\r\nTwo ZA-region orders are stuck and require remediation.\r\n\r\nOrder 1: ZA260910-80402150 (created 2026-09-27 12:10:45, total R719.10 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at EXTERNAL_FRAUD_RESULT_PROCESSED status. The order process errored at the reserveVirtualStock action node with the message \"amount must be greater than zero\". The order has been stagnant for approximately 24 hours. No consignments have been created for this order, confirming the process failed before the consignment creation step.\r\n\r\nOrder 2: ZA260924-93112936 (created 2026-09-24 08:46:45, total R7,448.00 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at PAYMENT_NOT_CAPTURED status. The payment capture was rejected (CAPTURE:REJECTED). The order has been stagnant for approximately 99 hours. No consignments have been created.\r\n\r\nRCA:\r\nOrder 1 (ZA260910-80402150):\r\nThe order passed external fraud check and reached the reserveVirtualStock action node in the order process. This action reserves virtual stock for the order entries before consignment creation. The action failed with NodeExecutionException: \"Error executing ActionNode with ID [reserveVirtualStock]: amount must be greater than zero\". This error occurs when the order's total amount or one of its order entry amounts evaluates to zero or negative at the point of stock reservation. The order total is R719.10, so the issue is likely on a per-entry basis — one of the order entries may have a zero basePrice or totalPrice, possibly due to a giveaway item or a pricing calculation error during checkout that left an entry with a zero amount. The reserveVirtualStock action iterates over order entries and calls the stock reservation service, which validates that each entry amount is greater than zero. When any entry fails this check, the entire action throws the exception and the process enters ERROR state.\r\n\r\nThis is a known recurring pattern on the Toko platform. Jira cross-reference found 6+ similar resolved tickets with the identical error: CSME-7180 (partial cancelled orders with zero-quantity entries), UAME-6593 (errored business process for commitStock), SAHME-3410 (ZA-region order stuck on fraud check, resolved under PC-53921 by removing the zero-quantity entry), KSME-3631, KSME-3609, and UAME-4559. In SAHME-3410, the root cause was a zero-quantity order entry (SMC-ZA-MOB-24-3-47 with 0 quantity) that caused the reserveVirtualStock action to fail. The remediation was to remove the zero-quantity entry and restart the order process.\r\n\r\nThe DB confirms no consignments exist for this order, and no business process parameters with error traces were retrievable (the BusinessProcess type does not expose the order field for direct FlexibleSearch JOIN in the HAC interface). The order has no consignment processes, no external services, and no payment transaction entries visible via the direct HAC query interface.\r\n\r\nOrder 2 (ZA260924-93112936):\r\nThe order reached PAYMENT_NOT_CAPTURED status, meaning the payment authorization was successful but the subsequent capture step was rejected by the payment gateway (PayGate/DPO). The order total is R7,448.00 ZAR. No consignments were created, confirming the process stopped at the payment capture stage. The capture rejection is a gateway-side decision — the payment provider declined to capture the authorized funds. This is typically caused by insufficient funds, expired authorization, fraud suspicion on the gateway side, or a gateway processing error.\r\n\r\nNo payment transaction entries were retrievable via the direct HAC query interface for either order. This may indicate the payment transaction records exist but the FlexibleSearch query syntax for accessing nested relations is not supported by the hac-direct.cjs tool on this environment.\r\n\r\nKibana logs were not available during this investigation. The cookie bridge returned cookies for kibana-apac domain, but the Kibana search script was configured for the aipro.sdsdev.co.kr domain, causing a cookie resolution failure. The DB state and Jira cross-reference provide sufficient evidence for the root cause analysis, but log analysis would provide additional confirmation of the exact entry-level pricing breakdown and the payment gateway rejection reason.\r\n\r\nPossible remediation:\r\nOrder 1 (ZA260910-80402150):\r\nThe remediation follows the same pattern as SAHME-3410 (PC-53921, now closed and reusable):\r\n\r\n1. Query the order entries to identify which entry has a zero or negative amount (giveaway items with zero basePrice are the most common cause).\r\n2. If a zero-quantity or zero-price entry is found, remove it from the order.\r\n3. Restart the order process from the reserveVirtualStock action node.\r\n\r\nThe script from PC-53921 (script-SAHE-3410-reserveVirtualStock-remediation.groovy) can be reused for this order. It needs to be adapted with the new order code and ticket reference. If the issue is not a zero-quantity entry but a genuine pricing error, the order entry prices may need to be corrected before restarting the process.\r\n\r\nOrder 2 (ZA260924-93112936):\r\nSince the payment capture was rejected by the gateway, Hybris-side remediation is limited. The options are:\r\n\r\n1. Cancel the order and ask the customer to place a new order with a different payment method.\r\n2. If the payment authorization is still valid and the rejection was a transient gateway error, a re-capture can be attempted by retriggering the capture payment action in the order process.\r\n3. If the authorization has expired (typically 7 days for PayGate/DPO), a new payment authorization and capture would be required, which effectively means a new order.\r\n\r\nThis order has been stagnant for 99 hours (over 4 days), so the payment authorization has likely expired. Cancellation and re-order is the recommended approach unless the payment team confirms the authorization is still valid.\r\n\r\n## Remediation\r\n- Order 1 (ZA260910-80402150): Reuse PC-53921 script. Identify and remove zero-amount order entry, then restart order process from reserveVirtualStock.\r\n- Order 2 (ZA260924-93112936): Payment capture rejected by gateway. Likely authorization expired after 99h stagnation. Recommend cancelling order and having customer re-order. If payment team confirms authorization still valid, retrigger capture.",
+        "sections": {
+          "issue": "Two ZA-region orders are stuck and require remediation.\r\n\r\nOrder 1: ZA260910-80402150 (created 2026-09-27 12:10:45, total R719.10 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at EXTERNAL_FRAUD_RESULT_PROCESSED status. The order process errored at the reserveVirtualStock action node with the message \"amount must be greater than zero\". The order has been stagnant for approximately 24 hours. No consignments have been created for this order, confirming the process failed before the consignment creation step.\r\n\r\nOrder 2: ZA260924-93112936 (created 2026-09-24 08:46:45, total R7,448.00 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at PAYMENT_NOT_CAPTURED status. The payment capture was rejected (CAPTURE:REJECTED). The order has been stagnant for approximately 99 hours. No consignments have been created.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-28T16:23:09.984Z"
+      }
+    },
     {
       "key": "RT-657502",
       "summary": "[STG2] SIT Return - Refund only product without service fee",
@@ -1159,48 +1203,7 @@
     "version": "v3",
     "lastResponseAt": "2026-10-08T15:19:45.323Z",
     "lastResponseIssue": 651,
-    "ideSessions": [
-      {
-        "pid": 20536,
-        "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 192603,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "implement the previous ones and 2, 6, 12, 13",
-        "lastExchange": "implement the previous ones and 2, 6, 12, 13",
-        "sessionId": "aryan-v1"
-      },
-      {
-        "pid": 21768,
-        "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 192210,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "i manually put the external service to NEW and retriggered processexternalservices. Check logs di...",
-        "lastExchange": "i manually put the external service to NEW and retriggered processexternalservices. Check logs did it call this time?",
-        "sessionId": "bin"
-      },
-      {
-        "pid": 32364,
-        "cwd": "c:\\windows",
-        "ageSeconds": 89935,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "windows",
-        "lastExchange": null,
-        "sessionId": "windows"
-      },
-      {
-        "pid": 39608,
-        "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 1229,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "implement the previous ones and 2, 6, 12, 13",
-        "lastExchange": "implement the previous ones and 2, 6, 12, 13",
-        "sessionId": "aryan-v1-1"
-      }
-    ],
+    "ideSessions": [],
     "activityLog": [
       {
         "id": "1791472785326-xcl7kl",
@@ -4517,12 +4520,40 @@
     "bridgeLogTail": "[2026-10-08T15:19:43.001Z] STDOUT data for #651: 117 bytes\n[2026-10-08T15:19:43.002Z] LIVE events write for #651: 48 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.013Z] STDOUT data for #651: 114 bytes\n[2026-10-08T15:19:43.015Z] LIVE events write for #651: 49 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.026Z] STDOUT data for #651: 109 bytes\n[2026-10-08T15:19:43.029Z] LIVE events write for #651: 50 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.031Z] STDOUT data for #651: 117 bytes\n[2026-10-08T15:19:43.033Z] LIVE events write for #651: 51 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.040Z] STDOUT data for #651: 116 bytes\n[2026-10-08T15:19:43.043Z] LIVE events write for #651: 52 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.051Z] STDOUT data for #651: 122 bytes\n[2026-10-08T15:19:43.053Z] LIVE events write for #651: 53 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.062Z] STDOUT data for #651: 104 bytes\n[2026-10-08T15:19:43.064Z] LIVE events write for #651: 54 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.068Z] STDOUT data for #651: 325 bytes\n[2026-10-08T15:19:43.070Z] LIVE events write for #651: 55 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.161Z] Comment posted on #652\n[2026-10-08T15:19:43.793Z] aipro completed for #651 (586 chars)\n[2026-10-08T15:19:45.309Z] Comment posted on #651\n[2026-10-08T22:33:37.129Z] ERROR poll #1: API returned 502 - backing off 10000ms",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-09T09:07:39.559Z",
-      "ageMs": 20824
+      "lastWrite": "2026-10-09T09:08:41.804Z",
+      "ageMs": 10854
     },
-    "watchdogLogTail": "[2026-10-09T09:06:54.927Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T09:07:05.540Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 17944) not found\n[2026-10-09T09:07:09.298Z] Could not kill dashboard PID 17944: Command failed: taskkill /PID 17944 /F /T\n[2026-10-09T09:07:12.859Z] Starting jira-dashboard-server.js...\n[2026-10-09T09:07:13.309Z] Dashboard started with PID 18068 (restart #45, 3 in last hour)\n[2026-10-09T09:07:13.317Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T09:07:28.913Z] Starting jira-dashboard-server.js...\n[2026-10-09T09:07:29.187Z] Dashboard started with PID 684 (restart #46, 4 in last hour)\n[2026-10-09T09:07:29.194Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T09:07:39.531Z] DUPLICATE jira-dashboard-server detected: PID 18068 — killing"
+    "watchdogLogTail": "[2026-10-09T09:07:12.859Z] Starting jira-dashboard-server.js...\n[2026-10-09T09:07:13.309Z] Dashboard started with PID 18068 (restart #45, 3 in last hour)\n[2026-10-09T09:07:13.317Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T09:07:28.913Z] Starting jira-dashboard-server.js...\n[2026-10-09T09:07:29.187Z] Dashboard started with PID 684 (restart #46, 4 in last hour)\n[2026-10-09T09:07:29.194Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T09:07:39.531Z] DUPLICATE jira-dashboard-server detected: PID 18068 — killing\n[2026-10-09T09:08:04.053Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T09:08:20.581Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T09:08:41.796Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
-  "mcps": [],
+  "mcps": [
+    {
+      "name": "Jira",
+      "status": "up",
+      "httpStatus": 200,
+      "lastCheck": "2026-10-09T09:08:31.631Z",
+      "downSince": null,
+      "downDuration": 0,
+      "alert": false
+    },
+    {
+      "name": "Kibana",
+      "status": "down",
+      "httpStatus": 502,
+      "lastCheck": "2026-10-09T09:08:31.631Z",
+      "downSince": "2026-10-09T09:07:34.937Z",
+      "downDuration": 56694,
+      "alert": false
+    },
+    {
+      "name": "Confluence",
+      "status": "down",
+      "httpStatus": 401,
+      "lastCheck": "2026-10-09T09:08:31.631Z",
+      "downSince": "2026-10-09T09:07:34.937Z",
+      "downDuration": 56694,
+      "alert": false
+    }
+  ],
   "hacReport": {
     "generatedAt": "2026-10-09T03:30:38.454Z",
     "generatedAtLocal": "Oct 9, 2026, 09:00:38 AM",
@@ -4635,6 +4666,18 @@
         "url": "https://jira.secext.samsung.net/browse/RT-657502",
         "updated": "2026-10-09T18:07:10.000+0900",
         "statusChangedAt": "2026-10-09T18:07:10.311+0900"
+      },
+      {
+        "key": "SAHME-3449",
+        "summary": "Stuck order on Hybris",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/SAHME-3449",
+        "updated": "2026-10-09T18:10:05.000+0900",
+        "statusChangedAt": "2026-09-29T01:09:17.840+0900"
       },
       {
         "key": "AUTEU-41862",
@@ -4856,7 +4899,7 @@
       }
     ],
     "totals": {
-      "zero": 6,
+      "zero": 7,
       "actionable": 4,
       "blocked": 8,
       "queued": 1
@@ -4910,152 +4953,9 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": {
-    "byTicket": [
-      {
-        "key": "AEME-6595",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86334,
-        "targetDate": "2026-09-30T07:32:47.469000001Z"
-      },
-      {
-        "key": "AEME-6595",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 766353,
-        "targetDate": "2026-10-22T06:02:01.803405421Z"
-      },
-      {
-        "key": "AEME-6602",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 84145,
-        "targetDate": "2026-10-01T06:07:13.196000001Z"
-      },
-      {
-        "key": "AEME-6602",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 843411,
-        "targetDate": "2026-10-23T03:26:19.844228780Z"
-      },
-      {
-        "key": "MHME-1434",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86298,
-        "targetDate": "2026-09-15T11:59:43.700000001Z"
-      },
-      {
-        "key": "MHME-1434",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "STILL",
-        "remainingDuration": 969397,
-        "targetDate": "2026-10-26T15:26:06.699000030Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86179,
-        "targetDate": "2026-09-30T08:16:57.595000001Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1269633,
-        "targetDate": "2026-10-20T08:16:57.595000015Z"
-      },
-      {
-        "key": "TKME-2350",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86388,
-        "targetDate": "2026-10-01T10:37:23.449000001Z"
-      },
-      {
-        "key": "TKME-2350",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 2591572,
-        "targetDate": "2026-11-18T11:46:56.172000035Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86397,
-        "targetDate": "2026-09-29T16:09:08.750000001Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2515423,
-        "targetDate": "2026-11-19T11:53:11.870000038Z"
-      },
-      {
-        "key": "AEME-6527",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86020,
-        "targetDate": "2026-09-01T07:46:25.907000001Z"
-      },
-      {
-        "key": "AEME-6527",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 990365,
-        "targetDate": "2026-10-18T21:25:13.757000035Z"
-      },
-      {
-        "key": "SAHME-3435",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85910,
-        "targetDate": "2026-09-17T09:08:01.990000001Z"
-      },
-      {
-        "key": "SAHME-3435",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 676353,
-        "targetDate": "2026-10-21T05:02:02.435135661Z"
-      },
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86254,
-        "targetDate": "2026-09-21T04:19:58.710000001Z"
-      },
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1356308,
-        "targetDate": "2026-11-02T02:54:37.529000031Z"
-      },
-      {
-        "key": "GMT-21163",
-        "slaName": "GMT Issue Response SLA(GMT+5.5)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85937,
-        "targetDate": "2026-09-17T08:08:38.502000001Z"
-      },
-      {
-        "key": "GMT-21163",
-        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1119549,
-        "targetDate": "2026-10-28T08:08:38.502000030Z"
-      }
-    ]
-  },
+  "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 0.33h on TKME-2348, 0.42h on AEME-6596, 3.92h on AEME-6527, 1.33h on SAM-18530, 1h on SAM-18531, 1.5h on PC-55179, 0.75h on MHME-1434, 0.75h on TKME-2349, 0.75h on PKHME-942, 1h on SAME-4005, 1h on PC-55196, 1.5h on PC-55204\nToday: RT-657502, AUTEU-41862, PC-55234, TKME-2348, AEME-6597\nBlockers: PC-55234, AEME-6527, PC-55179, PC-53923"
+    "standupText": "Yesterday: 0.33h on TKME-2348, 0.42h on AEME-6596, 3.92h on AEME-6527, 1.33h on SAM-18530, 1h on SAM-18531, 1.5h on PC-55179, 0.75h on MHME-1434, 0.75h on TKME-2349, 0.75h on PKHME-942, 1h on SAME-4005, 1h on PC-55196, 1.5h on PC-55204\nToday: SAHME-3449, RT-657502, AUTEU-41862, PC-55234, TKME-2348\nBlockers: PC-55234, AEME-6527, PC-55179, PC-53923"
   }
 }
