@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-09T08:19:38.445Z",
+  "generatedAt": "2026-10-09T08:20:25.359Z",
   "totalTickets": 21,
   "tickets": [
     {
@@ -11,16 +11,22 @@
       "project": "PROD Change",
       "projectKey": "PC",
       "issuetype": "Hybris Platform",
-      "updated": "2026-10-09T17:20:08.000+0900",
+      "updated": "2026-10-09T17:22:10.000+0900",
       "created": "2026-10-09T17:14:01.000+0900",
       "statusChangedAt": "",
       "assignedToMeAt": "",
       "description": "For order mentioned in ticket : AEME-6602\n\nOrder AE260928-97453028 is stuck in CHECKED_INVALID due to duplicate order-process entries triggering checkOrderForMultipleOrderProcesses NOK. Script deletes the duplicate process, sets order to CHECKED, and restarts the remaining process at checkOrder node",
-      "commentsCount": 0,
-      "recentComments": [],
-      "lastCommentBy": "",
-      "lastCommentSnippet": "",
-      "lastCommentDate": "",
+      "commentsCount": 1,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-09T17:22:10.687+0900",
+          "snippet": "S2 Staging Test Results\n\nTest Order: AE250722-95374906 (CHECKED_INVALID, CheckoutDotCom, 1 FAILED process — matches prod issue minus duplicate processes)\n\n||Field||Before||After||\n|Order Status|CHECKED_INVALID|CHECKED_VALID|\n|Process State|FAILED|ERROR (restart triggered)|\n|Process Restart Node|—|ch"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "S2 Staging Test Results\n\nTest Order: AE250722-95374906 (CHECKED_INVALID, CheckoutDotCom, 1 FAILED process — matches prod issue minus duplicate processes)\n\n||Field||Before||After||\n|Order Status|CHECKED_INVALID|CHECKED_VALID|\n|Process State|FAILED|ERROR (restart triggered)|\n|Process Restart Node|—|ch",
+      "lastCommentDate": "2026-10-09T17:22:10.687+0900",
       "url": "https://jira.secext.samsung.net/browse/PC-55239",
       "linkedTickets": [
         {
@@ -49,27 +55,27 @@
       "project": "UAE Maintenance & Enhancements",
       "projectKey": "AEME",
       "issuetype": "Maintenance Request",
-      "updated": "2026-10-09T17:14:05.000+0900",
+      "updated": "2026-10-09T17:22:10.000+0900",
       "created": "2026-09-30T15:07:08.000+0900",
       "statusChangedAt": "2026-10-07T20:51:41.893+0900",
       "assignedToMeAt": "",
       "description": "Hi Team,\n\n \n\nEnv: PROD Env\n\nBackground:\n\nPlease trigger the manual chargeback for the trade-in amount, as the trade-in orders were rejected.\n|Order Code|Trade-in Status|Charge Back Amount|\n|AE260814-59413370|REJECTED|270|\n|AE260803-49001795|REJECTED|3035|\n\n \n\nAlso, the below order is stuck in checke",
-      "commentsCount": 6,
+      "commentsCount": 7,
       "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-09T17:22:10.570+0900",
+          "snippet": "Hi Talib,\n\nWe have raised PC-55239 for the script to push order AE260928-97453028 forward. The order was stuck in CHECKED_INVALID due to duplicate order-process entries (both created at the same timestamp) triggering the multi-process guard in checkOrderAction. The script deletes the duplicate proce"
+        },
         {
           "author": "Talib Raza Zaidi",
           "date": "2026-10-08T18:40:50.205+0900",
           "snippet": "Hi ~@email,\n\n \n\nWhat about this order AE260928-97453028 ?\n\nFor order AE260814-59413370 , we will check from our end. Will let you know in case something is required.\n\n \n\nRegards\n\nTalib\n\nCC: ~@email"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-08T18:29:38.062+0900",
-          "snippet": "Hi Talib,\n\nAE260803-49001795 (Checkout.com, 3035 AED):\nPayment authorization succeeded. Checkout.com returned approved and the 3035 AED clawback amount was captured. The process completed through takePayment, FI messages (GERP financial numbers 710M20261008D0836225 and 710M20261008D0837083), fiscali"
         }
       ],
-      "lastCommentBy": "Talib Raza Zaidi",
-      "lastCommentSnippet": "Hi ~@email,\n\n \n\nWhat about this order AE260928-97453028 ?\n\nFor order AE260814-59413370 , we will check from our end. Will let you know in case something is required.\n\n \n\nRegards\n\nTalib\n\nCC: ~@email",
-      "lastCommentDate": "2026-10-08T18:40:50.205+0900",
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Talib,\n\nWe have raised PC-55239 for the script to push order AE260928-97453028 forward. The order was stuck in CHECKED_INVALID due to duplicate order-process entries (both created at the same timestamp) triggering the multi-process guard in checkOrderAction. The script deletes the duplicate proce",
+      "lastCommentDate": "2026-10-09T17:22:10.570+0900",
       "url": "https://jira.secext.samsung.net/browse/AEME-6602",
       "linkedTickets": [
         {
@@ -1265,7 +1271,7 @@
       {
         "pid": 20536,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 189710,
+        "ageSeconds": 189761,
         "status": "running",
         "isChild": false,
         "taskSummary": "implement the previous ones and 2, 6, 12, 13",
@@ -1275,7 +1281,7 @@
       {
         "pid": 21768,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 189317,
+        "ageSeconds": 189368,
         "status": "running",
         "isChild": false,
         "taskSummary": "yes",
@@ -1285,7 +1291,7 @@
       {
         "pid": 13300,
         "cwd": "c:\\windows",
-        "ageSeconds": 161390,
+        "ageSeconds": 161442,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1295,7 +1301,7 @@
       {
         "pid": 32364,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 87042,
+        "ageSeconds": 87093,
         "status": "running",
         "isChild": false,
         "taskSummary": "implement the previous ones and 2, 6, 12, 13",
@@ -4619,17 +4625,17 @@
     "bridgeLogTail": "[2026-10-08T15:19:43.001Z] STDOUT data for #651: 117 bytes\n[2026-10-08T15:19:43.002Z] LIVE events write for #651: 48 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.013Z] STDOUT data for #651: 114 bytes\n[2026-10-08T15:19:43.015Z] LIVE events write for #651: 49 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.026Z] STDOUT data for #651: 109 bytes\n[2026-10-08T15:19:43.029Z] LIVE events write for #651: 50 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.031Z] STDOUT data for #651: 117 bytes\n[2026-10-08T15:19:43.033Z] LIVE events write for #651: 51 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.040Z] STDOUT data for #651: 116 bytes\n[2026-10-08T15:19:43.043Z] LIVE events write for #651: 52 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.051Z] STDOUT data for #651: 122 bytes\n[2026-10-08T15:19:43.053Z] LIVE events write for #651: 53 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.062Z] STDOUT data for #651: 104 bytes\n[2026-10-08T15:19:43.064Z] LIVE events write for #651: 54 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.068Z] STDOUT data for #651: 325 bytes\n[2026-10-08T15:19:43.070Z] LIVE events write for #651: 55 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.161Z] Comment posted on #652\n[2026-10-08T15:19:43.793Z] aipro completed for #651 (586 chars)\n[2026-10-08T15:19:45.309Z] Comment posted on #651\n[2026-10-08T22:33:37.129Z] ERROR poll #1: API returned 502 - backing off 10000ms",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-09T08:19:43.594Z",
-      "ageMs": 1751
+      "lastWrite": "2026-10-09T08:20:20.520Z",
+      "ageMs": 14519
     },
-    "watchdogLogTail": "[2026-10-09T08:17:18.759Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:17:34.007Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:17:54.374Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:18:10.836Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:18:25.839Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:18:40.852Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:18:55.861Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:19:11.236Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:19:28.590Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:19:43.593Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-09T08:17:54.374Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:18:10.836Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:18:25.839Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:18:40.852Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:18:55.861Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:19:11.236Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:19:28.590Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:19:43.593Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:20:02.636Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T08:20:20.518Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-09T08:18:43.288Z",
+      "lastCheck": "2026-10-09T08:19:47.062Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4637,19 +4643,19 @@
     {
       "name": "Kibana",
       "status": "down",
-      "httpStatus": 503,
-      "lastCheck": "2026-10-09T08:18:43.288Z",
+      "httpStatus": 401,
+      "lastCheck": "2026-10-09T08:19:47.062Z",
       "downSince": "2026-10-09T08:11:36.107Z",
-      "downDuration": 427181,
+      "downDuration": 490955,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-09T08:18:43.288Z",
+      "lastCheck": "2026-10-09T08:19:47.062Z",
       "downSince": "2026-10-09T08:11:36.107Z",
-      "downDuration": 427181,
+      "downDuration": 490955,
       "alert": true
     }
   ],
@@ -4923,7 +4929,7 @@
         "reason": "Waiting for QA/review team",
         "whatToDo": "",
         "url": "https://jira.secext.samsung.net/browse/AEME-6602",
-        "updated": "2026-10-09T17:14:05.000+0900",
+        "updated": "2026-10-09T17:22:10.000+0900",
         "statusChangedAt": "2026-10-07T20:51:41.893+0900"
       },
       {
@@ -4983,7 +4989,7 @@
         "reason": "Blocked by AEME-6602 (QA Server Review)",
         "whatToDo": "",
         "url": "https://jira.secext.samsung.net/browse/PC-55239",
-        "updated": "2026-10-09T17:20:08.000+0900",
+        "updated": "2026-10-09T17:22:10.000+0900",
         "statusChangedAt": ""
       },
       {
