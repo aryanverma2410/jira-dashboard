@@ -1,7 +1,51 @@
 {
-  "generatedAt": "2026-10-09T11:15:34.916Z",
+  "generatedAt": "2026-10-09T11:16:17.172Z",
   "totalTickets": 21,
   "tickets": [
+    {
+      "key": "AEME-6597",
+      "summary": "Stuck in Shipped Status || 29-Sep",
+      "status": "RCA Requested",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "UAE Maintenance & Enhancements",
+      "projectKey": "AEME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-09T20:18:00.000+0900",
+      "created": "2026-09-29T17:16:55.000+0900",
+      "statusChangedAt": "2026-10-09T20:18:00.142+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team\n\nThis is replacement order. The order has been delivered and compeleted in NERP. But the order status is being stuck in Shipped status. Please check and move the order status forward.\nAE260921-84726057 - SHIPPED\n\nBilling Number -3247304585\n\n \n\nRegards\n\nJaffar",
+      "commentsCount": 6,
+      "recentComments": [
+        {
+          "author": "Talib Raza Zaidi",
+          "date": "2026-10-09T14:33:39.504+0900",
+          "snippet": "Hi ~@email,\n\n \n\nCan you please let us know how what was the RCA and fix done for this?\n\n \n\nRegards\n\nTalib\n\nCC: ~@email"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-08T00:20:56.745+0900",
+          "snippet": "Hi ~@email ,\n\nOrder tax Invoice generated.\n\n!image-2026-10-07-20-48-53-582.png|width=466,height=130!\n\nRegards\n\nAryan"
+        }
+      ],
+      "lastCommentBy": "Talib Raza Zaidi",
+      "lastCommentSnippet": "Hi ~@email,\n\n \n\nCan you please let us know how what was the RCA and fix done for this?\n\n \n\nRegards\n\nTalib\n\nCC: ~@email",
+      "lastCommentDate": "2026-10-09T14:33:39.504+0900",
+      "url": "https://jira.secext.samsung.net/browse/AEME-6597",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "# RCA: AEME-6597\n\nTicket Summary: Stuck in Shipped Status || 29-Sep\nOrder: AE260921-84726057 (Replacement Order)\nOriginal Order: AE260918-87269668\nGenerated: 2026-10-05T07:15:00.000Z\n\nIssue:\nReplacement order AE260921-84726057 was stuck in SHIPPED status. The consignment was already COMPLETED in the warehouse with GERP billing number 3247304585 generated on 24-Sep, but the order-level status never transitioned to COMPLETED. After initial remediation (moving order to COMPLETED via PC-52596 push-from-shipped script), the reporter noted the order shows 0 value and invoice cannot be generated.\n\nRCA:\nThe order is a ReplacementOrder created from original order AE260918-87269668 through return request 09280039. The 0 value is by design. The return request subtotal is 0.00 (exchange, not return-with-refund), and the replacement order entry (SM-F976BZWPMEA, Galaxy Z Fold8 Ultra 1TB Cream, qty=1) has basePrice=0 and totalPrice=0. The customer already paid 7899 AED on the original order (totalPrice=7899.00, totalTax=376.14), so the replacement carries no monetary charge. This is the standard Samsung Toko exchange/replacement flow confirmed by the business process return-replacement-order-process-v17 which completed all 18 tasks including checkReplacementOrder and processServicesForReplacement.\n\nThe order was stuck in SHIPPED because the consignment completed physically (warehouse delivered, GERP billed on 24-Sep) but the Hybris consignment business process did not detect completion and transition the order status. The initial remediation script (PC-52596, script-AEME-6597-push-from-shipped.groovy) correctly pushed the consignment process forward by restarting at isShippedComplete and moved the order to COMPLETED.\n\nThe invoice generation issue has two root causes:\n1. SMC external service (pk=9168691242923, provider=SMC, serviceProduct=10985570500609) is in UPDATE_ERROR state. The SMC registration/update failed during the replacement order flow. On the original order, the SMC service is in OK state with statusMessage=OK, confirming SMC worked for the original but failed for the replacement.\n2. The consignment externalBillingNumber and externalInvoiceNumber are both empty. The GERP billing number (3247304585) and GERP inbound billing number (5025341804) exist, but the external billing step never completed. The external invoice generation appears to depend on SMC service completion.\n\nThe original order's consignment also has empty externalBillingNumber and externalInvoiceNumber, but its SMC service is OK. This suggests either (a) external billing is a separate downstream process not yet triggered, or (b) external billing requires SMC to be in a terminal state (UPDATED/REGISTERED) before it can proceed.\n\nTwo consignment email processes are in ERROR state (tokoConsignmentDispatchEmailProcess and tokoConsignmentShippingPreparationEmailProcess), but these are non-blocking for the invoice issue.\n\nPossible remediation:\n1. Reset the SMC external service from UPDATE_ERROR to NEW and re-trigger ProcessExternalServicesOnConsignmentAction on the consignment process. Use the existing reusable PC-52678 (scplus-reset, script-AEME-6495-scplus-remediation.groovy) pattern adapted for this order.\n\n2. If the SMC UPDATE_ERROR requires clearing stale policy data first, use PC-53305 (smc-reregistration, script-AEME-6500-smc-reregistration-remediation.groovy) for SMC re-registration.\n\n3. After SMC moves to UPDATED/REGISTERED, monitor whether the external billing/invoice number populates automatically. If not, a separate consignment process retrigger may be needed (PC-52605, process-restart pattern).\n\n4. The two email processes in ERROR can be addressed by restarting them or suppressing the notification types, but these are non-blocking for the invoice issue.\n\nReusable PC tickets identified: PC-52596 (push-to-completed, already applied), PC-52678 (scplus-reset), PC-53305 (smc-reregistration), PC-52605 (process-restart).\n\nScript already applied: script-AEME-6597-push-from-shipped.groovy (PC-52596)",
+        "sections": {
+          "issue": "Replacement order AE260921-84726057 was stuck in SHIPPED status. The consignment was already COMPLETED in the warehouse with GERP billing number 3247304585 generated on 24-Sep, but the order-level status never transitioned to COMPLETED. After initial remediation (moving order to COMPLETED via PC-52596 push-from-shipped script), the reporter noted the order shows 0 value and invoice cannot be generated.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-05T07:16:57.446Z"
+      }
+    },
     {
       "key": "AUTEU-41862",
       "summary": "CSAgent access required for SMI P1 and STG",
@@ -439,50 +483,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-28T16:38:55.087Z"
-      }
-    },
-    {
-      "key": "AEME-6597",
-      "summary": "Stuck in Shipped Status || 29-Sep",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-09T14:33:47.000+0900",
-      "created": "2026-09-29T17:16:55.000+0900",
-      "statusChangedAt": "2026-10-05T15:58:25.179+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team\n\nThis is replacement order. The order has been delivered and compeleted in NERP. But the order status is being stuck in Shipped status. Please check and move the order status forward.\nAE260921-84726057 - SHIPPED\n\nBilling Number -3247304585\n\n \n\nRegards\n\nJaffar",
-      "commentsCount": 6,
-      "recentComments": [
-        {
-          "author": "Talib Raza Zaidi",
-          "date": "2026-10-09T14:33:39.504+0900",
-          "snippet": "Hi ~@email,\n\n \n\nCan you please let us know how what was the RCA and fix done for this?\n\n \n\nRegards\n\nTalib\n\nCC: ~@email"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-08T00:20:56.745+0900",
-          "snippet": "Hi ~@email ,\n\nOrder tax Invoice generated.\n\n!image-2026-10-07-20-48-53-582.png|width=466,height=130!\n\nRegards\n\nAryan"
-        }
-      ],
-      "lastCommentBy": "Talib Raza Zaidi",
-      "lastCommentSnippet": "Hi ~@email,\n\n \n\nCan you please let us know how what was the RCA and fix done for this?\n\n \n\nRegards\n\nTalib\n\nCC: ~@email",
-      "lastCommentDate": "2026-10-09T14:33:39.504+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6597",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: AEME-6597\n\nTicket Summary: Stuck in Shipped Status || 29-Sep\nOrder: AE260921-84726057 (Replacement Order)\nOriginal Order: AE260918-87269668\nGenerated: 2026-10-05T07:15:00.000Z\n\nIssue:\nReplacement order AE260921-84726057 was stuck in SHIPPED status. The consignment was already COMPLETED in the warehouse with GERP billing number 3247304585 generated on 24-Sep, but the order-level status never transitioned to COMPLETED. After initial remediation (moving order to COMPLETED via PC-52596 push-from-shipped script), the reporter noted the order shows 0 value and invoice cannot be generated.\n\nRCA:\nThe order is a ReplacementOrder created from original order AE260918-87269668 through return request 09280039. The 0 value is by design. The return request subtotal is 0.00 (exchange, not return-with-refund), and the replacement order entry (SM-F976BZWPMEA, Galaxy Z Fold8 Ultra 1TB Cream, qty=1) has basePrice=0 and totalPrice=0. The customer already paid 7899 AED on the original order (totalPrice=7899.00, totalTax=376.14), so the replacement carries no monetary charge. This is the standard Samsung Toko exchange/replacement flow confirmed by the business process return-replacement-order-process-v17 which completed all 18 tasks including checkReplacementOrder and processServicesForReplacement.\n\nThe order was stuck in SHIPPED because the consignment completed physically (warehouse delivered, GERP billed on 24-Sep) but the Hybris consignment business process did not detect completion and transition the order status. The initial remediation script (PC-52596, script-AEME-6597-push-from-shipped.groovy) correctly pushed the consignment process forward by restarting at isShippedComplete and moved the order to COMPLETED.\n\nThe invoice generation issue has two root causes:\n1. SMC external service (pk=9168691242923, provider=SMC, serviceProduct=10985570500609) is in UPDATE_ERROR state. The SMC registration/update failed during the replacement order flow. On the original order, the SMC service is in OK state with statusMessage=OK, confirming SMC worked for the original but failed for the replacement.\n2. The consignment externalBillingNumber and externalInvoiceNumber are both empty. The GERP billing number (3247304585) and GERP inbound billing number (5025341804) exist, but the external billing step never completed. The external invoice generation appears to depend on SMC service completion.\n\nThe original order's consignment also has empty externalBillingNumber and externalInvoiceNumber, but its SMC service is OK. This suggests either (a) external billing is a separate downstream process not yet triggered, or (b) external billing requires SMC to be in a terminal state (UPDATED/REGISTERED) before it can proceed.\n\nTwo consignment email processes are in ERROR state (tokoConsignmentDispatchEmailProcess and tokoConsignmentShippingPreparationEmailProcess), but these are non-blocking for the invoice issue.\n\nPossible remediation:\n1. Reset the SMC external service from UPDATE_ERROR to NEW and re-trigger ProcessExternalServicesOnConsignmentAction on the consignment process. Use the existing reusable PC-52678 (scplus-reset, script-AEME-6495-scplus-remediation.groovy) pattern adapted for this order.\n\n2. If the SMC UPDATE_ERROR requires clearing stale policy data first, use PC-53305 (smc-reregistration, script-AEME-6500-smc-reregistration-remediation.groovy) for SMC re-registration.\n\n3. After SMC moves to UPDATED/REGISTERED, monitor whether the external billing/invoice number populates automatically. If not, a separate consignment process retrigger may be needed (PC-52605, process-restart pattern).\n\n4. The two email processes in ERROR can be addressed by restarting them or suppressing the notification types, but these are non-blocking for the invoice issue.\n\nReusable PC tickets identified: PC-52596 (push-to-completed, already applied), PC-52678 (scplus-reset), PC-53305 (smc-reregistration), PC-52605 (process-restart).\n\nScript already applied: script-AEME-6597-push-from-shipped.groovy (PC-52596)",
-        "sections": {
-          "issue": "Replacement order AE260921-84726057 was stuck in SHIPPED status. The consignment was already COMPLETED in the warehouse with GERP billing number 3247304585 generated on 24-Sep, but the order-level status never transitioned to COMPLETED. After initial remediation (moving order to COMPLETED via PC-52596 push-from-shipped script), the reporter noted the order shows 0 value and invoice cannot be generated.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-05T07:16:57.446Z"
       }
     },
     {
@@ -1271,7 +1271,7 @@
       {
         "pid": 20536,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 200265,
+        "ageSeconds": 200307,
         "status": "running",
         "isChild": false,
         "taskSummary": "implement the previous ones and 2, 6, 12, 13",
@@ -1281,7 +1281,7 @@
       {
         "pid": 32364,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 97597,
+        "ageSeconds": 97640,
         "status": "running",
         "isChild": false,
         "taskSummary": "find BO ID names of these people for smi P1 fron jira tickets: Aryan Pallavi prateek sudhanshu su...",
@@ -1291,7 +1291,7 @@
       {
         "pid": 39608,
         "cwd": "c:\\windows",
-        "ageSeconds": 8891,
+        "ageSeconds": 8933,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1301,7 +1301,7 @@
       {
         "pid": 34396,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 204,
+        "ageSeconds": 246,
         "status": "running",
         "isChild": false,
         "taskSummary": "implement the previous ones and 2, 6, 12, 13",
@@ -4625,10 +4625,10 @@
     "bridgeLogTail": "[2026-10-08T15:19:43.001Z] STDOUT data for #651: 117 bytes\n[2026-10-08T15:19:43.002Z] LIVE events write for #651: 48 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.013Z] STDOUT data for #651: 114 bytes\n[2026-10-08T15:19:43.015Z] LIVE events write for #651: 49 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.026Z] STDOUT data for #651: 109 bytes\n[2026-10-08T15:19:43.029Z] LIVE events write for #651: 50 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.031Z] STDOUT data for #651: 117 bytes\n[2026-10-08T15:19:43.033Z] LIVE events write for #651: 51 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.040Z] STDOUT data for #651: 116 bytes\n[2026-10-08T15:19:43.043Z] LIVE events write for #651: 52 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.051Z] STDOUT data for #651: 122 bytes\n[2026-10-08T15:19:43.053Z] LIVE events write for #651: 53 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.062Z] STDOUT data for #651: 104 bytes\n[2026-10-08T15:19:43.064Z] LIVE events write for #651: 54 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.068Z] STDOUT data for #651: 325 bytes\n[2026-10-08T15:19:43.070Z] LIVE events write for #651: 55 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_651.txt\n[2026-10-08T15:19:43.161Z] Comment posted on #652\n[2026-10-08T15:19:43.793Z] aipro completed for #651 (586 chars)\n[2026-10-08T15:19:45.309Z] Comment posted on #651\n[2026-10-08T22:33:37.129Z] ERROR poll #1: API returned 502 - backing off 10000ms",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-09T11:15:26.710Z",
-      "ageMs": 11615
+      "lastWrite": "2026-10-09T11:16:11.724Z",
+      "ageMs": 8866
     },
-    "watchdogLogTail": "[2026-10-09T11:13:11.627Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T11:13:26.639Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T11:13:41.643Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T11:13:56.648Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T11:14:11.662Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T11:14:26.664Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T11:14:41.665Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T11:14:56.680Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T11:15:11.695Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T11:15:26.708Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-09T11:13:56.648Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T11:14:11.662Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T11:14:26.664Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T11:14:41.665Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T11:14:56.680Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T11:15:11.695Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T11:15:26.708Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T11:15:41.719Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T11:15:56.723Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-09T11:16:11.723Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
@@ -4886,13 +4886,13 @@
         "key": "AEME-6597",
         "summary": "Stuck in Shipped Status || 29-Sep",
         "priority": "None",
-        "status": "In Progress",
+        "status": "RCA Requested",
         "category": "actionable",
         "reason": "",
         "whatToDo": "Respond to Talib Raza Zaidi",
         "url": "https://jira.secext.samsung.net/browse/AEME-6597",
-        "updated": "2026-10-09T14:33:47.000+0900",
-        "statusChangedAt": "2026-10-05T15:58:25.179+0900"
+        "updated": "2026-10-09T20:18:00.000+0900",
+        "statusChangedAt": "2026-10-09T20:18:00.142+0900"
       },
       {
         "key": "TKME-2350",
@@ -5070,178 +5070,7 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": {
-    "byTicket": [
-      {
-        "key": "MHME-1451",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85687,
-        "targetDate": "2026-10-05T13:09:59.757000001Z"
-      },
-      {
-        "key": "MHME-1451",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1039971,
-        "targetDate": "2026-10-27T13:10:17.631000017Z"
-      },
-      {
-        "key": "AEME-6595",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86334,
-        "targetDate": "2026-09-30T07:32:47.469000001Z"
-      },
-      {
-        "key": "AEME-6595",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 766353,
-        "targetDate": "2026-10-22T08:09:59.926233261Z"
-      },
-      {
-        "key": "AEME-6602",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 84145,
-        "targetDate": "2026-10-01T06:07:13.196000001Z"
-      },
-      {
-        "key": "AEME-6602",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 843411,
-        "targetDate": "2026-10-23T05:34:17.841805984Z"
-      },
-      {
-        "key": "AEME-6527",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86020,
-        "targetDate": "2026-09-01T07:46:25.907000001Z"
-      },
-      {
-        "key": "AEME-6527",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 990365,
-        "targetDate": "2026-10-18T21:25:13.757000035Z"
-      },
-      {
-        "key": "TKME-2350",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86388,
-        "targetDate": "2026-10-01T10:37:23.449000001Z"
-      },
-      {
-        "key": "TKME-2350",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 2591572,
-        "targetDate": "2026-11-18T11:46:56.172000035Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85660,
-        "targetDate": "2026-09-15T08:21:25.088000001Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1211372,
-        "targetDate": "2026-10-13T12:51:05.986000021Z"
-      },
-      {
-        "key": "GMT-21163",
-        "slaName": "GMT Issue Response SLA(GMT+5.5)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85937,
-        "targetDate": "2026-09-17T08:08:38.502000001Z"
-      },
-      {
-        "key": "GMT-21163",
-        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1111871,
-        "targetDate": "2026-10-28T08:08:38.502000030Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86179,
-        "targetDate": "2026-09-30T08:16:57.595000001Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1269633,
-        "targetDate": "2026-10-20T08:16:57.595000015Z"
-      },
-      {
-        "key": "SAHME-3435",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85910,
-        "targetDate": "2026-09-17T09:08:01.990000001Z"
-      },
-      {
-        "key": "SAHME-3435",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 676353,
-        "targetDate": "2026-10-21T07:10:00.401833701Z"
-      },
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86254,
-        "targetDate": "2026-09-21T04:19:58.710000001Z"
-      },
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1348630,
-        "targetDate": "2026-11-02T02:54:37.529000031Z"
-      },
-      {
-        "key": "SAHME-3449",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86398,
-        "targetDate": "2026-09-29T16:09:15.925000001Z"
-      },
-      {
-        "key": "SAHME-3449",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2583627,
-        "targetDate": "2026-11-20T09:57:54.421000039Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86397,
-        "targetDate": "2026-09-29T16:09:08.750000001Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2507744,
-        "targetDate": "2026-11-19T11:53:11.870000038Z"
-      }
-    ]
-  },
+  "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
     "standupText": "Yesterday: 0.33h on TKME-2348, 0.42h on AEME-6596, 3.92h on AEME-6527, 1.33h on SAM-18530, 1h on SAM-18531, 1.5h on PC-55179, 0.75h on MHME-1434, 0.75h on TKME-2349, 0.75h on PKHME-942, 1h on SAME-4005, 1h on PC-55196, 1.5h on PC-55204\nToday: AUTEU-41862, MHME-1451, SAHME-3449, RT-657502, PC-55234\nBlockers: PC-55234, AEME-6527, PC-55179, PC-53923"
