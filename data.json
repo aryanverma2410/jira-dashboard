@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-13T05:21:10.414Z",
-  "totalTickets": 28,
+  "generatedAt": "2026-10-13T05:21:52.900Z",
+  "totalTickets": 27,
   "tickets": [
     {
       "key": "EHME-943",
@@ -109,8 +109,8 @@
         {
           "key": "TKME-2350",
           "summary": "Stuck order on Hybris- ORDER_SPLIT",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
+          "status": "Launch Verification",
+          "statusCategory": "Done",
           "relation": "is cloned by",
           "assignee": null
         }
@@ -559,59 +559,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-14T12:18:37.301Z"
-      }
-    },
-    {
-      "key": "TKME-2350",
-      "summary": "Stuck order on Hybris- ORDER_SPLIT",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Turkey Maintenance & Enhancements",
-      "projectKey": "TKME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-09T21:17:33.000+0900",
-      "created": "2026-09-30T19:37:21.000+0900",
-      "statusChangedAt": "2026-10-07T20:54:41.704+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n|Subsidiary|Order Nr|Order Status|\n|tr|TR260925-94249237|ORDER_SPLIT|\n|tr|TR260925-94292417|ORDER_SPLIT|\n|tr|TR260925-94453037|ORDER_SPLIT|\n|tr|TR260925-94514044|ORDER_SPLIT|\n|tr|TR260925-94546058|ORDE",
-      "commentsCount": 3,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-09T21:17:33.257+0900",
-          "snippet": "Hi ~@email ,\n\nWe will update as soon as the order has moved forward and close the ticket.\n\nNo actions are remaining from our end.\n\nRegards\n\nAryan"
-        },
-        {
-          "author": "Rajeshbabu Yatirajula",
-          "date": "2026-10-07T20:51:47.375+0900",
-          "snippet": "Hi ~@email \n\nOnly one order is still pending with DIVA, it will be moved further when hybris received the shipment status from DIVA system.\n\nRegards,\nRajesh"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi ~@email ,\n\nWe will update as soon as the order has moved forward and close the ticket.\n\nNo actions are remaining from our end.\n\nRegards\n\nAryan",
-      "lastCommentDate": "2026-10-09T21:17:33.257+0900",
-      "url": "https://jira.secext.samsung.net/browse/TKME-2350",
-      "linkedTickets": [
-        {
-          "key": "TKME-2348",
-          "summary": "Stuck order on Hybris",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
-          "relation": "clones",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "Ticket Summary: Stuck order on Hybris - ORDER_SPLIT\r\nGenerated: 2026-10-08T00:00:00Z\r\n\r\nIssue:\r\n\r\n6 TR-region orders reported stuck in ORDER_SPLIT status on 2026-09-25. All orders are buyback orders containing OmniChannelProduct, assigned to DIVA-Istanbul warehouse. Upon DB verification, 4 of the 6 orders have already self-resolved to COMPLETED status. One order (TR260925-94453037) remains genuinely stuck in ORDER_SPLIT, waiting for DIVA shipment status. One order (TR260925-94514044) progressed to REFUND_FAILED after its consignments were cancelled but the MasterPass refund of 450,000 TRY failed with ERROR status.\r\n\r\nRCA:\r\n\r\nTR260925-94249237, TR260925-94292417, TR260925-94546058, TR260925-94640512:\r\nThese 4 orders have fully completed. All consignments are COMPLETED, GERP billing numbers assigned, all order and consignment processes SUCCEEDED. No action needed — these progressed after the ticket was raised, likely as DIVA sent shipment confirmations.\r\n\r\nTR260925-94453037 (ORDER_SPLIT — genuinely stuck):\r\nThe order was split into 3 consignments (products: AR60F24C1KW/SK, ACL-RF50, FRH1458Z4) after checkout via the splitOrder action in order-process-v25-69. All 3 consignments are assigned to DIVA-Istanbul warehouse and are in READY status. The order process reached the isDelayedFiRequired action node, which checks IsDelayedFiPostingRequiredAction.executeAction() — this calls RentalPaymentUtil.isRentalPaymentMode() on the order's payment mode. Since the payment mode is MasterPass (tr-masterpassPaymentMode, not a rental payment mode), the action returns NO, transitioning to waitForWarehouseSubprocessEnd. The order process is now waiting for the event ${process.code}_ConsignmentSubprocessEnd.\r\n\r\nThe 3 consignment subprocesses (omnichannel-consignment-sub-process-v1) are all in RUNNING state. These subprocesses are waiting for DIVA to send the shipment status for each consignment. DIVA has not yet sent the shipment confirmation for this order, so the consignment processes remain RUNNING, which means the ConsignmentSubprocessEnd event is never fired, and the order process stays stuck at waitForWarehouseSubprocessEnd.\r\n\r\nThis matches the pattern seen in TKME-2028 (15 TR-region orders stuck at ORDER_SPLIT, resolved after confirming with DIVA and manually updating status) and RT-349680 (DIVA orders stuck at Order Split, fixed by DIVA 3rd party). The Jira comment from Rajeshbabu Yatirajula confirms: \"Only one order is still pending with DIVA, it will be moved further when hybris receives the shipment status from DIVA system.\"\r\n\r\nTR260925-94514044 (REFUND_FAILED — partially stuck):\r\nBoth consignments were CANCELLED (one at WC12-S751, one at DIVA-Istanbul). The order was cancelled and a REFUND_FOLLOW_ON transaction for 450,000 TRY was initiated on 2026-10-05 11:30:31, but it failed with ERROR status. The order process (order-process-v25-69) is in RUNNING state, waiting at the financial completion path — the process expects the refund to complete before the order can reach a terminal state. The failed refund transaction will not retry automatically. The order process is stuck at the isWaitForFinancialCompletionRequired / waitForFinancialCompletion stage because the financial system never posts the WaitForFinancialComplete event.\r\n\r\nPossible remediation:\r\n\r\nTR260925-94249237, TR260925-94292417, TR260925-94546058, TR260925-94640512:\r\nNo action required. These orders are fully COMPLETED.\r\n\r\nTR260925-94453037:\r\nConfirm with the DIVA team whether this order has been fulfilled on their end. If DIVA confirms fulfillment and the shipment status was sent but not processed by Hybris, the consignment statuses need to be manually updated (READY to SHIPPED/COMPLETED) and the omnichannel-consignment-sub-process needs to be retriggered. This follows the remediation pattern from TKME-2028 where orders were manually pushed to COMPLETED after DIVA confirmed fulfillment. If DIVA has not yet fulfilled the order, this is an external dependency — the order will remain in ORDER_SPLIT until DIVA sends the shipment status.\r\n\r\nTR260925-94514044:\r\nThe MasterPass REFUND_FOLLOW_ON transaction (450,000 TRY) is in ERROR status. The refund needs to be retried. This can be done by creating a new refund transaction entry or by resetting the failed transaction status and retriggering the refund flow via HAC script. The order process will remain in RUNNING state until the financial completion event is posted. Alternatively, if the refund cannot be retried, the order process can be manually advanced past the financial completion stage, but the refund failure should be resolved first to ensure the customer receives their money back.\r\n\r\nFor both stuck orders, no single reusable PC ticket covers this exact scenario. The closest existing reusable tickets are PC-44946 (TR Order Split — update external service status + retrigger consignment, manual, no script) and PC-52605 (generic process restart for stuck business processes, has script script-TKME-2279-retrigger-business-process.groovy). A new PC ticket may be needed if a HAC script is required for remediation.",
-        "sections": {
-          "issue": "6 TR-region orders reported stuck in ORDER_SPLIT status on 2026-09-25. All orders are buyback orders containing OmniChannelProduct, assigned to DIVA-Istanbul warehouse. Upon DB verification, 4 of the 6 orders have already self-resolved to COMPLETED status. One order (TR260925-94453037) remains genuinely stuck in ORDER_SPLIT, waiting for DIVA shipment status. One order (TR260925-94514044) progressed to REFUND_FAILED after its consignments were cancelled but the MasterPass refund of 450,000 TRY failed with ERROR status.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-08T04:06:09.800Z"
       }
     },
     {
@@ -1609,7 +1556,7 @@
       }
     ],
     "pid": 5176,
-    "uptime": 3251,
+    "uptime": 3297,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1621,7 +1568,7 @@
       {
         "pid": 19840,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 3318,
+        "ageSeconds": 3361,
         "status": "running",
         "isChild": false,
         "taskSummary": "implement the previous ones and 2, 6, 12, 13",
@@ -5002,7 +4949,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-12T22:58:57.608Z",
-      "ageMs": 22936273
+      "ageMs": 22978194
     },
     "watchdogLogTail": "[2026-10-13T04:26:33.995Z] Clock sync: VDI hw=2026-10-13T09:56:33.995Z Jira=2026-10-13T04:28:32.000Z drift=-19682s\n[2026-10-12T22:58:33.516Z] Clock sync: ADJUSTED by -19682s. Clock set to 2026-10-13 04:28:32\n[2026-10-12T22:58:45.600Z] RESTART NEEDED: Bridge process (PID 19860) not found\n[2026-10-12T22:58:47.714Z] Could not kill PID 19860: Command failed: taskkill /PID 19860 /F /T\n[2026-10-12T22:58:50.289Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 25416) not found\n[2026-10-12T22:58:52.418Z] Could not kill dashboard PID 25416: Command failed: taskkill /PID 25416 /F /T\n[2026-10-12T22:58:52.724Z] Starting bridge.js...\n[2026-10-12T22:58:52.889Z] Bridge started with PID 5176 (restart #1, 1 in last hour)\n[2026-10-12T22:58:57.422Z] Starting jira-dashboard-server.js...\n[2026-10-12T22:58:57.606Z] Dashboard started with PID 20072 (restart #1, 1 in last hour)"
   },
@@ -5011,7 +4958,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-13T05:20:08.876Z",
+      "lastCheck": "2026-10-13T05:21:08.515Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5020,7 +4967,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-13T05:20:08.876Z",
+      "lastCheck": "2026-10-13T05:21:08.515Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5029,9 +4976,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-13T05:20:08.876Z",
+      "lastCheck": "2026-10-13T05:21:08.515Z",
       "downSince": "2026-10-12T22:58:59.768Z",
-      "downDuration": 22869108,
+      "downDuration": 22928747,
       "alert": true
     }
   ],
@@ -5207,18 +5154,6 @@
         "url": "https://jira.secext.samsung.net/browse/SAHME-3357",
         "updated": "2026-10-09T23:06:23.000+0900",
         "statusChangedAt": "2026-08-03T20:40:12.579+0900"
-      },
-      {
-        "key": "TKME-2350",
-        "summary": "Stuck order on Hybris- ORDER_SPLIT",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/TKME-2350",
-        "updated": "2026-10-09T21:17:33.000+0900",
-        "statusChangedAt": "2026-10-07T20:54:41.704+0900"
       },
       {
         "key": "AUTEU-41862",
@@ -5476,7 +5411,7 @@
       }
     ],
     "totals": {
-      "zero": 12,
+      "zero": 11,
       "actionable": 4,
       "blocked": 11,
       "queued": 1
@@ -5530,248 +5465,7 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": {
-    "byTicket": [
-      {
-        "key": "EHME-943",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85622,
-        "targetDate": "2026-10-13T13:01:13.453000001Z"
-      },
-      {
-        "key": "EHME-943",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 373085,
-        "targetDate": "2026-10-19T13:01:13.453000005Z"
-      },
-      {
-        "key": "GMT-22264",
-        "slaName": "GMT Issue Response SLA(GMT+5.5)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86336,
-        "targetDate": "2026-10-13T17:53:07.713000001Z"
-      },
-      {
-        "key": "GMT-22264",
-        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
-        "slaStatus": "STILL",
-        "remainingDuration": 390599,
-        "targetDate": "2026-10-19T17:53:07.713000005Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86397,
-        "targetDate": "2026-09-29T16:09:08.750000001Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2450419,
-        "targetDate": "2026-11-20T14:03:27.584000039Z"
-      },
-      {
-        "key": "AEME-6582",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85811,
-        "targetDate": "2026-09-25T07:05:01.740000001Z"
-      },
-      {
-        "key": "AEME-6582",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1294922,
-        "targetDate": "2026-10-15T07:05:01.740000015Z"
-      },
-      {
-        "key": "AEME-6527",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86020,
-        "targetDate": "2026-09-01T07:46:25.907000001Z"
-      },
-      {
-        "key": "AEME-6527",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 990365,
-        "targetDate": "2026-10-18T21:25:13.757000035Z"
-      },
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86254,
-        "targetDate": "2026-09-21T04:19:58.710000001Z"
-      },
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1197089,
-        "targetDate": "2026-11-02T02:54:37.529000031Z"
-      },
-      {
-        "key": "TKME-2349",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85154,
-        "targetDate": "2026-09-30T05:54:00.259000001Z"
-      },
-      {
-        "key": "TKME-2349",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 832284,
-        "targetDate": "2026-10-21T22:04:04.731000017Z"
-      },
-      {
-        "key": "TKME-2350",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86388,
-        "targetDate": "2026-10-01T10:37:23.449000001Z"
-      },
-      {
-        "key": "TKME-2350",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 2591572,
-        "targetDate": "2026-11-18T11:46:56.172000035Z"
-      },
-      {
-        "key": "SAHME-3449",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86398,
-        "targetDate": "2026-09-29T16:09:15.925000001Z"
-      },
-      {
-        "key": "SAHME-3449",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2432086,
-        "targetDate": "2026-11-20T09:57:54.421000039Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86179,
-        "targetDate": "2026-09-30T08:16:57.595000001Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1269633,
-        "targetDate": "2026-10-20T08:16:57.595000015Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85660,
-        "targetDate": "2026-09-15T08:21:25.088000001Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1211372,
-        "targetDate": "2026-10-13T12:51:05.986000021Z"
-      },
-      {
-        "key": "SAHME-3357",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86400,
-        "targetDate": "2026-08-04T11:40:12.579000001Z"
-      },
-      {
-        "key": "SAHME-3357",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 534416,
-        "targetDate": "2026-10-21T09:50:04.163000057Z"
-      },
-      {
-        "key": "SAHME-3435",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85910,
-        "targetDate": "2026-09-17T09:08:01.990000001Z"
-      },
-      {
-        "key": "SAHME-3435",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 676353,
-        "targetDate": "2026-10-23T01:15:41.799594807Z"
-      },
-      {
-        "key": "AEME-6548",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86062,
-        "targetDate": "2026-09-10T08:03:14.021000001Z"
-      },
-      {
-        "key": "AEME-6548",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1116493,
-        "targetDate": "2026-10-06T04:37:50.432000019Z"
-      },
-      {
-        "key": "AEME-6602",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 84145,
-        "targetDate": "2026-10-01T06:07:13.196000001Z"
-      },
-      {
-        "key": "AEME-6602",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 843411,
-        "targetDate": "2026-10-26T23:39:59.259245084Z"
-      },
-      {
-        "key": "GMT-21163",
-        "slaName": "GMT Issue Response SLA(GMT+5.5)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85937,
-        "targetDate": "2026-09-17T08:08:38.502000001Z"
-      },
-      {
-        "key": "GMT-21163",
-        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
-        "slaStatus": "STILL",
-        "remainingDuration": 960330,
-        "targetDate": "2026-10-28T08:08:38.502000030Z"
-      },
-      {
-        "key": "AEME-6595",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86334,
-        "targetDate": "2026-09-30T07:32:47.469000001Z"
-      },
-      {
-        "key": "AEME-6595",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 766353,
-        "targetDate": "2026-10-26T02:15:41.631697930Z"
-      }
-    ]
-  },
+  "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
     "standupText": "Yesterday: no worklogs\nToday: EHME-943, GMT-22264, TKME-2348, RT-722599, TKME-2349\nBlockers: AEME-6548, PC-55204, PC-55239, AEME-6527, PC-55234, PC-55179, PC-53923"
