@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-13T10:58:14.352Z",
+  "generatedAt": "2026-10-13T10:58:56.584Z",
   "totalTickets": 18,
   "tickets": [
     {
@@ -1112,7 +1112,7 @@
       {
         "pid": 19840,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 23543,
+        "ageSeconds": 23587,
         "status": "running",
         "isChild": false,
         "taskSummary": "implement the previous ones and 2, 6, 12, 13",
@@ -1122,17 +1122,17 @@
       {
         "pid": 1572,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 19950,
+        "ageSeconds": 19995,
         "status": "running",
         "isChild": false,
-        "taskSummary": "cehck mail is actually not being sent from : //NOTE ITGC_JIRA:PC-48787(GMT-15456) //NOTE ITGC_JIR...",
-        "lastExchange": "cehck mail is actually not being sent from : //NOTE ITGC_JIRA:PC-48787(GMT-15456)\n//NOTE ITGC_JIRA:PC-48787(GMT-15456)\n\npackage my.bookstore.core.groovy\nimport de.hybris.platform.core.enums.OrderStatus\nimport de.hybris.platform.order.events.SubmitOrderEvent\n\n\nStringBuffer sb = new StringBuffer();\n\n//Email Configuration\nemail = de.hybris.platform.util.mail.MailUtils.getPreConfiguredEmail()\n//email.addTo('samsung.shop.support@accenture.com')\nemail.addTo('jain.vaibhav@samsung.com')\nemail.addTo('pallavi.m@samsung.com')\nemail.addTo('aryan.v1@samsung.com')\n\n\neventService = spring.getBean(\"eventService\")\nfss = spring.getBean(\"flexibleSearchService\")\n\ndef query = \"SELECT {o.pk} FROM {order AS o LEFT JOIN OrderStatus AS s ON {o.status}={s.pk}} WHERE {o.date} >= current_timestamp -1 AND {o.originalVersion} IS NULL ORDER BY {o.code}\"\n\norders = fss.search(query).result\n\nsb.append(\"Hi All,\\n\\n\")\n\nsb.append(\"MENA NULL Orders for the last 24 hours\\n\")\nsb.append(\"---------------------------------------------\")\nsb.append(\"\\n\\n\")\n\nsb.append(\"CTR|ORDER_NUMBER|CREATE_DATE|ORDER_STATUS|PAYMENT_MODE|PROCESS_SIZE\\n\")\n\nctr = 0\n\nfor (order in orders) {\n    if (order.orderProcess != null && order.orderProcess.size() != null && order.orderProcess.size() < 1 && !order.status.equals(OrderStatus.TEMPORARY)){\n        ctr++\n        def date = new java.text.SimpleDateFormat('MM/dd/yyyy hh:mm:ss a').format(order.date)\n        sb.append(ctr)\n        sb.append(\"|\")\n        // Added null check\n        sb.append(order?.code)\n        sb.append(\"|\")\n        sb.append(date)\n        sb.append(\"|\")\n        sb.append(order.status)\n        sb.append(\"|\")\n        // Added null check\n        sb.append(order?.paymentMode?.code)\n        sb.append(\"|\")\n        sb.append(order.orderProcess.size())\n        sb.append(\"\\n\")\n    }\n}\n\nemail.subject = 'Critical | MENA NULL ORDERS: '+ ctr\n\nsb.append(\"\\n\\nRegards,\\nAI Team\")\n\nif(ctr!=0){\n    email.msg = sb\n    email.send()\n}",
+        "taskSummary": "why am I not receiving email",
+        "lastExchange": "why am I not receiving email",
         "sessionId": "bin"
       },
       {
         "pid": 600,
         "cwd": "c:\\windows",
-        "ageSeconds": 19946,
+        "ageSeconds": 19990,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1142,7 +1142,7 @@
       {
         "pid": 25700,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 10524,
+        "ageSeconds": 10568,
         "status": "running",
         "isChild": false,
         "taskSummary": "implement the previous ones and 2, 6, 12, 13",
@@ -4522,10 +4522,10 @@
     "bridgeLogTail": "[2026-10-12T22:58:53.224Z] ==========================================\n[2026-10-12T22:58:53.226Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-12T22:58:53.227Z] === with Aipro Auto-Launch ===\n[2026-10-12T22:58:53.228Z] ==========================================\n[2026-10-12T22:58:53.228Z] PID: 5176\n[2026-10-12T22:58:53.229Z] Repo: aryanverma2410/agent-bridge\n[2026-10-12T22:58:53.229Z] Poll interval: 10000ms\n[2026-10-12T22:58:53.230Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-12T22:58:53.230Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-12T22:58:53.231Z] Waiting for messages...\n[2026-10-13T06:58:14.192Z] ==========================================\n[2026-10-13T06:58:14.195Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-13T06:58:14.196Z] === with Aipro Auto-Launch ===\n[2026-10-13T06:58:14.197Z] ==========================================\n[2026-10-13T06:58:14.198Z] PID: 1316\n[2026-10-13T06:58:14.199Z] Repo: aryanverma2410/agent-bridge\n[2026-10-13T06:58:14.200Z] Poll interval: 10000ms\n[2026-10-13T06:58:14.200Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-13T06:58:14.201Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-13T06:58:14.202Z] Waiting for messages...",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-13T10:58:05.262Z",
-      "ageMs": 12623
+      "lastWrite": "2026-10-13T10:58:50.819Z",
+      "ageMs": 11371
     },
-    "watchdogLogTail": "[2026-10-13T10:55:42.485Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-13T10:55:58.074Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-13T10:56:13.118Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-13T10:56:28.991Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-13T10:56:43.113Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-13T10:56:58.151Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-13T10:57:13.955Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-13T10:57:35.725Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-13T10:57:50.030Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-13T10:58:05.259Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-13T10:56:28.991Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-13T10:56:43.113Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-13T10:56:58.151Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-13T10:57:13.955Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-13T10:57:35.725Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-13T10:57:50.030Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-13T10:58:05.259Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-13T10:58:21.396Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-13T10:58:35.762Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-13T10:58:50.817Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
@@ -4931,150 +4931,7 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": {
-    "byTicket": [
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86254,
-        "targetDate": "2026-09-21T04:19:58.710000001Z"
-      },
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1176865,
-        "targetDate": "2026-11-02T02:54:37.529000031Z"
-      },
-      {
-        "key": "AEME-6595",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86334,
-        "targetDate": "2026-09-30T07:32:47.469000001Z"
-      },
-      {
-        "key": "AEME-6595",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 766353,
-        "targetDate": "2026-10-26T07:52:45.077353826Z"
-      },
-      {
-        "key": "SAHME-3449",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86398,
-        "targetDate": "2026-09-29T16:09:15.925000001Z"
-      },
-      {
-        "key": "SAHME-3449",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2411862,
-        "targetDate": "2026-11-20T09:57:54.421000039Z"
-      },
-      {
-        "key": "SAHME-3357",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86400,
-        "targetDate": "2026-08-04T11:40:12.579000001Z"
-      },
-      {
-        "key": "SAHME-3357",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 514192,
-        "targetDate": "2026-10-21T09:50:04.163000057Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85660,
-        "targetDate": "2026-09-15T08:21:25.088000001Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1211372,
-        "targetDate": "2026-10-13T12:51:05.986000021Z"
-      },
-      {
-        "key": "AEME-6548",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86062,
-        "targetDate": "2026-09-10T08:03:14.021000001Z"
-      },
-      {
-        "key": "AEME-6548",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1116493,
-        "targetDate": "2026-10-06T04:37:50.432000019Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86179,
-        "targetDate": "2026-09-30T08:16:57.595000001Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1269633,
-        "targetDate": "2026-10-20T08:16:57.595000015Z"
-      },
-      {
-        "key": "GMT-21163",
-        "slaName": "GMT Issue Response SLA(GMT+5.5)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85937,
-        "targetDate": "2026-09-17T08:08:38.502000001Z"
-      },
-      {
-        "key": "GMT-21163",
-        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
-        "slaStatus": "STILL",
-        "remainingDuration": 940106,
-        "targetDate": "2026-10-28T08:08:38.502000030Z"
-      },
-      {
-        "key": "AEME-6582",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85811,
-        "targetDate": "2026-09-25T07:05:01.740000001Z"
-      },
-      {
-        "key": "AEME-6582",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1294922,
-        "targetDate": "2026-10-15T07:05:01.740000015Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86397,
-        "targetDate": "2026-09-29T16:09:08.750000001Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2430195,
-        "targetDate": "2026-11-20T14:03:27.584000039Z"
-      }
-    ]
-  },
+  "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
     "standupText": "Yesterday: no worklogs\nToday: TKME-2348, RT-722599, SAHME-3357, SAHME-3449, RT-657502\nBlockers: PC-55234, PC-55360, AEME-6548, PC-53923"
