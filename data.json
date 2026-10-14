@@ -1,68 +1,7 @@
 {
-  "generatedAt": "2026-10-14T11:04:56.838Z",
+  "generatedAt": "2026-10-14T11:05:40.741Z",
   "totalTickets": 19,
   "tickets": [
-    {
-      "key": "AEME-6548",
-      "summary": "Stuck Order || 09-Sep",
-      "status": "QA Server Review",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-14T20:06:41.000+0900",
-      "created": "2026-09-09T17:03:11.000+0900",
-      "statusChangedAt": "2026-10-12T16:12:19.961+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team\n\n \n\nPlease fix the order below as it is stuck with Hybris. Kindly share the RCA as well\n\nAE260903-74755067 -CHECKED_INVALID\n\n \n\nThe payment authorization has been completed for the order below. Please capture and create the order with the below payment details.\n\n \n|Date|Request ID|Reference|",
-      "commentsCount": 9,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-14T20:06:41.117+0900",
-          "snippet": "Hi Dilip,\n\nRegarding the original Sep 6 timeline for AE260906-76717980, I checked the Kibana logs for the order and the database.\n\nThe order was created on Sep 6 at 06:04:41 UTC. The customer completed payment via Checkout.com GooglePay. On the Hybris side, the order was created as a temporary order"
-        },
-        {
-          "author": "Dilip Boddula",
-          "date": "2026-10-12T16:16:23.373+0900",
-          "snippet": "Dear ~@email \n\nThanks for sharing the detailed investigation. However, it is still not clear what happened on the day of the order where the customer completed payment. You mentioned that Hybris received the capture after the order moved to temporary_expired; however, the {}exact timing of the captu"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Dilip,\n\nRegarding the original Sep 6 timeline for AE260906-76717980, I checked the Kibana logs for the order and the database.\n\nThe order was created on Sep 6 at 06:04:41 UTC. The customer completed payment via Checkout.com GooglePay. On the Hybris side, the order was created as a temporary order",
-      "lastCommentDate": "2026-10-14T20:06:41.117+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6548",
-      "linkedTickets": [
-        {
-          "key": "PC-53917",
-          "summary": "AEME-6548 | Convert TEMPORARY_EXPIRED order AE260906-76717980_1 to normal order - GooglePay",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "is blocked by",
-          "assignee": null
-        },
-        {
-          "key": "AEME-6487",
-          "summary": "Stuck Order || 12-Aug",
-          "status": "RCA Requested",
-          "statusCategory": "In Progress",
-          "relation": "relates to",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: AEME-6548\nStuck Order || 09-Sep\nGenerated: 2026-09-09T11:35:00.000Z\n\nHi Jaffar ,\n\nOrder AE260903-74755067 is stuck at CHECKED_INVALID status with both order process instances (order-process-v25-69) in FAILED state. The order was placed on 07 September 2026 at 10:42:13 UTC via Checkout.com flow on the AE store for a total of 2,564.10 AED. The payment was successfully authorised twice — two AUTHORIZATION PaymentTransactionEntry records both show ACCEPTED status for 2,564.10 AED at 10:43:15 and 14:43:15 respectively. The paymentInfo (CreditCardPaymentInfo PK 9448882667562) is present and correctly linked to the order and PaymentTransaction. The payment side is healthy.\n\nThe root cause is a NULL deliveryMode on the order header. The order entry (entry 0) has the delivery mode set to ae-mx-calendar-delivery (PK 8797993762856), but this was not propagated to the order header during checkout conversion. DefaultCheckOrderService.check() validates that order.getDeliveryMode() is non-null as one of its mandatory conditions. When this check fails, the order status is set to CHECKED_INVALID and the method returns false. The CheckOrderAction in order-process-v25-69 then returns NOK, but the process appears to loop at the checkOrder action 50+ times before eventually reaching FAILED state, likely due to additional custom Toko pre-validation logic that throws an unhandled exception when deliveryMode is null rather than cleanly returning NOK on each attempt.\n\nAdditionally, order.getPaymentStatus() is NULL and there is a malformed ExternalService entry linked to the order with all fields NULL (provider, status, serviceProduct, serviceID are all empty). This partially initialised external service record is a secondary anomaly that would cause further issues downstream at checkExternalEnabled if the process were to progress past checkOrder.\n\nNo consignments were ever created because the process never reached the splitOrder step. The order is stuck at CHECKED_INVALID with no fulfilment path.\n\nThis is the same pattern observed in SAME-3952 (September 2026, order SA260831-72577904) where a Checkout.com ApplePay order on the SA store had a NULL deliveryMode on the order header despite the order entry having the delivery mode set. That ticket was resolved by setting the order header deliveryMode from the order entry and restarting the order process. The same remediation approach applies here.\n\nThe remediation is to set the order header deliveryMode from the order entry (ae-mx-calendar-delivery), set the paymentStatus to PAID (since both AUTHORIZATION entries are ACCEPTED), clean up the malformed ExternalService entry, and restart the order process from checkOrder. This requires a Groovy script run via HAC.\n\nThis is the same remediation approach confirmed and successfully applied in SAME-3952.\n\nThanks,\n\nAryan.\n\n## Remediation\n\n1. Set order.deliveryMode from order entry (ae-mx-calendar-delivery, PK 8797993762856)\n2. Set order.paymentStatus to PAID\n3. Clean up the malformed ExternalService entry (all fields NULL)\n4. Set order.status back to CREATED\n5. Restart the order process (order-process-v25-69) from the beginning or from checkOrder action\n6. Reuse approach from SAME-3952 remediation\n\nNo reusable PC ticket was found for this specific remediation type. A new PC ticket may be needed if script execution is required.",
-        "sections": {
-          "issue": "",
-          "rca": "# RCA: AEME-6548\nStuck Order || 09-Sep\nGenerated: 2026-09-09T11:35:00.000Z\n\nHi Jaffar ,\n\nOrder AE260903-74755067 is stuck at CHECKED_INVALID status with both order process instances (order-process-v25-69) in FAILED state. The order was placed on 07 September 2026 at 10:42:13 UTC via Checkout.com flow on the AE store for a total of 2,564.10 AED. The payment was successfully authorised twice — two AUTHORIZATION PaymentTransactionEntry records both show ACCEPTED status for 2,564.10 AED at 10:43:15 and 14:43:15 respectively. The paymentInfo (CreditCardPaymentInfo PK 9448882667562) is present and correctly linked to the order and PaymentTransaction. The payment side is healthy.\n\nThe root cause is a NULL deliveryMode on the order header. The order entry (entry 0) has the delivery mode set to ae-mx-calendar-delivery (PK 8797993762856), but this was not propagated to the order header during checkout conversion. DefaultCheckOrderService.check() validates that order.getDeliveryMode() is non-null as one of its mandatory conditions. When this check fails, the order status is set to CHECKED_INVALID and the method returns false. The CheckOrderAction in order-process-v25-69 then returns NOK, but the process appears to loop at the checkOrder action 50+ times before eventually reaching FAILED state, likely due to additional custom Toko pre-validation logic that throws an unhandled exception when deliveryMode is null rather than cleanly returning NOK on each attempt.\n\nAdditionally, order.getPaymentStatus() is NULL and there is a malformed ExternalService entry linked to the order with all fields NULL (provider, status, serviceProduct, serviceID are all empty). This partially initialised external service record is a secondary anomaly that would cause further issues downstream at checkExternalEnabled if the process were to progress past checkOrder.\n\nNo consignments were ever created because the process never reached the splitOrder step. The order is stuck at CHECKED_INVALID with no fulfilment path.\n\nThis is the same pattern observed in SAME-3952 (September 2026, order SA260831-72577904) where a Checkout.com ApplePay order on the SA store had a NULL deliveryMode on the order header despite the order entry having the delivery mode set. That ticket was resolved by setting the order header deliveryMode from the order entry and restarting the order process. The same remediation approach applies here.\n\nThe remediation is to set the order header deliveryMode from the order entry (ae-mx-calendar-delivery), set the paymentStatus to PAID (since both AUTHORIZATION entries are ACCEPTED), clean up the malformed ExternalService entry, and restart the order process from checkOrder. This requires a Groovy script run via HAC.\n\nThis is the same remediation approach confirmed and successfully applied in SAME-3952.\n\nThanks,\n\nAryan.\n\n## Remediation\n\n1. Set order.deliveryMode from order entry (ae-mx-calendar-delivery, PK 8797993762856)\n2. Set order.paymentStatus to PAID\n3. Clean up the malformed ExternalService entry (all fields NULL)\n4. Set order.status back to CREATED\n5. Restart the order process (order-process-v25-69) from the beginning or from checkOrder action\n6. Reuse approach from SAME-3952 remediation\n\nNo reusable PC ticket was found for this specific remediation type. A new PC ticket may be needed if script execution is required.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-09T11:40:12.173Z"
-      }
-    },
     {
       "key": "SAHME-3357",
       "summary": "SMC Errors-ProcessExternalServices",
@@ -72,7 +11,7 @@
       "project": "South Africa Maintenance & Enhancements",
       "projectKey": "SAHME",
       "issuetype": "Maintenance Request",
-      "updated": "2026-10-14T20:06:40.000+0900",
+      "updated": "2026-10-14T20:07:06.000+0900",
       "created": "2026-08-03T20:40:04.000+0900",
       "statusChangedAt": "2026-08-03T20:40:12.579+0900",
       "assignedToMeAt": "",
@@ -122,6 +61,67 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-03T13:45:10.016Z"
+      }
+    },
+    {
+      "key": "AEME-6548",
+      "summary": "Stuck Order || 09-Sep",
+      "status": "QA Server Review",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "UAE Maintenance & Enhancements",
+      "projectKey": "AEME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-14T20:07:06.000+0900",
+      "created": "2026-09-09T17:03:11.000+0900",
+      "statusChangedAt": "2026-10-12T16:12:19.961+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team\n\n \n\nPlease fix the order below as it is stuck with Hybris. Kindly share the RCA as well\n\nAE260903-74755067 -CHECKED_INVALID\n\n \n\nThe payment authorization has been completed for the order below. Please capture and create the order with the below payment details.\n\n \n|Date|Request ID|Reference|",
+      "commentsCount": 9,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-14T20:06:41.117+0900",
+          "snippet": "Hi Dilip,\n\nRegarding the original Sep 6 timeline for AE260906-76717980, I checked the Kibana logs for the order and the database.\n\nThe order was created on Sep 6 at 06:04:41 UTC. The customer completed payment via Checkout.com GooglePay. On the Hybris side, the order was created as a temporary order"
+        },
+        {
+          "author": "Dilip Boddula",
+          "date": "2026-10-12T16:16:23.373+0900",
+          "snippet": "Dear ~@email \n\nThanks for sharing the detailed investigation. However, it is still not clear what happened on the day of the order where the customer completed payment. You mentioned that Hybris received the capture after the order moved to temporary_expired; however, the {}exact timing of the captu"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Dilip,\n\nRegarding the original Sep 6 timeline for AE260906-76717980, I checked the Kibana logs for the order and the database.\n\nThe order was created on Sep 6 at 06:04:41 UTC. The customer completed payment via Checkout.com GooglePay. On the Hybris side, the order was created as a temporary order",
+      "lastCommentDate": "2026-10-14T20:06:41.117+0900",
+      "url": "https://jira.secext.samsung.net/browse/AEME-6548",
+      "linkedTickets": [
+        {
+          "key": "PC-53917",
+          "summary": "AEME-6548 | Convert TEMPORARY_EXPIRED order AE260906-76717980_1 to normal order - GooglePay",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "is blocked by",
+          "assignee": null
+        },
+        {
+          "key": "AEME-6487",
+          "summary": "Stuck Order || 12-Aug",
+          "status": "RCA Requested",
+          "statusCategory": "In Progress",
+          "relation": "relates to",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "# RCA: AEME-6548\nStuck Order || 09-Sep\nGenerated: 2026-09-09T11:35:00.000Z\n\nHi Jaffar ,\n\nOrder AE260903-74755067 is stuck at CHECKED_INVALID status with both order process instances (order-process-v25-69) in FAILED state. The order was placed on 07 September 2026 at 10:42:13 UTC via Checkout.com flow on the AE store for a total of 2,564.10 AED. The payment was successfully authorised twice — two AUTHORIZATION PaymentTransactionEntry records both show ACCEPTED status for 2,564.10 AED at 10:43:15 and 14:43:15 respectively. The paymentInfo (CreditCardPaymentInfo PK 9448882667562) is present and correctly linked to the order and PaymentTransaction. The payment side is healthy.\n\nThe root cause is a NULL deliveryMode on the order header. The order entry (entry 0) has the delivery mode set to ae-mx-calendar-delivery (PK 8797993762856), but this was not propagated to the order header during checkout conversion. DefaultCheckOrderService.check() validates that order.getDeliveryMode() is non-null as one of its mandatory conditions. When this check fails, the order status is set to CHECKED_INVALID and the method returns false. The CheckOrderAction in order-process-v25-69 then returns NOK, but the process appears to loop at the checkOrder action 50+ times before eventually reaching FAILED state, likely due to additional custom Toko pre-validation logic that throws an unhandled exception when deliveryMode is null rather than cleanly returning NOK on each attempt.\n\nAdditionally, order.getPaymentStatus() is NULL and there is a malformed ExternalService entry linked to the order with all fields NULL (provider, status, serviceProduct, serviceID are all empty). This partially initialised external service record is a secondary anomaly that would cause further issues downstream at checkExternalEnabled if the process were to progress past checkOrder.\n\nNo consignments were ever created because the process never reached the splitOrder step. The order is stuck at CHECKED_INVALID with no fulfilment path.\n\nThis is the same pattern observed in SAME-3952 (September 2026, order SA260831-72577904) where a Checkout.com ApplePay order on the SA store had a NULL deliveryMode on the order header despite the order entry having the delivery mode set. That ticket was resolved by setting the order header deliveryMode from the order entry and restarting the order process. The same remediation approach applies here.\n\nThe remediation is to set the order header deliveryMode from the order entry (ae-mx-calendar-delivery), set the paymentStatus to PAID (since both AUTHORIZATION entries are ACCEPTED), clean up the malformed ExternalService entry, and restart the order process from checkOrder. This requires a Groovy script run via HAC.\n\nThis is the same remediation approach confirmed and successfully applied in SAME-3952.\n\nThanks,\n\nAryan.\n\n## Remediation\n\n1. Set order.deliveryMode from order entry (ae-mx-calendar-delivery, PK 8797993762856)\n2. Set order.paymentStatus to PAID\n3. Clean up the malformed ExternalService entry (all fields NULL)\n4. Set order.status back to CREATED\n5. Restart the order process (order-process-v25-69) from the beginning or from checkOrder action\n6. Reuse approach from SAME-3952 remediation\n\nNo reusable PC ticket was found for this specific remediation type. A new PC ticket may be needed if script execution is required.",
+        "sections": {
+          "issue": "",
+          "rca": "# RCA: AEME-6548\nStuck Order || 09-Sep\nGenerated: 2026-09-09T11:35:00.000Z\n\nHi Jaffar ,\n\nOrder AE260903-74755067 is stuck at CHECKED_INVALID status with both order process instances (order-process-v25-69) in FAILED state. The order was placed on 07 September 2026 at 10:42:13 UTC via Checkout.com flow on the AE store for a total of 2,564.10 AED. The payment was successfully authorised twice — two AUTHORIZATION PaymentTransactionEntry records both show ACCEPTED status for 2,564.10 AED at 10:43:15 and 14:43:15 respectively. The paymentInfo (CreditCardPaymentInfo PK 9448882667562) is present and correctly linked to the order and PaymentTransaction. The payment side is healthy.\n\nThe root cause is a NULL deliveryMode on the order header. The order entry (entry 0) has the delivery mode set to ae-mx-calendar-delivery (PK 8797993762856), but this was not propagated to the order header during checkout conversion. DefaultCheckOrderService.check() validates that order.getDeliveryMode() is non-null as one of its mandatory conditions. When this check fails, the order status is set to CHECKED_INVALID and the method returns false. The CheckOrderAction in order-process-v25-69 then returns NOK, but the process appears to loop at the checkOrder action 50+ times before eventually reaching FAILED state, likely due to additional custom Toko pre-validation logic that throws an unhandled exception when deliveryMode is null rather than cleanly returning NOK on each attempt.\n\nAdditionally, order.getPaymentStatus() is NULL and there is a malformed ExternalService entry linked to the order with all fields NULL (provider, status, serviceProduct, serviceID are all empty). This partially initialised external service record is a secondary anomaly that would cause further issues downstream at checkExternalEnabled if the process were to progress past checkOrder.\n\nNo consignments were ever created because the process never reached the splitOrder step. The order is stuck at CHECKED_INVALID with no fulfilment path.\n\nThis is the same pattern observed in SAME-3952 (September 2026, order SA260831-72577904) where a Checkout.com ApplePay order on the SA store had a NULL deliveryMode on the order header despite the order entry having the delivery mode set. That ticket was resolved by setting the order header deliveryMode from the order entry and restarting the order process. The same remediation approach applies here.\n\nThe remediation is to set the order header deliveryMode from the order entry (ae-mx-calendar-delivery), set the paymentStatus to PAID (since both AUTHORIZATION entries are ACCEPTED), clean up the malformed ExternalService entry, and restart the order process from checkOrder. This requires a Groovy script run via HAC.\n\nThis is the same remediation approach confirmed and successfully applied in SAME-3952.\n\nThanks,\n\nAryan.\n\n## Remediation\n\n1. Set order.deliveryMode from order entry (ae-mx-calendar-delivery, PK 8797993762856)\n2. Set order.paymentStatus to PAID\n3. Clean up the malformed ExternalService entry (all fields NULL)\n4. Set order.status back to CREATED\n5. Restart the order process (order-process-v25-69) from the beginning or from checkOrder action\n6. Reuse approach from SAME-3952 remediation\n\nNo reusable PC ticket was found for this specific remediation type. A new PC ticket may be needed if script execution is required.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-09T11:40:12.173Z"
       }
     },
     {
@@ -1141,7 +1141,7 @@
       {
         "pid": 19840,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 110345,
+        "ageSeconds": 110390,
         "status": "running",
         "isChild": false,
         "taskSummary": "just run the normal script that will run on next launch",
@@ -1151,7 +1151,7 @@
       {
         "pid": 1572,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 106753,
+        "ageSeconds": 106798,
         "status": "running",
         "isChild": false,
         "taskSummary": "remove \" > What we can confirm from the database: > - Order creation time: 2026-09-06 06:04:41 UT...",
@@ -1161,7 +1161,7 @@
       {
         "pid": 600,
         "cwd": "c:\\windows",
-        "ageSeconds": 106749,
+        "ageSeconds": 106793,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1171,7 +1171,7 @@
       {
         "pid": 25700,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 97326,
+        "ageSeconds": 97371,
         "status": "running",
         "isChild": false,
         "taskSummary": "just run the normal script that will run on next launch",
@@ -1181,7 +1181,7 @@
       {
         "pid": 23676,
         "cwd": "unknown",
-        "ageSeconds": 83357,
+        "ageSeconds": 83402,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -4561,10 +4561,10 @@
     "bridgeLogTail": "[2026-10-12T22:58:53.224Z] ==========================================\n[2026-10-12T22:58:53.226Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-12T22:58:53.227Z] === with Aipro Auto-Launch ===\n[2026-10-12T22:58:53.228Z] ==========================================\n[2026-10-12T22:58:53.228Z] PID: 5176\n[2026-10-12T22:58:53.229Z] Repo: aryanverma2410/agent-bridge\n[2026-10-12T22:58:53.229Z] Poll interval: 10000ms\n[2026-10-12T22:58:53.230Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-12T22:58:53.230Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-12T22:58:53.231Z] Waiting for messages...\n[2026-10-13T06:58:14.192Z] ==========================================\n[2026-10-13T06:58:14.195Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-13T06:58:14.196Z] === with Aipro Auto-Launch ===\n[2026-10-13T06:58:14.197Z] ==========================================\n[2026-10-13T06:58:14.198Z] PID: 1316\n[2026-10-13T06:58:14.199Z] Repo: aryanverma2410/agent-bridge\n[2026-10-13T06:58:14.200Z] Poll interval: 10000ms\n[2026-10-13T06:58:14.200Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-13T06:58:14.201Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-13T06:58:14.202Z] Waiting for messages...",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-14T11:04:48.837Z",
-      "ageMs": 12318
+      "lastWrite": "2026-10-14T11:05:33.896Z",
+      "ageMs": 13248
     },
-    "watchdogLogTail": "[2026-10-14T11:02:33.773Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:02:48.778Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:03:03.785Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:03:18.788Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:03:33.796Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:03:48.812Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:04:03.816Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:04:18.819Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:04:33.824Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:04:48.836Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-14T11:03:18.788Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:03:33.796Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:03:48.812Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:04:03.816Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:04:18.819Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:04:33.824Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:04:48.836Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:05:03.848Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:05:18.880Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:05:33.894Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
@@ -4841,7 +4841,7 @@
         "reason": "Waiting for QA/review team",
         "whatToDo": "",
         "url": "https://jira.secext.samsung.net/browse/AEME-6548",
-        "updated": "2026-10-14T20:06:41.000+0900",
+        "updated": "2026-10-14T20:07:06.000+0900",
         "statusChangedAt": "2026-10-12T16:12:19.961+0900"
       },
       {
@@ -4877,7 +4877,7 @@
         "reason": "Waiting for dev lead to respond",
         "whatToDo": "",
         "url": "https://jira.secext.samsung.net/browse/SAHME-3357",
-        "updated": "2026-10-14T20:06:40.000+0900",
+        "updated": "2026-10-14T20:07:06.000+0900",
         "statusChangedAt": "2026-08-03T20:40:12.579+0900"
       },
       {
@@ -4935,12 +4935,12 @@
     }
   },
   "worklogTotals": {
-    "todayHours": 9.42,
-    "weekHours": 20,
+    "todayHours": 10.92,
+    "weekHours": 21.5,
     "dailyHours": [
       0,
       10.58,
-      9.42,
+      10.92,
       0,
       0,
       0,
@@ -4960,9 +4960,9 @@
   },
   "tempoApproval": {
     "status": "open",
-    "workedHours": 84.89,
+    "workedHours": 86.39,
     "requiredHours": 176,
-    "deficitHours": 91.11,
+    "deficitHours": 89.61,
     "periodStart": "2026-10-01",
     "periodEnd": "2026-10-31"
   },
