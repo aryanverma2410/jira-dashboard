@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-14T12:24:21.727Z",
-  "totalTickets": 18,
+  "generatedAt": "2026-10-14T12:25:07.999Z",
+  "totalTickets": 17,
   "tickets": [
     {
       "key": "MHME-1463",
@@ -204,59 +204,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-09-16T07:36:32.056Z"
-      }
-    },
-    {
-      "key": "SAHME-3449",
-      "summary": "Stuck order on Hybris",
-      "status": "QA Server Review",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "South Africa Maintenance & Enhancements",
-      "projectKey": "SAHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-14T20:29:19.000+0900",
-      "created": "2026-09-29T01:09:15.000+0900",
-      "statusChangedAt": "2026-10-14T19:09:35.783+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n||Order Number||Order Date||Order Status||Issue||\n|ZA260910-80402150|2026/09/27|EXTERNAL_FRAUD_RESULT_PROCESSED|Order process ERROR at reserveVirtualStock - amount must be greater than zero; STAGNANT f",
-      "commentsCount": 3,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-14T20:29:19.450+0900",
-          "snippet": "Hi Lerato,\n\nProviding an update on both orders.\n\nZA260910-80402150 — We have raised PC-55443 for the SC+ entry removal and order process retrigger. The script is ready and attached to the PC ticket. We are waiting for PC approval to proceed with the remediation on production.\n\nZA260924-93112936 — Th"
-        },
-        {
-          "author": "Lerato Mbambisa",
-          "date": "2026-10-09T18:09:51.921+0900",
-          "snippet": "Good day ~@email ,\n # Please remove the SC+ Product on the order and process the remote for order ZA260910-80402150.\n # For Order ZA260924-93112936 I am still checking with the PayGate.\n\n!image-2026-10-09-11-09-34-956.png!\n\nKind regards,\n\nLerato"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Lerato,\n\nProviding an update on both orders.\n\nZA260910-80402150 — We have raised PC-55443 for the SC+ entry removal and order process retrigger. The script is ready and attached to the PC ticket. We are waiting for PC approval to proceed with the remediation on production.\n\nZA260924-93112936 — Th",
-      "lastCommentDate": "2026-10-14T20:29:19.450+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAHME-3449",
-      "linkedTickets": [
-        {
-          "key": "PC-55443",
-          "summary": "Remove SC+ entry and retrigger order process for ZA260910-80402150",
-          "status": "Reviewed",
-          "statusCategory": "In Progress",
-          "relation": "blocks",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "Summary: Stuck order on Hybris - two ZA-region orders stuck at different stages\r\nGenerated: 2026-09-28T16:30:00Z\r\n\r\nIssue:\r\nTwo ZA-region orders are stuck and require remediation.\r\n\r\nOrder 1: ZA260910-80402150 (created 2026-09-27 12:10:45, total R719.10 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at EXTERNAL_FRAUD_RESULT_PROCESSED status. The order process errored at the reserveVirtualStock action node with the message \"amount must be greater than zero\". The order has been stagnant for approximately 24 hours. No consignments have been created for this order, confirming the process failed before the consignment creation step.\r\n\r\nOrder 2: ZA260924-93112936 (created 2026-09-24 08:46:45, total R7,448.00 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at PAYMENT_NOT_CAPTURED status. The payment capture was rejected (CAPTURE:REJECTED). The order has been stagnant for approximately 99 hours. No consignments have been created.\r\n\r\nRCA:\r\nOrder 1 (ZA260910-80402150):\r\nThe order passed external fraud check and reached the reserveVirtualStock action node in the order process. This action reserves virtual stock for the order entries before consignment creation. The action failed with NodeExecutionException: \"Error executing ActionNode with ID [reserveVirtualStock]: amount must be greater than zero\". This error occurs when the order's total amount or one of its order entry amounts evaluates to zero or negative at the point of stock reservation. The order total is R719.10, so the issue is likely on a per-entry basis — one of the order entries may have a zero basePrice or totalPrice, possibly due to a giveaway item or a pricing calculation error during checkout that left an entry with a zero amount. The reserveVirtualStock action iterates over order entries and calls the stock reservation service, which validates that each entry amount is greater than zero. When any entry fails this check, the entire action throws the exception and the process enters ERROR state.\r\n\r\nThis is a known recurring pattern on the Toko platform. Jira cross-reference found 6+ similar resolved tickets with the identical error: CSME-7180 (partial cancelled orders with zero-quantity entries), UAME-6593 (errored business process for commitStock), SAHME-3410 (ZA-region order stuck on fraud check, resolved under PC-53921 by removing the zero-quantity entry), KSME-3631, KSME-3609, and UAME-4559. In SAHME-3410, the root cause was a zero-quantity order entry (SMC-ZA-MOB-24-3-47 with 0 quantity) that caused the reserveVirtualStock action to fail. The remediation was to remove the zero-quantity entry and restart the order process.\r\n\r\nThe DB confirms no consignments exist for this order, and no business process parameters with error traces were retrievable (the BusinessProcess type does not expose the order field for direct FlexibleSearch JOIN in the HAC interface). The order has no consignment processes, no external services, and no payment transaction entries visible via the direct HAC query interface.\r\n\r\nOrder 2 (ZA260924-93112936):\r\nThe order reached PAYMENT_NOT_CAPTURED status, meaning the payment authorization was successful but the subsequent capture step was rejected by the payment gateway (PayGate/DPO). The order total is R7,448.00 ZAR. No consignments were created, confirming the process stopped at the payment capture stage. The capture rejection is a gateway-side decision — the payment provider declined to capture the authorized funds. This is typically caused by insufficient funds, expired authorization, fraud suspicion on the gateway side, or a gateway processing error.\r\n\r\nNo payment transaction entries were retrievable via the direct HAC query interface for either order. This may indicate the payment transaction records exist but the FlexibleSearch query syntax for accessing nested relations is not supported by the hac-direct.cjs tool on this environment.\r\n\r\nKibana logs were not available during this investigation. The cookie bridge returned cookies for kibana-apac domain, but the Kibana search script was configured for the aipro.sdsdev.co.kr domain, causing a cookie resolution failure. The DB state and Jira cross-reference provide sufficient evidence for the root cause analysis, but log analysis would provide additional confirmation of the exact entry-level pricing breakdown and the payment gateway rejection reason.\r\n\r\nPossible remediation:\r\nOrder 1 (ZA260910-80402150):\r\nThe remediation follows the same pattern as SAHME-3410 (PC-53921, now closed and reusable):\r\n\r\n1. Query the order entries to identify which entry has a zero or negative amount (giveaway items with zero basePrice are the most common cause).\r\n2. If a zero-quantity or zero-price entry is found, remove it from the order.\r\n3. Restart the order process from the reserveVirtualStock action node.\r\n\r\nThe script from PC-53921 (script-SAHE-3410-reserveVirtualStock-remediation.groovy) can be reused for this order. It needs to be adapted with the new order code and ticket reference. If the issue is not a zero-quantity entry but a genuine pricing error, the order entry prices may need to be corrected before restarting the process.\r\n\r\nOrder 2 (ZA260924-93112936):\r\nSince the payment capture was rejected by the gateway, Hybris-side remediation is limited. The options are:\r\n\r\n1. Cancel the order and ask the customer to place a new order with a different payment method.\r\n2. If the payment authorization is still valid and the rejection was a transient gateway error, a re-capture can be attempted by retriggering the capture payment action in the order process.\r\n3. If the authorization has expired (typically 7 days for PayGate/DPO), a new payment authorization and capture would be required, which effectively means a new order.\r\n\r\nThis order has been stagnant for 99 hours (over 4 days), so the payment authorization has likely expired. Cancellation and re-order is the recommended approach unless the payment team confirms the authorization is still valid.\r\n\r\n## Remediation\r\n- Order 1 (ZA260910-80402150): Reuse PC-53921 script. Identify and remove zero-amount order entry, then restart order process from reserveVirtualStock.\r\n- Order 2 (ZA260924-93112936): Payment capture rejected by gateway. Likely authorization expired after 99h stagnation. Recommend cancelling order and having customer re-order. If payment team confirms authorization still valid, retrigger capture.",
-        "sections": {
-          "issue": "Two ZA-region orders are stuck and require remediation.\r\n\r\nOrder 1: ZA260910-80402150 (created 2026-09-27 12:10:45, total R719.10 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at EXTERNAL_FRAUD_RESULT_PROCESSED status. The order process errored at the reserveVirtualStock action node with the message \"amount must be greater than zero\". The order has been stagnant for approximately 24 hours. No consignments have been created for this order, confirming the process failed before the consignment creation step.\r\n\r\nOrder 2: ZA260924-93112936 (created 2026-09-24 08:46:45, total R7,448.00 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at PAYMENT_NOT_CAPTURED status. The payment capture was rejected (CAPTURE:REJECTED). The order has been stagnant for approximately 99 hours. No consignments have been created.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-28T16:23:09.984Z"
       }
     },
     {
@@ -1091,7 +1038,7 @@
       {
         "pid": 19840,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 115110,
+        "ageSeconds": 115160,
         "status": "running",
         "isChild": false,
         "taskSummary": "just run the normal script that will run on next launch",
@@ -1101,7 +1048,7 @@
       {
         "pid": 1572,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 111517,
+        "ageSeconds": 111567,
         "status": "running",
         "isChild": false,
         "taskSummary": "for MHME-1439 check the scripts of all the scripting jobs on db and check if any of the jobs are ...",
@@ -1111,7 +1058,7 @@
       {
         "pid": 600,
         "cwd": "c:\\windows",
-        "ageSeconds": 111513,
+        "ageSeconds": 111563,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1121,7 +1068,7 @@
       {
         "pid": 25700,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 102091,
+        "ageSeconds": 102141,
         "status": "running",
         "isChild": false,
         "taskSummary": "just run the normal script that will run on next launch",
@@ -1131,7 +1078,7 @@
       {
         "pid": 23676,
         "cwd": "unknown",
-        "ageSeconds": 88122,
+        "ageSeconds": 88172,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -4511,17 +4458,17 @@
     "bridgeLogTail": "[2026-10-12T22:58:53.224Z] ==========================================\n[2026-10-12T22:58:53.226Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-12T22:58:53.227Z] === with Aipro Auto-Launch ===\n[2026-10-12T22:58:53.228Z] ==========================================\n[2026-10-12T22:58:53.228Z] PID: 5176\n[2026-10-12T22:58:53.229Z] Repo: aryanverma2410/agent-bridge\n[2026-10-12T22:58:53.229Z] Poll interval: 10000ms\n[2026-10-12T22:58:53.230Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-12T22:58:53.230Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-12T22:58:53.231Z] Waiting for messages...\n[2026-10-13T06:58:14.192Z] ==========================================\n[2026-10-13T06:58:14.195Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-13T06:58:14.196Z] === with Aipro Auto-Launch ===\n[2026-10-13T06:58:14.197Z] ==========================================\n[2026-10-13T06:58:14.198Z] PID: 1316\n[2026-10-13T06:58:14.199Z] Repo: aryanverma2410/agent-bridge\n[2026-10-13T06:58:14.200Z] Poll interval: 10000ms\n[2026-10-13T06:58:14.200Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-13T06:58:14.201Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-13T06:58:14.202Z] Waiting for messages...",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-14T12:24:14.152Z",
-      "ageMs": 12991
+      "lastWrite": "2026-10-14T12:25:14.161Z",
+      "ageMs": 13234
     },
-    "watchdogLogTail": "[2026-10-14T12:21:59.149Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T12:22:14.141Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T12:22:29.141Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T12:22:44.153Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T12:22:59.153Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T12:23:14.137Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T12:23:29.147Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T12:23:44.152Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T12:23:59.166Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T12:24:14.150Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-14T12:22:59.153Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T12:23:14.137Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T12:23:29.147Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T12:23:44.152Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T12:23:59.166Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T12:24:14.150Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T12:24:29.163Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T12:24:44.165Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T12:24:59.177Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T12:25:14.160Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-14T12:23:54.178Z",
+      "lastCheck": "2026-10-14T12:24:54.153Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4530,7 +4477,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-14T12:23:54.178Z",
+      "lastCheck": "2026-10-14T12:24:54.153Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4539,9 +4486,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-14T12:23:54.178Z",
+      "lastCheck": "2026-10-14T12:24:54.153Z",
       "downSince": "2026-10-14T12:06:00.477Z",
-      "downDuration": 1073701,
+      "downDuration": 1133676,
       "alert": true
     }
   ],
@@ -4819,18 +4766,6 @@
         "statusChangedAt": "2026-09-18T16:16:26.819+0900"
       },
       {
-        "key": "SAHME-3449",
-        "summary": "Stuck order on Hybris",
-        "priority": "None",
-        "status": "QA Server Review",
-        "category": "blocked",
-        "reason": "Waiting for QA/review team",
-        "whatToDo": "",
-        "url": "https://jira.secext.samsung.net/browse/SAHME-3449",
-        "updated": "2026-10-14T20:29:19.000+0900",
-        "statusChangedAt": "2026-10-14T19:09:35.783+0900"
-      },
-      {
         "key": "SAM-24720",
         "summary": " Update or create Cronjob for autocleanup",
         "priority": "High",
@@ -4868,7 +4803,7 @@
     "totals": {
       "zero": 8,
       "actionable": 3,
-      "blocked": 6,
+      "blocked": 5,
       "queued": 1
     }
   },
