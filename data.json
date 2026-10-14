@@ -1,7 +1,311 @@
 {
-  "generatedAt": "2026-10-14T11:28:15.380Z",
+  "generatedAt": "2026-10-14T11:29:50.139Z",
   "totalTickets": 18,
   "tickets": [
+    {
+      "key": "TKME-2348",
+      "summary": "Stuck order on Hybris",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Turkey Maintenance & Enhancements",
+      "projectKey": "TKME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-14T20:29:24.000+0900",
+      "created": "2026-09-29T01:09:08.000+0900",
+      "statusChangedAt": "2026-09-29T01:09:10.990+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n||Order Number||Order Date||Order Status||Issue||\n|TR260924-93500425|2026/09/28|REFUND_FAILED|Payment entry status: REFUND_FOLLOW_ON:ERROR|\n|TR260915-84759375|2026/09/27|ORDER_SPLIT|Consignment process",
+      "commentsCount": 7,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-14T20:29:19.531+0900",
+          "snippet": "Hi Rajesh,\n\nWe are working on updating the existing TR autoheal cronjob to include splitOrder and completeFinancialUpdate statuses as confirmed. The sendConsignmentToWarehouse consignment process will be covered under the new cronjob tracked in TKME-2362.\n\nWe will share the updated cronjob configura"
+        },
+        {
+          "author": "Rajeshbabu Yatirajula",
+          "date": "2026-10-12T23:27:59.925+0900",
+          "snippet": "Hi ~@email \n\nPlease proceed to include the splitOrder and completeFinancialUpdate statuses into the existing cronjob for TR.\n\nRegards,\nRajesh"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Rajesh,\n\nWe are working on updating the existing TR autoheal cronjob to include splitOrder and completeFinancialUpdate statuses as confirmed. The sendConsignmentToWarehouse consignment process will be covered under the new cronjob tracked in TKME-2362.\n\nWe will share the updated cronjob configura",
+      "lastCommentDate": "2026-10-14T20:29:19.531+0900",
+      "url": "https://jira.secext.samsung.net/browse/TKME-2348",
+      "linkedTickets": [
+        {
+          "key": "TKME-2350",
+          "summary": "Stuck order on Hybris- ORDER_SPLIT",
+          "status": "Launch Verification",
+          "statusCategory": "Done",
+          "relation": "is cloned by",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "Stuck order on Hybris - 16 TR-region orders\r\nGenerated: 2026-09-28T00:00:00Z\r\n\r\nIssue:\r\n\r\nTKME-2348 reports 16 stuck orders from the Turkey (TR) region across 5 distinct error patterns. All orders have payments captured (AUTH + CAPTURE accepted) but are stalled at various stages of the fulfilment, financial, or refund pipelines. The orders span dates from 2026-09-17 to 2026-09-28 and are stagnating for up to 98 hours.\r\n\r\nThe 5 patterns are:\r\n\r\n1. Connection reset at sendConsignmentToWarehouse (6 orders): TR260915-84759375, TR260927-96594178, TR260927-96494681, TR260926-95689021, TR260926-95561694, TR260925-94199293\r\n2. Cancel DO blocked by WMS with refund failure (6 orders): TR260924-93308617, TR260924-93147668, TR260923-92226009, TR260917-86921245, TR260919-88229034, TR260925-94514044\r\n3. Financial process I/O error (2 orders): TR260925-94391432, TR260922-91038821\r\n4. Refund FOLLOW_ON payment gateway error (1 order): TR260924-93500425\r\n5. Completed but missing shipping date (1 order): TR260926-95654349\r\n\r\nRCA:\r\n\r\nPattern 1: Connection reset at sendConsignmentToWarehouse (6 orders)\r\n\r\nThe consignment process (consignment-process-v11-36) reached the sendConsignmentToWarehouse action node, which calls SendConsignmentToWarehouseAction.executeAction() (com.samsung.toko.fulfilmentprocess.actions.consignment.SendConsignmentToWarehouseAction, line 38). This delegates to TokoBifrostWarehouseAdapterImpl.sendConsignmentToWarehouse() (line 217), which converts the consignment to a Bifrost sales order request via tokoBifrostSalesOrderRequestConverter and sends it to the WMS through TokoBifrostWebClient.\r\n\r\nThe WMS endpoint dropped the TCP connection mid-request (java.net.SocketException: Connection reset), causing the process engine to catch the RuntimeException at ActionNode.handleActionExecutionRuntimeException (line 163) and set the consignment process to ERROR state.\r\n\r\nDB verification confirms all 6 orders have:\r\n- Order process: RUNNING (waiting for warehouse subprocess to end)\r\n- Consignment process: ERROR (consignment-process-v11-36)\r\n- Consignment status: WAITING_FOR_TRANSFER (no tracking, no shipping date, no GERP bill)\r\n- Payment: AUTH and CAPTURE both ACCEPTED\r\n\r\nOrders TR260926-95689021 and TR260925-94199293 are partial - one consignment completed successfully and one is stuck. The stuck consignments in these orders also have ERROR state on their consignment processes.\r\n\r\n4 of 6 stuck consignments route to warehouse WC17-S751 (cross-dock), 2 route to DIVA warehouses (ce-xdock). The Connection reset is a transient network-level failure between Hybris and the WMS/Bifrost integration layer, not a code defect.\r\n\r\nThis is a recurring platform issue confirmed by Jira cross-reference: PC-54225 (Closed) documents the same error pattern for AE region order AE260908-78324187, remediated by re-triggering the consignment process. TKME-2055 and TKME-2089 are similar TR-region tickets.\r\n\r\nPattern 2: Cancel DO blocked by WMS with refund failure (6 orders)\r\n\r\n5 of 6 orders (TR260924-93308617, TR260924-93147668, TR260923-92226009, TR260917-86921245, TR260919-88229034) have the same lifecycle: consignment was CANCELLED at the warehouse (WC12-S751 or WC17-S751), consignment process SUCCEEDED, but the refund FOLLOW_ON call to the Masterpass payment gateway returned ERROR. All order totals are zeroed out (0E-8 TRY). The order process is stuck at RUNNING state, cycling through isWaitForFinancialCompletionRequired, isSecondFIRequired, and isFinancialUpdateRequired task actions.\r\n\r\nThe refund failure is in the PaymentTransactionEntry with type REFUND_FOLLOW_ON and status ERROR. The Masterpass payment gateway rejected the follow-on refund request. Orders TR260923-92226009, TR260917-86921245, and TR260919-88229034 share the same refund error timestamp (2026-09-25 07:30:26) and the same product (UE32H5000FUXTK x3), indicating a batch refund processing failure.\r\n\r\nThe 6th order (TR260925-94514044) has a different profile: first consignment CANCELLED at WC12-S751, second consignment stuck at READY status with consignment process RUNNING. The WMS did not process the cancel delivery order for the second consignment. Order total dropped to 1.00 TRY. Payment captured at 450,000 TRY but no refund has been initiated. The cancel email process SUCCEEDED but the second consignment remains blocked.\r\n\r\nJira cross-reference found PC-48853 (Closed) documenting REFUND_FOLLOW_ON PTE update remediation and PC-35580 (Closed) for refund follow-on entry to success. These PC tickets confirm that the standard remediation is to update the PTE status and re-trigger the refund flow.\r\n\r\nPattern 3: Financial process I/O error (2 orders)\r\n\r\nTR260925-94391432 (WAITING_FOR_SEND_FINANCIAL): The order process (order-process-v25-69) failed at the splitOrder action with an I/O error: sec.divaportal.com:443 failed to respond. The DIVA portal is the financial integration endpoint for TR region. No consignments were ever created. Payment was captured (69,999 TRY) but the initial FI posting to SAP/GERP through the DIVA portal failed. The order process is in ERROR state.\r\n\r\nTR260922-91038821 (WAITING_FOR_FINANCIAL): The consignment was fully completed and delivered (shipped 2026-09-25, GERP bill 3247490146, completed 2026-09-26), but the order process failed at the completeFinancialUpdate action with Connection reset. The order process is in ERROR state. Payment was captured (83,579.99 TRY across 2 transactions) but the second FI (completion FI) failed.\r\n\r\nCode trace: SendOrderCompleteFinancialUpdateAction (extends SendInitialFinancialUpdateAction) calls tokoConsignmentFinancialsService.sendInitialFinancialUpdate() at line 22. For TR region, this connects to sec.divaportal.com:443 (DIVA portal). The I/O error occurs when the DIVA portal is unreachable or drops the connection during the FI posting.\r\n\r\nJira cross-reference found TKME-1979 (DIVA portal failure) and TKME-1610 (DIVA services HTTPS update), confirming DIVA portal instability is a known TR-region issue. Monitoring alerts HTCK-4443, HTCK-4048, HTCK-4564 track high failure rates for divaportal.com.\r\n\r\nPattern 4: Refund FOLLOW_ON payment gateway error (1 order)\r\n\r\nTR260924-93500425 (REFUND_FAILED): No consignments were ever created. The order process is in FAILED state (not RUNNING). The payment transaction has AUTH=ACCEPTED, CAPTURE=ACCEPTED, and REFUND_FOLLOW_ON=ERROR for 27,139.65 TRY. The order was cancelled before fulfilment and the refund to the Masterpass payment gateway failed immediately. Task logs show the refund path was entered: refundCancelOrder, isChargeBackRefundProcessed, releaseVirtualStock, cancelNonActivatedExternalService, isInstantRefundEnabledCheckBeforeFinancialUpdate.\r\n\r\nThe REFUND_FOLLOW_ON failure is a payment gateway rejection, not a Hybris code defect. The Masterpass gateway may have rejected the refund due to a processing window restriction, duplicate refund attempt, or gateway-side issue.\r\n\r\nPattern 5: Completed but missing shipping date (1 order)\r\n\r\nTR260926-95654349 (COMPLETED): The order is fully COMPLETED. All 5 consignments are COMPLETED, all processes (order, consignment, omnichannel, store email, dispatch email) are SUCCEEDED. GERP bills exist for all consignments. Payment AUTH and CAPTURE accepted (85,119 TRY). However, the first consignment (entry 0, product WW90DG6U25LEAH, a washing machine) has no shipping date despite having a completion date and GERP bill. No tracking IDs exist on any of the 5 consignments.\r\n\r\nThis is a data integrity issue, not a process error. The consignment was physically delivered and GERP billed, but the shipping date field was never populated by the warehouse subsystem. The order itself is COMPLETED and the process is SUCCEEDED, so no process remediation is needed.\r\n\r\nNote: Kibana log analysis was not performed (Kibana MCP was unavailable during this investigation). The error messages cited in the ticket description and the DB state verification provide sufficient evidence for the root cause analysis above. If Kibana becomes available, log analysis could confirm the exact exception stack traces and timestamps.\r\n\r\nPossible remediation:\r\n\r\nPattern 1 (Connection reset at sendConsignmentToWarehouse) - 6 orders:\r\nRe-trigger the consignment process from the sendConsignmentToWarehouse action. The consignment data is intact and the WMS connection reset was transient. Reusable PC ticket: PC-52605 (process-restart, REUSABLE, parent TKME-2279, script: script-TKME-2279-retrigger-business-process.groovy). Adapt the script to target these 6 orders' consignment processes, resetting the ERROR state and re-triggering from the sendConsignmentToWarehouse action node. For the 2 partial orders (TR260926-95689021, TR260925-94199293), only retrigger the stuck consignment process (the one in ERROR state), not the completed one.\r\n\r\nPattern 2 (Cancel DO blocked by WMS with refund failure) - 6 orders:\r\nFor the 5 REFUND_FAILED orders (TR260924-93308617, TR260924-93147668, TR260923-92226009, TR260917-86921245, TR260919-88229034): The consignments are already CANCELLED and the consignment process SUCCEEDED. The issue is the REFUND_FOLLOW_ON PTE in ERROR state. Remediation: update the PTE status from ERROR to SUCCESS (if the refund was actually processed by the gateway) or re-trigger the refund (if the refund was not processed). Reference: PC-48853 (Closed) and PC-35580 (Closed) document the PTE update approach. Reusable PC ticket: PC-52765 (refund-retrigger, REUSABLE, parent SAME-3941, script: script-SAME-3941-sa260722-return-refund-retrigger.groovy) may be adaptable for the refund retrigger.\r\n\r\nFor TR260925-94514044 (Cancel DO blocked by WMS without refund): The second consignment is stuck at READY with the consignment process RUNNING. This requires WMS team intervention to either cancel the delivery order or confirm fulfilment. The WMS has blocked the cancel DO and Hybris cannot force this. Once WMS resolves the DO, the consignment process should advance. If WMS confirms the cancel, the refund flow will need to be triggered. This order may need escalation to the WMS/warehouse operations team.\r\n\r\nPattern 3 (Financial process I/O error) - 2 orders:\r\nTR260925-94391432: Re-trigger the order process from the splitOrder action. The DIVA portal timeout was transient. Reusable PC ticket: PC-52605 (process-restart, REUSABLE). The script should target the order process and reset from the splitOrder action node.\r\n\r\nTR260922-91038821: Re-trigger the order process from the completeFinancialUpdate action. The consignment is already COMPLETED and delivered. Reusable PC ticket: PC-52605 (process-restart, REUSABLE). The script should target the order process and reset from the completeFinancialUpdate action node.\r\n\r\nPattern 4 (Refund FOLLOW_ON payment gateway error) - 1 order:\r\nTR260924-93500425: The order process is in FAILED state (not ERROR), so process retrigger alone may not work. The refund FOLLOW_ON PTE needs to be investigated. Check with the payment team whether the Masterpass gateway actually processed the refund despite returning ERROR. If the refund was processed, update the PTE to SUCCESS. If not, re-trigger the refund. Reference: PC-48853 (Closed) for PTE update approach.\r\n\r\nPattern 5 (Completed but missing shipping date) - 1 order:\r\nTR260926-95654349: The order is fully COMPLETED and all processes SUCCEEDED. This is a data integrity issue only. If the missing shipping date causes downstream reporting or tracking issues, update the consignment shipping date field to match the completion date. This is a minor data fix and does not require process remediation.\r\n\r\n## Remediation\r\n\r\nReusable PC tickets identified:\r\n1. PC-52605 (REUSABLE) - Process restart for Connection reset and Financial I/O errors (Patterns 1 and 3). Script: script-TKME-2279-retrigger-business-process.groovy. Parent: TKME-2279.\r\n2. PC-52765 (REUSABLE) - Refund retrigger for REFUND_FOLLOW_ON errors (Pattern 2). Script: script-SAME-3941-sa260722-return-refund-retrigger.groovy. Parent: SAME-3941.\r\n3. PC-48853 (Closed) - PTE REFUND_FOLLOW_ON update (Pattern 4). Manual approach documented in ticket.\r\n4. PC-54225 (Closed) - Connection reset remediation precedent (AE region).\r\n\r\nOrders requiring WMS team escalation:\r\n- TR260925-94514044 (second consignment DO blocked by WMS at READY status)\r\n\r\nOrders requiring no remediation:\r\n- TR260926-95654349 (COMPLETED, data integrity issue only)\r\n\r\nInvestigation gaps:\r\n- Kibana log analysis was not performed (Kibana MCP unavailable). Log confirmation of exact exception stack traces and timestamps is recommended if Kibana becomes available.\r\n- DIVA portal (sec.divaportal.com) connectivity should be verified - TKME-1979 and TKME-1610 document known instability.",
+        "sections": {
+          "issue": "TKME-2348 reports 16 stuck orders from the Turkey (TR) region across 5 distinct error patterns. All orders have payments captured (AUTH + CAPTURE accepted) but are stalled at various stages of the fulfilment, financial, or refund pipelines. The orders span dates from 2026-09-17 to 2026-09-28 and are stagnating for up to 98 hours.\r\n\r\nThe 5 patterns are:\r\n\r\n1. Connection reset at sendConsignmentToWarehouse (6 orders): TR260915-84759375, TR260927-96594178, TR260927-96494681, TR260926-95689021, TR260926-95561694, TR260925-94199293\r\n2. Cancel DO blocked by WMS with refund failure (6 orders): TR260924-93308617, TR260924-93147668, TR260923-92226009, TR260917-86921245, TR260919-88229034, TR260925-94514044\r\n3. Financial process I/O error (2 orders): TR260925-94391432, TR260922-91038821\r\n4. Refund FOLLOW_ON payment gateway error (1 order): TR260924-93500425\r\n5. Completed but missing shipping date (1 order): TR260926-95654349",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-28T16:38:55.087Z"
+      }
+    },
+    {
+      "key": "MHME-1439",
+      "summary": "SMI - List of MENA Extracts",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Morocco Maintenance & Enhancements",
+      "projectKey": "MHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-14T20:29:23.000+0900",
+      "created": "2026-09-18T13:19:57.000+0900",
+      "statusChangedAt": "2026-09-18T13:22:24.330+0900",
+      "assignedToMeAt": "",
+      "description": "Hi ~@email \n\nWe want to do an audit of all the current extracts that being generated for MENA markets only (both cronjobs and scripts). We are only focusing on the extracts that are being generated and sent via email\n\nPlease can you share a list of these jobs and the subject of the email so we can r",
+      "commentsCount": 3,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-14T20:29:22.081+0900",
+          "snippet": "Hi Rizwan,\n\nThank you for the feedback. We are extending the audit to include scripts as well, not just cronjobs. We are checking for any standalone scripts that generate extracts and send them via email for MENA markets, including stock information reports and any other adhoc data extracts.\n\nWe wil"
+        },
+        {
+          "author": "Rizwan Khan",
+          "date": "2026-10-05T14:38:16.447+0900",
+          "snippet": "Hi ~@email \n\nThanks for the information. We are reviewing this now. Pleas can you also check on scripts as well? We should have some for stock information and others\n\nRegards\nRiz"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Rizwan,\n\nThank you for the feedback. We are extending the audit to include scripts as well, not just cronjobs. We are checking for any standalone scripts that generate extracts and send them via email for MENA markets, including stock information reports and any other adhoc data extracts.\n\nWe wil",
+      "lastCommentDate": "2026-10-14T20:29:22.081+0900",
+      "url": "https://jira.secext.samsung.net/browse/MHME-1439",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "# RCA: MHME-1439\n\nSummary: SMI - List of MENA Extracts\nGenerated: 2026-09-18T11:07:12.910Z\n\nHi [~khan.r@samsung.com] ,\n\nThis ticket requests an audit and inventory of all data extracts (both cronjobs and scripts) that generate extracts sent via email for MENA markets only. The request covers both scheduled cronjobs and ad-hoc scripts that produce extracts distributed via email.\n\nAll CronJob and Trigger records were queried directly from the Hybris database using FlexibleSearch. The results were filtered for MENA market prefixes (ae, bh, eg, iq, jo, kw, ma, om, qa, sa, lb, dz, tn) and for MENA-region cronjobs with \"mena\" or \"MENA\" in the name. The query covered all active and inactive jobs to provide a complete inventory. Triggers were also joined to provide schedule information.\n\nThe email subject lines are not stored as metadata on the CronJob entity. They are hardcoded within each Groovy script or Java reporting class. The script URIs for all ScriptingJob-based cronjobs were retrieved and are listed below. To get the exact email subject for each extract, the individual Groovy scripts would need to be opened and reviewed. The inventory below lists each job, its schedule, active status, and the script URI where applicable.\n\nBelow is the complete list of MENA extracts that generate and send extracts via email, organized by category:\n\n1. Per-Market StockInformation Reports (NonPII, sent via email)\n\nCronJob: ae-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 10 5,10,14 * * ? (3x daily at 05:10, 10:10, 14:10)\nActive: Yes\nScript: model://ae-StockInformationScriptingJob\n\nCronJob: eg-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 35 5,10,14 * * ? (3x daily at 05:35, 10:35, 14:35)\nActive: Yes\nScript: model://egStockInformationScriptingJob\n\nCronJob: iq-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 5 5,10,14 * * ? (3x daily at 05:05, 10:05, 14:05)\nActive: Yes\nScript: model://IQ_PROD_StockInformationScript\n\nCronJob: jo-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 40 5,10,14 * * ? (3x daily at 05:40, 10:40, 14:40)\nActive: Yes\nScript: model://joStockInformationScriptingJob\n\nCronJob: ma-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 15 5,10,14 * * ? (3x daily at 05:15, 10:15, 14:15)\nActive: Yes\nScript: model://ma-StockInformationScriptingJob\n\nCronJob: sa-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 25 5,10,14 * * ? (3x daily at 05:25, 10:25, 14:25)\nActive: Yes\nScript: model://sa-StockInformationScriptingJob\n\n2. Per-Market Sales and EPP Reports (NonPII, sent via email)\n\nCronJob: ae-Report-NonPII-EMAIL-DailyteleSalesReportJob-NewOneJob\nSchedule: 0 0 20 1/1 * ? * (daily at 20:00)\nActive: Yes\nScript: model://ae-Report-NonPII-EMAIL-DailyteleSalesReportJob-NewOneScript\n\nCronJob: ae-Report-NonPII-Email-gcc-EPP-RegisteredUserReport\nSchedule: 0 0 4 1/1 * ? * (daily at 04:00)\nActive: Yes\nScript: model://ae-gcc-EPP-RegisteredUserReportScript\n\nCronJob: ae-Report-NON-PII-EMAIL-tradein-instant-discount-report\nSchedule: Not found (manual trigger)\nActive: Yes\nScript: reportingJobPerformable (Java-based, not Groovy)\n\nCronJob: eg-report-NonPII-EMAIL-EPP-ReportJob\nSchedule: 0 2 5 1/1 * ? * (daily at 05:02)\nActive: Yes\nScript: model://eg-report-NonPII-EMAIL-EPP-ReportScript\n\n3. MENA-Region Extract and Report Jobs (sent via email)\n\nCronJob: mena-Report-NonPII-Email-NERPOrderExtractCronJob\nSchedule: 0 0 4 ? * MON * (weekly Monday at 04:00)\nActive: Yes\nScript: model://MENANERPOrderExtract\n\nCronJob: MENA-TokoPromotionExtractJSONScriptCronJob\nSchedule: 0 0 1 ? * * * (daily at 01:00)\nActive: Yes\nScript: model://MENA-TokoPromotionExtractJSONScript\n\nCronJob: mena-report-nonpii-email-salesReportJob\nSchedule: 0 0 4 ? * MON * (weekly Monday at 04:00)\nActive: Yes\nScript: reportingJobPerformable (Java-based, not Groovy)\n\nCronJob: mena-daily-nonpii-email-PromotionReportJob\nSchedule: 0 5/3 ? * * * (every 3 hours starting at 00:05)\nActive: Yes\nScript: model://mena-daily-nonpii-email-PromotionReportScript\n\nCronJob: mena-epp-monthly-report-nonpii-email-salesReportJob\nSchedule: 0 0 0 15 1/1 ? * (monthly on 15th at 00:00)\nActive: Yes\nScript: reportingJobPerformable (Java-based, not Groovy)\n\nCronJob: mena-epp-weekly-nonpii-email-salesReportJob\nSchedule: 0 0 5 ? * 2 * (weekly Tuesday at 05:00)\nActive: Yes\nScript: model://mena-epp-weekly-nonpii-email-salesReportScript\n\nCronJob: mena-epp-oneTime-nonpii-email-salesReportJob\nSchedule: Not found (one-time)\nActive: Yes\nScript: model://mena-epp-oneTime-nonpii-email-salesReportScript\n\n4. MENA Monitoring and Alert Jobs (sent via email)\n\nCronJob: MENA-StuckOrdersInLast24HoursJob\nSchedule: 0 3 0/6 1/1 * ? * (every 6 hours)\nActive: Yes\nScript: model://MENA-StuckOrdersInLast24Hours\n\nCronJob: mena-nullOrdersAlertCronJob\nSchedule: 0 1 0/6 1/1 * ? * (every 6 hours)\nActive: Yes\nScript: model://mena-nullOrdersAlertScript\n\nCronJob: mena-EmailsFailingJob\nSchedule: 0 4 0/1 1/1 * ? * (hourly)\nActive: Yes\nScript: model://mena-EmailsFailingScript\n\nCronJob: toko-MENA-SpecialMonitoringReportJob\nSchedule: 0 0 4,12,20 1/1 * ? * (3x daily at 04:00, 12:00, 20:00)\nActive: Yes\nScript: SpecialMonitoringReportJob (Java-based)\n\nCronJob: toko-MENA-PaymentOrderStatusReportJob\nSchedule: 0 4 0/6 1/1 * ? * (every 6 hours)\nActive: Yes\nScript: PaymentOrderStatusReportJob (Java-based)\n\nCronJob: mena-AuditSalesReportsAlertForPIICronJob\nSchedule: 0 57 3 ? * * * (daily at 03:57)\nActive: Yes\nScript: model://mena-AuditSalesReportsAlertForPIIScript\n\n5. MENA GPV2 (GCDM 2.0) Sales and Pricing Reports (sent via email)\n\nCronJob: toko-GPV2-mena-orderGenerateSalesReportJob\nSchedule: 0 2/17 * * * ? (every 17 minutes)\nActive: Yes\nScript: tokoCdmGenerateSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-orderGenerateSalesReportJob_new\nSchedule: 0 3/15 * ? * * (every 15 minutes)\nActive: Yes\nScript: tokoCdmGenerateSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-ONE-TIME-orderGenerateSalesReportJob\nSchedule: Not found (one-time)\nActive: Yes\nEmail: genesis.joy.pineda@accenture.com\nScript: tokoCdmGenerateSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-ONE-TIME-sendPricingInformationReportJob\nSchedule: Not found (one-time)\nActive: Yes\nScript: tokoCdmSendSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-generateAndSendPreOrderProductCronJob\nSchedule: 0 3 3 1/1 * ? * (daily at 03:03)\nActive: Yes\nScript: model://toko-GPV2-mena-generateAndSendPreOrderProductScript\n\nCronJob: toko-GPV2-mena-generateAndSendRewardsDataCronJob\nSchedule: 0 59 3 ? * * * (daily at 03:59)\nActive: Yes\nScript: toko-GPV2-qa-generateAndSendRewardsDataCronJobScriptingJob\n\n6. GCC-Wide Reports (covering MENA markets, sent via email)\n\nCronJob: gcc-Report-NonPII-Email-PRODDailySCReportCronJob\nSchedule: 0 2 3 1/1 * ? * (daily at 03:02)\nActive: Yes\nScript: model://gcc-PRODDailySCReportScriptingJob\n\n7. RestrictedProductsExtract Jobs (per market, generate extracts)\n\nCronJob: ae-restrictedProductsExtractReportJob (Active)\nCronJob: eg-restrictedProductsExtractReportJob (Active)\nCronJob: iq-restrictedProductsExtractReportJob (Active)\nCronJob: jo-restrictedProductsExtractReportJob (Active)\nCronJob: ma-restrictedProductsExtractReportJob (Active)\nCronJob: sa-restrictedProductsExtractReportJob (Active)\nSchedule: No trigger found for these jobs\nScript: Per-market ScriptingJob variants (e.g., ae-restrictedProductsExtractReportScriptJob)\n\n8. Other MENA Extract and Alert Jobs\n\nCronJob: UAEExtractCronJob (Active, Script: UAEExtractScriptJob)\nCronJob: mena-CategoryToProductMappingScriptingJob (Active, daily at 03:00, Script: model://mena-CategoryToProductMappingScript)\nCronJob: toko-MENA-CancelledPreorderStatusJob (Inactive, Script: CancelledPreorderStatusReportJob)\nCronJob: mena-missingCompositeEntriesCronJob (Active, Script: model://mena-missingCompositeEntriesScript)\nCronJob: MENA-GCDM2.0-voucher-interface-v1 (Active, Script: tokoVoucherCodeGCPUploadJob)\nCronJob: toko-MENA-VoucherRedemptionReport (Inactive, Script: tokoSalesReportJob)\n\nNotes:\n- All 27 cronjobs with \"NonPII\" and \"EMAIL\" in their names were confirmed via DB query. These are the primary email-sent extract jobs.\n- An additional 18 MENA-prefixed cronjobs were found (monitoring, alerts, GPV2, extracts) that also generate and send extracts/reports via email.\n- The StockInformation reports run 3x daily per market (at staggered intervals to avoid overlap) across AE, EG, IQ, JO, MA, SA.\n- Several jobs use \"reportingJobPerformable\" (Java-based) instead of Groovy scripts. These are configured via Spring beans and generate reports using the Hybris reporting framework.\n- Two cronjobs have explicit email addresses configured: toko-GPV2-mena-ONE-TIME-orderGenerateSalesReportJob (genesis.joy.pineda@accenture.com) and toko-GPV2-mena-ONE-TIME-generatePricingInformationReportJob (kathlene.mae.basuel@accenture.com). All others send to distribution lists configured within the scripts themselves.\n- Inactive jobs (sendEmail=0 or active=0) were excluded from the list above except where noted. The complete DB query returned 35 extract-named cronjobs and 45 MENA-named cronjobs.\n\nKindly let me know if you need the exact email subject lines for any specific extract. I can open the corresponding Groovy scripts to retrieve those.\n\nRegards\n\nAryan\n\n## Remediation\n\nThis is an informational/audit request, not a technical issue requiring remediation. No platform bug or code defect was involved. The inventory above provides the complete list of MENA market extracts generated and sent via email.\n\nTicket URL: https://jira.secext.samsung.net/browse/MHME-1439",
+        "sections": {
+          "issue": "",
+          "rca": "# RCA: MHME-1439\n\nSummary: SMI - List of MENA Extracts\nGenerated: 2026-09-18T11:07:12.910Z\n\nHi [~khan.r@samsung.com] ,\n\nThis ticket requests an audit and inventory of all data extracts (both cronjobs and scripts) that generate extracts sent via email for MENA markets only. The request covers both scheduled cronjobs and ad-hoc scripts that produce extracts distributed via email.\n\nAll CronJob and Trigger records were queried directly from the Hybris database using FlexibleSearch. The results were filtered for MENA market prefixes (ae, bh, eg, iq, jo, kw, ma, om, qa, sa, lb, dz, tn) and for MENA-region cronjobs with \"mena\" or \"MENA\" in the name. The query covered all active and inactive jobs to provide a complete inventory. Triggers were also joined to provide schedule information.\n\nThe email subject lines are not stored as metadata on the CronJob entity. They are hardcoded within each Groovy script or Java reporting class. The script URIs for all ScriptingJob-based cronjobs were retrieved and are listed below. To get the exact email subject for each extract, the individual Groovy scripts would need to be opened and reviewed. The inventory below lists each job, its schedule, active status, and the script URI where applicable.\n\nBelow is the complete list of MENA extracts that generate and send extracts via email, organized by category:\n\n1. Per-Market StockInformation Reports (NonPII, sent via email)\n\nCronJob: ae-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 10 5,10,14 * * ? (3x daily at 05:10, 10:10, 14:10)\nActive: Yes\nScript: model://ae-StockInformationScriptingJob\n\nCronJob: eg-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 35 5,10,14 * * ? (3x daily at 05:35, 10:35, 14:35)\nActive: Yes\nScript: model://egStockInformationScriptingJob\n\nCronJob: iq-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 5 5,10,14 * * ? (3x daily at 05:05, 10:05, 14:05)\nActive: Yes\nScript: model://IQ_PROD_StockInformationScript\n\nCronJob: jo-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 40 5,10,14 * * ? (3x daily at 05:40, 10:40, 14:40)\nActive: Yes\nScript: model://joStockInformationScriptingJob\n\nCronJob: ma-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 15 5,10,14 * * ? (3x daily at 05:15, 10:15, 14:15)\nActive: Yes\nScript: model://ma-StockInformationScriptingJob\n\nCronJob: sa-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 25 5,10,14 * * ? (3x daily at 05:25, 10:25, 14:25)\nActive: Yes\nScript: model://sa-StockInformationScriptingJob\n\n2. Per-Market Sales and EPP Reports (NonPII, sent via email)\n\nCronJob: ae-Report-NonPII-EMAIL-DailyteleSalesReportJob-NewOneJob\nSchedule: 0 0 20 1/1 * ? * (daily at 20:00)\nActive: Yes\nScript: model://ae-Report-NonPII-EMAIL-DailyteleSalesReportJob-NewOneScript\n\nCronJob: ae-Report-NonPII-Email-gcc-EPP-RegisteredUserReport\nSchedule: 0 0 4 1/1 * ? * (daily at 04:00)\nActive: Yes\nScript: model://ae-gcc-EPP-RegisteredUserReportScript\n\nCronJob: ae-Report-NON-PII-EMAIL-tradein-instant-discount-report\nSchedule: Not found (manual trigger)\nActive: Yes\nScript: reportingJobPerformable (Java-based, not Groovy)\n\nCronJob: eg-report-NonPII-EMAIL-EPP-ReportJob\nSchedule: 0 2 5 1/1 * ? * (daily at 05:02)\nActive: Yes\nScript: model://eg-report-NonPII-EMAIL-EPP-ReportScript\n\n3. MENA-Region Extract and Report Jobs (sent via email)\n\nCronJob: mena-Report-NonPII-Email-NERPOrderExtractCronJob\nSchedule: 0 0 4 ? * MON * (weekly Monday at 04:00)\nActive: Yes\nScript: model://MENANERPOrderExtract\n\nCronJob: MENA-TokoPromotionExtractJSONScriptCronJob\nSchedule: 0 0 1 ? * * * (daily at 01:00)\nActive: Yes\nScript: model://MENA-TokoPromotionExtractJSONScript\n\nCronJob: mena-report-nonpii-email-salesReportJob\nSchedule: 0 0 4 ? * MON * (weekly Monday at 04:00)\nActive: Yes\nScript: reportingJobPerformable (Java-based, not Groovy)\n\nCronJob: mena-daily-nonpii-email-PromotionReportJob\nSchedule: 0 5/3 ? * * * (every 3 hours starting at 00:05)\nActive: Yes\nScript: model://mena-daily-nonpii-email-PromotionReportScript\n\nCronJob: mena-epp-monthly-report-nonpii-email-salesReportJob\nSchedule: 0 0 0 15 1/1 ? * (monthly on 15th at 00:00)\nActive: Yes\nScript: reportingJobPerformable (Java-based, not Groovy)\n\nCronJob: mena-epp-weekly-nonpii-email-salesReportJob\nSchedule: 0 0 5 ? * 2 * (weekly Tuesday at 05:00)\nActive: Yes\nScript: model://mena-epp-weekly-nonpii-email-salesReportScript\n\nCronJob: mena-epp-oneTime-nonpii-email-salesReportJob\nSchedule: Not found (one-time)\nActive: Yes\nScript: model://mena-epp-oneTime-nonpii-email-salesReportScript\n\n4. MENA Monitoring and Alert Jobs (sent via email)\n\nCronJob: MENA-StuckOrdersInLast24HoursJob\nSchedule: 0 3 0/6 1/1 * ? * (every 6 hours)\nActive: Yes\nScript: model://MENA-StuckOrdersInLast24Hours\n\nCronJob: mena-nullOrdersAlertCronJob\nSchedule: 0 1 0/6 1/1 * ? * (every 6 hours)\nActive: Yes\nScript: model://mena-nullOrdersAlertScript\n\nCronJob: mena-EmailsFailingJob\nSchedule: 0 4 0/1 1/1 * ? * (hourly)\nActive: Yes\nScript: model://mena-EmailsFailingScript\n\nCronJob: toko-MENA-SpecialMonitoringReportJob\nSchedule: 0 0 4,12,20 1/1 * ? * (3x daily at 04:00, 12:00, 20:00)\nActive: Yes\nScript: SpecialMonitoringReportJob (Java-based)\n\nCronJob: toko-MENA-PaymentOrderStatusReportJob\nSchedule: 0 4 0/6 1/1 * ? * (every 6 hours)\nActive: Yes\nScript: PaymentOrderStatusReportJob (Java-based)\n\nCronJob: mena-AuditSalesReportsAlertForPIICronJob\nSchedule: 0 57 3 ? * * * (daily at 03:57)\nActive: Yes\nScript: model://mena-AuditSalesReportsAlertForPIIScript\n\n5. MENA GPV2 (GCDM 2.0) Sales and Pricing Reports (sent via email)\n\nCronJob: toko-GPV2-mena-orderGenerateSalesReportJob\nSchedule: 0 2/17 * * * ? (every 17 minutes)\nActive: Yes\nScript: tokoCdmGenerateSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-orderGenerateSalesReportJob_new\nSchedule: 0 3/15 * ? * * (every 15 minutes)\nActive: Yes\nScript: tokoCdmGenerateSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-ONE-TIME-orderGenerateSalesReportJob\nSchedule: Not found (one-time)\nActive: Yes\nEmail: genesis.joy.pineda@accenture.com\nScript: tokoCdmGenerateSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-ONE-TIME-sendPricingInformationReportJob\nSchedule: Not found (one-time)\nActive: Yes\nScript: tokoCdmSendSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-generateAndSendPreOrderProductCronJob\nSchedule: 0 3 3 1/1 * ? * (daily at 03:03)\nActive: Yes\nScript: model://toko-GPV2-mena-generateAndSendPreOrderProductScript\n\nCronJob: toko-GPV2-mena-generateAndSendRewardsDataCronJob\nSchedule: 0 59 3 ? * * * (daily at 03:59)\nActive: Yes\nScript: toko-GPV2-qa-generateAndSendRewardsDataCronJobScriptingJob\n\n6. GCC-Wide Reports (covering MENA markets, sent via email)\n\nCronJob: gcc-Report-NonPII-Email-PRODDailySCReportCronJob\nSchedule: 0 2 3 1/1 * ? * (daily at 03:02)\nActive: Yes\nScript: model://gcc-PRODDailySCReportScriptingJob\n\n7. RestrictedProductsExtract Jobs (per market, generate extracts)\n\nCronJob: ae-restrictedProductsExtractReportJob (Active)\nCronJob: eg-restrictedProductsExtractReportJob (Active)\nCronJob: iq-restrictedProductsExtractReportJob (Active)\nCronJob: jo-restrictedProductsExtractReportJob (Active)\nCronJob: ma-restrictedProductsExtractReportJob (Active)\nCronJob: sa-restrictedProductsExtractReportJob (Active)\nSchedule: No trigger found for these jobs\nScript: Per-market ScriptingJob variants (e.g., ae-restrictedProductsExtractReportScriptJob)\n\n8. Other MENA Extract and Alert Jobs\n\nCronJob: UAEExtractCronJob (Active, Script: UAEExtractScriptJob)\nCronJob: mena-CategoryToProductMappingScriptingJob (Active, daily at 03:00, Script: model://mena-CategoryToProductMappingScript)\nCronJob: toko-MENA-CancelledPreorderStatusJob (Inactive, Script: CancelledPreorderStatusReportJob)\nCronJob: mena-missingCompositeEntriesCronJob (Active, Script: model://mena-missingCompositeEntriesScript)\nCronJob: MENA-GCDM2.0-voucher-interface-v1 (Active, Script: tokoVoucherCodeGCPUploadJob)\nCronJob: toko-MENA-VoucherRedemptionReport (Inactive, Script: tokoSalesReportJob)\n\nNotes:\n- All 27 cronjobs with \"NonPII\" and \"EMAIL\" in their names were confirmed via DB query. These are the primary email-sent extract jobs.\n- An additional 18 MENA-prefixed cronjobs were found (monitoring, alerts, GPV2, extracts) that also generate and send extracts/reports via email.\n- The StockInformation reports run 3x daily per market (at staggered intervals to avoid overlap) across AE, EG, IQ, JO, MA, SA.\n- Several jobs use \"reportingJobPerformable\" (Java-based) instead of Groovy scripts. These are configured via Spring beans and generate reports using the Hybris reporting framework.\n- Two cronjobs have explicit email addresses configured: toko-GPV2-mena-ONE-TIME-orderGenerateSalesReportJob (genesis.joy.pineda@accenture.com) and toko-GPV2-mena-ONE-TIME-generatePricingInformationReportJob (kathlene.mae.basuel@accenture.com). All others send to distribution lists configured within the scripts themselves.\n- Inactive jobs (sendEmail=0 or active=0) were excluded from the list above except where noted. The complete DB query returned 35 extract-named cronjobs and 45 MENA-named cronjobs.\n\nKindly let me know if you need the exact email subject lines for any specific extract. I can open the corresponding Groovy scripts to retrieve those.\n\nRegards\n\nAryan\n\n## Remediation\n\nThis is an informational/audit request, not a technical issue requiring remediation. No platform bug or code defect was involved. The inventory above provides the complete list of MENA market extracts generated and sent via email.\n\nTicket URL: https://jira.secext.samsung.net/browse/MHME-1439",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-18T05:37:13.224Z"
+      }
+    },
+    {
+      "key": "TKME-2324",
+      "summary": "O2O Dealers PII Data Request for SETK Hybris Enhancement",
+      "status": "QA Server Review",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Turkey Maintenance & Enhancements",
+      "projectKey": "TKME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-14T20:29:22.000+0900",
+      "created": "2026-09-14T17:21:22.000+0900",
+      "statusChangedAt": "2026-09-23T21:27:31.640+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\n \n\nRequesting for your support to provide/extract the following data. Attached is the approval for your reference.\n\n \n\nWe need below details for each created account for EA Dealer Multistore:\n\nDealer Code\nBranch\nIP Address\nUser ID\nEmail ID\nUser Name\nActivation Status\nAuthority Group (Store",
+      "commentsCount": 15,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-14T20:29:21.108+0900",
+          "snippet": "Hi Rajesh,\n\nThank you for the feedback. We are working on regenerating the data as a single consolidated file that includes the dealer code, associated accounts, linked stores, assigned IP addresses, and account status in one sheet. We will also filter out Customer Service and Service Tech accounts "
+        },
+        {
+          "author": "Rajeshbabu Yatirajula",
+          "date": "2026-10-09T19:11:28.799+0900",
+          "snippet": "Hi ~@email \n\nWe'd shared the data with the business, but they've a concern that the data shared with them was split into two separate sheets, “Dealers” and “Users.” There is no common field linking them, so business cannot see which dealer uses which account and cannot complete the mapping. The data"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Rajesh,\n\nThank you for the feedback. We are working on regenerating the data as a single consolidated file that includes the dealer code, associated accounts, linked stores, assigned IP addresses, and account status in one sheet. We will also filter out Customer Service and Service Tech accounts ",
+      "lastCommentDate": "2026-10-14T20:29:21.108+0900",
+      "url": "https://jira.secext.samsung.net/browse/TKME-2324",
+      "linkedTickets": [
+        {
+          "key": "PC-44430",
+          "summary": "TKME-1976|O2O Dealers PII Data Request for SETK Hybris Enhancement",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        },
+        {
+          "key": "PC-54055",
+          "summary": "TKME-2324|O2O Dealers PII Data Extraction for SETK Hybris Enhancement",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        },
+        {
+          "key": "TKME-1976",
+          "summary": "O2O Dealers PII Data Request for SETK Hybris Enhancement",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "clones",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "Agent encountered an error while processing your request. Please try again or rephrase. Exit code: 1",
+        "sections": {
+          "issue": "",
+          "rca": "Agent encountered an error while processing your request. Please try again or rephrase. Exit code: 1",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-16T07:36:32.056Z"
+      }
+    },
+    {
+      "key": "SAHME-3449",
+      "summary": "Stuck order on Hybris",
+      "status": "QA Server Review",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "South Africa Maintenance & Enhancements",
+      "projectKey": "SAHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-14T20:29:19.000+0900",
+      "created": "2026-09-29T01:09:15.000+0900",
+      "statusChangedAt": "2026-10-14T19:09:35.783+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n||Order Number||Order Date||Order Status||Issue||\n|ZA260910-80402150|2026/09/27|EXTERNAL_FRAUD_RESULT_PROCESSED|Order process ERROR at reserveVirtualStock - amount must be greater than zero; STAGNANT f",
+      "commentsCount": 3,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-14T20:29:19.450+0900",
+          "snippet": "Hi Lerato,\n\nProviding an update on both orders.\n\nZA260910-80402150 — We have raised PC-55443 for the SC+ entry removal and order process retrigger. The script is ready and attached to the PC ticket. We are waiting for PC approval to proceed with the remediation on production.\n\nZA260924-93112936 — Th"
+        },
+        {
+          "author": "Lerato Mbambisa",
+          "date": "2026-10-09T18:09:51.921+0900",
+          "snippet": "Good day ~@email ,\n # Please remove the SC+ Product on the order and process the remote for order ZA260910-80402150.\n # For Order ZA260924-93112936 I am still checking with the PayGate.\n\n!image-2026-10-09-11-09-34-956.png!\n\nKind regards,\n\nLerato"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Lerato,\n\nProviding an update on both orders.\n\nZA260910-80402150 — We have raised PC-55443 for the SC+ entry removal and order process retrigger. The script is ready and attached to the PC ticket. We are waiting for PC approval to proceed with the remediation on production.\n\nZA260924-93112936 — Th",
+      "lastCommentDate": "2026-10-14T20:29:19.450+0900",
+      "url": "https://jira.secext.samsung.net/browse/SAHME-3449",
+      "linkedTickets": [
+        {
+          "key": "PC-55443",
+          "summary": "Remove SC+ entry and retrigger order process for ZA260910-80402150",
+          "status": "Reviewed",
+          "statusCategory": "In Progress",
+          "relation": "blocks",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "Summary: Stuck order on Hybris - two ZA-region orders stuck at different stages\r\nGenerated: 2026-09-28T16:30:00Z\r\n\r\nIssue:\r\nTwo ZA-region orders are stuck and require remediation.\r\n\r\nOrder 1: ZA260910-80402150 (created 2026-09-27 12:10:45, total R719.10 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at EXTERNAL_FRAUD_RESULT_PROCESSED status. The order process errored at the reserveVirtualStock action node with the message \"amount must be greater than zero\". The order has been stagnant for approximately 24 hours. No consignments have been created for this order, confirming the process failed before the consignment creation step.\r\n\r\nOrder 2: ZA260924-93112936 (created 2026-09-24 08:46:45, total R7,448.00 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at PAYMENT_NOT_CAPTURED status. The payment capture was rejected (CAPTURE:REJECTED). The order has been stagnant for approximately 99 hours. No consignments have been created.\r\n\r\nRCA:\r\nOrder 1 (ZA260910-80402150):\r\nThe order passed external fraud check and reached the reserveVirtualStock action node in the order process. This action reserves virtual stock for the order entries before consignment creation. The action failed with NodeExecutionException: \"Error executing ActionNode with ID [reserveVirtualStock]: amount must be greater than zero\". This error occurs when the order's total amount or one of its order entry amounts evaluates to zero or negative at the point of stock reservation. The order total is R719.10, so the issue is likely on a per-entry basis — one of the order entries may have a zero basePrice or totalPrice, possibly due to a giveaway item or a pricing calculation error during checkout that left an entry with a zero amount. The reserveVirtualStock action iterates over order entries and calls the stock reservation service, which validates that each entry amount is greater than zero. When any entry fails this check, the entire action throws the exception and the process enters ERROR state.\r\n\r\nThis is a known recurring pattern on the Toko platform. Jira cross-reference found 6+ similar resolved tickets with the identical error: CSME-7180 (partial cancelled orders with zero-quantity entries), UAME-6593 (errored business process for commitStock), SAHME-3410 (ZA-region order stuck on fraud check, resolved under PC-53921 by removing the zero-quantity entry), KSME-3631, KSME-3609, and UAME-4559. In SAHME-3410, the root cause was a zero-quantity order entry (SMC-ZA-MOB-24-3-47 with 0 quantity) that caused the reserveVirtualStock action to fail. The remediation was to remove the zero-quantity entry and restart the order process.\r\n\r\nThe DB confirms no consignments exist for this order, and no business process parameters with error traces were retrievable (the BusinessProcess type does not expose the order field for direct FlexibleSearch JOIN in the HAC interface). The order has no consignment processes, no external services, and no payment transaction entries visible via the direct HAC query interface.\r\n\r\nOrder 2 (ZA260924-93112936):\r\nThe order reached PAYMENT_NOT_CAPTURED status, meaning the payment authorization was successful but the subsequent capture step was rejected by the payment gateway (PayGate/DPO). The order total is R7,448.00 ZAR. No consignments were created, confirming the process stopped at the payment capture stage. The capture rejection is a gateway-side decision — the payment provider declined to capture the authorized funds. This is typically caused by insufficient funds, expired authorization, fraud suspicion on the gateway side, or a gateway processing error.\r\n\r\nNo payment transaction entries were retrievable via the direct HAC query interface for either order. This may indicate the payment transaction records exist but the FlexibleSearch query syntax for accessing nested relations is not supported by the hac-direct.cjs tool on this environment.\r\n\r\nKibana logs were not available during this investigation. The cookie bridge returned cookies for kibana-apac domain, but the Kibana search script was configured for the aipro.sdsdev.co.kr domain, causing a cookie resolution failure. The DB state and Jira cross-reference provide sufficient evidence for the root cause analysis, but log analysis would provide additional confirmation of the exact entry-level pricing breakdown and the payment gateway rejection reason.\r\n\r\nPossible remediation:\r\nOrder 1 (ZA260910-80402150):\r\nThe remediation follows the same pattern as SAHME-3410 (PC-53921, now closed and reusable):\r\n\r\n1. Query the order entries to identify which entry has a zero or negative amount (giveaway items with zero basePrice are the most common cause).\r\n2. If a zero-quantity or zero-price entry is found, remove it from the order.\r\n3. Restart the order process from the reserveVirtualStock action node.\r\n\r\nThe script from PC-53921 (script-SAHE-3410-reserveVirtualStock-remediation.groovy) can be reused for this order. It needs to be adapted with the new order code and ticket reference. If the issue is not a zero-quantity entry but a genuine pricing error, the order entry prices may need to be corrected before restarting the process.\r\n\r\nOrder 2 (ZA260924-93112936):\r\nSince the payment capture was rejected by the gateway, Hybris-side remediation is limited. The options are:\r\n\r\n1. Cancel the order and ask the customer to place a new order with a different payment method.\r\n2. If the payment authorization is still valid and the rejection was a transient gateway error, a re-capture can be attempted by retriggering the capture payment action in the order process.\r\n3. If the authorization has expired (typically 7 days for PayGate/DPO), a new payment authorization and capture would be required, which effectively means a new order.\r\n\r\nThis order has been stagnant for 99 hours (over 4 days), so the payment authorization has likely expired. Cancellation and re-order is the recommended approach unless the payment team confirms the authorization is still valid.\r\n\r\n## Remediation\r\n- Order 1 (ZA260910-80402150): Reuse PC-53921 script. Identify and remove zero-amount order entry, then restart order process from reserveVirtualStock.\r\n- Order 2 (ZA260924-93112936): Payment capture rejected by gateway. Likely authorization expired after 99h stagnation. Recommend cancelling order and having customer re-order. If payment team confirms authorization still valid, retrigger capture.",
+        "sections": {
+          "issue": "Two ZA-region orders are stuck and require remediation.\r\n\r\nOrder 1: ZA260910-80402150 (created 2026-09-27 12:10:45, total R719.10 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at EXTERNAL_FRAUD_RESULT_PROCESSED status. The order process errored at the reserveVirtualStock action node with the message \"amount must be greater than zero\". The order has been stagnant for approximately 24 hours. No consignments have been created for this order, confirming the process failed before the consignment creation step.\r\n\r\nOrder 2: ZA260924-93112936 (created 2026-09-24 08:46:45, total R7,448.00 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at PAYMENT_NOT_CAPTURED status. The payment capture was rejected (CAPTURE:REJECTED). The order has been stagnant for approximately 99 hours. No consignments have been created.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-28T16:23:09.984Z"
+      }
+    },
+    {
+      "key": "AEME-6527",
+      "summary": "Stuck Order || 31-Aug",
+      "status": "QA Server Review",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "UAE Maintenance & Enhancements",
+      "projectKey": "AEME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-14T20:29:18.000+0900",
+      "created": "2026-08-31T16:46:21.000+0900",
+      "statusChangedAt": "2026-10-06T14:05:18.355+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\n \n\nPlease find the SC+ activation error order and fix the issue.\n\n \n|Order ID|Order Status|Order Creation Date|Sale Type|Activation Status|\n|AE260823-66529054|COMPLETED|23-08-26|Bundle|UPDATE_ERROR|\n\n \n|AE260826-69146168|WAITING_FOR_EXTERNAL_FRAUD_RESULT|28/08/2026|\n|KW260830-72315746|WAIT",
+      "commentsCount": 52,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-14T20:29:18.190+0900",
+          "snippet": "Hi Talib,\n\nThank you for the update. We are checking why the FULFILLED status was not sent to NorthLadder for order AE260723-36597333 after the deal was created.\n\nWe are comparing the provider response parameters between this order and the working order AE261010-10522720 that you shared. The working"
+        },
+        {
+          "author": "Talib Raza Zaidi",
+          "date": "2026-10-14T14:31:37.712+0900",
+          "snippet": "Hi ~@email,\n\n \n\nDeal is created but now we have to send FULFILLED status to NL as the order is delivered.\n\nCurrent status, the deal is now created in the Northladder system but the Northladder is not informed that product is delivered. \n\nFor the order, AE260723-36597333\n\n!image-2026-10-13-18-41-05-1"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Talib,\n\nThank you for the update. We are checking why the FULFILLED status was not sent to NorthLadder for order AE260723-36597333 after the deal was created.\n\nWe are comparing the provider response parameters between this order and the working order AE261010-10522720 that you shared. The working",
+      "lastCommentDate": "2026-10-14T20:29:18.190+0900",
+      "url": "https://jira.secext.samsung.net/browse/AEME-6527",
+      "linkedTickets": [
+        {
+          "key": "PC-54713",
+          "summary": "Script to fix delivery address country + retrigger SC+ and push NL trade-in consignments to COMPLETED",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        },
+        {
+          "key": "PC-54929",
+          "summary": "Script to reset NorthLadder ExternalService and retrigger deal creation",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        },
+        {
+          "key": "PC-55360",
+          "summary": "NL deal creation for AE260723-36597333 (skip KnoxGuard)",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        },
+        {
+          "key": "PC-53355",
+          "summary": "AEME-6527 : To retrigger the Order Process",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "is blocked by",
+          "assignee": null
+        },
+        {
+          "key": "PC-53570",
+          "summary": "AEME-6527 | Change trade-in status to REGISTERED",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "relates to",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "Agent encountered an error while processing your request. Please try again or rephrase. Exit code: 1",
+        "sections": {
+          "issue": "",
+          "rca": "Agent encountered an error while processing your request. Please try again or rephrase. Exit code: 1",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-14T12:18:37.301Z"
+      }
+    },
     {
       "key": "RT-657502",
       "summary": "[STG2] SIT Return - Refund only product without service fee",
@@ -279,197 +583,6 @@
       }
     },
     {
-      "key": "SAHME-3449",
-      "summary": "Stuck order on Hybris",
-      "status": "QA Server Review",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "South Africa Maintenance & Enhancements",
-      "projectKey": "SAHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-14T19:09:35.000+0900",
-      "created": "2026-09-29T01:09:15.000+0900",
-      "statusChangedAt": "2026-10-14T19:09:35.783+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n||Order Number||Order Date||Order Status||Issue||\n|ZA260910-80402150|2026/09/27|EXTERNAL_FRAUD_RESULT_PROCESSED|Order process ERROR at reserveVirtualStock - amount must be greater than zero; STAGNANT f",
-      "commentsCount": 2,
-      "recentComments": [
-        {
-          "author": "Lerato Mbambisa",
-          "date": "2026-10-09T18:09:51.921+0900",
-          "snippet": "Good day ~@email ,\n # Please remove the SC+ Product on the order and process the remote for order ZA260910-80402150.\n # For Order ZA260924-93112936 I am still checking with the PayGate.\n\n!image-2026-10-09-11-09-34-956.png!\n\nKind regards,\n\nLerato"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-29T01:12:28.524+0900",
-          "snippet": "Hi Team,\n\nKindly check if remediation is required for these orders.\n\nZA260910-80402150 is stuck at reserveVirtualStock with amount must be greater than zero.\nZA260924-93112936 has payment status CAPTURE:REJECTED.\n\nPlease confirm if we can retrigger the stuck process and if the payment-rejected order"
-        }
-      ],
-      "lastCommentBy": "Lerato Mbambisa",
-      "lastCommentSnippet": "Good day ~@email ,\n # Please remove the SC+ Product on the order and process the remote for order ZA260910-80402150.\n # For Order ZA260924-93112936 I am still checking with the PayGate.\n\n!image-2026-10-09-11-09-34-956.png!\n\nKind regards,\n\nLerato",
-      "lastCommentDate": "2026-10-09T18:09:51.921+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAHME-3449",
-      "linkedTickets": [
-        {
-          "key": "PC-55443",
-          "summary": "Remove SC+ entry and retrigger order process for ZA260910-80402150",
-          "status": "Reviewed",
-          "statusCategory": "In Progress",
-          "relation": "blocks",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "Summary: Stuck order on Hybris - two ZA-region orders stuck at different stages\r\nGenerated: 2026-09-28T16:30:00Z\r\n\r\nIssue:\r\nTwo ZA-region orders are stuck and require remediation.\r\n\r\nOrder 1: ZA260910-80402150 (created 2026-09-27 12:10:45, total R719.10 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at EXTERNAL_FRAUD_RESULT_PROCESSED status. The order process errored at the reserveVirtualStock action node with the message \"amount must be greater than zero\". The order has been stagnant for approximately 24 hours. No consignments have been created for this order, confirming the process failed before the consignment creation step.\r\n\r\nOrder 2: ZA260924-93112936 (created 2026-09-24 08:46:45, total R7,448.00 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at PAYMENT_NOT_CAPTURED status. The payment capture was rejected (CAPTURE:REJECTED). The order has been stagnant for approximately 99 hours. No consignments have been created.\r\n\r\nRCA:\r\nOrder 1 (ZA260910-80402150):\r\nThe order passed external fraud check and reached the reserveVirtualStock action node in the order process. This action reserves virtual stock for the order entries before consignment creation. The action failed with NodeExecutionException: \"Error executing ActionNode with ID [reserveVirtualStock]: amount must be greater than zero\". This error occurs when the order's total amount or one of its order entry amounts evaluates to zero or negative at the point of stock reservation. The order total is R719.10, so the issue is likely on a per-entry basis — one of the order entries may have a zero basePrice or totalPrice, possibly due to a giveaway item or a pricing calculation error during checkout that left an entry with a zero amount. The reserveVirtualStock action iterates over order entries and calls the stock reservation service, which validates that each entry amount is greater than zero. When any entry fails this check, the entire action throws the exception and the process enters ERROR state.\r\n\r\nThis is a known recurring pattern on the Toko platform. Jira cross-reference found 6+ similar resolved tickets with the identical error: CSME-7180 (partial cancelled orders with zero-quantity entries), UAME-6593 (errored business process for commitStock), SAHME-3410 (ZA-region order stuck on fraud check, resolved under PC-53921 by removing the zero-quantity entry), KSME-3631, KSME-3609, and UAME-4559. In SAHME-3410, the root cause was a zero-quantity order entry (SMC-ZA-MOB-24-3-47 with 0 quantity) that caused the reserveVirtualStock action to fail. The remediation was to remove the zero-quantity entry and restart the order process.\r\n\r\nThe DB confirms no consignments exist for this order, and no business process parameters with error traces were retrievable (the BusinessProcess type does not expose the order field for direct FlexibleSearch JOIN in the HAC interface). The order has no consignment processes, no external services, and no payment transaction entries visible via the direct HAC query interface.\r\n\r\nOrder 2 (ZA260924-93112936):\r\nThe order reached PAYMENT_NOT_CAPTURED status, meaning the payment authorization was successful but the subsequent capture step was rejected by the payment gateway (PayGate/DPO). The order total is R7,448.00 ZAR. No consignments were created, confirming the process stopped at the payment capture stage. The capture rejection is a gateway-side decision — the payment provider declined to capture the authorized funds. This is typically caused by insufficient funds, expired authorization, fraud suspicion on the gateway side, or a gateway processing error.\r\n\r\nNo payment transaction entries were retrievable via the direct HAC query interface for either order. This may indicate the payment transaction records exist but the FlexibleSearch query syntax for accessing nested relations is not supported by the hac-direct.cjs tool on this environment.\r\n\r\nKibana logs were not available during this investigation. The cookie bridge returned cookies for kibana-apac domain, but the Kibana search script was configured for the aipro.sdsdev.co.kr domain, causing a cookie resolution failure. The DB state and Jira cross-reference provide sufficient evidence for the root cause analysis, but log analysis would provide additional confirmation of the exact entry-level pricing breakdown and the payment gateway rejection reason.\r\n\r\nPossible remediation:\r\nOrder 1 (ZA260910-80402150):\r\nThe remediation follows the same pattern as SAHME-3410 (PC-53921, now closed and reusable):\r\n\r\n1. Query the order entries to identify which entry has a zero or negative amount (giveaway items with zero basePrice are the most common cause).\r\n2. If a zero-quantity or zero-price entry is found, remove it from the order.\r\n3. Restart the order process from the reserveVirtualStock action node.\r\n\r\nThe script from PC-53921 (script-SAHE-3410-reserveVirtualStock-remediation.groovy) can be reused for this order. It needs to be adapted with the new order code and ticket reference. If the issue is not a zero-quantity entry but a genuine pricing error, the order entry prices may need to be corrected before restarting the process.\r\n\r\nOrder 2 (ZA260924-93112936):\r\nSince the payment capture was rejected by the gateway, Hybris-side remediation is limited. The options are:\r\n\r\n1. Cancel the order and ask the customer to place a new order with a different payment method.\r\n2. If the payment authorization is still valid and the rejection was a transient gateway error, a re-capture can be attempted by retriggering the capture payment action in the order process.\r\n3. If the authorization has expired (typically 7 days for PayGate/DPO), a new payment authorization and capture would be required, which effectively means a new order.\r\n\r\nThis order has been stagnant for 99 hours (over 4 days), so the payment authorization has likely expired. Cancellation and re-order is the recommended approach unless the payment team confirms the authorization is still valid.\r\n\r\n## Remediation\r\n- Order 1 (ZA260910-80402150): Reuse PC-53921 script. Identify and remove zero-amount order entry, then restart order process from reserveVirtualStock.\r\n- Order 2 (ZA260924-93112936): Payment capture rejected by gateway. Likely authorization expired after 99h stagnation. Recommend cancelling order and having customer re-order. If payment team confirms authorization still valid, retrigger capture.",
-        "sections": {
-          "issue": "Two ZA-region orders are stuck and require remediation.\r\n\r\nOrder 1: ZA260910-80402150 (created 2026-09-27 12:10:45, total R719.10 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at EXTERNAL_FRAUD_RESULT_PROCESSED status. The order process errored at the reserveVirtualStock action node with the message \"amount must be greater than zero\". The order has been stagnant for approximately 24 hours. No consignments have been created for this order, confirming the process failed before the consignment creation step.\r\n\r\nOrder 2: ZA260924-93112936 (created 2026-09-24 08:46:45, total R7,448.00 ZAR, payment mode za-dpoPayGatePaymentMode) is stuck at PAYMENT_NOT_CAPTURED status. The payment capture was rejected (CAPTURE:REJECTED). The order has been stagnant for approximately 99 hours. No consignments have been created.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-28T16:23:09.984Z"
-      }
-    },
-    {
-      "key": "AEME-6527",
-      "summary": "Stuck Order || 31-Aug",
-      "status": "QA Server Review",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-14T14:31:46.000+0900",
-      "created": "2026-08-31T16:46:21.000+0900",
-      "statusChangedAt": "2026-10-06T14:05:18.355+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\n \n\nPlease find the SC+ activation error order and fix the issue.\n\n \n|Order ID|Order Status|Order Creation Date|Sale Type|Activation Status|\n|AE260823-66529054|COMPLETED|23-08-26|Bundle|UPDATE_ERROR|\n\n \n|AE260826-69146168|WAITING_FOR_EXTERNAL_FRAUD_RESULT|28/08/2026|\n|KW260830-72315746|WAIT",
-      "commentsCount": 51,
-      "recentComments": [
-        {
-          "author": "Talib Raza Zaidi",
-          "date": "2026-10-14T14:31:37.712+0900",
-          "snippet": "Hi ~@email,\n\n \n\nDeal is created but now we have to send FULFILLED status to NL as the order is delivered.\n\nCurrent status, the deal is now created in the Northladder system but the Northladder is not informed that product is delivered. \n\nFor the order, AE260723-36597333\n\n!image-2026-10-13-18-41-05-1"
-        },
-        {
-          "author": "Jaffar Ali",
-          "date": "2026-10-13T19:55:55.012+0900",
-          "snippet": "Dear All,\n\nI am currently out of the office with no access to mail.\n\nIn my absence, please message Mr. Abdul, Mr. Dilip & Mr. Talib.\n\nThanks\nJaffar\nI'm currently out of the office until Oct-19.  Please reach out to Mr.Talib."
-        }
-      ],
-      "lastCommentBy": "Talib Raza Zaidi",
-      "lastCommentSnippet": "Hi ~@email,\n\n \n\nDeal is created but now we have to send FULFILLED status to NL as the order is delivered.\n\nCurrent status, the deal is now created in the Northladder system but the Northladder is not informed that product is delivered. \n\nFor the order, AE260723-36597333\n\n!image-2026-10-13-18-41-05-1",
-      "lastCommentDate": "2026-10-14T14:31:37.712+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6527",
-      "linkedTickets": [
-        {
-          "key": "PC-54713",
-          "summary": "Script to fix delivery address country + retrigger SC+ and push NL trade-in consignments to COMPLETED",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "blocks",
-          "assignee": null
-        },
-        {
-          "key": "PC-54929",
-          "summary": "Script to reset NorthLadder ExternalService and retrigger deal creation",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "blocks",
-          "assignee": null
-        },
-        {
-          "key": "PC-55360",
-          "summary": "NL deal creation for AE260723-36597333 (skip KnoxGuard)",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "blocks",
-          "assignee": null
-        },
-        {
-          "key": "PC-53355",
-          "summary": "AEME-6527 : To retrigger the Order Process",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "is blocked by",
-          "assignee": null
-        },
-        {
-          "key": "PC-53570",
-          "summary": "AEME-6527 | Change trade-in status to REGISTERED",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "relates to",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "Agent encountered an error while processing your request. Please try again or rephrase. Exit code: 1",
-        "sections": {
-          "issue": "",
-          "rca": "Agent encountered an error while processing your request. Please try again or rephrase. Exit code: 1",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-14T12:18:37.301Z"
-      }
-    },
-    {
-      "key": "TKME-2348",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Turkey Maintenance & Enhancements",
-      "projectKey": "TKME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-12T23:28:06.000+0900",
-      "created": "2026-09-29T01:09:08.000+0900",
-      "statusChangedAt": "2026-09-29T01:09:10.990+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n||Order Number||Order Date||Order Status||Issue||\n|TR260924-93500425|2026/09/28|REFUND_FAILED|Payment entry status: REFUND_FOLLOW_ON:ERROR|\n|TR260915-84759375|2026/09/27|ORDER_SPLIT|Consignment process",
-      "commentsCount": 6,
-      "recentComments": [
-        {
-          "author": "Rajeshbabu Yatirajula",
-          "date": "2026-10-12T23:27:59.925+0900",
-          "snippet": "Hi ~@email \n\nPlease proceed to include the splitOrder and completeFinancialUpdate statuses into the existing cronjob for TR.\n\nRegards,\nRajesh"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-09T21:15:29.762+0900",
-          "snippet": "Hi ~@email ,\n\nAs discussed ,\n\nsendConsignmentToWarehouse  is a consignment process, it will be included in the new cronjob.\n\nFor the mentioned cronjob we will be including splitOrder and completeFinancialUpdate statuses to the existing cronjob query.\n\nKindly confirm on the same.\n\nRegards\n\nAryan"
-        }
-      ],
-      "lastCommentBy": "Rajeshbabu Yatirajula",
-      "lastCommentSnippet": "Hi ~@email \n\nPlease proceed to include the splitOrder and completeFinancialUpdate statuses into the existing cronjob for TR.\n\nRegards,\nRajesh",
-      "lastCommentDate": "2026-10-12T23:27:59.925+0900",
-      "url": "https://jira.secext.samsung.net/browse/TKME-2348",
-      "linkedTickets": [
-        {
-          "key": "TKME-2350",
-          "summary": "Stuck order on Hybris- ORDER_SPLIT",
-          "status": "Launch Verification",
-          "statusCategory": "Done",
-          "relation": "is cloned by",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "Stuck order on Hybris - 16 TR-region orders\r\nGenerated: 2026-09-28T00:00:00Z\r\n\r\nIssue:\r\n\r\nTKME-2348 reports 16 stuck orders from the Turkey (TR) region across 5 distinct error patterns. All orders have payments captured (AUTH + CAPTURE accepted) but are stalled at various stages of the fulfilment, financial, or refund pipelines. The orders span dates from 2026-09-17 to 2026-09-28 and are stagnating for up to 98 hours.\r\n\r\nThe 5 patterns are:\r\n\r\n1. Connection reset at sendConsignmentToWarehouse (6 orders): TR260915-84759375, TR260927-96594178, TR260927-96494681, TR260926-95689021, TR260926-95561694, TR260925-94199293\r\n2. Cancel DO blocked by WMS with refund failure (6 orders): TR260924-93308617, TR260924-93147668, TR260923-92226009, TR260917-86921245, TR260919-88229034, TR260925-94514044\r\n3. Financial process I/O error (2 orders): TR260925-94391432, TR260922-91038821\r\n4. Refund FOLLOW_ON payment gateway error (1 order): TR260924-93500425\r\n5. Completed but missing shipping date (1 order): TR260926-95654349\r\n\r\nRCA:\r\n\r\nPattern 1: Connection reset at sendConsignmentToWarehouse (6 orders)\r\n\r\nThe consignment process (consignment-process-v11-36) reached the sendConsignmentToWarehouse action node, which calls SendConsignmentToWarehouseAction.executeAction() (com.samsung.toko.fulfilmentprocess.actions.consignment.SendConsignmentToWarehouseAction, line 38). This delegates to TokoBifrostWarehouseAdapterImpl.sendConsignmentToWarehouse() (line 217), which converts the consignment to a Bifrost sales order request via tokoBifrostSalesOrderRequestConverter and sends it to the WMS through TokoBifrostWebClient.\r\n\r\nThe WMS endpoint dropped the TCP connection mid-request (java.net.SocketException: Connection reset), causing the process engine to catch the RuntimeException at ActionNode.handleActionExecutionRuntimeException (line 163) and set the consignment process to ERROR state.\r\n\r\nDB verification confirms all 6 orders have:\r\n- Order process: RUNNING (waiting for warehouse subprocess to end)\r\n- Consignment process: ERROR (consignment-process-v11-36)\r\n- Consignment status: WAITING_FOR_TRANSFER (no tracking, no shipping date, no GERP bill)\r\n- Payment: AUTH and CAPTURE both ACCEPTED\r\n\r\nOrders TR260926-95689021 and TR260925-94199293 are partial - one consignment completed successfully and one is stuck. The stuck consignments in these orders also have ERROR state on their consignment processes.\r\n\r\n4 of 6 stuck consignments route to warehouse WC17-S751 (cross-dock), 2 route to DIVA warehouses (ce-xdock). The Connection reset is a transient network-level failure between Hybris and the WMS/Bifrost integration layer, not a code defect.\r\n\r\nThis is a recurring platform issue confirmed by Jira cross-reference: PC-54225 (Closed) documents the same error pattern for AE region order AE260908-78324187, remediated by re-triggering the consignment process. TKME-2055 and TKME-2089 are similar TR-region tickets.\r\n\r\nPattern 2: Cancel DO blocked by WMS with refund failure (6 orders)\r\n\r\n5 of 6 orders (TR260924-93308617, TR260924-93147668, TR260923-92226009, TR260917-86921245, TR260919-88229034) have the same lifecycle: consignment was CANCELLED at the warehouse (WC12-S751 or WC17-S751), consignment process SUCCEEDED, but the refund FOLLOW_ON call to the Masterpass payment gateway returned ERROR. All order totals are zeroed out (0E-8 TRY). The order process is stuck at RUNNING state, cycling through isWaitForFinancialCompletionRequired, isSecondFIRequired, and isFinancialUpdateRequired task actions.\r\n\r\nThe refund failure is in the PaymentTransactionEntry with type REFUND_FOLLOW_ON and status ERROR. The Masterpass payment gateway rejected the follow-on refund request. Orders TR260923-92226009, TR260917-86921245, and TR260919-88229034 share the same refund error timestamp (2026-09-25 07:30:26) and the same product (UE32H5000FUXTK x3), indicating a batch refund processing failure.\r\n\r\nThe 6th order (TR260925-94514044) has a different profile: first consignment CANCELLED at WC12-S751, second consignment stuck at READY status with consignment process RUNNING. The WMS did not process the cancel delivery order for the second consignment. Order total dropped to 1.00 TRY. Payment captured at 450,000 TRY but no refund has been initiated. The cancel email process SUCCEEDED but the second consignment remains blocked.\r\n\r\nJira cross-reference found PC-48853 (Closed) documenting REFUND_FOLLOW_ON PTE update remediation and PC-35580 (Closed) for refund follow-on entry to success. These PC tickets confirm that the standard remediation is to update the PTE status and re-trigger the refund flow.\r\n\r\nPattern 3: Financial process I/O error (2 orders)\r\n\r\nTR260925-94391432 (WAITING_FOR_SEND_FINANCIAL): The order process (order-process-v25-69) failed at the splitOrder action with an I/O error: sec.divaportal.com:443 failed to respond. The DIVA portal is the financial integration endpoint for TR region. No consignments were ever created. Payment was captured (69,999 TRY) but the initial FI posting to SAP/GERP through the DIVA portal failed. The order process is in ERROR state.\r\n\r\nTR260922-91038821 (WAITING_FOR_FINANCIAL): The consignment was fully completed and delivered (shipped 2026-09-25, GERP bill 3247490146, completed 2026-09-26), but the order process failed at the completeFinancialUpdate action with Connection reset. The order process is in ERROR state. Payment was captured (83,579.99 TRY across 2 transactions) but the second FI (completion FI) failed.\r\n\r\nCode trace: SendOrderCompleteFinancialUpdateAction (extends SendInitialFinancialUpdateAction) calls tokoConsignmentFinancialsService.sendInitialFinancialUpdate() at line 22. For TR region, this connects to sec.divaportal.com:443 (DIVA portal). The I/O error occurs when the DIVA portal is unreachable or drops the connection during the FI posting.\r\n\r\nJira cross-reference found TKME-1979 (DIVA portal failure) and TKME-1610 (DIVA services HTTPS update), confirming DIVA portal instability is a known TR-region issue. Monitoring alerts HTCK-4443, HTCK-4048, HTCK-4564 track high failure rates for divaportal.com.\r\n\r\nPattern 4: Refund FOLLOW_ON payment gateway error (1 order)\r\n\r\nTR260924-93500425 (REFUND_FAILED): No consignments were ever created. The order process is in FAILED state (not RUNNING). The payment transaction has AUTH=ACCEPTED, CAPTURE=ACCEPTED, and REFUND_FOLLOW_ON=ERROR for 27,139.65 TRY. The order was cancelled before fulfilment and the refund to the Masterpass payment gateway failed immediately. Task logs show the refund path was entered: refundCancelOrder, isChargeBackRefundProcessed, releaseVirtualStock, cancelNonActivatedExternalService, isInstantRefundEnabledCheckBeforeFinancialUpdate.\r\n\r\nThe REFUND_FOLLOW_ON failure is a payment gateway rejection, not a Hybris code defect. The Masterpass gateway may have rejected the refund due to a processing window restriction, duplicate refund attempt, or gateway-side issue.\r\n\r\nPattern 5: Completed but missing shipping date (1 order)\r\n\r\nTR260926-95654349 (COMPLETED): The order is fully COMPLETED. All 5 consignments are COMPLETED, all processes (order, consignment, omnichannel, store email, dispatch email) are SUCCEEDED. GERP bills exist for all consignments. Payment AUTH and CAPTURE accepted (85,119 TRY). However, the first consignment (entry 0, product WW90DG6U25LEAH, a washing machine) has no shipping date despite having a completion date and GERP bill. No tracking IDs exist on any of the 5 consignments.\r\n\r\nThis is a data integrity issue, not a process error. The consignment was physically delivered and GERP billed, but the shipping date field was never populated by the warehouse subsystem. The order itself is COMPLETED and the process is SUCCEEDED, so no process remediation is needed.\r\n\r\nNote: Kibana log analysis was not performed (Kibana MCP was unavailable during this investigation). The error messages cited in the ticket description and the DB state verification provide sufficient evidence for the root cause analysis above. If Kibana becomes available, log analysis could confirm the exact exception stack traces and timestamps.\r\n\r\nPossible remediation:\r\n\r\nPattern 1 (Connection reset at sendConsignmentToWarehouse) - 6 orders:\r\nRe-trigger the consignment process from the sendConsignmentToWarehouse action. The consignment data is intact and the WMS connection reset was transient. Reusable PC ticket: PC-52605 (process-restart, REUSABLE, parent TKME-2279, script: script-TKME-2279-retrigger-business-process.groovy). Adapt the script to target these 6 orders' consignment processes, resetting the ERROR state and re-triggering from the sendConsignmentToWarehouse action node. For the 2 partial orders (TR260926-95689021, TR260925-94199293), only retrigger the stuck consignment process (the one in ERROR state), not the completed one.\r\n\r\nPattern 2 (Cancel DO blocked by WMS with refund failure) - 6 orders:\r\nFor the 5 REFUND_FAILED orders (TR260924-93308617, TR260924-93147668, TR260923-92226009, TR260917-86921245, TR260919-88229034): The consignments are already CANCELLED and the consignment process SUCCEEDED. The issue is the REFUND_FOLLOW_ON PTE in ERROR state. Remediation: update the PTE status from ERROR to SUCCESS (if the refund was actually processed by the gateway) or re-trigger the refund (if the refund was not processed). Reference: PC-48853 (Closed) and PC-35580 (Closed) document the PTE update approach. Reusable PC ticket: PC-52765 (refund-retrigger, REUSABLE, parent SAME-3941, script: script-SAME-3941-sa260722-return-refund-retrigger.groovy) may be adaptable for the refund retrigger.\r\n\r\nFor TR260925-94514044 (Cancel DO blocked by WMS without refund): The second consignment is stuck at READY with the consignment process RUNNING. This requires WMS team intervention to either cancel the delivery order or confirm fulfilment. The WMS has blocked the cancel DO and Hybris cannot force this. Once WMS resolves the DO, the consignment process should advance. If WMS confirms the cancel, the refund flow will need to be triggered. This order may need escalation to the WMS/warehouse operations team.\r\n\r\nPattern 3 (Financial process I/O error) - 2 orders:\r\nTR260925-94391432: Re-trigger the order process from the splitOrder action. The DIVA portal timeout was transient. Reusable PC ticket: PC-52605 (process-restart, REUSABLE). The script should target the order process and reset from the splitOrder action node.\r\n\r\nTR260922-91038821: Re-trigger the order process from the completeFinancialUpdate action. The consignment is already COMPLETED and delivered. Reusable PC ticket: PC-52605 (process-restart, REUSABLE). The script should target the order process and reset from the completeFinancialUpdate action node.\r\n\r\nPattern 4 (Refund FOLLOW_ON payment gateway error) - 1 order:\r\nTR260924-93500425: The order process is in FAILED state (not ERROR), so process retrigger alone may not work. The refund FOLLOW_ON PTE needs to be investigated. Check with the payment team whether the Masterpass gateway actually processed the refund despite returning ERROR. If the refund was processed, update the PTE to SUCCESS. If not, re-trigger the refund. Reference: PC-48853 (Closed) for PTE update approach.\r\n\r\nPattern 5 (Completed but missing shipping date) - 1 order:\r\nTR260926-95654349: The order is fully COMPLETED and all processes SUCCEEDED. This is a data integrity issue only. If the missing shipping date causes downstream reporting or tracking issues, update the consignment shipping date field to match the completion date. This is a minor data fix and does not require process remediation.\r\n\r\n## Remediation\r\n\r\nReusable PC tickets identified:\r\n1. PC-52605 (REUSABLE) - Process restart for Connection reset and Financial I/O errors (Patterns 1 and 3). Script: script-TKME-2279-retrigger-business-process.groovy. Parent: TKME-2279.\r\n2. PC-52765 (REUSABLE) - Refund retrigger for REFUND_FOLLOW_ON errors (Pattern 2). Script: script-SAME-3941-sa260722-return-refund-retrigger.groovy. Parent: SAME-3941.\r\n3. PC-48853 (Closed) - PTE REFUND_FOLLOW_ON update (Pattern 4). Manual approach documented in ticket.\r\n4. PC-54225 (Closed) - Connection reset remediation precedent (AE region).\r\n\r\nOrders requiring WMS team escalation:\r\n- TR260925-94514044 (second consignment DO blocked by WMS at READY status)\r\n\r\nOrders requiring no remediation:\r\n- TR260926-95654349 (COMPLETED, data integrity issue only)\r\n\r\nInvestigation gaps:\r\n- Kibana log analysis was not performed (Kibana MCP unavailable). Log confirmation of exact exception stack traces and timestamps is recommended if Kibana becomes available.\r\n- DIVA portal (sec.divaportal.com) connectivity should be verified - TKME-1979 and TKME-1610 document known instability.",
-        "sections": {
-          "issue": "TKME-2348 reports 16 stuck orders from the Turkey (TR) region across 5 distinct error patterns. All orders have payments captured (AUTH + CAPTURE accepted) but are stalled at various stages of the fulfilment, financial, or refund pipelines. The orders span dates from 2026-09-17 to 2026-09-28 and are stagnating for up to 98 hours.\r\n\r\nThe 5 patterns are:\r\n\r\n1. Connection reset at sendConsignmentToWarehouse (6 orders): TR260915-84759375, TR260927-96594178, TR260927-96494681, TR260926-95689021, TR260926-95561694, TR260925-94199293\r\n2. Cancel DO blocked by WMS with refund failure (6 orders): TR260924-93308617, TR260924-93147668, TR260923-92226009, TR260917-86921245, TR260919-88229034, TR260925-94514044\r\n3. Financial process I/O error (2 orders): TR260925-94391432, TR260922-91038821\r\n4. Refund FOLLOW_ON payment gateway error (1 order): TR260924-93500425\r\n5. Completed but missing shipping date (1 order): TR260926-95654349",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-28T16:38:55.087Z"
-      }
-    },
-    {
       "key": "RT-722599",
       "summary": "[STG2] Multiple Samsung Care+ services per order | Subscription Values Token",
       "status": "In Progress",
@@ -595,119 +708,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-10-05T07:16:57.446Z"
-      }
-    },
-    {
-      "key": "TKME-2324",
-      "summary": "O2O Dealers PII Data Request for SETK Hybris Enhancement",
-      "status": "QA Server Review",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Turkey Maintenance & Enhancements",
-      "projectKey": "TKME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-09T19:12:12.000+0900",
-      "created": "2026-09-14T17:21:22.000+0900",
-      "statusChangedAt": "2026-09-23T21:27:31.640+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\n \n\nRequesting for your support to provide/extract the following data. Attached is the approval for your reference.\n\n \n\nWe need below details for each created account for EA Dealer Multistore:\n\nDealer Code\nBranch\nIP Address\nUser ID\nEmail ID\nUser Name\nActivation Status\nAuthority Group (Store",
-      "commentsCount": 14,
-      "recentComments": [
-        {
-          "author": "Rajeshbabu Yatirajula",
-          "date": "2026-10-09T19:11:28.799+0900",
-          "snippet": "Hi ~@email \n\nWe'd shared the data with the business, but they've a concern that the data shared with them was split into two separate sheets, “Dealers” and “Users.” There is no common field linking them, so business cannot see which dealer uses which account and cannot complete the mapping. The data"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-09-23T22:09:26.197+0900",
-          "snippet": "Hi ~@email ,\n\nThe file mailed as per requirement.\n\nKindly check and validate at your end as well.\n\nThanks and Regards\n\nAryan"
-        }
-      ],
-      "lastCommentBy": "Rajeshbabu Yatirajula",
-      "lastCommentSnippet": "Hi ~@email \n\nWe'd shared the data with the business, but they've a concern that the data shared with them was split into two separate sheets, “Dealers” and “Users.” There is no common field linking them, so business cannot see which dealer uses which account and cannot complete the mapping. The data",
-      "lastCommentDate": "2026-10-09T19:11:28.799+0900",
-      "url": "https://jira.secext.samsung.net/browse/TKME-2324",
-      "linkedTickets": [
-        {
-          "key": "PC-44430",
-          "summary": "TKME-1976|O2O Dealers PII Data Request for SETK Hybris Enhancement",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "blocks",
-          "assignee": null
-        },
-        {
-          "key": "PC-54055",
-          "summary": "TKME-2324|O2O Dealers PII Data Extraction for SETK Hybris Enhancement",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "blocks",
-          "assignee": null
-        },
-        {
-          "key": "TKME-1976",
-          "summary": "O2O Dealers PII Data Request for SETK Hybris Enhancement",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "clones",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "Agent encountered an error while processing your request. Please try again or rephrase. Exit code: 1",
-        "sections": {
-          "issue": "",
-          "rca": "Agent encountered an error while processing your request. Please try again or rephrase. Exit code: 1",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-16T07:36:32.056Z"
-      }
-    },
-    {
-      "key": "MHME-1439",
-      "summary": "SMI - List of MENA Extracts",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Morocco Maintenance & Enhancements",
-      "projectKey": "MHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-05T14:40:29.000+0900",
-      "created": "2026-09-18T13:19:57.000+0900",
-      "statusChangedAt": "2026-09-18T13:22:24.330+0900",
-      "assignedToMeAt": "",
-      "description": "Hi ~@email \n\nWe want to do an audit of all the current extracts that being generated for MENA markets only (both cronjobs and scripts). We are only focusing on the extracts that are being generated and sent via email\n\nPlease can you share a list of these jobs and the subject of the email so we can r",
-      "commentsCount": 2,
-      "recentComments": [
-        {
-          "author": "Rizwan Khan",
-          "date": "2026-10-05T14:38:16.447+0900",
-          "snippet": "Hi ~@email \n\nThanks for the information. We are reviewing this now. Pleas can you also check on scripts as well? We should have some for stock information and others\n\nRegards\nRiz"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-02T17:24:05.095+0900",
-          "snippet": "Hi Rizwan,\n\nCompleted the audit of all active extracts generated for MENA markets. Below is the complete list of cronjobs that generate extracts and send them via email, with their configured email subjects.\n\nSales Report Extracts (per country):\n1. report-ae-tokoSalesReportJob-nonPII — \"Order Extrac"
-        }
-      ],
-      "lastCommentBy": "Rizwan Khan",
-      "lastCommentSnippet": "Hi ~@email \n\nThanks for the information. We are reviewing this now. Pleas can you also check on scripts as well? We should have some for stock information and others\n\nRegards\nRiz",
-      "lastCommentDate": "2026-10-05T14:38:16.447+0900",
-      "url": "https://jira.secext.samsung.net/browse/MHME-1439",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: MHME-1439\n\nSummary: SMI - List of MENA Extracts\nGenerated: 2026-09-18T11:07:12.910Z\n\nHi [~khan.r@samsung.com] ,\n\nThis ticket requests an audit and inventory of all data extracts (both cronjobs and scripts) that generate extracts sent via email for MENA markets only. The request covers both scheduled cronjobs and ad-hoc scripts that produce extracts distributed via email.\n\nAll CronJob and Trigger records were queried directly from the Hybris database using FlexibleSearch. The results were filtered for MENA market prefixes (ae, bh, eg, iq, jo, kw, ma, om, qa, sa, lb, dz, tn) and for MENA-region cronjobs with \"mena\" or \"MENA\" in the name. The query covered all active and inactive jobs to provide a complete inventory. Triggers were also joined to provide schedule information.\n\nThe email subject lines are not stored as metadata on the CronJob entity. They are hardcoded within each Groovy script or Java reporting class. The script URIs for all ScriptingJob-based cronjobs were retrieved and are listed below. To get the exact email subject for each extract, the individual Groovy scripts would need to be opened and reviewed. The inventory below lists each job, its schedule, active status, and the script URI where applicable.\n\nBelow is the complete list of MENA extracts that generate and send extracts via email, organized by category:\n\n1. Per-Market StockInformation Reports (NonPII, sent via email)\n\nCronJob: ae-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 10 5,10,14 * * ? (3x daily at 05:10, 10:10, 14:10)\nActive: Yes\nScript: model://ae-StockInformationScriptingJob\n\nCronJob: eg-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 35 5,10,14 * * ? (3x daily at 05:35, 10:35, 14:35)\nActive: Yes\nScript: model://egStockInformationScriptingJob\n\nCronJob: iq-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 5 5,10,14 * * ? (3x daily at 05:05, 10:05, 14:05)\nActive: Yes\nScript: model://IQ_PROD_StockInformationScript\n\nCronJob: jo-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 40 5,10,14 * * ? (3x daily at 05:40, 10:40, 14:40)\nActive: Yes\nScript: model://joStockInformationScriptingJob\n\nCronJob: ma-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 15 5,10,14 * * ? (3x daily at 05:15, 10:15, 14:15)\nActive: Yes\nScript: model://ma-StockInformationScriptingJob\n\nCronJob: sa-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 25 5,10,14 * * ? (3x daily at 05:25, 10:25, 14:25)\nActive: Yes\nScript: model://sa-StockInformationScriptingJob\n\n2. Per-Market Sales and EPP Reports (NonPII, sent via email)\n\nCronJob: ae-Report-NonPII-EMAIL-DailyteleSalesReportJob-NewOneJob\nSchedule: 0 0 20 1/1 * ? * (daily at 20:00)\nActive: Yes\nScript: model://ae-Report-NonPII-EMAIL-DailyteleSalesReportJob-NewOneScript\n\nCronJob: ae-Report-NonPII-Email-gcc-EPP-RegisteredUserReport\nSchedule: 0 0 4 1/1 * ? * (daily at 04:00)\nActive: Yes\nScript: model://ae-gcc-EPP-RegisteredUserReportScript\n\nCronJob: ae-Report-NON-PII-EMAIL-tradein-instant-discount-report\nSchedule: Not found (manual trigger)\nActive: Yes\nScript: reportingJobPerformable (Java-based, not Groovy)\n\nCronJob: eg-report-NonPII-EMAIL-EPP-ReportJob\nSchedule: 0 2 5 1/1 * ? * (daily at 05:02)\nActive: Yes\nScript: model://eg-report-NonPII-EMAIL-EPP-ReportScript\n\n3. MENA-Region Extract and Report Jobs (sent via email)\n\nCronJob: mena-Report-NonPII-Email-NERPOrderExtractCronJob\nSchedule: 0 0 4 ? * MON * (weekly Monday at 04:00)\nActive: Yes\nScript: model://MENANERPOrderExtract\n\nCronJob: MENA-TokoPromotionExtractJSONScriptCronJob\nSchedule: 0 0 1 ? * * * (daily at 01:00)\nActive: Yes\nScript: model://MENA-TokoPromotionExtractJSONScript\n\nCronJob: mena-report-nonpii-email-salesReportJob\nSchedule: 0 0 4 ? * MON * (weekly Monday at 04:00)\nActive: Yes\nScript: reportingJobPerformable (Java-based, not Groovy)\n\nCronJob: mena-daily-nonpii-email-PromotionReportJob\nSchedule: 0 5/3 ? * * * (every 3 hours starting at 00:05)\nActive: Yes\nScript: model://mena-daily-nonpii-email-PromotionReportScript\n\nCronJob: mena-epp-monthly-report-nonpii-email-salesReportJob\nSchedule: 0 0 0 15 1/1 ? * (monthly on 15th at 00:00)\nActive: Yes\nScript: reportingJobPerformable (Java-based, not Groovy)\n\nCronJob: mena-epp-weekly-nonpii-email-salesReportJob\nSchedule: 0 0 5 ? * 2 * (weekly Tuesday at 05:00)\nActive: Yes\nScript: model://mena-epp-weekly-nonpii-email-salesReportScript\n\nCronJob: mena-epp-oneTime-nonpii-email-salesReportJob\nSchedule: Not found (one-time)\nActive: Yes\nScript: model://mena-epp-oneTime-nonpii-email-salesReportScript\n\n4. MENA Monitoring and Alert Jobs (sent via email)\n\nCronJob: MENA-StuckOrdersInLast24HoursJob\nSchedule: 0 3 0/6 1/1 * ? * (every 6 hours)\nActive: Yes\nScript: model://MENA-StuckOrdersInLast24Hours\n\nCronJob: mena-nullOrdersAlertCronJob\nSchedule: 0 1 0/6 1/1 * ? * (every 6 hours)\nActive: Yes\nScript: model://mena-nullOrdersAlertScript\n\nCronJob: mena-EmailsFailingJob\nSchedule: 0 4 0/1 1/1 * ? * (hourly)\nActive: Yes\nScript: model://mena-EmailsFailingScript\n\nCronJob: toko-MENA-SpecialMonitoringReportJob\nSchedule: 0 0 4,12,20 1/1 * ? * (3x daily at 04:00, 12:00, 20:00)\nActive: Yes\nScript: SpecialMonitoringReportJob (Java-based)\n\nCronJob: toko-MENA-PaymentOrderStatusReportJob\nSchedule: 0 4 0/6 1/1 * ? * (every 6 hours)\nActive: Yes\nScript: PaymentOrderStatusReportJob (Java-based)\n\nCronJob: mena-AuditSalesReportsAlertForPIICronJob\nSchedule: 0 57 3 ? * * * (daily at 03:57)\nActive: Yes\nScript: model://mena-AuditSalesReportsAlertForPIIScript\n\n5. MENA GPV2 (GCDM 2.0) Sales and Pricing Reports (sent via email)\n\nCronJob: toko-GPV2-mena-orderGenerateSalesReportJob\nSchedule: 0 2/17 * * * ? (every 17 minutes)\nActive: Yes\nScript: tokoCdmGenerateSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-orderGenerateSalesReportJob_new\nSchedule: 0 3/15 * ? * * (every 15 minutes)\nActive: Yes\nScript: tokoCdmGenerateSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-ONE-TIME-orderGenerateSalesReportJob\nSchedule: Not found (one-time)\nActive: Yes\nEmail: genesis.joy.pineda@accenture.com\nScript: tokoCdmGenerateSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-ONE-TIME-sendPricingInformationReportJob\nSchedule: Not found (one-time)\nActive: Yes\nScript: tokoCdmSendSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-generateAndSendPreOrderProductCronJob\nSchedule: 0 3 3 1/1 * ? * (daily at 03:03)\nActive: Yes\nScript: model://toko-GPV2-mena-generateAndSendPreOrderProductScript\n\nCronJob: toko-GPV2-mena-generateAndSendRewardsDataCronJob\nSchedule: 0 59 3 ? * * * (daily at 03:59)\nActive: Yes\nScript: toko-GPV2-qa-generateAndSendRewardsDataCronJobScriptingJob\n\n6. GCC-Wide Reports (covering MENA markets, sent via email)\n\nCronJob: gcc-Report-NonPII-Email-PRODDailySCReportCronJob\nSchedule: 0 2 3 1/1 * ? * (daily at 03:02)\nActive: Yes\nScript: model://gcc-PRODDailySCReportScriptingJob\n\n7. RestrictedProductsExtract Jobs (per market, generate extracts)\n\nCronJob: ae-restrictedProductsExtractReportJob (Active)\nCronJob: eg-restrictedProductsExtractReportJob (Active)\nCronJob: iq-restrictedProductsExtractReportJob (Active)\nCronJob: jo-restrictedProductsExtractReportJob (Active)\nCronJob: ma-restrictedProductsExtractReportJob (Active)\nCronJob: sa-restrictedProductsExtractReportJob (Active)\nSchedule: No trigger found for these jobs\nScript: Per-market ScriptingJob variants (e.g., ae-restrictedProductsExtractReportScriptJob)\n\n8. Other MENA Extract and Alert Jobs\n\nCronJob: UAEExtractCronJob (Active, Script: UAEExtractScriptJob)\nCronJob: mena-CategoryToProductMappingScriptingJob (Active, daily at 03:00, Script: model://mena-CategoryToProductMappingScript)\nCronJob: toko-MENA-CancelledPreorderStatusJob (Inactive, Script: CancelledPreorderStatusReportJob)\nCronJob: mena-missingCompositeEntriesCronJob (Active, Script: model://mena-missingCompositeEntriesScript)\nCronJob: MENA-GCDM2.0-voucher-interface-v1 (Active, Script: tokoVoucherCodeGCPUploadJob)\nCronJob: toko-MENA-VoucherRedemptionReport (Inactive, Script: tokoSalesReportJob)\n\nNotes:\n- All 27 cronjobs with \"NonPII\" and \"EMAIL\" in their names were confirmed via DB query. These are the primary email-sent extract jobs.\n- An additional 18 MENA-prefixed cronjobs were found (monitoring, alerts, GPV2, extracts) that also generate and send extracts/reports via email.\n- The StockInformation reports run 3x daily per market (at staggered intervals to avoid overlap) across AE, EG, IQ, JO, MA, SA.\n- Several jobs use \"reportingJobPerformable\" (Java-based) instead of Groovy scripts. These are configured via Spring beans and generate reports using the Hybris reporting framework.\n- Two cronjobs have explicit email addresses configured: toko-GPV2-mena-ONE-TIME-orderGenerateSalesReportJob (genesis.joy.pineda@accenture.com) and toko-GPV2-mena-ONE-TIME-generatePricingInformationReportJob (kathlene.mae.basuel@accenture.com). All others send to distribution lists configured within the scripts themselves.\n- Inactive jobs (sendEmail=0 or active=0) were excluded from the list above except where noted. The complete DB query returned 35 extract-named cronjobs and 45 MENA-named cronjobs.\n\nKindly let me know if you need the exact email subject lines for any specific extract. I can open the corresponding Groovy scripts to retrieve those.\n\nRegards\n\nAryan\n\n## Remediation\n\nThis is an informational/audit request, not a technical issue requiring remediation. No platform bug or code defect was involved. The inventory above provides the complete list of MENA market extracts generated and sent via email.\n\nTicket URL: https://jira.secext.samsung.net/browse/MHME-1439",
-        "sections": {
-          "issue": "",
-          "rca": "# RCA: MHME-1439\n\nSummary: SMI - List of MENA Extracts\nGenerated: 2026-09-18T11:07:12.910Z\n\nHi [~khan.r@samsung.com] ,\n\nThis ticket requests an audit and inventory of all data extracts (both cronjobs and scripts) that generate extracts sent via email for MENA markets only. The request covers both scheduled cronjobs and ad-hoc scripts that produce extracts distributed via email.\n\nAll CronJob and Trigger records were queried directly from the Hybris database using FlexibleSearch. The results were filtered for MENA market prefixes (ae, bh, eg, iq, jo, kw, ma, om, qa, sa, lb, dz, tn) and for MENA-region cronjobs with \"mena\" or \"MENA\" in the name. The query covered all active and inactive jobs to provide a complete inventory. Triggers were also joined to provide schedule information.\n\nThe email subject lines are not stored as metadata on the CronJob entity. They are hardcoded within each Groovy script or Java reporting class. The script URIs for all ScriptingJob-based cronjobs were retrieved and are listed below. To get the exact email subject for each extract, the individual Groovy scripts would need to be opened and reviewed. The inventory below lists each job, its schedule, active status, and the script URI where applicable.\n\nBelow is the complete list of MENA extracts that generate and send extracts via email, organized by category:\n\n1. Per-Market StockInformation Reports (NonPII, sent via email)\n\nCronJob: ae-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 10 5,10,14 * * ? (3x daily at 05:10, 10:10, 14:10)\nActive: Yes\nScript: model://ae-StockInformationScriptingJob\n\nCronJob: eg-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 35 5,10,14 * * ? (3x daily at 05:35, 10:35, 14:35)\nActive: Yes\nScript: model://egStockInformationScriptingJob\n\nCronJob: iq-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 5 5,10,14 * * ? (3x daily at 05:05, 10:05, 14:05)\nActive: Yes\nScript: model://IQ_PROD_StockInformationScript\n\nCronJob: jo-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 40 5,10,14 * * ? (3x daily at 05:40, 10:40, 14:40)\nActive: Yes\nScript: model://joStockInformationScriptingJob\n\nCronJob: ma-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 15 5,10,14 * * ? (3x daily at 05:15, 10:15, 14:15)\nActive: Yes\nScript: model://ma-StockInformationScriptingJob\n\nCronJob: sa-Report-NonPII-EMAIL-StockInformationReportJob\nSchedule: 0 25 5,10,14 * * ? (3x daily at 05:25, 10:25, 14:25)\nActive: Yes\nScript: model://sa-StockInformationScriptingJob\n\n2. Per-Market Sales and EPP Reports (NonPII, sent via email)\n\nCronJob: ae-Report-NonPII-EMAIL-DailyteleSalesReportJob-NewOneJob\nSchedule: 0 0 20 1/1 * ? * (daily at 20:00)\nActive: Yes\nScript: model://ae-Report-NonPII-EMAIL-DailyteleSalesReportJob-NewOneScript\n\nCronJob: ae-Report-NonPII-Email-gcc-EPP-RegisteredUserReport\nSchedule: 0 0 4 1/1 * ? * (daily at 04:00)\nActive: Yes\nScript: model://ae-gcc-EPP-RegisteredUserReportScript\n\nCronJob: ae-Report-NON-PII-EMAIL-tradein-instant-discount-report\nSchedule: Not found (manual trigger)\nActive: Yes\nScript: reportingJobPerformable (Java-based, not Groovy)\n\nCronJob: eg-report-NonPII-EMAIL-EPP-ReportJob\nSchedule: 0 2 5 1/1 * ? * (daily at 05:02)\nActive: Yes\nScript: model://eg-report-NonPII-EMAIL-EPP-ReportScript\n\n3. MENA-Region Extract and Report Jobs (sent via email)\n\nCronJob: mena-Report-NonPII-Email-NERPOrderExtractCronJob\nSchedule: 0 0 4 ? * MON * (weekly Monday at 04:00)\nActive: Yes\nScript: model://MENANERPOrderExtract\n\nCronJob: MENA-TokoPromotionExtractJSONScriptCronJob\nSchedule: 0 0 1 ? * * * (daily at 01:00)\nActive: Yes\nScript: model://MENA-TokoPromotionExtractJSONScript\n\nCronJob: mena-report-nonpii-email-salesReportJob\nSchedule: 0 0 4 ? * MON * (weekly Monday at 04:00)\nActive: Yes\nScript: reportingJobPerformable (Java-based, not Groovy)\n\nCronJob: mena-daily-nonpii-email-PromotionReportJob\nSchedule: 0 5/3 ? * * * (every 3 hours starting at 00:05)\nActive: Yes\nScript: model://mena-daily-nonpii-email-PromotionReportScript\n\nCronJob: mena-epp-monthly-report-nonpii-email-salesReportJob\nSchedule: 0 0 0 15 1/1 ? * (monthly on 15th at 00:00)\nActive: Yes\nScript: reportingJobPerformable (Java-based, not Groovy)\n\nCronJob: mena-epp-weekly-nonpii-email-salesReportJob\nSchedule: 0 0 5 ? * 2 * (weekly Tuesday at 05:00)\nActive: Yes\nScript: model://mena-epp-weekly-nonpii-email-salesReportScript\n\nCronJob: mena-epp-oneTime-nonpii-email-salesReportJob\nSchedule: Not found (one-time)\nActive: Yes\nScript: model://mena-epp-oneTime-nonpii-email-salesReportScript\n\n4. MENA Monitoring and Alert Jobs (sent via email)\n\nCronJob: MENA-StuckOrdersInLast24HoursJob\nSchedule: 0 3 0/6 1/1 * ? * (every 6 hours)\nActive: Yes\nScript: model://MENA-StuckOrdersInLast24Hours\n\nCronJob: mena-nullOrdersAlertCronJob\nSchedule: 0 1 0/6 1/1 * ? * (every 6 hours)\nActive: Yes\nScript: model://mena-nullOrdersAlertScript\n\nCronJob: mena-EmailsFailingJob\nSchedule: 0 4 0/1 1/1 * ? * (hourly)\nActive: Yes\nScript: model://mena-EmailsFailingScript\n\nCronJob: toko-MENA-SpecialMonitoringReportJob\nSchedule: 0 0 4,12,20 1/1 * ? * (3x daily at 04:00, 12:00, 20:00)\nActive: Yes\nScript: SpecialMonitoringReportJob (Java-based)\n\nCronJob: toko-MENA-PaymentOrderStatusReportJob\nSchedule: 0 4 0/6 1/1 * ? * (every 6 hours)\nActive: Yes\nScript: PaymentOrderStatusReportJob (Java-based)\n\nCronJob: mena-AuditSalesReportsAlertForPIICronJob\nSchedule: 0 57 3 ? * * * (daily at 03:57)\nActive: Yes\nScript: model://mena-AuditSalesReportsAlertForPIIScript\n\n5. MENA GPV2 (GCDM 2.0) Sales and Pricing Reports (sent via email)\n\nCronJob: toko-GPV2-mena-orderGenerateSalesReportJob\nSchedule: 0 2/17 * * * ? (every 17 minutes)\nActive: Yes\nScript: tokoCdmGenerateSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-orderGenerateSalesReportJob_new\nSchedule: 0 3/15 * ? * * (every 15 minutes)\nActive: Yes\nScript: tokoCdmGenerateSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-ONE-TIME-orderGenerateSalesReportJob\nSchedule: Not found (one-time)\nActive: Yes\nEmail: genesis.joy.pineda@accenture.com\nScript: tokoCdmGenerateSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-ONE-TIME-sendPricingInformationReportJob\nSchedule: Not found (one-time)\nActive: Yes\nScript: tokoCdmSendSalesReportJob (Java-based)\n\nCronJob: toko-GPV2-mena-generateAndSendPreOrderProductCronJob\nSchedule: 0 3 3 1/1 * ? * (daily at 03:03)\nActive: Yes\nScript: model://toko-GPV2-mena-generateAndSendPreOrderProductScript\n\nCronJob: toko-GPV2-mena-generateAndSendRewardsDataCronJob\nSchedule: 0 59 3 ? * * * (daily at 03:59)\nActive: Yes\nScript: toko-GPV2-qa-generateAndSendRewardsDataCronJobScriptingJob\n\n6. GCC-Wide Reports (covering MENA markets, sent via email)\n\nCronJob: gcc-Report-NonPII-Email-PRODDailySCReportCronJob\nSchedule: 0 2 3 1/1 * ? * (daily at 03:02)\nActive: Yes\nScript: model://gcc-PRODDailySCReportScriptingJob\n\n7. RestrictedProductsExtract Jobs (per market, generate extracts)\n\nCronJob: ae-restrictedProductsExtractReportJob (Active)\nCronJob: eg-restrictedProductsExtractReportJob (Active)\nCronJob: iq-restrictedProductsExtractReportJob (Active)\nCronJob: jo-restrictedProductsExtractReportJob (Active)\nCronJob: ma-restrictedProductsExtractReportJob (Active)\nCronJob: sa-restrictedProductsExtractReportJob (Active)\nSchedule: No trigger found for these jobs\nScript: Per-market ScriptingJob variants (e.g., ae-restrictedProductsExtractReportScriptJob)\n\n8. Other MENA Extract and Alert Jobs\n\nCronJob: UAEExtractCronJob (Active, Script: UAEExtractScriptJob)\nCronJob: mena-CategoryToProductMappingScriptingJob (Active, daily at 03:00, Script: model://mena-CategoryToProductMappingScript)\nCronJob: toko-MENA-CancelledPreorderStatusJob (Inactive, Script: CancelledPreorderStatusReportJob)\nCronJob: mena-missingCompositeEntriesCronJob (Active, Script: model://mena-missingCompositeEntriesScript)\nCronJob: MENA-GCDM2.0-voucher-interface-v1 (Active, Script: tokoVoucherCodeGCPUploadJob)\nCronJob: toko-MENA-VoucherRedemptionReport (Inactive, Script: tokoSalesReportJob)\n\nNotes:\n- All 27 cronjobs with \"NonPII\" and \"EMAIL\" in their names were confirmed via DB query. These are the primary email-sent extract jobs.\n- An additional 18 MENA-prefixed cronjobs were found (monitoring, alerts, GPV2, extracts) that also generate and send extracts/reports via email.\n- The StockInformation reports run 3x daily per market (at staggered intervals to avoid overlap) across AE, EG, IQ, JO, MA, SA.\n- Several jobs use \"reportingJobPerformable\" (Java-based) instead of Groovy scripts. These are configured via Spring beans and generate reports using the Hybris reporting framework.\n- Two cronjobs have explicit email addresses configured: toko-GPV2-mena-ONE-TIME-orderGenerateSalesReportJob (genesis.joy.pineda@accenture.com) and toko-GPV2-mena-ONE-TIME-generatePricingInformationReportJob (kathlene.mae.basuel@accenture.com). All others send to distribution lists configured within the scripts themselves.\n- Inactive jobs (sendEmail=0 or active=0) were excluded from the list above except where noted. The complete DB query returned 35 extract-named cronjobs and 45 MENA-named cronjobs.\n\nKindly let me know if you need the exact email subject lines for any specific extract. I can open the corresponding Groovy scripts to retrieve those.\n\nRegards\n\nAryan\n\n## Remediation\n\nThis is an informational/audit request, not a technical issue requiring remediation. No platform bug or code defect was involved. The inventory above provides the complete list of MENA market extracts generated and sent via email.\n\nTicket URL: https://jira.secext.samsung.net/browse/MHME-1439",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-18T05:37:13.224Z"
       }
     },
     {
@@ -1108,7 +1108,58 @@
     "version": "v3",
     "lastResponseAt": "2026-10-13T04:14:48.790Z",
     "lastResponseIssue": 713,
-    "ideSessions": [],
+    "ideSessions": [
+      {
+        "pid": 19840,
+        "cwd": "c:\\users\\aryan.v1",
+        "ageSeconds": 111850,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "just run the normal script that will run on next launch",
+        "lastExchange": "just run the normal script that will run on next launch",
+        "sessionId": "aryan-v1"
+      },
+      {
+        "pid": 1572,
+        "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
+        "ageSeconds": 108258,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "``` $env:NO_PROXY=\"*\"; $env:no_proxy=\"*\"; $env:https_proxy=\"\"; $env:http_proxy=\"\"; $env:NODE_TLS_...",
+        "lastExchange": "```\n$env:NO_PROXY=\"*\"; $env:no_proxy=\"*\"; $env:https_proxy=\"\"; $env:http_proxy=\"\"; $env:NODE_TLS_REJECT_UNAUTHORIZED=\"0\"; Set-Location \"C:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin\"; node hac-groovy-prod.cjs script-SAHME-3357-mark-es-updated.txt\n```",
+        "sessionId": "bin"
+      },
+      {
+        "pid": 600,
+        "cwd": "c:\\windows",
+        "ageSeconds": 108253,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "windows",
+        "lastExchange": null,
+        "sessionId": "windows"
+      },
+      {
+        "pid": 25700,
+        "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
+        "ageSeconds": 98831,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "just run the normal script that will run on next launch",
+        "lastExchange": "just run the normal script that will run on next launch",
+        "sessionId": "aryan-v1-1"
+      },
+      {
+        "pid": 23676,
+        "cwd": "unknown",
+        "ageSeconds": 84862,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "aipro session",
+        "lastExchange": null,
+        "sessionId": null
+      }
+    ],
     "activityLog": [
       {
         "id": "1791864888803-hv4lst",
@@ -4481,17 +4532,17 @@
     "bridgeLogTail": "[2026-10-12T22:58:53.224Z] ==========================================\n[2026-10-12T22:58:53.226Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-12T22:58:53.227Z] === with Aipro Auto-Launch ===\n[2026-10-12T22:58:53.228Z] ==========================================\n[2026-10-12T22:58:53.228Z] PID: 5176\n[2026-10-12T22:58:53.229Z] Repo: aryanverma2410/agent-bridge\n[2026-10-12T22:58:53.229Z] Poll interval: 10000ms\n[2026-10-12T22:58:53.230Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-12T22:58:53.230Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-12T22:58:53.231Z] Waiting for messages...\n[2026-10-13T06:58:14.192Z] ==========================================\n[2026-10-13T06:58:14.195Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-13T06:58:14.196Z] === with Aipro Auto-Launch ===\n[2026-10-13T06:58:14.197Z] ==========================================\n[2026-10-13T06:58:14.198Z] PID: 1316\n[2026-10-13T06:58:14.199Z] Repo: aryanverma2410/agent-bridge\n[2026-10-13T06:58:14.200Z] Poll interval: 10000ms\n[2026-10-13T06:58:14.200Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-13T06:58:14.201Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-13T06:58:14.202Z] Waiting for messages...",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-14T11:28:26.410Z",
-      "ageMs": 952
+      "lastWrite": "2026-10-14T11:29:43.264Z",
+      "ageMs": 10858
     },
-    "watchdogLogTail": "[2026-10-14T11:25:14.838Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:25:29.844Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:25:44.854Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:26:21.392Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:26:36.397Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:26:51.400Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:27:06.411Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:28:01.401Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:28:16.416Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:28:32.546Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-14T11:25:44.854Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:26:21.392Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:26:36.397Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:26:51.400Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:27:06.411Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:28:01.401Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:28:16.416Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:28:32.546Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:28:47.558Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:29:43.260Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-14T11:27:55.648Z",
+      "lastCheck": "2026-10-14T11:29:35.601Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4500,7 +4551,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-14T11:27:55.648Z",
+      "lastCheck": "2026-10-14T11:29:35.601Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4509,9 +4560,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-14T11:27:55.648Z",
+      "lastCheck": "2026-10-14T11:29:35.601Z",
       "downSince": "2026-10-14T09:45:11.940Z",
-      "downDuration": 6163708,
+      "downDuration": 6263661,
       "alert": true
     }
   ],
@@ -4629,6 +4680,30 @@
         "statusChangedAt": "2026-10-09T18:07:10.311+0900"
       },
       {
+        "key": "TKME-2348",
+        "summary": "Stuck order on Hybris",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/TKME-2348",
+        "updated": "2026-10-14T20:29:24.000+0900",
+        "statusChangedAt": "2026-09-29T01:09:10.990+0900"
+      },
+      {
+        "key": "MHME-1439",
+        "summary": "SMI - List of MENA Extracts",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/MHME-1439",
+        "updated": "2026-10-14T20:29:23.000+0900",
+        "statusChangedAt": "2026-09-18T13:22:24.330+0900"
+      },
+      {
         "key": "AEME-6633",
         "summary": "Stuck order on Hybris",
         "priority": "None",
@@ -4651,30 +4726,6 @@
         "url": "https://jira.secext.samsung.net/browse/JHME-1818",
         "updated": "2026-10-14T19:33:39.000+0900",
         "statusChangedAt": "2026-10-14T18:05:34.842+0900"
-      },
-      {
-        "key": "TKME-2348",
-        "summary": "Stuck order on Hybris",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/TKME-2348",
-        "updated": "2026-10-12T23:28:06.000+0900",
-        "statusChangedAt": "2026-09-29T01:09:10.990+0900"
-      },
-      {
-        "key": "MHME-1439",
-        "summary": "SMI - List of MENA Extracts",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/MHME-1439",
-        "updated": "2026-10-05T14:40:29.000+0900",
-        "statusChangedAt": "2026-09-18T13:22:24.330+0900"
       },
       {
         "key": "GMT-21163",
@@ -4749,7 +4800,7 @@
         "reason": "Waiting for QA/review team",
         "whatToDo": "",
         "url": "https://jira.secext.samsung.net/browse/AEME-6527",
-        "updated": "2026-10-14T14:31:46.000+0900",
+        "updated": "2026-10-14T20:29:18.000+0900",
         "statusChangedAt": "2026-10-06T14:05:18.355+0900"
       },
       {
@@ -4797,7 +4848,7 @@
         "reason": "Waiting for QA/review team",
         "whatToDo": "",
         "url": "https://jira.secext.samsung.net/browse/SAHME-3449",
-        "updated": "2026-10-14T19:09:35.000+0900",
+        "updated": "2026-10-14T20:29:19.000+0900",
         "statusChangedAt": "2026-10-14T19:09:35.783+0900"
       },
       {
@@ -4821,7 +4872,7 @@
         "reason": "Waiting for QA/review team",
         "whatToDo": "",
         "url": "https://jira.secext.samsung.net/browse/TKME-2324",
-        "updated": "2026-10-09T19:12:12.000+0900",
+        "updated": "2026-10-14T20:29:22.000+0900",
         "statusChangedAt": "2026-09-23T21:27:31.640+0900"
       }
     ],
@@ -4843,12 +4894,12 @@
     }
   },
   "worklogTotals": {
-    "todayHours": 10.92,
-    "weekHours": 21.5,
+    "todayHours": 11.92,
+    "weekHours": 22.5,
     "dailyHours": [
       0,
       10.58,
-      10.92,
+      11.92,
       0,
       0,
       0,
@@ -4868,9 +4919,9 @@
   },
   "tempoApproval": {
     "status": "open",
-    "workedHours": 86.39,
+    "workedHours": 87.39,
     "requiredHours": 176,
-    "deficitHours": 89.61,
+    "deficitHours": 88.61,
     "periodStart": "2026-10-01",
     "periodEnd": "2026-10-31"
   },
@@ -4890,194 +4941,9 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": {
-    "byTicket": [
-      {
-        "key": "SAME-4016",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86398,
-        "targetDate": "2026-10-15T09:05:08.430000001Z"
-      },
-      {
-        "key": "SAME-4016",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2588405,
-        "targetDate": "2026-11-25T10:29:20.680000030Z"
-      },
-      {
-        "key": "SAHME-3357",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86400,
-        "targetDate": "2026-08-04T11:40:12.579000001Z"
-      },
-      {
-        "key": "SAHME-3357",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 426048,
-        "targetDate": "2026-10-21T09:50:04.163000057Z"
-      },
-      {
-        "key": "AEME-6548",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86062,
-        "targetDate": "2026-09-10T08:03:14.021000001Z"
-      },
-      {
-        "key": "AEME-6548",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1116493,
-        "targetDate": "2026-10-06T04:37:50.432000019Z"
-      },
-      {
-        "key": "JHME-1818",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86398,
-        "targetDate": "2026-10-15T09:05:33.743000001Z"
-      },
-      {
-        "key": "JHME-1818",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2586805,
-        "targetDate": "2026-11-25T11:02:41.664000030Z"
-      },
-      {
-        "key": "AEME-6633",
-        "slaName": "Shop app Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86398,
-        "targetDate": "2026-10-15T09:40:28.387000001Z"
-      },
-      {
-        "key": "AEME-6633",
-        "slaName": "Shop app Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2589745,
-        "targetDate": "2026-11-25T10:51:41.208000030Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86179,
-        "targetDate": "2026-09-30T08:16:57.595000001Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1269633,
-        "targetDate": "2026-10-20T08:16:57.595000015Z"
-      },
-      {
-        "key": "AEME-6582",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85811,
-        "targetDate": "2026-09-25T07:05:01.740000001Z"
-      },
-      {
-        "key": "AEME-6582",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1294922,
-        "targetDate": "2026-10-15T07:05:01.740000015Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86397,
-        "targetDate": "2026-09-29T16:09:08.750000001Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2342051,
-        "targetDate": "2026-11-20T14:03:27.584000039Z"
-      },
-      {
-        "key": "AEME-6527",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86020,
-        "targetDate": "2026-09-01T07:46:25.907000001Z"
-      },
-      {
-        "key": "AEME-6527",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 990365,
-        "targetDate": "2026-10-18T21:25:13.757000035Z"
-      },
-      {
-        "key": "SAHME-3449",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86398,
-        "targetDate": "2026-09-29T16:09:15.925000001Z"
-      },
-      {
-        "key": "SAHME-3449",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2328498,
-        "targetDate": "2026-11-20T11:17:34.382673650Z"
-      },
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86254,
-        "targetDate": "2026-09-21T04:19:58.710000001Z"
-      },
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1088721,
-        "targetDate": "2026-11-02T02:54:37.529000031Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85660,
-        "targetDate": "2026-09-15T08:21:25.088000001Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1211372,
-        "targetDate": "2026-10-13T12:51:05.986000021Z"
-      },
-      {
-        "key": "GMT-21163",
-        "slaName": "GMT Issue Response SLA(GMT+5.5)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85937,
-        "targetDate": "2026-09-17T08:08:38.502000001Z"
-      },
-      {
-        "key": "GMT-21163",
-        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
-        "slaStatus": "STILL",
-        "remainingDuration": 851962,
-        "targetDate": "2026-10-28T08:08:38.502000030Z"
-      }
-    ]
-  },
+  "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 0.58h on AEME-6602, 1h on AUTEU-41862, 0.75h on TKME-2368, 0.75h on AEME-6527, 1.33h on SAHME-3435, 1.33h on SAM-18530, 1.33h on GMT-22264, 2.5h on TKME-2349, 1h on PC-55360\nToday: RT-657502, SAME-4016, SAHME-3357, AEME-6633, JHME-1818\nBlockers: AEME-6548, AEME-6527, PC-53923"
+    "standupText": "Yesterday: 0.58h on AEME-6602, 1h on AUTEU-41862, 0.75h on TKME-2368, 0.75h on AEME-6527, 1.33h on SAHME-3435, 1.33h on SAM-18530, 1.33h on GMT-22264, 2.5h on TKME-2349, 1h on PC-55360\nToday: TKME-2348, MHME-1439, RT-657502, SAME-4016, SAHME-3357\nBlockers: AEME-6527, AEME-6548, PC-53923"
   }
 }
