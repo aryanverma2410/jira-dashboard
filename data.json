@@ -1,7 +1,129 @@
 {
-  "generatedAt": "2026-10-14T11:04:13.595Z",
+  "generatedAt": "2026-10-14T11:04:56.838Z",
   "totalTickets": 19,
   "tickets": [
+    {
+      "key": "AEME-6548",
+      "summary": "Stuck Order || 09-Sep",
+      "status": "QA Server Review",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "UAE Maintenance & Enhancements",
+      "projectKey": "AEME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-14T20:06:41.000+0900",
+      "created": "2026-09-09T17:03:11.000+0900",
+      "statusChangedAt": "2026-10-12T16:12:19.961+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team\n\n \n\nPlease fix the order below as it is stuck with Hybris. Kindly share the RCA as well\n\nAE260903-74755067 -CHECKED_INVALID\n\n \n\nThe payment authorization has been completed for the order below. Please capture and create the order with the below payment details.\n\n \n|Date|Request ID|Reference|",
+      "commentsCount": 9,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-14T20:06:41.117+0900",
+          "snippet": "Hi Dilip,\n\nRegarding the original Sep 6 timeline for AE260906-76717980, I checked the Kibana logs for the order and the database.\n\nThe order was created on Sep 6 at 06:04:41 UTC. The customer completed payment via Checkout.com GooglePay. On the Hybris side, the order was created as a temporary order"
+        },
+        {
+          "author": "Dilip Boddula",
+          "date": "2026-10-12T16:16:23.373+0900",
+          "snippet": "Dear ~@email \n\nThanks for sharing the detailed investigation. However, it is still not clear what happened on the day of the order where the customer completed payment. You mentioned that Hybris received the capture after the order moved to temporary_expired; however, the {}exact timing of the captu"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Dilip,\n\nRegarding the original Sep 6 timeline for AE260906-76717980, I checked the Kibana logs for the order and the database.\n\nThe order was created on Sep 6 at 06:04:41 UTC. The customer completed payment via Checkout.com GooglePay. On the Hybris side, the order was created as a temporary order",
+      "lastCommentDate": "2026-10-14T20:06:41.117+0900",
+      "url": "https://jira.secext.samsung.net/browse/AEME-6548",
+      "linkedTickets": [
+        {
+          "key": "PC-53917",
+          "summary": "AEME-6548 | Convert TEMPORARY_EXPIRED order AE260906-76717980_1 to normal order - GooglePay",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "is blocked by",
+          "assignee": null
+        },
+        {
+          "key": "AEME-6487",
+          "summary": "Stuck Order || 12-Aug",
+          "status": "RCA Requested",
+          "statusCategory": "In Progress",
+          "relation": "relates to",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "# RCA: AEME-6548\nStuck Order || 09-Sep\nGenerated: 2026-09-09T11:35:00.000Z\n\nHi Jaffar ,\n\nOrder AE260903-74755067 is stuck at CHECKED_INVALID status with both order process instances (order-process-v25-69) in FAILED state. The order was placed on 07 September 2026 at 10:42:13 UTC via Checkout.com flow on the AE store for a total of 2,564.10 AED. The payment was successfully authorised twice — two AUTHORIZATION PaymentTransactionEntry records both show ACCEPTED status for 2,564.10 AED at 10:43:15 and 14:43:15 respectively. The paymentInfo (CreditCardPaymentInfo PK 9448882667562) is present and correctly linked to the order and PaymentTransaction. The payment side is healthy.\n\nThe root cause is a NULL deliveryMode on the order header. The order entry (entry 0) has the delivery mode set to ae-mx-calendar-delivery (PK 8797993762856), but this was not propagated to the order header during checkout conversion. DefaultCheckOrderService.check() validates that order.getDeliveryMode() is non-null as one of its mandatory conditions. When this check fails, the order status is set to CHECKED_INVALID and the method returns false. The CheckOrderAction in order-process-v25-69 then returns NOK, but the process appears to loop at the checkOrder action 50+ times before eventually reaching FAILED state, likely due to additional custom Toko pre-validation logic that throws an unhandled exception when deliveryMode is null rather than cleanly returning NOK on each attempt.\n\nAdditionally, order.getPaymentStatus() is NULL and there is a malformed ExternalService entry linked to the order with all fields NULL (provider, status, serviceProduct, serviceID are all empty). This partially initialised external service record is a secondary anomaly that would cause further issues downstream at checkExternalEnabled if the process were to progress past checkOrder.\n\nNo consignments were ever created because the process never reached the splitOrder step. The order is stuck at CHECKED_INVALID with no fulfilment path.\n\nThis is the same pattern observed in SAME-3952 (September 2026, order SA260831-72577904) where a Checkout.com ApplePay order on the SA store had a NULL deliveryMode on the order header despite the order entry having the delivery mode set. That ticket was resolved by setting the order header deliveryMode from the order entry and restarting the order process. The same remediation approach applies here.\n\nThe remediation is to set the order header deliveryMode from the order entry (ae-mx-calendar-delivery), set the paymentStatus to PAID (since both AUTHORIZATION entries are ACCEPTED), clean up the malformed ExternalService entry, and restart the order process from checkOrder. This requires a Groovy script run via HAC.\n\nThis is the same remediation approach confirmed and successfully applied in SAME-3952.\n\nThanks,\n\nAryan.\n\n## Remediation\n\n1. Set order.deliveryMode from order entry (ae-mx-calendar-delivery, PK 8797993762856)\n2. Set order.paymentStatus to PAID\n3. Clean up the malformed ExternalService entry (all fields NULL)\n4. Set order.status back to CREATED\n5. Restart the order process (order-process-v25-69) from the beginning or from checkOrder action\n6. Reuse approach from SAME-3952 remediation\n\nNo reusable PC ticket was found for this specific remediation type. A new PC ticket may be needed if script execution is required.",
+        "sections": {
+          "issue": "",
+          "rca": "# RCA: AEME-6548\nStuck Order || 09-Sep\nGenerated: 2026-09-09T11:35:00.000Z\n\nHi Jaffar ,\n\nOrder AE260903-74755067 is stuck at CHECKED_INVALID status with both order process instances (order-process-v25-69) in FAILED state. The order was placed on 07 September 2026 at 10:42:13 UTC via Checkout.com flow on the AE store for a total of 2,564.10 AED. The payment was successfully authorised twice — two AUTHORIZATION PaymentTransactionEntry records both show ACCEPTED status for 2,564.10 AED at 10:43:15 and 14:43:15 respectively. The paymentInfo (CreditCardPaymentInfo PK 9448882667562) is present and correctly linked to the order and PaymentTransaction. The payment side is healthy.\n\nThe root cause is a NULL deliveryMode on the order header. The order entry (entry 0) has the delivery mode set to ae-mx-calendar-delivery (PK 8797993762856), but this was not propagated to the order header during checkout conversion. DefaultCheckOrderService.check() validates that order.getDeliveryMode() is non-null as one of its mandatory conditions. When this check fails, the order status is set to CHECKED_INVALID and the method returns false. The CheckOrderAction in order-process-v25-69 then returns NOK, but the process appears to loop at the checkOrder action 50+ times before eventually reaching FAILED state, likely due to additional custom Toko pre-validation logic that throws an unhandled exception when deliveryMode is null rather than cleanly returning NOK on each attempt.\n\nAdditionally, order.getPaymentStatus() is NULL and there is a malformed ExternalService entry linked to the order with all fields NULL (provider, status, serviceProduct, serviceID are all empty). This partially initialised external service record is a secondary anomaly that would cause further issues downstream at checkExternalEnabled if the process were to progress past checkOrder.\n\nNo consignments were ever created because the process never reached the splitOrder step. The order is stuck at CHECKED_INVALID with no fulfilment path.\n\nThis is the same pattern observed in SAME-3952 (September 2026, order SA260831-72577904) where a Checkout.com ApplePay order on the SA store had a NULL deliveryMode on the order header despite the order entry having the delivery mode set. That ticket was resolved by setting the order header deliveryMode from the order entry and restarting the order process. The same remediation approach applies here.\n\nThe remediation is to set the order header deliveryMode from the order entry (ae-mx-calendar-delivery), set the paymentStatus to PAID (since both AUTHORIZATION entries are ACCEPTED), clean up the malformed ExternalService entry, and restart the order process from checkOrder. This requires a Groovy script run via HAC.\n\nThis is the same remediation approach confirmed and successfully applied in SAME-3952.\n\nThanks,\n\nAryan.\n\n## Remediation\n\n1. Set order.deliveryMode from order entry (ae-mx-calendar-delivery, PK 8797993762856)\n2. Set order.paymentStatus to PAID\n3. Clean up the malformed ExternalService entry (all fields NULL)\n4. Set order.status back to CREATED\n5. Restart the order process (order-process-v25-69) from the beginning or from checkOrder action\n6. Reuse approach from SAME-3952 remediation\n\nNo reusable PC ticket was found for this specific remediation type. A new PC ticket may be needed if script execution is required.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-09T11:40:12.173Z"
+      }
+    },
+    {
+      "key": "SAHME-3357",
+      "summary": "SMC Errors-ProcessExternalServices",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "South Africa Maintenance & Enhancements",
+      "projectKey": "SAHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-14T20:06:40.000+0900",
+      "created": "2026-08-03T20:40:04.000+0900",
+      "statusChangedAt": "2026-08-03T20:40:12.579+0900",
+      "assignedToMeAt": "",
+      "description": "Hi ~@email \n\nCan you please help to check below orders that were errored at processExternalServices\n\n \n\nZA260730-45028831\n\nError Code: 400 HTTP Response : \\{\\n  \\\"message\\\" : \\\"UNSUPPORTED_DEVICE_MODEL\\\",\\n  \\\"code\\\" : \\\"USR-B1008\\\"\\n}\n\n \n\nZA260729-43785340\n\nError Code: 400 HTTP Response : \\{\\n  \\\"d",
+      "commentsCount": 25,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-14T20:06:40.966+0900",
+          "snippet": "Hi Nosipho, Suresh,\n\nThank you for confirming that the policy for ZA260730-45028831 was created manually by HQ. I will mark the ExternalService as UPDATED on our end to reflect this. No retrigger is needed since the policy already exists on the SMC side.\n\nZA260720-34285353 is still pending the custo"
+        },
+        {
+          "author": "Nosipho Mkhungo",
+          "date": "2026-10-09T23:05:52.533+0900",
+          "snippet": "~@email \n\n \n # Was the policy manually created on the SMC side (bypassing the API)? If yes, we will mark the ExternalService as UPDATED on our end to reflect this - no retrigger needed. This policy was created by HQ manually.\n\nKind Regards\n\nNosipho"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Nosipho, Suresh,\n\nThank you for confirming that the policy for ZA260730-45028831 was created manually by HQ. I will mark the ExternalService as UPDATED on our end to reflect this. No retrigger is needed since the policy already exists on the SMC side.\n\nZA260720-34285353 is still pending the custo",
+      "lastCommentDate": "2026-10-14T20:06:40.966+0900",
+      "url": "https://jira.secext.samsung.net/browse/SAHME-3357",
+      "linkedTickets": [
+        {
+          "key": "SAHME-3408",
+          "summary": "SMC Errors-ProcessExternalServices",
+          "status": "Launch Verification",
+          "statusCategory": "Done",
+          "relation": "is cloned by",
+          "assignee": null
+        },
+        {
+          "key": "GMT-18732",
+          "summary": "SMI - ZA | Samsung care + Orders in error status",
+          "status": "On-Hold",
+          "statusCategory": "Done",
+          "relation": "relates to",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "SMC Errors-ProcessExternalServices\r\nGenerated: 2026-09-03T22:45:00Z\r\n\r\nHi [~irish.o.antony.rajan@accenture.com] ,\r\n\r\nWe investigated the 14 orders reported with SMC (Samsung Care+) errors at the processExternalServices stage. 11 of the 14 ExternalService records are now in UPDATED status with statusMessage \"OK\", confirming that the SC+ policies are active for those orders. These were remediated after the Subs/SMC team completed the required device and product mappings.\r\n\r\nThree orders still have ExternalService in ERROR status:\r\n\r\nZA260730-45028831 (UNSUPPORTED_DEVICE_MODEL, USR-B1008):\r\nThe device model SM-A366BZKVAFA (Galaxy A36) is not yet mapped in the SMC system. The consignment process invokes ProcessExternalServicesOnConsignmentAction which calls SMCExternalServicesActivationImpl.processService(). This in turn calls SMCWebClient.executeRESTExchangeRequest() to POST the device activation request to the SMC API. The SMC API returns HTTP 400 with \"UNSUPPORTED_DEVICE_MODEL\", causing SMCWebClientResultFailedException. The exception is caught by callDeviceService() which returns false, and the ExternalService is moved to ERROR status. Kibana logs confirm 4 failed retry attempts between August 7 and August 21, all failing with the same error. Kindly confirm with the Subs/SMC team once the A36 device mapping is completed so we can reset and retrigger.\r\n\r\nZA260720-34285353 (INVALID_REQUEST_PARAMETERS, USR-A0002):\r\nThe SMC API rejected the request with \"South Africa Identity Book is invalid\". The ExternalService statusMessage was not persisted in this case. The same code path applies: processService() -> callDeviceService() -> SMCWebClientResultFailedException on HTTP 400. The root cause is an invalid identity document or request parameter submitted during checkout. Kindly confirm with the Subs/SMC team whether the identity document or request parameter issue has been resolved so we can reset and retrigger.\r\n\r\nZA260818-62782020 (NOT_EXISTS_PRODUCT_ID, USR-A1002):\r\nThe product ID SMC-ZA-MOB-24-1-35 was not valid in the SMC system. Kibana logs show the ExternalService was created at checkout on 2026-08-18 and the SMC API returned HTTP 400 with \"the product id is not valid\". The ExternalService was moved to ERROR status via the same SMCWebClientResultFailedException path. Kindly confirm with the Subs/SMC team once this product ID is mapped so we can reset and retrigger.\r\n\r\nThis is not a Hybris platform issue. The root cause is on the SMC/Subs side for all three remaining orders -- device model mapping (A36), identity document validation, and product ID mapping respectively. The Hybris code correctly handles these rejections: ProcessExternalServicesOnConsignmentAction invokes the SMC API via SMCExternalServicesActivationImpl, and when the API returns a non-200 response, SMCWebClientResultFailedException is thrown and ExternalService is set to ERROR.\r\n\r\nThis is the same cluster of orders tracked under GMT-18732 (SMI - ZA | Samsung care+ Orders in error status).\r\n\r\nRegards\r\n\r\nAryan\r\n\r\n## Remediation\r\nReuse PC-52678 (Closed, REUSABLE) for SC+ reset. Once the Subs/SMC team confirms the required mappings are completed:\r\n1. Reset ExternalService status from ERROR to NEW for each affected order\r\n2. Re-invoke processExternalServicesOnConsignmentAction.executeAction(consignmentProcess) to retrigger the SMC API call\r\n3. The existing script script-AEME-6495-scplus-remediation.groovy under PC-52678 can be copied and updated with the new order list\r\n\r\nPre-conditions: secondGI must be valid (non-blank) for each consignment before retrigger. The 11 already-resolved orders do not need any further action.",
+        "sections": {
+          "issue": "",
+          "rca": "SMC Errors-ProcessExternalServices\r\nGenerated: 2026-09-03T22:45:00Z\r\n\r\nHi [~irish.o.antony.rajan@accenture.com] ,\r\n\r\nWe investigated the 14 orders reported with SMC (Samsung Care+) errors at the processExternalServices stage. 11 of the 14 ExternalService records are now in UPDATED status with statusMessage \"OK\", confirming that the SC+ policies are active for those orders. These were remediated after the Subs/SMC team completed the required device and product mappings.\r\n\r\nThree orders still have ExternalService in ERROR status:\r\n\r\nZA260730-45028831 (UNSUPPORTED_DEVICE_MODEL, USR-B1008):\r\nThe device model SM-A366BZKVAFA (Galaxy A36) is not yet mapped in the SMC system. The consignment process invokes ProcessExternalServicesOnConsignmentAction which calls SMCExternalServicesActivationImpl.processService(). This in turn calls SMCWebClient.executeRESTExchangeRequest() to POST the device activation request to the SMC API. The SMC API returns HTTP 400 with \"UNSUPPORTED_DEVICE_MODEL\", causing SMCWebClientResultFailedException. The exception is caught by callDeviceService() which returns false, and the ExternalService is moved to ERROR status. Kibana logs confirm 4 failed retry attempts between August 7 and August 21, all failing with the same error. Kindly confirm with the Subs/SMC team once the A36 device mapping is completed so we can reset and retrigger.\r\n\r\nZA260720-34285353 (INVALID_REQUEST_PARAMETERS, USR-A0002):\r\nThe SMC API rejected the request with \"South Africa Identity Book is invalid\". The ExternalService statusMessage was not persisted in this case. The same code path applies: processService() -> callDeviceService() -> SMCWebClientResultFailedException on HTTP 400. The root cause is an invalid identity document or request parameter submitted during checkout. Kindly confirm with the Subs/SMC team whether the identity document or request parameter issue has been resolved so we can reset and retrigger.\r\n\r\nZA260818-62782020 (NOT_EXISTS_PRODUCT_ID, USR-A1002):\r\nThe product ID SMC-ZA-MOB-24-1-35 was not valid in the SMC system. Kibana logs show the ExternalService was created at checkout on 2026-08-18 and the SMC API returned HTTP 400 with \"the product id is not valid\". The ExternalService was moved to ERROR status via the same SMCWebClientResultFailedException path. Kindly confirm with the Subs/SMC team once this product ID is mapped so we can reset and retrigger.\r\n\r\nThis is not a Hybris platform issue. The root cause is on the SMC/Subs side for all three remaining orders -- device model mapping (A36), identity document validation, and product ID mapping respectively. The Hybris code correctly handles these rejections: ProcessExternalServicesOnConsignmentAction invokes the SMC API via SMCExternalServicesActivationImpl, and when the API returns a non-200 response, SMCWebClientResultFailedException is thrown and ExternalService is set to ERROR.\r\n\r\nThis is the same cluster of orders tracked under GMT-18732 (SMI - ZA | Samsung care+ Orders in error status).\r\n\r\nRegards\r\n\r\nAryan\r\n\r\n## Remediation\r\nReuse PC-52678 (Closed, REUSABLE) for SC+ reset. Once the Subs/SMC team confirms the required mappings are completed:\r\n1. Reset ExternalService status from ERROR to NEW for each affected order\r\n2. Re-invoke processExternalServicesOnConsignmentAction.executeAction(consignmentProcess) to retrigger the SMC API call\r\n3. The existing script script-AEME-6495-scplus-remediation.groovy under PC-52678 can be copied and updated with the new order list\r\n\r\nPre-conditions: secondGI must be valid (non-blank) for each consignment before retrigger. The 11 already-resolved orders do not need any further action.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-03T13:45:10.016Z"
+      }
+    },
     {
       "key": "AEME-6633",
       "summary": "Stuck order on Hybris",
@@ -324,67 +446,6 @@
       }
     },
     {
-      "key": "AEME-6548",
-      "summary": "Stuck Order || 09-Sep",
-      "status": "QA Server Review",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-13T16:46:33.000+0900",
-      "created": "2026-09-09T17:03:11.000+0900",
-      "statusChangedAt": "2026-10-12T16:12:19.961+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team\n\n \n\nPlease fix the order below as it is stuck with Hybris. Kindly share the RCA as well\n\nAE260903-74755067 -CHECKED_INVALID\n\n \n\nThe payment authorization has been completed for the order below. Please capture and create the order with the below payment details.\n\n \n|Date|Request ID|Reference|",
-      "commentsCount": 8,
-      "recentComments": [
-        {
-          "author": "Dilip Boddula",
-          "date": "2026-10-12T16:16:23.373+0900",
-          "snippet": "Dear ~@email \n\nThanks for sharing the detailed investigation. However, it is still not clear what happened on the day of the order where the customer completed payment. You mentioned that Hybris received the capture after the order moved to temporary_expired; however, the {}exact timing of the captu"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-06T20:48:48.357+0900",
-          "snippet": "Hi Dilip,\n\nWe checked the payment transaction entries for AE260906-76717980 on the PROD database. Here are the findings.\n\n\norderCode          | entryType      | txStatus  | reqId                             | amount  | entryTime\n-----------------------------------------------------------------------"
-        }
-      ],
-      "lastCommentBy": "Dilip Boddula",
-      "lastCommentSnippet": "Dear ~@email \n\nThanks for sharing the detailed investigation. However, it is still not clear what happened on the day of the order where the customer completed payment. You mentioned that Hybris received the capture after the order moved to temporary_expired; however, the {}exact timing of the captu",
-      "lastCommentDate": "2026-10-12T16:16:23.373+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6548",
-      "linkedTickets": [
-        {
-          "key": "PC-53917",
-          "summary": "AEME-6548 | Convert TEMPORARY_EXPIRED order AE260906-76717980_1 to normal order - GooglePay",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "is blocked by",
-          "assignee": null
-        },
-        {
-          "key": "AEME-6487",
-          "summary": "Stuck Order || 12-Aug",
-          "status": "RCA Requested",
-          "statusCategory": "In Progress",
-          "relation": "relates to",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: AEME-6548\nStuck Order || 09-Sep\nGenerated: 2026-09-09T11:35:00.000Z\n\nHi Jaffar ,\n\nOrder AE260903-74755067 is stuck at CHECKED_INVALID status with both order process instances (order-process-v25-69) in FAILED state. The order was placed on 07 September 2026 at 10:42:13 UTC via Checkout.com flow on the AE store for a total of 2,564.10 AED. The payment was successfully authorised twice — two AUTHORIZATION PaymentTransactionEntry records both show ACCEPTED status for 2,564.10 AED at 10:43:15 and 14:43:15 respectively. The paymentInfo (CreditCardPaymentInfo PK 9448882667562) is present and correctly linked to the order and PaymentTransaction. The payment side is healthy.\n\nThe root cause is a NULL deliveryMode on the order header. The order entry (entry 0) has the delivery mode set to ae-mx-calendar-delivery (PK 8797993762856), but this was not propagated to the order header during checkout conversion. DefaultCheckOrderService.check() validates that order.getDeliveryMode() is non-null as one of its mandatory conditions. When this check fails, the order status is set to CHECKED_INVALID and the method returns false. The CheckOrderAction in order-process-v25-69 then returns NOK, but the process appears to loop at the checkOrder action 50+ times before eventually reaching FAILED state, likely due to additional custom Toko pre-validation logic that throws an unhandled exception when deliveryMode is null rather than cleanly returning NOK on each attempt.\n\nAdditionally, order.getPaymentStatus() is NULL and there is a malformed ExternalService entry linked to the order with all fields NULL (provider, status, serviceProduct, serviceID are all empty). This partially initialised external service record is a secondary anomaly that would cause further issues downstream at checkExternalEnabled if the process were to progress past checkOrder.\n\nNo consignments were ever created because the process never reached the splitOrder step. The order is stuck at CHECKED_INVALID with no fulfilment path.\n\nThis is the same pattern observed in SAME-3952 (September 2026, order SA260831-72577904) where a Checkout.com ApplePay order on the SA store had a NULL deliveryMode on the order header despite the order entry having the delivery mode set. That ticket was resolved by setting the order header deliveryMode from the order entry and restarting the order process. The same remediation approach applies here.\n\nThe remediation is to set the order header deliveryMode from the order entry (ae-mx-calendar-delivery), set the paymentStatus to PAID (since both AUTHORIZATION entries are ACCEPTED), clean up the malformed ExternalService entry, and restart the order process from checkOrder. This requires a Groovy script run via HAC.\n\nThis is the same remediation approach confirmed and successfully applied in SAME-3952.\n\nThanks,\n\nAryan.\n\n## Remediation\n\n1. Set order.deliveryMode from order entry (ae-mx-calendar-delivery, PK 8797993762856)\n2. Set order.paymentStatus to PAID\n3. Clean up the malformed ExternalService entry (all fields NULL)\n4. Set order.status back to CREATED\n5. Restart the order process (order-process-v25-69) from the beginning or from checkOrder action\n6. Reuse approach from SAME-3952 remediation\n\nNo reusable PC ticket was found for this specific remediation type. A new PC ticket may be needed if script execution is required.",
-        "sections": {
-          "issue": "",
-          "rca": "# RCA: AEME-6548\nStuck Order || 09-Sep\nGenerated: 2026-09-09T11:35:00.000Z\n\nHi Jaffar ,\n\nOrder AE260903-74755067 is stuck at CHECKED_INVALID status with both order process instances (order-process-v25-69) in FAILED state. The order was placed on 07 September 2026 at 10:42:13 UTC via Checkout.com flow on the AE store for a total of 2,564.10 AED. The payment was successfully authorised twice — two AUTHORIZATION PaymentTransactionEntry records both show ACCEPTED status for 2,564.10 AED at 10:43:15 and 14:43:15 respectively. The paymentInfo (CreditCardPaymentInfo PK 9448882667562) is present and correctly linked to the order and PaymentTransaction. The payment side is healthy.\n\nThe root cause is a NULL deliveryMode on the order header. The order entry (entry 0) has the delivery mode set to ae-mx-calendar-delivery (PK 8797993762856), but this was not propagated to the order header during checkout conversion. DefaultCheckOrderService.check() validates that order.getDeliveryMode() is non-null as one of its mandatory conditions. When this check fails, the order status is set to CHECKED_INVALID and the method returns false. The CheckOrderAction in order-process-v25-69 then returns NOK, but the process appears to loop at the checkOrder action 50+ times before eventually reaching FAILED state, likely due to additional custom Toko pre-validation logic that throws an unhandled exception when deliveryMode is null rather than cleanly returning NOK on each attempt.\n\nAdditionally, order.getPaymentStatus() is NULL and there is a malformed ExternalService entry linked to the order with all fields NULL (provider, status, serviceProduct, serviceID are all empty). This partially initialised external service record is a secondary anomaly that would cause further issues downstream at checkExternalEnabled if the process were to progress past checkOrder.\n\nNo consignments were ever created because the process never reached the splitOrder step. The order is stuck at CHECKED_INVALID with no fulfilment path.\n\nThis is the same pattern observed in SAME-3952 (September 2026, order SA260831-72577904) where a Checkout.com ApplePay order on the SA store had a NULL deliveryMode on the order header despite the order entry having the delivery mode set. That ticket was resolved by setting the order header deliveryMode from the order entry and restarting the order process. The same remediation approach applies here.\n\nThe remediation is to set the order header deliveryMode from the order entry (ae-mx-calendar-delivery), set the paymentStatus to PAID (since both AUTHORIZATION entries are ACCEPTED), clean up the malformed ExternalService entry, and restart the order process from checkOrder. This requires a Groovy script run via HAC.\n\nThis is the same remediation approach confirmed and successfully applied in SAME-3952.\n\nThanks,\n\nAryan.\n\n## Remediation\n\n1. Set order.deliveryMode from order entry (ae-mx-calendar-delivery, PK 8797993762856)\n2. Set order.paymentStatus to PAID\n3. Clean up the malformed ExternalService entry (all fields NULL)\n4. Set order.status back to CREATED\n5. Restart the order process (order-process-v25-69) from the beginning or from checkOrder action\n6. Reuse approach from SAME-3952 remediation\n\nNo reusable PC ticket was found for this specific remediation type. A new PC ticket may be needed if script execution is required.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-09T11:40:12.173Z"
-      }
-    },
-    {
       "key": "TKME-2348",
       "summary": "Stuck order on Hybris",
       "status": "In Progress",
@@ -519,67 +580,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-10-08T09:47:19.525Z"
-      }
-    },
-    {
-      "key": "SAHME-3357",
-      "summary": "SMC Errors-ProcessExternalServices",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "South Africa Maintenance & Enhancements",
-      "projectKey": "SAHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-09T23:06:23.000+0900",
-      "created": "2026-08-03T20:40:04.000+0900",
-      "statusChangedAt": "2026-08-03T20:40:12.579+0900",
-      "assignedToMeAt": "",
-      "description": "Hi ~@email \n\nCan you please help to check below orders that were errored at processExternalServices\n\n \n\nZA260730-45028831\n\nError Code: 400 HTTP Response : \\{\\n  \\\"message\\\" : \\\"UNSUPPORTED_DEVICE_MODEL\\\",\\n  \\\"code\\\" : \\\"USR-B1008\\\"\\n}\n\n \n\nZA260729-43785340\n\nError Code: 400 HTTP Response : \\{\\n  \\\"d",
-      "commentsCount": 24,
-      "recentComments": [
-        {
-          "author": "Nosipho Mkhungo",
-          "date": "2026-10-09T23:05:52.533+0900",
-          "snippet": "~@email \n\n \n # Was the policy manually created on the SMC side (bypassing the API)? If yes, we will mark the ExternalService as UPDATED on our end to reflect this - no retrigger needed. This policy was created by HQ manually.\n\nKind Regards\n\nNosipho"
-        },
-        {
-          "author": "Suresh Ganesula",
-          "date": "2026-10-09T20:11:35.710+0900",
-          "snippet": "Hi ~@email Please check below comment from Aryan and let us know since we are having GMT ticket as well reported for same order.\n\n[Jira Link] \n\ncc: ~@email ~@email"
-        }
-      ],
-      "lastCommentBy": "Nosipho Mkhungo",
-      "lastCommentSnippet": "~@email \n\n \n # Was the policy manually created on the SMC side (bypassing the API)? If yes, we will mark the ExternalService as UPDATED on our end to reflect this - no retrigger needed. This policy was created by HQ manually.\n\nKind Regards\n\nNosipho",
-      "lastCommentDate": "2026-10-09T23:05:52.533+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAHME-3357",
-      "linkedTickets": [
-        {
-          "key": "SAHME-3408",
-          "summary": "SMC Errors-ProcessExternalServices",
-          "status": "Launch Verification",
-          "statusCategory": "Done",
-          "relation": "is cloned by",
-          "assignee": null
-        },
-        {
-          "key": "GMT-18732",
-          "summary": "SMI - ZA | Samsung care + Orders in error status",
-          "status": "On-Hold",
-          "statusCategory": "Done",
-          "relation": "relates to",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "SMC Errors-ProcessExternalServices\r\nGenerated: 2026-09-03T22:45:00Z\r\n\r\nHi [~irish.o.antony.rajan@accenture.com] ,\r\n\r\nWe investigated the 14 orders reported with SMC (Samsung Care+) errors at the processExternalServices stage. 11 of the 14 ExternalService records are now in UPDATED status with statusMessage \"OK\", confirming that the SC+ policies are active for those orders. These were remediated after the Subs/SMC team completed the required device and product mappings.\r\n\r\nThree orders still have ExternalService in ERROR status:\r\n\r\nZA260730-45028831 (UNSUPPORTED_DEVICE_MODEL, USR-B1008):\r\nThe device model SM-A366BZKVAFA (Galaxy A36) is not yet mapped in the SMC system. The consignment process invokes ProcessExternalServicesOnConsignmentAction which calls SMCExternalServicesActivationImpl.processService(). This in turn calls SMCWebClient.executeRESTExchangeRequest() to POST the device activation request to the SMC API. The SMC API returns HTTP 400 with \"UNSUPPORTED_DEVICE_MODEL\", causing SMCWebClientResultFailedException. The exception is caught by callDeviceService() which returns false, and the ExternalService is moved to ERROR status. Kibana logs confirm 4 failed retry attempts between August 7 and August 21, all failing with the same error. Kindly confirm with the Subs/SMC team once the A36 device mapping is completed so we can reset and retrigger.\r\n\r\nZA260720-34285353 (INVALID_REQUEST_PARAMETERS, USR-A0002):\r\nThe SMC API rejected the request with \"South Africa Identity Book is invalid\". The ExternalService statusMessage was not persisted in this case. The same code path applies: processService() -> callDeviceService() -> SMCWebClientResultFailedException on HTTP 400. The root cause is an invalid identity document or request parameter submitted during checkout. Kindly confirm with the Subs/SMC team whether the identity document or request parameter issue has been resolved so we can reset and retrigger.\r\n\r\nZA260818-62782020 (NOT_EXISTS_PRODUCT_ID, USR-A1002):\r\nThe product ID SMC-ZA-MOB-24-1-35 was not valid in the SMC system. Kibana logs show the ExternalService was created at checkout on 2026-08-18 and the SMC API returned HTTP 400 with \"the product id is not valid\". The ExternalService was moved to ERROR status via the same SMCWebClientResultFailedException path. Kindly confirm with the Subs/SMC team once this product ID is mapped so we can reset and retrigger.\r\n\r\nThis is not a Hybris platform issue. The root cause is on the SMC/Subs side for all three remaining orders -- device model mapping (A36), identity document validation, and product ID mapping respectively. The Hybris code correctly handles these rejections: ProcessExternalServicesOnConsignmentAction invokes the SMC API via SMCExternalServicesActivationImpl, and when the API returns a non-200 response, SMCWebClientResultFailedException is thrown and ExternalService is set to ERROR.\r\n\r\nThis is the same cluster of orders tracked under GMT-18732 (SMI - ZA | Samsung care+ Orders in error status).\r\n\r\nRegards\r\n\r\nAryan\r\n\r\n## Remediation\r\nReuse PC-52678 (Closed, REUSABLE) for SC+ reset. Once the Subs/SMC team confirms the required mappings are completed:\r\n1. Reset ExternalService status from ERROR to NEW for each affected order\r\n2. Re-invoke processExternalServicesOnConsignmentAction.executeAction(consignmentProcess) to retrigger the SMC API call\r\n3. The existing script script-AEME-6495-scplus-remediation.groovy under PC-52678 can be copied and updated with the new order list\r\n\r\nPre-conditions: secondGI must be valid (non-blank) for each consignment before retrigger. The 11 already-resolved orders do not need any further action.",
-        "sections": {
-          "issue": "",
-          "rca": "SMC Errors-ProcessExternalServices\r\nGenerated: 2026-09-03T22:45:00Z\r\n\r\nHi [~irish.o.antony.rajan@accenture.com] ,\r\n\r\nWe investigated the 14 orders reported with SMC (Samsung Care+) errors at the processExternalServices stage. 11 of the 14 ExternalService records are now in UPDATED status with statusMessage \"OK\", confirming that the SC+ policies are active for those orders. These were remediated after the Subs/SMC team completed the required device and product mappings.\r\n\r\nThree orders still have ExternalService in ERROR status:\r\n\r\nZA260730-45028831 (UNSUPPORTED_DEVICE_MODEL, USR-B1008):\r\nThe device model SM-A366BZKVAFA (Galaxy A36) is not yet mapped in the SMC system. The consignment process invokes ProcessExternalServicesOnConsignmentAction which calls SMCExternalServicesActivationImpl.processService(). This in turn calls SMCWebClient.executeRESTExchangeRequest() to POST the device activation request to the SMC API. The SMC API returns HTTP 400 with \"UNSUPPORTED_DEVICE_MODEL\", causing SMCWebClientResultFailedException. The exception is caught by callDeviceService() which returns false, and the ExternalService is moved to ERROR status. Kibana logs confirm 4 failed retry attempts between August 7 and August 21, all failing with the same error. Kindly confirm with the Subs/SMC team once the A36 device mapping is completed so we can reset and retrigger.\r\n\r\nZA260720-34285353 (INVALID_REQUEST_PARAMETERS, USR-A0002):\r\nThe SMC API rejected the request with \"South Africa Identity Book is invalid\". The ExternalService statusMessage was not persisted in this case. The same code path applies: processService() -> callDeviceService() -> SMCWebClientResultFailedException on HTTP 400. The root cause is an invalid identity document or request parameter submitted during checkout. Kindly confirm with the Subs/SMC team whether the identity document or request parameter issue has been resolved so we can reset and retrigger.\r\n\r\nZA260818-62782020 (NOT_EXISTS_PRODUCT_ID, USR-A1002):\r\nThe product ID SMC-ZA-MOB-24-1-35 was not valid in the SMC system. Kibana logs show the ExternalService was created at checkout on 2026-08-18 and the SMC API returned HTTP 400 with \"the product id is not valid\". The ExternalService was moved to ERROR status via the same SMCWebClientResultFailedException path. Kindly confirm with the Subs/SMC team once this product ID is mapped so we can reset and retrigger.\r\n\r\nThis is not a Hybris platform issue. The root cause is on the SMC/Subs side for all three remaining orders -- device model mapping (A36), identity document validation, and product ID mapping respectively. The Hybris code correctly handles these rejections: ProcessExternalServicesOnConsignmentAction invokes the SMC API via SMCExternalServicesActivationImpl, and when the API returns a non-200 response, SMCWebClientResultFailedException is thrown and ExternalService is set to ERROR.\r\n\r\nThis is the same cluster of orders tracked under GMT-18732 (SMI - ZA | Samsung care+ Orders in error status).\r\n\r\nRegards\r\n\r\nAryan\r\n\r\n## Remediation\r\nReuse PC-52678 (Closed, REUSABLE) for SC+ reset. Once the Subs/SMC team confirms the required mappings are completed:\r\n1. Reset ExternalService status from ERROR to NEW for each affected order\r\n2. Re-invoke processExternalServicesOnConsignmentAction.executeAction(consignmentProcess) to retrigger the SMC API call\r\n3. The existing script script-AEME-6495-scplus-remediation.groovy under PC-52678 can be copied and updated with the new order list\r\n\r\nPre-conditions: secondGI must be valid (non-blank) for each consignment before retrigger. The 11 already-resolved orders do not need any further action.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-03T13:45:10.016Z"
       }
     },
     {
@@ -1141,7 +1141,7 @@
       {
         "pid": 19840,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 110302,
+        "ageSeconds": 110345,
         "status": "running",
         "isChild": false,
         "taskSummary": "just run the normal script that will run on next launch",
@@ -1151,7 +1151,7 @@
       {
         "pid": 1572,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 106709,
+        "ageSeconds": 106753,
         "status": "running",
         "isChild": false,
         "taskSummary": "remove \" > What we can confirm from the database: > - Order creation time: 2026-09-06 06:04:41 UT...",
@@ -1161,7 +1161,7 @@
       {
         "pid": 600,
         "cwd": "c:\\windows",
-        "ageSeconds": 106705,
+        "ageSeconds": 106749,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1171,7 +1171,7 @@
       {
         "pid": 25700,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 97283,
+        "ageSeconds": 97326,
         "status": "running",
         "isChild": false,
         "taskSummary": "just run the normal script that will run on next launch",
@@ -1181,7 +1181,7 @@
       {
         "pid": 23676,
         "cwd": "unknown",
-        "ageSeconds": 83314,
+        "ageSeconds": 83357,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -4561,17 +4561,17 @@
     "bridgeLogTail": "[2026-10-12T22:58:53.224Z] ==========================================\n[2026-10-12T22:58:53.226Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-12T22:58:53.227Z] === with Aipro Auto-Launch ===\n[2026-10-12T22:58:53.228Z] ==========================================\n[2026-10-12T22:58:53.228Z] PID: 5176\n[2026-10-12T22:58:53.229Z] Repo: aryanverma2410/agent-bridge\n[2026-10-12T22:58:53.229Z] Poll interval: 10000ms\n[2026-10-12T22:58:53.230Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-12T22:58:53.230Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-12T22:58:53.231Z] Waiting for messages...\n[2026-10-13T06:58:14.192Z] ==========================================\n[2026-10-13T06:58:14.195Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-13T06:58:14.196Z] === with Aipro Auto-Launch ===\n[2026-10-13T06:58:14.197Z] ==========================================\n[2026-10-13T06:58:14.198Z] PID: 1316\n[2026-10-13T06:58:14.199Z] Repo: aryanverma2410/agent-bridge\n[2026-10-13T06:58:14.200Z] Poll interval: 10000ms\n[2026-10-13T06:58:14.200Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-13T06:58:14.201Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-13T06:58:14.202Z] Waiting for messages...",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-14T11:04:03.817Z",
-      "ageMs": 12280
+      "lastWrite": "2026-10-14T11:04:48.837Z",
+      "ageMs": 12318
     },
-    "watchdogLogTail": "[2026-10-14T11:01:48.737Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:02:03.752Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:02:18.761Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:02:33.773Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:02:48.778Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:03:03.785Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:03:18.788Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:03:33.796Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:03:48.812Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:04:03.816Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-14T11:02:33.773Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:02:48.778Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:03:03.785Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:03:18.788Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:03:33.796Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:03:48.812Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:04:03.816Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:04:18.819Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:04:33.824Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:04:48.836Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-14T11:03:41.527Z",
+      "lastCheck": "2026-10-14T11:04:41.570Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4580,7 +4580,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-14T11:03:41.527Z",
+      "lastCheck": "2026-10-14T11:04:41.570Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4589,9 +4589,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-14T11:03:41.527Z",
+      "lastCheck": "2026-10-14T11:04:41.570Z",
       "downSince": "2026-10-14T09:45:11.940Z",
-      "downDuration": 4709587,
+      "downDuration": 4769630,
       "alert": true
     }
   ],
@@ -4757,18 +4757,6 @@
         "statusChangedAt": "2026-09-29T01:09:10.990+0900"
       },
       {
-        "key": "SAHME-3357",
-        "summary": "SMC Errors-ProcessExternalServices",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/SAHME-3357",
-        "updated": "2026-10-09T23:06:23.000+0900",
-        "statusChangedAt": "2026-08-03T20:40:12.579+0900"
-      },
-      {
         "key": "MHME-1439",
         "summary": "SMI - List of MENA Extracts",
         "priority": "None",
@@ -4853,7 +4841,7 @@
         "reason": "Waiting for QA/review team",
         "whatToDo": "",
         "url": "https://jira.secext.samsung.net/browse/AEME-6548",
-        "updated": "2026-10-13T16:46:33.000+0900",
+        "updated": "2026-10-14T20:06:41.000+0900",
         "statusChangedAt": "2026-10-12T16:12:19.961+0900"
       },
       {
@@ -4879,6 +4867,18 @@
         "url": "https://jira.secext.samsung.net/browse/PC-55443",
         "updated": "2026-10-14T19:08:58.000+0900",
         "statusChangedAt": ""
+      },
+      {
+        "key": "SAHME-3357",
+        "summary": "SMC Errors-ProcessExternalServices",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "blocked",
+        "reason": "Waiting for dev lead to respond",
+        "whatToDo": "",
+        "url": "https://jira.secext.samsung.net/browse/SAHME-3357",
+        "updated": "2026-10-14T20:06:40.000+0900",
+        "statusChangedAt": "2026-08-03T20:40:12.579+0900"
       },
       {
         "key": "SAHME-3449",
@@ -4928,9 +4928,9 @@
       }
     ],
     "totals": {
-      "zero": 9,
+      "zero": 8,
       "actionable": 2,
-      "blocked": 7,
+      "blocked": 8,
       "queued": 1
     }
   },
@@ -4982,194 +4982,9 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": {
-    "byTicket": [
-      {
-        "key": "JHME-1818",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86398,
-        "targetDate": "2026-10-15T09:05:33.743000001Z"
-      },
-      {
-        "key": "JHME-1818",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2588189,
-        "targetDate": "2026-11-25T11:02:41.664000030Z"
-      },
-      {
-        "key": "AEME-6633",
-        "slaName": "Shop app Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86398,
-        "targetDate": "2026-10-15T09:40:28.387000001Z"
-      },
-      {
-        "key": "AEME-6633",
-        "slaName": "Shop app Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2591128,
-        "targetDate": "2026-11-25T10:51:41.208000030Z"
-      },
-      {
-        "key": "AEME-6582",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85811,
-        "targetDate": "2026-09-25T07:05:01.740000001Z"
-      },
-      {
-        "key": "AEME-6582",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1294922,
-        "targetDate": "2026-10-15T07:05:01.740000015Z"
-      },
-      {
-        "key": "AEME-6527",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86020,
-        "targetDate": "2026-09-01T07:46:25.907000001Z"
-      },
-      {
-        "key": "AEME-6527",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 990365,
-        "targetDate": "2026-10-18T21:25:13.757000035Z"
-      },
-      {
-        "key": "GMT-21163",
-        "slaName": "GMT Issue Response SLA(GMT+5.5)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85937,
-        "targetDate": "2026-09-17T08:08:38.502000001Z"
-      },
-      {
-        "key": "GMT-21163",
-        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
-        "slaStatus": "STILL",
-        "remainingDuration": 853345,
-        "targetDate": "2026-10-28T08:08:38.502000030Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86179,
-        "targetDate": "2026-09-30T08:16:57.595000001Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1269633,
-        "targetDate": "2026-10-20T08:16:57.595000015Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86397,
-        "targetDate": "2026-09-29T16:09:08.750000001Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2343435,
-        "targetDate": "2026-11-20T14:03:27.584000039Z"
-      },
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86254,
-        "targetDate": "2026-09-21T04:19:58.710000001Z"
-      },
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1090104,
-        "targetDate": "2026-11-02T02:54:37.529000031Z"
-      },
-      {
-        "key": "SAHME-3449",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86398,
-        "targetDate": "2026-09-29T16:09:15.925000001Z"
-      },
-      {
-        "key": "SAHME-3449",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2328498,
-        "targetDate": "2026-11-20T10:54:31.401240684Z"
-      },
-      {
-        "key": "SAHME-3357",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86400,
-        "targetDate": "2026-08-04T11:40:12.579000001Z"
-      },
-      {
-        "key": "SAHME-3357",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 427431,
-        "targetDate": "2026-10-21T09:50:04.163000057Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85660,
-        "targetDate": "2026-09-15T08:21:25.088000001Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1211372,
-        "targetDate": "2026-10-13T12:51:05.986000021Z"
-      },
-      {
-        "key": "SAHME-3473",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86367,
-        "targetDate": "2026-10-14T12:20:13.850000001Z"
-      },
-      {
-        "key": "SAHME-3473",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 350041,
-        "targetDate": "2026-10-20T12:20:13.850000005Z"
-      },
-      {
-        "key": "AEME-6548",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86062,
-        "targetDate": "2026-09-10T08:03:14.021000001Z"
-      },
-      {
-        "key": "AEME-6548",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1116493,
-        "targetDate": "2026-10-06T04:37:50.432000019Z"
-      }
-    ]
-  },
+  "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 0.58h on AEME-6602, 1h on AUTEU-41862, 0.75h on TKME-2368, 0.75h on AEME-6527, 1.33h on SAHME-3435, 1.33h on SAM-18530, 1.33h on GMT-22264, 2.5h on TKME-2349, 1h on PC-55360\nToday: AEME-6633, JHME-1818, PC-55443, RT-657502, SAHME-3473\nBlockers: PC-55443, AEME-6527, AEME-6548, PC-53923"
+    "standupText": "Yesterday: 0.58h on AEME-6602, 1h on AUTEU-41862, 0.75h on TKME-2368, 0.75h on AEME-6527, 1.33h on SAHME-3435, 1.33h on SAM-18530, 1.33h on GMT-22264, 2.5h on TKME-2349, 1h on PC-55360\nToday: SAHME-3357, AEME-6633, JHME-1818, PC-55443, RT-657502\nBlockers: AEME-6548, PC-55443, AEME-6527, PC-53923"
   }
 }
