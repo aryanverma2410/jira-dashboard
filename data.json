@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-14T11:35:12.772Z",
-  "totalTickets": 18,
+  "generatedAt": "2026-10-14T11:35:58.883Z",
+  "totalTickets": 17,
   "tickets": [
     {
       "key": "TKME-2348",
@@ -384,67 +384,6 @@
         "source": "",
         "foundAt": "",
         "issueNumber": null
-      }
-    },
-    {
-      "key": "SAHME-3357",
-      "summary": "SMC Errors-ProcessExternalServices",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "South Africa Maintenance & Enhancements",
-      "projectKey": "SAHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-14T20:07:06.000+0900",
-      "created": "2026-08-03T20:40:04.000+0900",
-      "statusChangedAt": "2026-08-03T20:40:12.579+0900",
-      "assignedToMeAt": "",
-      "description": "Hi ~@email \n\nCan you please help to check below orders that were errored at processExternalServices\n\n \n\nZA260730-45028831\n\nError Code: 400 HTTP Response : \\{\\n  \\\"message\\\" : \\\"UNSUPPORTED_DEVICE_MODEL\\\",\\n  \\\"code\\\" : \\\"USR-B1008\\\"\\n}\n\n \n\nZA260729-43785340\n\nError Code: 400 HTTP Response : \\{\\n  \\\"d",
-      "commentsCount": 25,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-14T20:06:40.966+0900",
-          "snippet": "Hi Nosipho, Suresh,\n\nThank you for confirming that the policy for ZA260730-45028831 was created manually by HQ. I will mark the ExternalService as UPDATED on our end to reflect this. No retrigger is needed since the policy already exists on the SMC side.\n\nZA260720-34285353 is still pending the custo"
-        },
-        {
-          "author": "Nosipho Mkhungo",
-          "date": "2026-10-09T23:05:52.533+0900",
-          "snippet": "~@email \n\n \n # Was the policy manually created on the SMC side (bypassing the API)? If yes, we will mark the ExternalService as UPDATED on our end to reflect this - no retrigger needed. This policy was created by HQ manually.\n\nKind Regards\n\nNosipho"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Nosipho, Suresh,\n\nThank you for confirming that the policy for ZA260730-45028831 was created manually by HQ. I will mark the ExternalService as UPDATED on our end to reflect this. No retrigger is needed since the policy already exists on the SMC side.\n\nZA260720-34285353 is still pending the custo",
-      "lastCommentDate": "2026-10-14T20:06:40.966+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAHME-3357",
-      "linkedTickets": [
-        {
-          "key": "SAHME-3408",
-          "summary": "SMC Errors-ProcessExternalServices",
-          "status": "Launch Verification",
-          "statusCategory": "Done",
-          "relation": "is cloned by",
-          "assignee": null
-        },
-        {
-          "key": "GMT-18732",
-          "summary": "SMI - ZA | Samsung care + Orders in error status",
-          "status": "On-Hold",
-          "statusCategory": "Done",
-          "relation": "relates to",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "SMC Errors-ProcessExternalServices\r\nGenerated: 2026-09-03T22:45:00Z\r\n\r\nHi [~irish.o.antony.rajan@accenture.com] ,\r\n\r\nWe investigated the 14 orders reported with SMC (Samsung Care+) errors at the processExternalServices stage. 11 of the 14 ExternalService records are now in UPDATED status with statusMessage \"OK\", confirming that the SC+ policies are active for those orders. These were remediated after the Subs/SMC team completed the required device and product mappings.\r\n\r\nThree orders still have ExternalService in ERROR status:\r\n\r\nZA260730-45028831 (UNSUPPORTED_DEVICE_MODEL, USR-B1008):\r\nThe device model SM-A366BZKVAFA (Galaxy A36) is not yet mapped in the SMC system. The consignment process invokes ProcessExternalServicesOnConsignmentAction which calls SMCExternalServicesActivationImpl.processService(). This in turn calls SMCWebClient.executeRESTExchangeRequest() to POST the device activation request to the SMC API. The SMC API returns HTTP 400 with \"UNSUPPORTED_DEVICE_MODEL\", causing SMCWebClientResultFailedException. The exception is caught by callDeviceService() which returns false, and the ExternalService is moved to ERROR status. Kibana logs confirm 4 failed retry attempts between August 7 and August 21, all failing with the same error. Kindly confirm with the Subs/SMC team once the A36 device mapping is completed so we can reset and retrigger.\r\n\r\nZA260720-34285353 (INVALID_REQUEST_PARAMETERS, USR-A0002):\r\nThe SMC API rejected the request with \"South Africa Identity Book is invalid\". The ExternalService statusMessage was not persisted in this case. The same code path applies: processService() -> callDeviceService() -> SMCWebClientResultFailedException on HTTP 400. The root cause is an invalid identity document or request parameter submitted during checkout. Kindly confirm with the Subs/SMC team whether the identity document or request parameter issue has been resolved so we can reset and retrigger.\r\n\r\nZA260818-62782020 (NOT_EXISTS_PRODUCT_ID, USR-A1002):\r\nThe product ID SMC-ZA-MOB-24-1-35 was not valid in the SMC system. Kibana logs show the ExternalService was created at checkout on 2026-08-18 and the SMC API returned HTTP 400 with \"the product id is not valid\". The ExternalService was moved to ERROR status via the same SMCWebClientResultFailedException path. Kindly confirm with the Subs/SMC team once this product ID is mapped so we can reset and retrigger.\r\n\r\nThis is not a Hybris platform issue. The root cause is on the SMC/Subs side for all three remaining orders -- device model mapping (A36), identity document validation, and product ID mapping respectively. The Hybris code correctly handles these rejections: ProcessExternalServicesOnConsignmentAction invokes the SMC API via SMCExternalServicesActivationImpl, and when the API returns a non-200 response, SMCWebClientResultFailedException is thrown and ExternalService is set to ERROR.\r\n\r\nThis is the same cluster of orders tracked under GMT-18732 (SMI - ZA | Samsung care+ Orders in error status).\r\n\r\nRegards\r\n\r\nAryan\r\n\r\n## Remediation\r\nReuse PC-52678 (Closed, REUSABLE) for SC+ reset. Once the Subs/SMC team confirms the required mappings are completed:\r\n1. Reset ExternalService status from ERROR to NEW for each affected order\r\n2. Re-invoke processExternalServicesOnConsignmentAction.executeAction(consignmentProcess) to retrigger the SMC API call\r\n3. The existing script script-AEME-6495-scplus-remediation.groovy under PC-52678 can be copied and updated with the new order list\r\n\r\nPre-conditions: secondGI must be valid (non-blank) for each consignment before retrigger. The 11 already-resolved orders do not need any further action.",
-        "sections": {
-          "issue": "",
-          "rca": "SMC Errors-ProcessExternalServices\r\nGenerated: 2026-09-03T22:45:00Z\r\n\r\nHi [~irish.o.antony.rajan@accenture.com] ,\r\n\r\nWe investigated the 14 orders reported with SMC (Samsung Care+) errors at the processExternalServices stage. 11 of the 14 ExternalService records are now in UPDATED status with statusMessage \"OK\", confirming that the SC+ policies are active for those orders. These were remediated after the Subs/SMC team completed the required device and product mappings.\r\n\r\nThree orders still have ExternalService in ERROR status:\r\n\r\nZA260730-45028831 (UNSUPPORTED_DEVICE_MODEL, USR-B1008):\r\nThe device model SM-A366BZKVAFA (Galaxy A36) is not yet mapped in the SMC system. The consignment process invokes ProcessExternalServicesOnConsignmentAction which calls SMCExternalServicesActivationImpl.processService(). This in turn calls SMCWebClient.executeRESTExchangeRequest() to POST the device activation request to the SMC API. The SMC API returns HTTP 400 with \"UNSUPPORTED_DEVICE_MODEL\", causing SMCWebClientResultFailedException. The exception is caught by callDeviceService() which returns false, and the ExternalService is moved to ERROR status. Kibana logs confirm 4 failed retry attempts between August 7 and August 21, all failing with the same error. Kindly confirm with the Subs/SMC team once the A36 device mapping is completed so we can reset and retrigger.\r\n\r\nZA260720-34285353 (INVALID_REQUEST_PARAMETERS, USR-A0002):\r\nThe SMC API rejected the request with \"South Africa Identity Book is invalid\". The ExternalService statusMessage was not persisted in this case. The same code path applies: processService() -> callDeviceService() -> SMCWebClientResultFailedException on HTTP 400. The root cause is an invalid identity document or request parameter submitted during checkout. Kindly confirm with the Subs/SMC team whether the identity document or request parameter issue has been resolved so we can reset and retrigger.\r\n\r\nZA260818-62782020 (NOT_EXISTS_PRODUCT_ID, USR-A1002):\r\nThe product ID SMC-ZA-MOB-24-1-35 was not valid in the SMC system. Kibana logs show the ExternalService was created at checkout on 2026-08-18 and the SMC API returned HTTP 400 with \"the product id is not valid\". The ExternalService was moved to ERROR status via the same SMCWebClientResultFailedException path. Kindly confirm with the Subs/SMC team once this product ID is mapped so we can reset and retrigger.\r\n\r\nThis is not a Hybris platform issue. The root cause is on the SMC/Subs side for all three remaining orders -- device model mapping (A36), identity document validation, and product ID mapping respectively. The Hybris code correctly handles these rejections: ProcessExternalServicesOnConsignmentAction invokes the SMC API via SMCExternalServicesActivationImpl, and when the API returns a non-200 response, SMCWebClientResultFailedException is thrown and ExternalService is set to ERROR.\r\n\r\nThis is the same cluster of orders tracked under GMT-18732 (SMI - ZA | Samsung care+ Orders in error status).\r\n\r\nRegards\r\n\r\nAryan\r\n\r\n## Remediation\r\nReuse PC-52678 (Closed, REUSABLE) for SC+ reset. Once the Subs/SMC team confirms the required mappings are completed:\r\n1. Reset ExternalService status from ERROR to NEW for each affected order\r\n2. Re-invoke processExternalServicesOnConsignmentAction.executeAction(consignmentProcess) to retrigger the SMC API call\r\n3. The existing script script-AEME-6495-scplus-remediation.groovy under PC-52678 can be copied and updated with the new order list\r\n\r\nPre-conditions: secondGI must be valid (non-blank) for each consignment before retrigger. The 11 already-resolved orders do not need any further action.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-03T13:45:10.016Z"
       }
     },
     {
@@ -1114,7 +1053,7 @@
       {
         "pid": 19840,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 112161,
+        "ageSeconds": 112207,
         "status": "running",
         "isChild": false,
         "taskSummary": "just run the normal script that will run on next launch",
@@ -1124,7 +1063,7 @@
       {
         "pid": 1572,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 108569,
+        "ageSeconds": 108615,
         "status": "running",
         "isChild": false,
         "taskSummary": "check",
@@ -1134,7 +1073,7 @@
       {
         "pid": 600,
         "cwd": "c:\\windows",
-        "ageSeconds": 108565,
+        "ageSeconds": 108610,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1144,7 +1083,7 @@
       {
         "pid": 25700,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 99142,
+        "ageSeconds": 99188,
         "status": "running",
         "isChild": false,
         "taskSummary": "just run the normal script that will run on next launch",
@@ -1154,7 +1093,7 @@
       {
         "pid": 23676,
         "cwd": "unknown",
-        "ageSeconds": 85173,
+        "ageSeconds": 85219,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -4534,17 +4473,17 @@
     "bridgeLogTail": "[2026-10-12T22:58:53.224Z] ==========================================\n[2026-10-12T22:58:53.226Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-12T22:58:53.227Z] === with Aipro Auto-Launch ===\n[2026-10-12T22:58:53.228Z] ==========================================\n[2026-10-12T22:58:53.228Z] PID: 5176\n[2026-10-12T22:58:53.229Z] Repo: aryanverma2410/agent-bridge\n[2026-10-12T22:58:53.229Z] Poll interval: 10000ms\n[2026-10-12T22:58:53.230Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-12T22:58:53.230Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-12T22:58:53.231Z] Waiting for messages...\n[2026-10-13T06:58:14.192Z] ==========================================\n[2026-10-13T06:58:14.195Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-13T06:58:14.196Z] === with Aipro Auto-Launch ===\n[2026-10-13T06:58:14.197Z] ==========================================\n[2026-10-13T06:58:14.198Z] PID: 1316\n[2026-10-13T06:58:14.199Z] Repo: aryanverma2410/agent-bridge\n[2026-10-13T06:58:14.200Z] Poll interval: 10000ms\n[2026-10-13T06:58:14.200Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-13T06:58:14.201Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-13T06:58:14.202Z] Waiting for messages...",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-14T11:35:05.844Z",
-      "ageMs": 12979
+      "lastWrite": "2026-10-14T11:35:50.884Z",
+      "ageMs": 11475
     },
-    "watchdogLogTail": "[2026-10-14T11:31:53.270Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:32:08.274Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:33:03.229Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:33:18.235Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:33:33.243Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:33:48.259Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:34:20.820Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:34:35.828Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:34:50.836Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:35:05.842Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-14T11:33:18.235Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:33:33.243Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:33:48.259Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:34:20.820Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:34:35.828Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:34:50.836Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:35:05.842Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:35:20.855Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:35:35.870Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-14T11:35:50.877Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-14T11:34:16.865Z",
+      "lastCheck": "2026-10-14T11:35:22.055Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4553,7 +4492,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-14T11:34:16.865Z",
+      "lastCheck": "2026-10-14T11:35:22.055Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4562,9 +4501,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-14T11:34:16.865Z",
+      "lastCheck": "2026-10-14T11:35:22.055Z",
       "downSince": "2026-10-14T09:45:11.940Z",
-      "downDuration": 6544925,
+      "downDuration": 6610115,
       "alert": true
     }
   ],
@@ -4830,18 +4769,6 @@
         "statusChangedAt": "2026-09-18T16:16:26.819+0900"
       },
       {
-        "key": "SAHME-3357",
-        "summary": "SMC Errors-ProcessExternalServices",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "blocked",
-        "reason": "Waiting for dev lead to respond",
-        "whatToDo": "",
-        "url": "https://jira.secext.samsung.net/browse/SAHME-3357",
-        "updated": "2026-10-14T20:07:06.000+0900",
-        "statusChangedAt": "2026-08-03T20:40:12.579+0900"
-      },
-      {
         "key": "SAHME-3449",
         "summary": "Stuck order on Hybris",
         "priority": "None",
@@ -4891,7 +4818,7 @@
     "totals": {
       "zero": 7,
       "actionable": 3,
-      "blocked": 7,
+      "blocked": 6,
       "queued": 1
     }
   },
@@ -4943,9 +4870,180 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86254,
+        "targetDate": "2026-09-21T04:19:58.710000001Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1088399,
+        "targetDate": "2026-11-02T02:54:37.529000031Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86397,
+        "targetDate": "2026-09-29T16:09:08.750000001Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2341729,
+        "targetDate": "2026-11-20T14:03:27.584000039Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85660,
+        "targetDate": "2026-09-15T08:21:25.088000001Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1211372,
+        "targetDate": "2026-10-13T12:51:05.986000021Z"
+      },
+      {
+        "key": "AEME-6527",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86020,
+        "targetDate": "2026-09-01T07:46:25.907000001Z"
+      },
+      {
+        "key": "AEME-6527",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 990365,
+        "targetDate": "2026-10-18T21:25:13.757000035Z"
+      },
+      {
+        "key": "SAME-4016",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86398,
+        "targetDate": "2026-10-15T09:05:08.430000001Z"
+      },
+      {
+        "key": "SAME-4016",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2588082,
+        "targetDate": "2026-11-25T10:29:20.680000030Z"
+      },
+      {
+        "key": "AEME-6633",
+        "slaName": "Shop app Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86398,
+        "targetDate": "2026-10-15T09:40:28.387000001Z"
+      },
+      {
+        "key": "AEME-6633",
+        "slaName": "Shop app Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2589422,
+        "targetDate": "2026-11-25T10:51:41.208000030Z"
+      },
+      {
+        "key": "AEME-6582",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85811,
+        "targetDate": "2026-09-25T07:05:01.740000001Z"
+      },
+      {
+        "key": "AEME-6582",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1294922,
+        "targetDate": "2026-10-15T07:05:01.740000015Z"
+      },
+      {
+        "key": "AEME-6548",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86062,
+        "targetDate": "2026-09-10T08:03:14.021000001Z"
+      },
+      {
+        "key": "AEME-6548",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1116493,
+        "targetDate": "2026-10-06T04:37:50.432000019Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86179,
+        "targetDate": "2026-09-30T08:16:57.595000001Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1269633,
+        "targetDate": "2026-10-20T08:16:57.595000015Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85937,
+        "targetDate": "2026-09-17T08:08:38.502000001Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 851640,
+        "targetDate": "2026-10-28T08:08:38.502000030Z"
+      },
+      {
+        "key": "JHME-1818",
+        "slaName": "Maintenance Response (GMT+2)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86398,
+        "targetDate": "2026-10-15T09:05:33.743000001Z"
+      },
+      {
+        "key": "JHME-1818",
+        "slaName": "Maintenance Resolution (GMT+2)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2586483,
+        "targetDate": "2026-11-25T11:02:41.664000030Z"
+      },
+      {
+        "key": "SAHME-3449",
+        "slaName": "Maintenance Response (GMT+2)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86398,
+        "targetDate": "2026-09-29T16:09:15.925000001Z"
+      },
+      {
+        "key": "SAHME-3449",
+        "slaName": "Maintenance Resolution (GMT+2)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2328498,
+        "targetDate": "2026-11-20T11:22:57.243315443Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 0.58h on AEME-6602, 1h on AUTEU-41862, 0.75h on TKME-2368, 0.75h on AEME-6527, 1.33h on SAHME-3435, 1.33h on SAM-18530, 1.33h on GMT-22264, 2.5h on TKME-2349, 1h on PC-55360\nToday: TKME-2348, MHME-1439, RT-657502, SAME-4016, SAHME-3357\nBlockers: AEME-6527, AEME-6548, PC-53923"
+    "standupText": "Yesterday: 0.58h on AEME-6602, 1h on AUTEU-41862, 0.75h on TKME-2368, 0.75h on AEME-6527, 1.33h on SAHME-3435, 1.33h on SAM-18530, 1.33h on GMT-22264, 2.5h on TKME-2349, 1h on PC-55360\nToday: TKME-2348, MHME-1439, RT-657502, SAME-4016, AEME-6633\nBlockers: AEME-6527, AEME-6548, PC-53923"
   }
 }
