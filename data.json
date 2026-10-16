@@ -1,7 +1,78 @@
 {
-  "generatedAt": "2026-10-16T11:19:26.626Z",
-  "totalTickets": 20,
+  "generatedAt": "2026-10-16T11:20:10.226Z",
+  "totalTickets": 22,
   "tickets": [
+    {
+      "key": "SAME-4027",
+      "summary": "Stuck order on Hybris",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Kingdom of Saudi Arabia Maintenance & Enhancements",
+      "projectKey": "SAME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-16T20:20:01.000+0900",
+      "created": "2026-10-16T19:18:54.000+0900",
+      "statusChangedAt": "2026-10-16T19:19:00.638+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|SA261013-14592894|2026/10/15|ORDER_SPLIT|\n|SA261013-13642757|2026/10/14|SHIPPED|\n\n\nThanks",
+      "commentsCount": 2,
+      "recentComments": [
+        {
+          "author": "Arjenelle Acabado",
+          "date": "2026-10-16T20:19:49.178+0900",
+          "snippet": "Hi ~@email \n\nPlease confirm the remediation to be done, will it only be retriggering the process?\n\nCan you please confirm why we keep receiving stuck orders w/ the same error?\n\n \n\nThanks,\n\nArj\n\n~@email"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-16T19:18:58.918+0900",
+          "snippet": "Hi Team,\n\nFollowing orders were found to be stuck with consignment process errors.\n\nSA261013-14592894 (sendConsignmentToWarehouse ERROR):\nConsignment process ERROR at sendConsignmentToWarehouse rc= - sendConsignmentToWarehouse: I/O error: Connection reset; nested exception is java.net.SocketExceptio"
+        }
+      ],
+      "lastCommentBy": "Arjenelle Acabado",
+      "lastCommentSnippet": "Hi ~@email \n\nPlease confirm the remediation to be done, will it only be retriggering the process?\n\nCan you please confirm why we keep receiving stuck orders w/ the same error?\n\n \n\nThanks,\n\nArj\n\n~@email",
+      "lastCommentDate": "2026-10-16T20:19:49.178+0900",
+      "url": "https://jira.secext.samsung.net/browse/SAME-4027",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "# RCA: SAME-4027\nStuck order on Hybris\nGenerated: 2026-10-16T16:07:47.252Z\n\nIssue:\nTwo SA region orders are stuck with consignment process errors. SA261013-14592894 (Tabby, 3149.10 SAR) is in ORDER_SPLIT status with its consignment process in ERROR at sendConsignmentToWarehouse — the consignment was never transmitted to warehouse WC05 and remains in WAITING_FOR_TRANSFER. SA261013-13642757 (Tamara, 1099.00 SAR) is in SHIPPED status with its consignment COMPLETED and GERP billing done, but its consignment process errored at processExternalServices — the GCIC_EXPERT_CLEANING_STANDALONE external service was never registered and remains in NEW status.\n\nRCA:\nSA261013-14592894:\nThe consignment process (consignment-process-v11-36) executed 13 actions successfully, including sendConsignmentToExternalERP at 11:59:24 on 2026-10-15. The very next action, sendConsignmentToWarehouse, failed at 11:59:25 and the process entered ERROR state with endMessage \"An error occurred while executing the process.\" The order remains in ORDER_SPLIT because the parent order process (order-process-v25-69, state RUNNING) is blocked waiting for the consignment process to complete. Payment is fully captured — Tabby CAPTURE ACCEPTED for 3149.10 SAR at 14:11:19. The consignment is physically stuck — it was never sent to warehouse WC05, so no shipment or delivery has occurred. The product is SM-S938BZKIMEA (physical device). No external services are involved.\n\nThis is the same sendConsignmentToWarehouse ERROR pattern seen across multiple regions and resolved tickets (NFME-5178, KSME-1277, UAME-5154, TKME-2055, SAME-4005). Kibana logs were unavailable during this investigation so the exact exception at sendConsignmentToWarehouse could not be retrieved, but the DB process task log confirms the failure point.\n\nSA261013-13642757:\nThe consignment process (consignment-process-v11-36) executed 44 actions covering the entire fulfillment lifecycle — sendConsignmentToWarehouse succeeded, waitForWarehouse passed, receiveConsignmentStatus completed, isShippedDone confirmed, sendDispatchEmail sent, sendUpdateShipmentToFraudService completed. The consignment reached COMPLETED status with GERP billing number 3249459356 created on 2026-10-14. The order moved to SHIPPED. However, the very last action in the consignment process — processExternalServices at 00:03:02 on 2026-10-14 — failed and the process entered ERROR state.\n\nThe product P-GT-LCXOS1GW is a cleaning service product that requires external service registration with the GCIC (Galaxy Care+ / Expert Cleaning) provider. The ExternalService record (provider: GCIC_EXPERT_CLEANING_STANDALONE, serviceProduct: 11524227137537) is still in NEW status — it was never sent to the external provider. The processExternalServicesOnConsignmentAction.invokeExternalService() call failed, preventing the external service registration. Payment is fully captured — Tamara CAPTURE ACCEPTED for 1099.00 SAR.\n\nThis matches the pattern resolved in AEME-6596 (PC-55204, PC-54773) where GCIC external services were stuck at NEW after the consignment process errored at processExternalServices.\n\nPossible remediation:\nSA261013-14592894:\nRestart the consignment business process from the waitForSendToWarehouse wait node. This re-triggers the warehouse send action. Reusable PC ticket: PC-54582 (REUSABLE, approved by D2C — Sathishkumar Senamohan). SA-specific variant: PC-55037 (REUSABLE, approved for SAME-4005 by Vamseedhara Reddy Dhonadula). Script: script-retrigger-consignment-sendToWarehouse.groovy — copy and update order list to SA261013-14592894.\n\nSA261013-13642757:\nThe consignment is already COMPLETED and the order is SHIPPED — physical fulfillment is done. The consignment process cannot be restarted from processExternalServices in the normal way since the process is in ERROR at that action. Two options based on prior REUSABLE PC tickets:\n\nOption A (PC-55204, script-AEME-6596-gcic-activation-remediation.groovy): Directly invoke the GCIC activation service via Spring bean (extendedWarrantyActivationService / TokoGcicActivationServiceImpl) to register the service with the external provider. This was used when the consignment process had already SUCCEEDED and process restart was not possible.\n\nOption B (PC-54773, script-AEME-6596-expert-care-remediation.groovy): Reset the external service from its current state and restart the order process to re-trigger processExternalServices.\n\nBoth remediation approaches have approved REUSABLE PC tickets. The SA region has used the sendConsignmentToWarehouse retrigger pattern before (PC-55037 for SAME-4005).",
+        "sections": {
+          "issue": "Two SA region orders are stuck with consignment process errors. SA261013-14592894 (Tabby, 3149.10 SAR) is in ORDER_SPLIT status with its consignment process in ERROR at sendConsignmentToWarehouse — the consignment was never transmitted to warehouse WC05 and remains in WAITING_FOR_TRANSFER. SA261013-13642757 (Tamara, 1099.00 SAR) is in SHIPPED status with its consignment COMPLETED and GERP billing done, but its consignment process errored at processExternalServices — the GCIC_EXPERT_CLEANING_STANDALONE external service was never registered and remains in NEW status.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-16T10:37:47.646Z"
+      }
+    },
+    {
+      "key": "MHME-1466",
+      "summary": "Unit limitations for Orange Platform EPP",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "None",
+      "project": "Morocco Maintenance & Enhancements",
+      "projectKey": "MHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-16T20:19:58.000+0900",
+      "created": "2026-10-16T20:06:47.000+0900",
+      "statusChangedAt": "",
+      "assignedToMeAt": "",
+      "description": "Hi Team,  \n\nCould you please update the product limits per division for each account on the orange platform as follows?\n  Mobile division:* maximum of 5 units\n  VD division:* maximum of 5 units\n\nThank you for your assistance.\n\nBest regards,\nAshwani\n\nCC: ~@email",
+      "commentsCount": 0,
+      "recentComments": [],
+      "lastCommentBy": "",
+      "lastCommentSnippet": "",
+      "lastCommentDate": "",
+      "url": "https://jira.secext.samsung.net/browse/MHME-1466",
+      "linkedTickets": [],
+      "solution": {
+        "status": "investigating",
+        "issueNumber": null,
+        "lockedAt": "2026-10-16T11:20:06.064Z"
+      }
+    },
     {
       "key": "AEME-6642",
       "summary": "Stuck order on Hybris",
@@ -1153,7 +1224,7 @@
       }
     ],
     "pid": 13056,
-    "uptime": 23438,
+    "uptime": 23483,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -1162,7 +1233,7 @@
         "issueTitle": "Investigate ticket TKME-2381",
         "snippet": "Auto-triggered investigation for new ticket TKME-2381.\n\nTicket: TKME-2381\nSummary: Stuck order on Hybris\n\nUse the invest",
         "pid": 24996,
-        "elapsed": 3349
+        "elapsed": 3394
       }
     ],
     "startTime": "2026-10-16T04:48:44.342Z",
@@ -1173,7 +1244,7 @@
       {
         "pid": 23212,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 17368,
+        "ageSeconds": 17412,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -1183,7 +1254,7 @@
       {
         "pid": 5444,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 17364,
+        "ageSeconds": 17408,
         "status": "running",
         "isChild": false,
         "taskSummary": "check only for AE260922-91467505 the GCIC thing in deep with logs",
@@ -1193,7 +1264,7 @@
       {
         "pid": 704,
         "cwd": "c:\\windows",
-        "ageSeconds": 17272,
+        "ageSeconds": 17316,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1203,7 +1274,7 @@
       {
         "pid": 27344,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 10424,
+        "ageSeconds": 10468,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -4860,7 +4931,7 @@
     "watchdog": {
       "alive": true,
       "lastWrite": "2026-10-16T11:12:42.548Z",
-      "ageMs": 407456
+      "ageMs": 451072
     },
     "watchdogLogTail": "[2026-10-16T08:02:09.513Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 17244) not found\n[2026-10-16T08:02:12.427Z] Could not kill dashboard PID 17244: Command failed: taskkill /PID 17244 /F /T\n[2026-10-16T08:02:12.513Z] Starting jira-dashboard-server.js...\n[2026-10-16T08:02:12.772Z] Dashboard started with PID 20628 (restart #3, 3 in last hour)\n[2026-10-16T08:02:19.589Z] Starting jira-dashboard-server.js...\n[2026-10-16T08:02:19.785Z] Dashboard started with PID 26972 (restart #4, 4 in last hour)\n[2026-10-16T08:02:28.983Z] DUPLICATE jira-dashboard-server detected: PID 20628 — killing\n[2026-10-16T08:32:40.930Z] DUPLICATE watchdog detected: PID 32252 — killing\n[2026-10-16T09:27:44.818Z] DUPLICATE watchdog detected: PID 33664 — killing\n[2026-10-16T11:12:42.547Z] DUPLICATE watchdog detected: PID 35152 — killing",
     "jobOutputs": {}
@@ -4870,7 +4941,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-16T11:18:40.452Z",
+      "lastCheck": "2026-10-16T11:19:40.081Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4879,18 +4950,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-16T11:18:40.452Z",
+      "lastCheck": "2026-10-16T11:19:40.081Z",
       "downSince": "2026-10-16T08:04:23.215Z",
-      "downDuration": 11657237,
+      "downDuration": 11716866,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-16T11:18:40.452Z",
+      "lastCheck": "2026-10-16T11:19:40.081Z",
       "downSince": "2026-10-16T08:02:21.737Z",
-      "downDuration": 11778715,
+      "downDuration": 11838344,
       "alert": true
     }
   ],
@@ -5024,6 +5095,18 @@
         "statusChangedAt": "2026-10-09T18:07:10.311+0900"
       },
       {
+        "key": "MHME-1466",
+        "summary": "Unit limitations for Orange Platform EPP",
+        "priority": "None",
+        "status": "New",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Review and take next step",
+        "url": "https://jira.secext.samsung.net/browse/MHME-1466",
+        "updated": "2026-10-16T20:19:58.000+0900",
+        "statusChangedAt": ""
+      },
+      {
         "key": "AEME-6642",
         "summary": "Stuck order on Hybris",
         "priority": "None",
@@ -5146,6 +5229,18 @@
     ],
     "actionable": [
       {
+        "key": "SAME-4027",
+        "summary": "Stuck order on Hybris",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "actionable",
+        "reason": "",
+        "whatToDo": "Respond to Arjenelle Acabado",
+        "url": "https://jira.secext.samsung.net/browse/SAME-4027",
+        "updated": "2026-10-16T20:20:01.000+0900",
+        "statusChangedAt": "2026-10-16T19:19:00.638+0900"
+      },
+      {
         "key": "AEME-6597",
         "summary": "Stuck in Shipped Status || 29-Sep",
         "priority": "None",
@@ -5251,8 +5346,8 @@
       }
     ],
     "totals": {
-      "zero": 11,
-      "actionable": 1,
+      "zero": 12,
+      "actionable": 2,
       "blocked": 6,
       "queued": 2
     }
@@ -5305,9 +5400,222 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "SAME-4027",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86394,
+        "targetDate": "2026-10-19T10:18:54.906000001Z"
+      },
+      {
+        "key": "SAME-4027",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2588893,
+        "targetDate": "2026-11-27T10:28:22.789000030Z"
+      },
+      {
+        "key": "AEME-6640",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85858,
+        "targetDate": "2026-10-19T05:31:04.341000001Z"
+      },
+      {
+        "key": "AEME-6640",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2571054,
+        "targetDate": "2026-11-27T05:31:04.341000030Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85660,
+        "targetDate": "2026-09-15T08:21:25.088000001Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1211372,
+        "targetDate": "2026-10-13T12:51:05.986000021Z"
+      },
+      {
+        "key": "MHME-1462",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85471,
+        "targetDate": "2026-10-14T05:24:28.367000001Z"
+      },
+      {
+        "key": "MHME-1462",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1188746,
+        "targetDate": "2026-11-05T06:32:35.651000017Z"
+      },
+      {
+        "key": "AEME-6642",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86395,
+        "targetDate": "2026-10-19T10:19:51.243000001Z"
+      },
+      {
+        "key": "AEME-6642",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2588866,
+        "targetDate": "2026-11-27T10:27:55.529000030Z"
+      },
+      {
+        "key": "SAME-4024",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86243,
+        "targetDate": "2026-10-16T12:25:18.509000001Z"
+      },
+      {
+        "key": "SAME-4024",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 349509,
+        "targetDate": "2026-10-22T12:25:18.509000005Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86254,
+        "targetDate": "2026-09-21T04:19:58.710000001Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 916468,
+        "targetDate": "2026-11-02T02:54:37.529000031Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85937,
+        "targetDate": "2026-09-17T08:08:38.502000001Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 679709,
+        "targetDate": "2026-10-28T08:08:38.502000030Z"
+      },
+      {
+        "key": "TKME-2379",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85854,
+        "targetDate": "2026-10-16T13:23:55.356000001Z"
+      },
+      {
+        "key": "TKME-2379",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1217025,
+        "targetDate": "2026-11-05T13:23:55.356000015Z"
+      },
+      {
+        "key": "MHME-1466",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85724,
+        "targetDate": "2026-10-19T11:08:49.611000001Z"
+      },
+      {
+        "key": "MHME-1466",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1295320,
+        "targetDate": "2026-11-06T12:08:49.611000015Z"
+      },
+      {
+        "key": "AEME-6527",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86020,
+        "targetDate": "2026-09-01T07:46:25.907000001Z"
+      },
+      {
+        "key": "AEME-6527",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 990365,
+        "targetDate": "2026-10-18T21:25:13.757000035Z"
+      },
+      {
+        "key": "AEME-6596",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86129,
+        "targetDate": "2026-09-30T08:09:57.356000001Z"
+      },
+      {
+        "key": "AEME-6596",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1274218,
+        "targetDate": "2026-10-21T08:26:03.543000016Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86397,
+        "targetDate": "2026-09-29T16:09:08.750000001Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2169797,
+        "targetDate": "2026-11-20T14:03:27.584000039Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86179,
+        "targetDate": "2026-09-30T08:16:57.595000001Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1269633,
+        "targetDate": "2026-10-20T08:16:57.595000015Z"
+      },
+      {
+        "key": "GMT-22427",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85808,
+        "targetDate": "2026-10-18T19:31:09.203000001Z"
+      },
+      {
+        "key": "GMT-22427",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 375059,
+        "targetDate": "2026-10-22T19:31:09.203000005Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 0.25h on AEME-6582, 0.25h on MHME-1463, 3.75h on SAM-18531, 1.33h on SAM-18530, 1.5h on PC-55464, 0.33h on AEME-6637, 0.33h on PKHME-945, 0.33h on SAME-4019, 0.33h on TKME-2377, 0.01h on JHME-1818, 1h on EHME-943\nToday: AEME-6642, AUTEU-41862, MHME-1462, AEME-6640, GMT-21163\nBlockers: AEME-6527, PC-55443, PC-53923"
+    "standupText": "Yesterday: 0.25h on AEME-6582, 0.25h on MHME-1463, 3.75h on SAM-18531, 1.33h on SAM-18530, 1.5h on PC-55464, 0.33h on AEME-6637, 0.33h on PKHME-945, 0.33h on SAME-4019, 0.33h on TKME-2377, 0.01h on JHME-1818, 1h on EHME-943\nToday: SAME-4027, AEME-6642, AUTEU-41862, MHME-1462, AEME-6640\nBlockers: AEME-6527, PC-55443, PC-53923"
   }
 }
