@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-16T12:14:46.334Z",
+  "generatedAt": "2026-10-16T12:15:28.825Z",
   "totalTickets": 20,
   "tickets": [
     {
@@ -24,9 +24,15 @@
       "url": "https://jira.secext.samsung.net/browse/MHME-1466",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-10-16T11:20:06.064Z"
+        "status": "found",
+        "excerpt": "Ticket: MHME-1466 - Unit limitations for Orange Platform EPP\r\nGenerated: 2026-10-16T11:30:00Z\r\n\r\nIssue:\r\nThe reporter (Ashwani) has requested updating the product purchase limits per division for each account on the Orange Platform EPP store (ma_orange) in Morocco. Specifically, Mobile division products should be capped at a maximum of 5 units per account, and VD (Visual Display) division products should also be capped at 5 units per account. No purchase limits are currently configured for the ma_orange store on the platform.\r\n\r\nRCA:\r\nThe ma_orange BaseSite exists in the Hybris database (confirmed via HAC query: uid=ma_orange, locale=en). It is one of 18 Morocco-region stores including ma_corporates, ma_students, ma_samsung_socgen, and others. The purchase limit mechanism in the Samsung Toko platform operates through two Hybris types defined in tokomultistorecore-items.xml:\r\n\r\n1. TokoCategoryPurchaseLimit (table: tokocatpurchaselimits, typecode 10714) — linked to TokoMultiStore via TokoMultiStore2CategoryPurchaseLimitRelation (1:N). Fields: category (Category, required, unique), quantityThreshold (Integer), valueThreshold (Double), userGroup (UserGroup, optional), defaultLimit (boolean, default false). This type enforces per-category quantity limits on a multistore, optionally scoped to a specific user group.\r\n\r\n2. UserPurchaseLimit (table: userpurchaselimit, typecode 10716) — linked to TokoMultiStore via TokoMultiStore2UserPurchaseLimitRelation (1:N). Fields: value (Double, required), defaultLimit (boolean, default false), userGroup (UserGroup, optional, unique). This type enforces cart-level purchase value limits per user group on a multistore.\r\n\r\nThe validation is triggered by TokoCartFacadeImpl.validateProductQuantityPurchaseLimits() (line 2409 in TokoCartFacadeImpl.java), which delegates to productPurchaseLimitValidationStrategy.validateCart(). This is called from CartsController.java (line 1100) and BaseCommerceController.java (line 578) during cart validation. The controller checks the result for MULTISTORE_CART_PURCHASE_LIMIT and MULTISTORE_PURCHASE_LIMIT error codes to surface validation messages to the user.\r\n\r\nAdditionally, CategoryDivisionMapping (typecode 11351, defined in tokocore-items.xml) maps category codes to division identifiers (field: categoryDivision of type CategoryDivisionParametersMapping). However, no CategoryDivisionMapping entries exist in the database currently. The knox.productbenefit.division.config.enabled.in config property is set to true but the .in suffix indicates this is India-only and does not apply to Morocco.\r\n\r\nNo TokoConfigProperty entries exist for ma_orange related to purchase limits, cart limits, or unit limits. The config properties toko.cart.purchase.limit.validation.enabled.in and toko.purchase.limit.exclusion.order.status.in are India-specific (the .in suffix denotes India region). The global properties populate.product.purchase.limit.disabled=true and product.purchase.limit.for.user.disabled=true indicate that purchase limit population is currently disabled globally, though the validation infrastructure is present.\r\n\r\nThis is a configuration request, not a platform bug or code defect. The Hybris type system already supports the requested behaviour through TokoCategoryPurchaseLimit entries linked to the ma_orange TokoMultiStore, with the Mobile and VD categories mapped to quantityThreshold=5 each. No code changes are required.\r\n\r\nPossible remediation:\r\nThis requires an ImpEx script to configure purchase limits on the ma_orange store. The steps are:\r\n\r\n1. Identify the TokoMultiStore PK for ma_orange (the BaseSite uid is ma_orange, but the TokoMultiStore may use a different identifier — this needs verification in the database).\r\n\r\n2. Identify the Category PKs for Mobile division and VD division products in the Morocco product catalog. If Mobile and VD do not exist as standalone Category items, the appropriate parent categories for these divisions need to be identified.\r\n\r\n3. Create TokoCategoryPurchaseLimit entries via ImpEx:\r\n   - One entry linking the Mobile category to the ma_orange TokoMultiStore with quantityThreshold=5\r\n   - One entry linking the VD category to the ma_orange TokoMultiStore with quantityThreshold=5\r\n   - If per-account (per-user-group) scoping is needed, set the userGroup field on each TokoCategoryPurchaseLimit entry to the specific Orange Platform account user groups\r\n\r\n4. Ensure the config property toko.cart.purchase.limit.validation.enabled is set for the ma_orange site (or globally) so the validation is active.\r\n\r\n5. Verify in Backoffice that the limits appear on the ma_orange multistore configuration and test with a cart containing more than 5 units of a Mobile division product to confirm the validation blocks the checkout.\r\n\r\nNo PC ticket or HAC Groovy script is needed for this change — it is an ImpEx configuration update that should be applied through the standard Backoffice or ImpEx import process.",
+        "sections": {
+          "issue": "The reporter (Ashwani) has requested updating the product purchase limits per division for each account on the Orange Platform EPP store (ma_orange) in Morocco. Specifically, Mobile division products should be capped at a maximum of 5 units per account, and VD (Visual Display) division products should also be capped at 5 units per account. No purchase limits are currently configured for the ma_orange store on the platform.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-16T12:15:21.190Z"
       }
     },
     {
@@ -1111,7 +1117,7 @@
       }
     ],
     "pid": 13056,
-    "uptime": 26761,
+    "uptime": 26800,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -1120,7 +1126,7 @@
         "issueTitle": "Investigate ticket MHME-1466",
         "snippet": "Auto-triggered investigation for new ticket MHME-1466.\n\nTicket: MHME-1466\nSummary: Unit limitations for Orange Platform ",
         "pid": 33804,
-        "elapsed": 3268
+        "elapsed": 3307
       }
     ],
     "startTime": "2026-10-16T04:48:44.342Z",
@@ -1131,7 +1137,7 @@
       {
         "pid": 23212,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 20688,
+        "ageSeconds": 20730,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -1141,7 +1147,7 @@
       {
         "pid": 5444,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 20684,
+        "ageSeconds": 20727,
         "status": "running",
         "isChild": false,
         "taskSummary": "post the comment with 1hr logs and assign back",
@@ -1151,7 +1157,7 @@
       {
         "pid": 704,
         "cwd": "c:\\windows",
-        "ageSeconds": 20592,
+        "ageSeconds": 20634,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1161,7 +1167,7 @@
       {
         "pid": 27344,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 13745,
+        "ageSeconds": 13787,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -4829,11 +4835,11 @@
         ]
       }
     },
-    "bridgeLogTail": "[2026-10-16T12:14:30.547Z] STDOUT data for #772: 372 bytes\n[2026-10-16T12:14:30.551Z] LIVE events write for #772: 422 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_772.txt\n[2026-10-16T12:14:30.877Z] aipro stderr for #772: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-10-16T12:14:34.352Z] STDOUT data for #772: 506 bytes\n[2026-10-16T12:14:34.355Z] LIVE events write for #772: 423 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_772.txt\n[2026-10-16T12:14:34.357Z] STDOUT data for #772: 530 bytes\n[2026-10-16T12:14:34.359Z] LIVE events write for #772: 424 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_772.txt",
+    "bridgeLogTail": "[2026-10-16T12:15:17.405Z] STDOUT data for #772: 113 bytes\n[2026-10-16T12:15:17.408Z] LIVE events write for #772: 431 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_772.txt\n[2026-10-16T12:15:17.415Z] STDOUT data for #772: 123 bytes\n[2026-10-16T12:15:17.418Z] LIVE events write for #772: 432 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_772.txt\n[2026-10-16T12:15:17.424Z] STDOUT data for #772: 120 bytes\n[2026-10-16T12:15:17.428Z] LIVE events write for #772: 433 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_772.txt\n[2026-10-16T12:15:17.435Z] STDOUT data for #772: 119 bytes\n[2026-10-16T12:15:17.438Z] LIVE events write for #772: 434 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_772.txt\n[2026-10-16T12:15:17.448Z] STDOUT data for #772: 104 bytes\n[2026-10-16T12:15:17.452Z] LIVE events write for #772: 435 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_772.txt\n[2026-10-16T12:15:21.172Z] STDOUT data for #772: 5228 bytes\n[2026-10-16T12:15:21.175Z] LIVE events write for #772: 436 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_772.txt\n[2026-10-16T12:15:21.199Z] STDOUT data for #772: 124 bytes\n[2026-10-16T12:15:21.202Z] LIVE events write for #772: 437 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_772.txt\n[2026-10-16T12:15:22.348Z] STDOUT data for #772: 159 bytes\n[2026-10-16T12:15:22.352Z] LIVE events write for #772: 438 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_772.txt\n[2026-10-16T12:15:22.356Z] STDOUT data for #772: 104 bytes\n[2026-10-16T12:15:22.360Z] LIVE events write for #772: 439 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_772.txt\n[2026-10-16T12:15:28.586Z] STDOUT data for #772: 7469 bytes\n[2026-10-16T12:15:28.591Z] LIVE events write for #772: 440 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_772.txt",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-16T11:52:43.241Z",
-      "ageMs": 1326848
+      "ageMs": 1368667
     },
     "watchdogLogTail": "[2026-10-16T08:02:12.513Z] Starting jira-dashboard-server.js...\n[2026-10-16T08:02:12.772Z] Dashboard started with PID 20628 (restart #3, 3 in last hour)\n[2026-10-16T08:02:19.589Z] Starting jira-dashboard-server.js...\n[2026-10-16T08:02:19.785Z] Dashboard started with PID 26972 (restart #4, 4 in last hour)\n[2026-10-16T08:02:28.983Z] DUPLICATE jira-dashboard-server detected: PID 20628 — killing\n[2026-10-16T08:32:40.930Z] DUPLICATE watchdog detected: PID 32252 — killing\n[2026-10-16T09:27:44.818Z] DUPLICATE watchdog detected: PID 33664 — killing\n[2026-10-16T11:12:42.547Z] DUPLICATE watchdog detected: PID 35152 — killing\n[2026-10-16T11:37:44.938Z] DUPLICATE watchdog detected: PID 35308 — killing\n[2026-10-16T11:52:43.239Z] DUPLICATE watchdog detected: PID 9412 — killing",
     "jobOutputs": {}
@@ -4843,7 +4849,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-16T12:14:08.695Z",
+      "lastCheck": "2026-10-16T12:15:08.941Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4852,18 +4858,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-16T12:14:08.695Z",
+      "lastCheck": "2026-10-16T12:15:08.941Z",
       "downSince": "2026-10-16T08:04:23.215Z",
-      "downDuration": 14985480,
+      "downDuration": 15045726,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-16T12:14:08.695Z",
+      "lastCheck": "2026-10-16T12:15:08.941Z",
       "downSince": "2026-10-16T08:02:21.737Z",
-      "downDuration": 15106958,
+      "downDuration": 15167204,
       "alert": true
     }
   ],
@@ -5278,7 +5284,192 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "SAME-4027",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86394,
+        "targetDate": "2026-10-19T10:18:54.906000001Z"
+      },
+      {
+        "key": "SAME-4027",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2585574,
+        "targetDate": "2026-11-27T10:28:22.789000030Z"
+      },
+      {
+        "key": "MHME-1466",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85724,
+        "targetDate": "2026-10-19T11:08:49.611000001Z"
+      },
+      {
+        "key": "MHME-1466",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1292001,
+        "targetDate": "2026-11-06T12:08:49.611000015Z"
+      },
+      {
+        "key": "TKME-2379",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85854,
+        "targetDate": "2026-10-16T13:23:55.356000001Z"
+      },
+      {
+        "key": "TKME-2379",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1213707,
+        "targetDate": "2026-11-05T13:23:55.356000015Z"
+      },
+      {
+        "key": "AEME-6642",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86395,
+        "targetDate": "2026-10-19T10:19:51.243000001Z"
+      },
+      {
+        "key": "AEME-6642",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2585547,
+        "targetDate": "2026-11-27T10:27:55.529000030Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86397,
+        "targetDate": "2026-09-29T16:09:08.750000001Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2166479,
+        "targetDate": "2026-11-20T14:03:27.584000039Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85660,
+        "targetDate": "2026-09-15T08:21:25.088000001Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1211372,
+        "targetDate": "2026-10-13T12:51:05.986000021Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86254,
+        "targetDate": "2026-09-21T04:19:58.710000001Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 913149,
+        "targetDate": "2026-11-02T02:54:37.529000031Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85937,
+        "targetDate": "2026-09-17T08:08:38.502000001Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 676390,
+        "targetDate": "2026-10-28T08:08:38.502000030Z"
+      },
+      {
+        "key": "SAME-4024",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86243,
+        "targetDate": "2026-10-16T12:25:18.509000001Z"
+      },
+      {
+        "key": "SAME-4024",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 346190,
+        "targetDate": "2026-10-22T12:25:18.509000005Z"
+      },
+      {
+        "key": "GMT-22427",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85808,
+        "targetDate": "2026-10-18T19:31:09.203000001Z"
+      },
+      {
+        "key": "GMT-22427",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 371741,
+        "targetDate": "2026-10-22T19:31:09.203000005Z"
+      },
+      {
+        "key": "AEME-6527",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86020,
+        "targetDate": "2026-09-01T07:46:25.907000001Z"
+      },
+      {
+        "key": "AEME-6527",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 990365,
+        "targetDate": "2026-10-18T21:25:13.757000035Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86179,
+        "targetDate": "2026-09-30T08:16:57.595000001Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1269633,
+        "targetDate": "2026-10-20T08:16:57.595000015Z"
+      },
+      {
+        "key": "AEME-6640",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85858,
+        "targetDate": "2026-10-19T05:31:04.341000001Z"
+      },
+      {
+        "key": "AEME-6640",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2567736,
+        "targetDate": "2026-11-27T05:31:04.341000030Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
     "standupText": "Yesterday: 0.25h on AEME-6582, 0.25h on MHME-1463, 3.75h on SAM-18531, 1.33h on SAM-18530, 1.5h on PC-55464, 0.33h on AEME-6637, 0.33h on PKHME-945, 0.33h on SAME-4019, 0.33h on TKME-2377, 0.01h on JHME-1818, 1h on EHME-943\nToday: MHME-1466, SAME-4027, AEME-6642, AUTEU-41862, AEME-6640\nBlockers: AEME-6527, PC-55443, PC-53923"
