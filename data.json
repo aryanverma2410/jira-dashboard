@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-16T07:45:18.456Z",
+  "generatedAt": "2026-10-16T07:47:56.602Z",
   "totalTickets": 22,
   "tickets": [
     {
@@ -64,9 +64,15 @@
       "url": "https://jira.secext.samsung.net/browse/SAHME-3480",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": "auto-triggered",
-        "lockedAt": "2026-10-16T00:00:00Z"
+        "status": "found",
+        "excerpt": "{\"type\":\"init\",\"timestamp\":\"2026-10-16T07:23:39.838Z\",\"session_id\":\"55f5da11-b407-413b-9d5f-8d125835cf48\",\"model\":\"glm-5.2\"}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:23:39.843Z\",\"role\":\"user\",\"content\":\"You are responding to a message from your user (Aryan) sent via GitHub Issues.\\nThe user created a GitHub issue with the following title and body.\\nProcess this request and provide a helpful response.\\nIf the user asks a question, answer it.\\nIf the user asks you to do something, do it and report what happened.\\nKeep your response concise and direct.\\n\\nISSUE TITLE: Investigate ticket SAHME-3480\\n\\nISSUE BODY:\\nAuto-triggered investigation for new ticket SAHME-3480.\\n\\nTicket: SAHME-3480\\nSummary: MSA | Fraud service | ZAF | Order not found in MSA\\n\\nUse the investigate workflow:\\n1. Fetch the ticket details using the workflow MCP (workflow_fetch_ticket)\\n2. Analyze the issue, check Kibana logs, trace the codebase\\n3. Produce a complete RCA with the following 3 sections:\\n   Issue:\\n   <brief description of the problem>\\n   RCA:\\n   <root cause analysis>\\n   Possible remediation:\\n   <recommended remediation steps>\\n4. Save the RCA using workflow_save_rca (writes to ticket-rca/SAHME-3480.md)\\n5. Do NOT ask the user if they need a script or PC ticket — just save the RCA directly\\n\\nSent from dashboard auto-trigger\\n\\nRespond with your answer below. Do not use markdown headers.\"}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-16T07:24:05.193Z\",\"tool_name\":\"activate_skill\",\"tool_id\":\"chatcmpl-tool-9e11dc885a40ab9e\",\"parameters\":{\"name\":\"investigate\"}}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-16T07:24:06.211Z\",\"tool_id\":\"chatcmpl-tool-9e11dc885a40ab9e\",\"status\":\"success\",\"output\":\"Skill **investigate** activated. Resources loaded from `C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\investigate`:\\n\\nShowing up to 200 items (files + folders).\\n\\nC:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\investigate\\\\\\n├───SKILL.md\\n└───references\\\\\\n    └───learnings.md\"}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-16T07:24:40.903Z\",\"tool_name\":\"update_topic\",\"tool_id\":\"chatcmpl-tool-86f5730ea52e2616\",\"parameters\":{\"title\":\"Investigating SAHME-3480\",\"summary\":\"Starting investigation for ticket SAHME-3480 (MSA | Fraud service | ZAF | Order not found in MSA). Phase 0: reading learnings, checking existing RCA/cache, fetching ticket details from Jira, and creating lock file.\",\"strategic_intent\":\"Execute the investigate workflow for SAHME-3480: fetch ticket, fan out parallel investigations, synthesize RCA, and save to ticket-rca/SAHME-3480.md.\"}}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-16T07:24:40.920Z\",\"tool_id\":\"chatcmpl-tool-86f5730ea52e2616\",\"status\":\"success\",\"output\":\"## 📂 Topic: **Investigating SAHME-3480**\\n\\n**Summary:**\\nStarting investigation for ticket SAHME-3480 (MSA | Fraud service | ZAF | Order not found in MSA). Phase 0: reading learnings, checking existing RCA/cache, fetching ticket details from Jira, and creating lock file.\\n\\n> [!STRATEGY]\\n> **Intent:** Execute the investigate workflow for SAHME-3480: fetch ticket, fan out parallel investigations, synthesize RCA, and save to ticket-rca/SAHME-3480.md.\"}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:25:21.329Z\",\"role\":\"assistant\",\"content\":\"Now\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:25:21.991Z\",\"role\":\"assistant\",\"content\":\" let me start\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:25:22.680Z\",\"role\":\"assistant\",\"content\":\" Phase 0 -\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:25:23.416Z\",\"role\":\"assistant\",\"content\":\" reading past\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:25:24.193Z\",\"role\":\"assistant\",\"content\":\" learnings, checking\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:25:25.048Z\",\"role\":\"assistant\",\"content\":\" for existing RCA\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:25:25.873Z\",\"role\":\"assistant\",\"content\":\"/cache files, and\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:25:26.777Z\",\"role\":\"assistant\",\"content\":\" creating\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:25:27.743Z\",\"role\":\"assistant\",\"content\":\" the lock file.\",\"delta\":true}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-16T07:25:52.189Z\",\"tool_name\":\"read_file\",\"tool_id\":\"chatcmpl-tool-92872edab155566a\",\"parameters\":{\"file_path\":\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\investigate\\\\references\\\\learnings.md\"}}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-16T07:25:52.189Z\",\"tool_name\":\"glob\",\"tool_id\":\"chatcmpl-tool-acb5ac3b9b4e3a0c\",\"parameters\":{\"pattern\":\"*sahme3480*\",\"dir_path\":\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1\\\\ticket-rca\"}}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-16T07:25:52.189Z\",\"tool_name\":\"glob\",\"tool_id\":\"chatcmpl-tool-b1a13464203bad3b\",\"parameters\":{\"pattern\":\"SAHME-3480*\",\"dir_path\":\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1\\\\ticket-cache\"}}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-16T07:25:52.189Z\",\"tool_name\":\"run_shell_command\",\"tool_id\":\"chatcmpl-tool-bc9092eb111b93a5\",\"parameters\":{\"command\":\"if (-not (Test-Path \\\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1\\\\ticket-rca\\\")) { New-Item -ItemType Directory -Force -Path \\\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1\\\\ticket-rca\\\" }; $lockContent = '{\\\"ticketKey\\\":\\\"SAHME-3480\\\",\\\"lockedAt\\\":\\\"' + (Get-Date -Format \\\"o\\\") + '\\\",\\\"issueNumber\\\":\\\"auto-triggered\\\"}'; Set-Content -Path \\\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1\\\\ticket-rca\\\\SAHME-3480.lock\\\" -Value $lockContent -Encoding UTF8; Write-Output \\\"Lock created\\\"\",\"description\":\"Create ticket-rca directory and lock file for SAHME-3480\"}}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-16T07:26:17.326Z\",\"tool_id\":\"chatcmpl-tool-92872edab155566a\",\"status\":\"success\",\"output\":\"\"}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-16T07:26:17.327Z\",\"tool_id\":\"chatcmpl-tool-acb5ac3b9b4e3a0c\",\"status\":\"success\",\"output\":\"No files found\"}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-16T07:26:17.327Z\",\"tool_id\":\"chatcmpl-tool-b1a13464203bad3b\",\"status\":\"success\",\"output\":\"No files found\"}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-16T07:26:17.327Z\",\"tool_id\":\"chatcmpl-tool-bc9092eb111b93a5\",\"status\":\"success\",\"output\":\"Blocked: command substitution detected in shell command.\"}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:26:54.539Z\",\"role\":\"assistant\",\"content\":\"Let\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:26:55.549Z\",\"role\":\"assistant\",\"content\":\" me create the lock\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:26:56.682Z\",\"role\":\"assistant\",\"content\":\" file using write\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:26:59.039Z\",\"role\":\"assistant\",\"content\":\"_file instead.\",\"delta\":true}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-16T07:27:01.213Z\",\"tool_name\":\"write_file\",\"tool_id\":\"chatcmpl-tool-b29791d361fa5c79\",\"parameters\":{\"file_path\":\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1\\\\ticket-rca\\\\SAHME-3480.lock\",\"content\":\"{\\\"ticketKey\\\":\\\"SAHME-3480\\\",\\\"lockedAt\\\":\\\"2026-10-16T00:00:00Z\\\",\\\"issueNumber\\\":\\\"auto-triggered\\\"}\"}}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-16T07:27:01.306Z\",\"tool_id\":\"chatcmpl-tool-b29791d361fa5c79\",\"status\":\"success\"}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:00.069Z\",\"role\":\"assistant\",\"content\":\"Good\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:00.070Z\",\"role\":\"assistant\",\"content\":\". No existing RCA\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:00.553Z\",\"role\":\"assistant\",\"content\":\" or cache file -\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:01.265Z\",\"role\":\"assistant\",\"content\":\" this is a fresh\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:02.620Z\",\"role\":\"assistant\",\"content\":\" investigation. Now\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:02.900Z\",\"role\":\"assistant\",\"content\":\" let\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:03.767Z\",\"role\":\"assistant\",\"content\":\" me fetch the J\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:05.146Z\",\"role\":\"assistant\",\"content\":\"ira ticket and\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:05.887Z\",\"role\":\"assistant\",\"content\":\" check MCP\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:06.402Z\",\"role\":\"assistant\",\"content\":\" availability\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:07.122Z\",\"role\":\"assistant\",\"content\":\". Let\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:07.149Z\",\"role\":\"assistant\",\"content\":\" me also read the\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:08.308Z\",\"role\":\"assistant\",\"content\":\" Aryantone style\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:08.308Z\",\"role\":\"assistant\",\"content\":\" guide\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:08.309Z\",\"role\":\"assistant\",\"content\":\".\",\"delta\":true}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-16T07:28:10.068Z\",\"tool_name\":\"read_file\",\"tool_id\":\"chatcmpl-tool-916fb6c2a837d32f\",\"parameters\":{\"file_path\":\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\bin\\\\memory\\\\Aryantone.md\"}}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-16T07:28:10.068Z\",\"tool_name\":\"invoke_agent\",\"tool_id\":\"chatcmpl-tool-b8259fff79efa7ea\",\"parameters\":{\"agent_name\":\"generalist\",\"prompt\":\"Fetch Jira ticket SAHME-3480 using the MCP tool mcp_jira-mcp_jira-ticket. Get the full ticket details: summary, description, status, assignee, reporter, labels, priority, issue type, and any comments. Also search for any order codes mentioned in the ticket description or comments. Return ALL raw ticket data — the full description text, all comments, all labels, all fields. This is a ticket about \\\"MSA | Fraud service | ZAF | Order not found in MSA\\\". \\n\\nAlso, if possible, do a lightweight Jira MCP probe by calling mcp_jira-mcp_jira-open-tickets with maxResults: 1 to confirm Jira connectivity.\\n\\nReturn everything you find.\",\"wait_for_previous\":false}}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-16T07:41:10.727Z\",\"tool_id\":\"chatcmpl-tool-916fb6c2a837d32f\",\"status\":\"error\",\"output\":\"Path not in workspace: Attempted path \\\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\bin\\\\memory\\\\Aryantone.md\\\" resolves outside the allowed workspace directories: C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1, C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\investigate, C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\ponytail, C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\pc-ticket-creator, C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\flexiquery, C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\i-have-adhd or the project temp directory: C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1-1\",\"error\":{\"type\":\"invalid_tool_params\",\"message\":\"Path not in workspace: Attempted path \\\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\bin\\\\memory\\\\Aryantone.md\\\" resolves outside the allowed workspace directories: C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1, C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\investigate, C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\ponytail, C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\pc-ticket-creator, C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\flexiquery, C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\i-have-adhd or the project temp directory: C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1-1\"}}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-16T07:41:10.816Z\",\"tool_id\":\"chatcmpl-tool-b8259fff79efa7ea\",\"status\":\"success\"}\n{\"type\":\"result\",\"timestamp\":\"2026-10-16T07:41:45.527Z\",\"status\":\"error\",\"error\":{\"type\":\"unknown\",\"message\":\"[API Error: terminated]\"},\"stats\":{\"total_tokens\":498842,\"input_tokens\":489481,\"output_tokens\":9361,\"cached\":289664,\"input\":199817,\"duration_ms\":0,\"tool_calls\":24,\"models\":{\"glm-5.2\":{\"total_tokens\":498842,\"input_tokens\":489481,\"output_tokens\":9361,\"cached\":289664,\"input\":199817}}}}",
+        "sections": {
+          "issue": "",
+          "rca": "{\"type\":\"init\",\"timestamp\":\"2026-10-16T07:23:39.838Z\",\"session_id\":\"55f5da11-b407-413b-9d5f-8d125835cf48\",\"model\":\"glm-5.2\"}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:23:39.843Z\",\"role\":\"user\",\"content\":\"You are responding to a message from your user (Aryan) sent via GitHub Issues.\\nThe user created a GitHub issue with the following title and body.\\nProcess this request and provide a helpful response.\\nIf the user asks a question, answer it.\\nIf the user asks you to do something, do it and report what happened.\\nKeep your response concise and direct.\\n\\nISSUE TITLE: Investigate ticket SAHME-3480\\n\\nISSUE BODY:\\nAuto-triggered investigation for new ticket SAHME-3480.\\n\\nTicket: SAHME-3480\\nSummary: MSA | Fraud service | ZAF | Order not found in MSA\\n\\nUse the investigate workflow:\\n1. Fetch the ticket details using the workflow MCP (workflow_fetch_ticket)\\n2. Analyze the issue, check Kibana logs, trace the codebase\\n3. Produce a complete RCA with the following 3 sections:\\n   Issue:\\n   <brief description of the problem>\\n   RCA:\\n   <root cause analysis>\\n   Possible remediation:\\n   <recommended remediation steps>\\n4. Save the RCA using workflow_save_rca (writes to ticket-rca/SAHME-3480.md)\\n5. Do NOT ask the user if they need a script or PC ticket — just save the RCA directly\\n\\nSent from dashboard auto-trigger\\n\\nRespond with your answer below. Do not use markdown headers.\"}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-16T07:24:05.193Z\",\"tool_name\":\"activate_skill\",\"tool_id\":\"chatcmpl-tool-9e11dc885a40ab9e\",\"parameters\":{\"name\":\"investigate\"}}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-16T07:24:06.211Z\",\"tool_id\":\"chatcmpl-tool-9e11dc885a40ab9e\",\"status\":\"success\",\"output\":\"Skill **investigate** activated. Resources loaded from `C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\investigate`:\\n\\nShowing up to 200 items (files + folders).\\n\\nC:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\investigate\\\\\\n├───SKILL.md\\n└───references\\\\\\n    └───learnings.md\"}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-16T07:24:40.903Z\",\"tool_name\":\"update_topic\",\"tool_id\":\"chatcmpl-tool-86f5730ea52e2616\",\"parameters\":{\"title\":\"Investigating SAHME-3480\",\"summary\":\"Starting investigation for ticket SAHME-3480 (MSA | Fraud service | ZAF | Order not found in MSA). Phase 0: reading learnings, checking existing RCA/cache, fetching ticket details from Jira, and creating lock file.\",\"strategic_intent\":\"Execute the investigate workflow for SAHME-3480: fetch ticket, fan out parallel investigations, synthesize RCA, and save to ticket-rca/SAHME-3480.md.\"}}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-16T07:24:40.920Z\",\"tool_id\":\"chatcmpl-tool-86f5730ea52e2616\",\"status\":\"success\",\"output\":\"## 📂 Topic: **Investigating SAHME-3480**\\n\\n**Summary:**\\nStarting investigation for ticket SAHME-3480 (MSA | Fraud service | ZAF | Order not found in MSA). Phase 0: reading learnings, checking existing RCA/cache, fetching ticket details from Jira, and creating lock file.\\n\\n> [!STRATEGY]\\n> **Intent:** Execute the investigate workflow for SAHME-3480: fetch ticket, fan out parallel investigations, synthesize RCA, and save to ticket-rca/SAHME-3480.md.\"}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:25:21.329Z\",\"role\":\"assistant\",\"content\":\"Now\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:25:21.991Z\",\"role\":\"assistant\",\"content\":\" let me start\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:25:22.680Z\",\"role\":\"assistant\",\"content\":\" Phase 0 -\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:25:23.416Z\",\"role\":\"assistant\",\"content\":\" reading past\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:25:24.193Z\",\"role\":\"assistant\",\"content\":\" learnings, checking\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:25:25.048Z\",\"role\":\"assistant\",\"content\":\" for existing RCA\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:25:25.873Z\",\"role\":\"assistant\",\"content\":\"/cache files, and\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:25:26.777Z\",\"role\":\"assistant\",\"content\":\" creating\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:25:27.743Z\",\"role\":\"assistant\",\"content\":\" the lock file.\",\"delta\":true}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-16T07:25:52.189Z\",\"tool_name\":\"read_file\",\"tool_id\":\"chatcmpl-tool-92872edab155566a\",\"parameters\":{\"file_path\":\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\investigate\\\\references\\\\learnings.md\"}}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-16T07:25:52.189Z\",\"tool_name\":\"glob\",\"tool_id\":\"chatcmpl-tool-acb5ac3b9b4e3a0c\",\"parameters\":{\"pattern\":\"*sahme3480*\",\"dir_path\":\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1\\\\ticket-rca\"}}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-16T07:25:52.189Z\",\"tool_name\":\"glob\",\"tool_id\":\"chatcmpl-tool-b1a13464203bad3b\",\"parameters\":{\"pattern\":\"SAHME-3480*\",\"dir_path\":\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1\\\\ticket-cache\"}}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-16T07:25:52.189Z\",\"tool_name\":\"run_shell_command\",\"tool_id\":\"chatcmpl-tool-bc9092eb111b93a5\",\"parameters\":{\"command\":\"if (-not (Test-Path \\\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1\\\\ticket-rca\\\")) { New-Item -ItemType Directory -Force -Path \\\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1\\\\ticket-rca\\\" }; $lockContent = '{\\\"ticketKey\\\":\\\"SAHME-3480\\\",\\\"lockedAt\\\":\\\"' + (Get-Date -Format \\\"o\\\") + '\\\",\\\"issueNumber\\\":\\\"auto-triggered\\\"}'; Set-Content -Path \\\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1\\\\ticket-rca\\\\SAHME-3480.lock\\\" -Value $lockContent -Encoding UTF8; Write-Output \\\"Lock created\\\"\",\"description\":\"Create ticket-rca directory and lock file for SAHME-3480\"}}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-16T07:26:17.326Z\",\"tool_id\":\"chatcmpl-tool-92872edab155566a\",\"status\":\"success\",\"output\":\"\"}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-16T07:26:17.327Z\",\"tool_id\":\"chatcmpl-tool-acb5ac3b9b4e3a0c\",\"status\":\"success\",\"output\":\"No files found\"}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-16T07:26:17.327Z\",\"tool_id\":\"chatcmpl-tool-b1a13464203bad3b\",\"status\":\"success\",\"output\":\"No files found\"}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-16T07:26:17.327Z\",\"tool_id\":\"chatcmpl-tool-bc9092eb111b93a5\",\"status\":\"success\",\"output\":\"Blocked: command substitution detected in shell command.\"}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:26:54.539Z\",\"role\":\"assistant\",\"content\":\"Let\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:26:55.549Z\",\"role\":\"assistant\",\"content\":\" me create the lock\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:26:56.682Z\",\"role\":\"assistant\",\"content\":\" file using write\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:26:59.039Z\",\"role\":\"assistant\",\"content\":\"_file instead.\",\"delta\":true}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-16T07:27:01.213Z\",\"tool_name\":\"write_file\",\"tool_id\":\"chatcmpl-tool-b29791d361fa5c79\",\"parameters\":{\"file_path\":\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1\\\\ticket-rca\\\\SAHME-3480.lock\",\"content\":\"{\\\"ticketKey\\\":\\\"SAHME-3480\\\",\\\"lockedAt\\\":\\\"2026-10-16T00:00:00Z\\\",\\\"issueNumber\\\":\\\"auto-triggered\\\"}\"}}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-16T07:27:01.306Z\",\"tool_id\":\"chatcmpl-tool-b29791d361fa5c79\",\"status\":\"success\"}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:00.069Z\",\"role\":\"assistant\",\"content\":\"Good\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:00.070Z\",\"role\":\"assistant\",\"content\":\". No existing RCA\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:00.553Z\",\"role\":\"assistant\",\"content\":\" or cache file -\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:01.265Z\",\"role\":\"assistant\",\"content\":\" this is a fresh\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:02.620Z\",\"role\":\"assistant\",\"content\":\" investigation. Now\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:02.900Z\",\"role\":\"assistant\",\"content\":\" let\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:03.767Z\",\"role\":\"assistant\",\"content\":\" me fetch the J\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:05.146Z\",\"role\":\"assistant\",\"content\":\"ira ticket and\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:05.887Z\",\"role\":\"assistant\",\"content\":\" check MCP\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:06.402Z\",\"role\":\"assistant\",\"content\":\" availability\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:07.122Z\",\"role\":\"assistant\",\"content\":\". Let\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:07.149Z\",\"role\":\"assistant\",\"content\":\" me also read the\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:08.308Z\",\"role\":\"assistant\",\"content\":\" Aryantone style\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:08.308Z\",\"role\":\"assistant\",\"content\":\" guide\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-16T07:28:08.309Z\",\"role\":\"assistant\",\"content\":\".\",\"delta\":true}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-16T07:28:10.068Z\",\"tool_name\":\"read_file\",\"tool_id\":\"chatcmpl-tool-916fb6c2a837d32f\",\"parameters\":{\"file_path\":\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\bin\\\\memory\\\\Aryantone.md\"}}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-16T07:28:10.068Z\",\"tool_name\":\"invoke_agent\",\"tool_id\":\"chatcmpl-tool-b8259fff79efa7ea\",\"parameters\":{\"agent_name\":\"generalist\",\"prompt\":\"Fetch Jira ticket SAHME-3480 using the MCP tool mcp_jira-mcp_jira-ticket. Get the full ticket details: summary, description, status, assignee, reporter, labels, priority, issue type, and any comments. Also search for any order codes mentioned in the ticket description or comments. Return ALL raw ticket data — the full description text, all comments, all labels, all fields. This is a ticket about \\\"MSA | Fraud service | ZAF | Order not found in MSA\\\". \\n\\nAlso, if possible, do a lightweight Jira MCP probe by calling mcp_jira-mcp_jira-open-tickets with maxResults: 1 to confirm Jira connectivity.\\n\\nReturn everything you find.\",\"wait_for_previous\":false}}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-16T07:41:10.727Z\",\"tool_id\":\"chatcmpl-tool-916fb6c2a837d32f\",\"status\":\"error\",\"output\":\"Path not in workspace: Attempted path \\\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\bin\\\\memory\\\\Aryantone.md\\\" resolves outside the allowed workspace directories: C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1, C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\investigate, C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\ponytail, C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\pc-ticket-creator, C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\flexiquery, C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\i-have-adhd or the project temp directory: C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1-1\",\"error\":{\"type\":\"invalid_tool_params\",\"message\":\"Path not in workspace: Attempted path \\\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\bin\\\\memory\\\\Aryantone.md\\\" resolves outside the allowed workspace directories: C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1, C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\investigate, C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\ponytail, C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\pc-ticket-creator, C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\flexiquery, C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\i-have-adhd or the project temp directory: C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1-1\"}}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-16T07:41:10.816Z\",\"tool_id\":\"chatcmpl-tool-b8259fff79efa7ea\",\"status\":\"success\"}\n{\"type\":\"result\",\"timestamp\":\"2026-10-16T07:41:45.527Z\",\"status\":\"error\",\"error\":{\"type\":\"unknown\",\"message\":\"[API Error: terminated]\"},\"stats\":{\"total_tokens\":498842,\"input_tokens\":489481,\"output_tokens\":9361,\"cached\":289664,\"input\":199817,\"duration_ms\":0,\"tool_calls\":24,\"models\":{\"glm-5.2\":{\"total_tokens\":498842,\"input_tokens\":489481,\"output_tokens\":9361,\"cached\":289664,\"input\":199817}}}}",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-16T07:46:17.429Z"
       }
     },
     {
@@ -1212,7 +1218,7 @@
       }
     ],
     "pid": 13056,
-    "uptime": 10593,
+    "uptime": 10750,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1224,7 +1230,7 @@
       {
         "pid": 21116,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 4526,
+        "ageSeconds": 4684,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -1234,7 +1240,7 @@
       {
         "pid": 23212,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 4520,
+        "ageSeconds": 4679,
         "status": "running",
         "isChild": false,
         "taskSummary": "verify these claims you are making",
@@ -1244,7 +1250,7 @@
       {
         "pid": 5444,
         "cwd": "c:\\windows",
-        "ageSeconds": 4516,
+        "ageSeconds": 4675,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1254,7 +1260,7 @@
       {
         "pid": 704,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 4424,
+        "ageSeconds": 4582,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -4821,18 +4827,18 @@
     },
     "bridgeLogTail": "[2026-10-16T07:42:44.361Z] STDOUT data for #761: 560 bytes\n[2026-10-16T07:42:44.363Z] LIVE events write for #761: 205 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_761.txt\n[2026-10-16T07:42:44.407Z] STDOUT data for #761: 113 bytes\n[2026-10-16T07:42:44.410Z] LIVE events write for #761: 206 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_761.txt\n[2026-10-16T07:42:44.441Z] STDOUT data for #761: 110 bytes\n[2026-10-16T07:42:44.445Z] LIVE events write for #761: 207 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_761.txt\n[2026-10-16T07:42:44.449Z] STDOUT data for #761: 116 bytes\n[2026-10-16T07:42:44.451Z] LIVE events write for #761: 208 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_761.txt\n[2026-10-16T07:42:44.461Z] STDOUT data for #761: 118 bytes\n[2026-10-16T07:42:44.463Z] LIVE events write for #761: 209 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_761.txt\n[2026-10-16T07:42:44.478Z] STDOUT data for #761: 119 bytes\n[2026-10-16T07:42:44.484Z] LIVE events write for #761: 210 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_761.txt\n[2026-10-16T07:42:44.547Z] STDOUT data for #761: 108 bytes\n[2026-10-16T07:42:44.549Z] LIVE events write for #761: 211 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_761.txt\n[2026-10-16T07:42:44.551Z] STDOUT data for #761: 105 bytes\n[2026-10-16T07:42:44.553Z] LIVE events write for #761: 212 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_761.txt\n[2026-10-16T07:42:44.706Z] STDOUT data for #761: 339 bytes\n[2026-10-16T07:42:44.709Z] LIVE events write for #761: 213 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_761.txt\n[2026-10-16T07:42:48.703Z] aipro completed for #761 (1930 chars)\n[2026-10-16T07:42:49.603Z] Comment posted on #761",
     "watchdog": {
-      "alive": false,
-      "lastWrite": "2026-10-16T07:32:43.391Z",
-      "ageMs": 758553
+      "alive": true,
+      "lastWrite": "2026-10-16T07:47:48.051Z",
+      "ageMs": 13993
     },
-    "watchdogLogTail": "[2026-10-16T05:13:43.448Z] Dashboard is degraded (failures: 31). Will not restart yet.\n[2026-10-16T05:15:44.348Z] Dashboard is degraded (failures: 33). Will not restart yet.\n[2026-10-16T05:57:00.214Z] Dashboard is degraded (failures: 74). Will not restart yet.\n[2026-10-16T05:57:59.406Z] Dashboard is degraded (failures: 75). Will not restart yet.\n[2026-10-16T05:59:00.793Z] Dashboard is degraded (failures: 76). Will not restart yet.\n[2026-10-16T05:59:59.241Z] Dashboard is degraded (failures: 77). Will not restart yet.\n[2026-10-16T06:01:00.045Z] Dashboard is degraded (failures: 78). Will not restart yet.\n[2026-10-16T06:01:59.875Z] Dashboard is degraded (failures: 79). Will not restart yet.\n[2026-10-16T06:03:00.704Z] Dashboard is degraded (failures: 80). Will not restart yet.\n[2026-10-16T07:32:43.389Z] DUPLICATE watchdog detected: PID 26228 — killing"
+    "watchdogLogTail": "[2026-10-16T07:32:43.389Z] DUPLICATE watchdog detected: PID 26228 — killing\n[2026-10-16T07:46:50.870Z] DASHBOARD RESTART NEEDED: Dashboard heartbeat is stale (33s old)\n[2026-10-16T07:46:54.368Z] Killed dashboard PID 12580\n[2026-10-16T07:47:02.637Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 12580) not found\n[2026-10-16T07:47:07.858Z] Could not kill dashboard PID 12580: Command failed: taskkill /PID 12580 /F /T\n[2026-10-16T07:47:13.193Z] Starting jira-dashboard-server.js...\n[2026-10-16T07:47:14.014Z] Dashboard started with PID 26388 (restart #1, 1 in last hour)\n[2026-10-16T07:47:43.489Z] Starting jira-dashboard-server.js...\n[2026-10-16T07:47:43.708Z] Dashboard started with PID 17244 (restart #2, 2 in last hour)\n[2026-10-16T07:47:48.050Z] DUPLICATE jira-dashboard-server detected: PID 26388 — killing"
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-16T07:45:12.229Z",
+      "lastCheck": "2026-10-16T07:47:45.479Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4841,7 +4847,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-16T07:45:12.229Z",
+      "lastCheck": "2026-10-16T07:47:45.479Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4850,10 +4856,10 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-16T07:45:12.229Z",
-      "downSince": "2026-10-15T23:14:41.168Z",
-      "downDuration": 30631061,
-      "alert": true
+      "lastCheck": "2026-10-16T07:47:45.479Z",
+      "downSince": "2026-10-16T07:47:45.479Z",
+      "downDuration": 0,
+      "alert": false
     }
   ],
   "hacReport": {
@@ -5291,7 +5297,192 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "SAHME-3480",
+        "slaName": "Maintenance Response (GMT+2)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 84517,
+        "targetDate": "2026-10-19T06:25:06.976000001Z"
+      },
+      {
+        "key": "SAHME-3480",
+        "slaName": "Maintenance Resolution (GMT+2)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1292340,
+        "targetDate": "2026-11-06T07:46:51.619000015Z"
+      },
+      {
+        "key": "SAME-4019",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86398,
+        "targetDate": "2026-10-16T05:16:55.206000001Z"
+      },
+      {
+        "key": "SAME-4019",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2502728,
+        "targetDate": "2026-11-26T06:59:59.595000030Z"
+      },
+      {
+        "key": "AEME-6640",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85858,
+        "targetDate": "2026-10-19T05:31:04.341000001Z"
+      },
+      {
+        "key": "AEME-6640",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2583793,
+        "targetDate": "2026-11-27T05:31:04.341000030Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85660,
+        "targetDate": "2026-09-15T08:21:25.088000001Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1211372,
+        "targetDate": "2026-10-13T12:51:05.986000021Z"
+      },
+      {
+        "key": "TKME-2377",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86398,
+        "targetDate": "2026-10-16T05:17:18.911000001Z"
+      },
+      {
+        "key": "TKME-2377",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2583227,
+        "targetDate": "2026-11-27T05:21:38.812000031Z"
+      },
+      {
+        "key": "TKME-2379",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85854,
+        "targetDate": "2026-10-16T13:23:55.356000001Z"
+      },
+      {
+        "key": "TKME-2379",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1229763,
+        "targetDate": "2026-11-05T13:23:55.356000015Z"
+      },
+      {
+        "key": "SAME-4024",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86243,
+        "targetDate": "2026-10-16T12:25:18.509000001Z"
+      },
+      {
+        "key": "SAME-4024",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 362247,
+        "targetDate": "2026-10-22T12:25:18.509000005Z"
+      },
+      {
+        "key": "AEME-6527",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86020,
+        "targetDate": "2026-09-01T07:46:25.907000001Z"
+      },
+      {
+        "key": "AEME-6527",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 990365,
+        "targetDate": "2026-10-18T21:25:13.757000035Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86179,
+        "targetDate": "2026-09-30T08:16:57.595000001Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1269633,
+        "targetDate": "2026-10-20T08:16:57.595000015Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86397,
+        "targetDate": "2026-09-29T16:09:08.750000001Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2182536,
+        "targetDate": "2026-11-20T14:03:27.584000039Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86254,
+        "targetDate": "2026-09-21T04:19:58.710000001Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 929206,
+        "targetDate": "2026-11-02T02:54:37.529000031Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85937,
+        "targetDate": "2026-09-17T08:08:38.502000001Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 692447,
+        "targetDate": "2026-10-28T08:08:38.502000030Z"
+      },
+      {
+        "key": "GMT-22427",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85808,
+        "targetDate": "2026-10-18T19:31:09.203000001Z"
+      },
+      {
+        "key": "GMT-22427",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 387797,
+        "targetDate": "2026-10-22T19:31:09.203000005Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
     "standupText": "Yesterday: 0.25h on AEME-6582, 0.25h on MHME-1463, 3.75h on SAM-18531, 1.33h on SAM-18530, 1.5h on PC-55464, 0.33h on AEME-6637, 0.33h on PKHME-945, 0.33h on SAME-4019, 0.33h on TKME-2377, 0.01h on JHME-1818, 1h on EHME-943\nToday: SAHME-3480, AUTEU-41862, AEME-6640, TKME-2377, GMT-21163\nBlockers: PC-55464, SAME-4019, AEME-6527, PC-55443, PC-53923"
