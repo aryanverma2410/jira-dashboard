@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-16T09:35:21.215Z",
+  "generatedAt": "2026-10-16T09:36:03.540Z",
   "totalTickets": 20,
   "tickets": [
     {
@@ -35,9 +35,15 @@
       "url": "https://jira.secext.samsung.net/browse/MHME-1462",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-10-16T09:22:24.722Z"
+        "status": "found",
+        "excerpt": "# RCA: MHME-1462\nSummary: Update invoice for the Order MA261008-0769928\nGenerated: 2026-10-16T09:30:00Z\n\nIssue:\nThe reporter (Ashwani Verma) requested updating the invoice customer and address details on order MA261008-07699289 (referred to as MA261008-0769928 in the ticket, missing the trailing 9). The order is COMPLETED with the consignment also in COMPLETED status, shipped on 2026-10-08, and a GERP billing number (3249268252) has already been generated. The current invoice bears the original customer name (Abderrahman lahroussi) and address (Ain Chock, Casablanca-Settat, Morocco), but the reporter needs it updated to the new entity: Primelift SARL, ICE 003595504000059, address Bloc D Rue 04 N17, Ain Chock, Casablanca, Morocco. Both the delivery address (PK 10306956263447) and payment address (PK 10306956296215) on the order need to be updated with the new customer name, company, and ICE number.\n\nRCA:\nThe order MA261008-07699289 was placed on 2026-10-08 via CMI credit card payment (ma-cmiCreditCardPaymentMode) with total 10,324.79 MAD. The order completed normally through the full fulfillment lifecycle (order placed, consignment shipped, GERP billing generated, order status COMPLETED). There is no platform bug or code defect involved. The request is a post-fulfillment invoice data correction, which is a standard operational request for the Morocco (MHME) region.\n\nThe address fields on both delivery and payment addresses are Hybris-encrypted (attribute encryption enabled for the MA region), meaning they cannot be directly updated via SQL or ImpEx. A Groovy script through HAC is required to load the AddressModel items via getModelService, update the firstname, lastname, company, and any ICE-related fields, then save via modelService.saveAll(). This is the same remediation pattern confirmed and successfully applied in MHME-1328 (Invoice Update ICE, May 2026), MHME-773 (ICE Number Update, Jan 2024), MHME-719 (Order invoice update, Oct 2023), MHME-709 (Order details update, Sep 2023), and MHME-734 (Order invoice modification, Oct 2023). All precedent tickets were resolved as HAC remediation scripts.\n\nThe consignment has a GERP billing number (3249268252) already assigned, so the invoice has been generated in the downstream GERP system. Updating the Hybris-side address data will need to be accompanied by a GERP-side invoice correction or re-generation request to the Morocco finance/accounting team, as the GERP billing document is a separate downstream artifact.\n\nPossible remediation:\n1. Create a HAC Groovy script to update both Address items (delivery: PK 10306956263447, payment: PK 10306956296215) with the new customer details:\n   - firstname: Primelift\n   - lastname: SARL\n   - company: Primelift SARL\n   - streetname: Bloc D Rue 04 N17\n   - town: Ain Chock\n   - district: Casablanca\n   - postalcode: (as provided)\n   - Ensure ICE number 003595504000059 is set in the appropriate field (likely company or a custom attribute)\n2. Use modelService to load, modify, and save the Address items (not direct SQL, due to attribute encryption)\n3. After the Hybris update, coordinate with the Morocco GERP/finance team to regenerate or correct the downstream GERP billing document (billing number 3249268252) with the new customer and ICE details\n4. The script should follow the pattern established in MHME-1328 and MHME-773 for invoice/address updates on completed orders in the MA region\n5. No PC ticket type exists in the standard reusable library for invoice/address updates specifically, but this falls under the general data-fix remediation category — refer to MHME-1328 for the approved script template",
+        "sections": {
+          "issue": "The reporter (Ashwani Verma) requested updating the invoice customer and address details on order MA261008-07699289 (referred to as MA261008-0769928 in the ticket, missing the trailing 9). The order is COMPLETED with the consignment also in COMPLETED status, shipped on 2026-10-08, and a GERP billing number (3249268252) has already been generated. The current invoice bears the original customer name (Abderrahman lahroussi) and address (Ain Chock, Casablanca-Settat, Morocco), but the reporter needs it updated to the new entity: Primelift SARL, ICE 003595504000059, address Bloc D Rue 04 N17, Ain Chock, Casablanca, Morocco. Both the delivery address (PK 10306956263447) and payment address (PK 10306956296215) on the order need to be updated with the new customer name, company, and ICE number.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-16T09:35:29.905Z"
       }
     },
     {
@@ -871,7 +877,7 @@
         {
           "author": "Talib Raza Zaidi",
           "date": "2026-10-09T14:33:39.504+0900",
-          "snippet": "Hi ~@email,\n\n \n\nCan you please let us know how what was the RCA and fix done for this?\n\n \n\nRegards\n\nTalib\n\nCC: ~@email"
+          "snippet": "Hi ~@email,\n\n��\n\nCan you please let us know how what was the RCA and fix done for this?\n\n \n\nRegards\n\nTalib\n\nCC: ~@email"
         },
         {
           "author": "Aryan Verma",
@@ -880,7 +886,7 @@
         }
       ],
       "lastCommentBy": "Talib Raza Zaidi",
-      "lastCommentSnippet": "Hi ~@email,\n\n \n\nCan you please let us know how what was the RCA and fix done for this?\n\n \n\nRegards\n\nTalib\n\nCC: ~@email",
+      "lastCommentSnippet": "Hi ~@email,\n\n��\n\nCan you please let us know how what was the RCA and fix done for this?\n\n \n\nRegards\n\nTalib\n\nCC: ~@email",
       "lastCommentDate": "2026-10-09T14:33:39.504+0900",
       "url": "https://jira.secext.samsung.net/browse/AEME-6597",
       "linkedTickets": [],
@@ -1002,8 +1008,8 @@
         "issueNum": 766,
         "title": "Investigate ticket MHME-1462",
         "received": "2026-10-16T09:22:40.534Z",
-        "responded": "",
-        "responseSnippet": ""
+        "responded": "2026-10-16T09:35:38.791Z",
+        "responseSnippet": "Starting Phase 0 — reading learnings, checking for existing RCA/cache files, and looking for workflow tools to fetch the ticket.Now I need to fetch the Jira ticket. Let me check available MCP tools and Jira scripts.Good — found all the key scripts. Now let me fetch the Jira ticket and check if there's a pc-script-library.json. The issue mentions `workflow_fetch_ticket` and `workflow_save_rca` — let me check if those exist as MCP tools or if I need to use jira-ops.cjs.Ticket fetched. This is a da"
       },
       {
         "issueNum": 761,
@@ -1140,27 +1146,19 @@
       }
     ],
     "pid": 13056,
-    "uptime": 17197,
+    "uptime": 17239,
     "failures": 0,
-    "activeJobCount": 1,
-    "jobs": [
-      {
-        "issueNum": 766,
-        "issueTitle": "Investigate ticket MHME-1462",
-        "snippet": "Auto-triggered investigation for new ticket MHME-1462.\n\nTicket: MHME-1462\nSummary: Update invoice for the Order MA261008",
-        "pid": 25332,
-        "elapsed": 759
-      }
-    ],
+    "activeJobCount": 0,
+    "jobs": [],
     "startTime": "2026-10-16T04:48:44.342Z",
     "version": "v3",
-    "lastResponseAt": "2026-10-16T07:42:49.621Z",
-    "lastResponseIssue": 761,
+    "lastResponseAt": "2026-10-16T09:35:38.802Z",
+    "lastResponseIssue": 766,
     "ideSessions": [
       {
         "pid": 23212,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 11123,
+        "ageSeconds": 11165,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -1170,7 +1168,7 @@
       {
         "pid": 5444,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 11119,
+        "ageSeconds": 11161,
         "status": "running",
         "isChild": false,
         "taskSummary": "check the current status and draft comment again abut if they moved or if something else is required",
@@ -1180,7 +1178,7 @@
       {
         "pid": 704,
         "cwd": "c:\\windows",
-        "ageSeconds": 11026,
+        "ageSeconds": 11069,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1190,7 +1188,7 @@
       {
         "pid": 27344,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 4179,
+        "ageSeconds": 4221,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -1199,6 +1197,15 @@
       }
     ],
     "activityLog": [
+      {
+        "id": "1792143338805-39i8qj",
+        "timestamp": "2026-10-16T09:35:38.805Z",
+        "type": "agent-response",
+        "source": "bridge",
+        "title": "Investigate ticket MHME-1462",
+        "detail": "Starting Phase 0 — reading learnings, checking for existing RCA/cache files, and looking for workflow tools to fetch the ticket.Now I need to fetch the Jira ticket. Let me check available MCP tools an",
+        "status": "success"
+      },
       {
         "id": "1792142561439-288x8q",
         "timestamp": "2026-10-16T09:22:41.439Z",
@@ -1458,15 +1465,6 @@
         "source": "aryanverma2410",
         "title": "Investigate ticket AUTEU-41862",
         "detail": "#657",
-        "status": "pending"
-      },
-      {
-        "id": "1791702646072-mg2jro",
-        "timestamp": "2026-10-11T07:10:46.072Z",
-        "type": "command",
-        "source": "aryanverma2410",
-        "title": "Investigate ticket RT-657502",
-        "detail": "#662",
         "status": "pending"
       }
     ],
@@ -4759,30 +4757,31 @@
         "issueNum": 766,
         "title": "Investigate ticket MHME-1462",
         "startTime": "2026-10-16T09:22:41.679Z",
-        "status": "thinking",
+        "status": "done",
         "commandHistory": [
           {
             "title": "Investigate ticket MHME-1462",
             "time": "2026-10-16T09:22:41.679Z"
           }
-        ]
+        ],
+        "endTime": "2026-10-16T09:35:38.808Z",
+        "lastOutput": "Starting Phase 0 — reading learnings, checking for existing RCA/cache files, and looking for workflow tools to fetch the ticket.Now I need to fetch the Jira ticket. Let me check available MCP tools and Jira scripts.Good — found all the key scripts. Now let me fetch the Jira ticket and check if there's a pc-script-library.json. The issue mentions `workflow_fetch_ticket` and `workflow_save_rca` — let me check if those exist as MCP tools or if I need to use jira-ops.cjs.Ticket fetched. This is a da"
       }
     },
-    "bridgeLogTail": "[2026-10-16T09:34:22.709Z] STDOUT data for #766: 110 bytes\n[2026-10-16T09:34:22.719Z] LIVE events write for #766: 255 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_766.txt\n[2026-10-16T09:34:22.721Z] STDOUT data for #766: 127 bytes\n[2026-10-16T09:34:22.724Z] LIVE events write for #766: 256 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_766.txt\n[2026-10-16T09:34:22.729Z] STDOUT data for #766: 110 bytes\n[2026-10-16T09:34:22.732Z] LIVE events write for #766: 257 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_766.txt\n[2026-10-16T09:34:22.743Z] STDOUT data for #766: 121 bytes\n[2026-10-16T09:34:22.746Z] LIVE events write for #766: 258 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_766.txt\n[2026-10-16T09:34:22.757Z] STDOUT data for #766: 109 bytes\n[2026-10-16T09:34:22.816Z] LIVE events write for #766: 259 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_766.txt\n[2026-10-16T09:34:22.820Z] STDOUT data for #766: 111 bytes\n[2026-10-16T09:34:22.822Z] LIVE events write for #766: 260 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_766.txt\n[2026-10-16T09:34:22.824Z] STDOUT data for #766: 326 bytes\n[2026-10-16T09:34:22.826Z] LIVE events write for #766: 263 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_766.txt\n[2026-10-16T09:34:23.764Z] STDOUT data for #766: 1020 bytes\n[2026-10-16T09:34:23.766Z] LIVE events write for #766: 264 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_766.txt\n[2026-10-16T09:34:23.774Z] STDOUT data for #766: 1034 bytes\n[2026-10-16T09:34:23.776Z] LIVE events write for #766: 265 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_766.txt\n[2026-10-16T09:35:10.338Z] STDOUT data for #766: 10291 bytes\n[2026-10-16T09:35:10.341Z] LIVE events write for #766: 266 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_766.txt",
+    "bridgeLogTail": "[2026-10-16T09:35:35.741Z] STDOUT data for #766: 621 bytes\n[2026-10-16T09:35:35.745Z] LIVE events write for #766: 399 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_766.txt\n[2026-10-16T09:35:35.746Z] STDOUT data for #766: 104 bytes\n[2026-10-16T09:35:35.749Z] LIVE events write for #766: 400 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_766.txt\n[2026-10-16T09:35:35.753Z] STDOUT data for #766: 109 bytes\n[2026-10-16T09:35:35.755Z] LIVE events write for #766: 401 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_766.txt\n[2026-10-16T09:35:35.763Z] STDOUT data for #766: 112 bytes\n[2026-10-16T09:35:35.766Z] LIVE events write for #766: 402 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_766.txt\n[2026-10-16T09:35:35.776Z] STDOUT data for #766: 124 bytes\n[2026-10-16T09:35:35.780Z] LIVE events write for #766: 403 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_766.txt\n[2026-10-16T09:35:35.782Z] STDOUT data for #766: 118 bytes\n[2026-10-16T09:35:35.784Z] LIVE events write for #766: 404 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_766.txt\n[2026-10-16T09:35:35.793Z] STDOUT data for #766: 122 bytes\n[2026-10-16T09:35:35.796Z] LIVE events write for #766: 405 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_766.txt\n[2026-10-16T09:35:35.803Z] STDOUT data for #766: 129 bytes\n[2026-10-16T09:35:35.807Z] LIVE events write for #766: 406 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_766.txt\n[2026-10-16T09:35:35.965Z] STDOUT data for #766: 1254 bytes\n[2026-10-16T09:35:35.967Z] LIVE events write for #766: 415 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_766.txt\n[2026-10-16T09:35:37.436Z] aipro completed for #766 (4087 chars)\n[2026-10-16T09:35:38.790Z] Comment posted on #766",
     "watchdog": {
       "alive": true,
       "lastWrite": "2026-10-16T09:27:44.819Z",
-      "ageMs": 458871
+      "ageMs": 500991
     },
-    "watchdogLogTail": "[2026-10-16T08:02:00.323Z] Killed dashboard PID 17244\n[2026-10-16T08:02:09.513Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 17244) not found\n[2026-10-16T08:02:12.427Z] Could not kill dashboard PID 17244: Command failed: taskkill /PID 17244 /F /T\n[2026-10-16T08:02:12.513Z] Starting jira-dashboard-server.js...\n[2026-10-16T08:02:12.772Z] Dashboard started with PID 20628 (restart #3, 3 in last hour)\n[2026-10-16T08:02:19.589Z] Starting jira-dashboard-server.js...\n[2026-10-16T08:02:19.785Z] Dashboard started with PID 26972 (restart #4, 4 in last hour)\n[2026-10-16T08:02:28.983Z] DUPLICATE jira-dashboard-server detected: PID 20628 — killing\n[2026-10-16T08:32:40.930Z] DUPLICATE watchdog detected: PID 32252 — killing\n[2026-10-16T09:27:44.818Z] DUPLICATE watchdog detected: PID 33664 — killing",
-    "jobOutputs": {}
+    "watchdogLogTail": "[2026-10-16T08:02:00.323Z] Killed dashboard PID 17244\n[2026-10-16T08:02:09.513Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 17244) not found\n[2026-10-16T08:02:12.427Z] Could not kill dashboard PID 17244: Command failed: taskkill /PID 17244 /F /T\n[2026-10-16T08:02:12.513Z] Starting jira-dashboard-server.js...\n[2026-10-16T08:02:12.772Z] Dashboard started with PID 20628 (restart #3, 3 in last hour)\n[2026-10-16T08:02:19.589Z] Starting jira-dashboard-server.js...\n[2026-10-16T08:02:19.785Z] Dashboard started with PID 26972 (restart #4, 4 in last hour)\n[2026-10-16T08:02:28.983Z] DUPLICATE jira-dashboard-server detected: PID 20628 — killing\n[2026-10-16T08:32:40.930Z] DUPLICATE watchdog detected: PID 32252 — killing\n[2026-10-16T09:27:44.818Z] DUPLICATE watchdog detected: PID 33664 — killing"
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-16T09:34:26.471Z",
+      "lastCheck": "2026-10-16T09:35:26.628Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4791,18 +4790,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-16T09:34:26.471Z",
+      "lastCheck": "2026-10-16T09:35:26.628Z",
       "downSince": "2026-10-16T08:04:23.215Z",
-      "downDuration": 5403256,
+      "downDuration": 5463413,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-16T09:34:26.471Z",
+      "lastCheck": "2026-10-16T09:35:26.628Z",
       "downSince": "2026-10-16T08:02:21.737Z",
-      "downDuration": 5524734,
+      "downDuration": 5584891,
       "alert": true
     }
   ],
@@ -5217,7 +5216,192 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "MHME-1462",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85471,
+        "targetDate": "2026-10-14T05:24:28.367000001Z"
+      },
+      {
+        "key": "MHME-1462",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1194993,
+        "targetDate": "2026-11-05T06:32:35.651000017Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86397,
+        "targetDate": "2026-09-29T16:09:08.750000001Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2176045,
+        "targetDate": "2026-11-20T14:03:27.584000039Z"
+      },
+      {
+        "key": "AEME-6640",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85858,
+        "targetDate": "2026-10-19T05:31:04.341000001Z"
+      },
+      {
+        "key": "AEME-6640",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2577301,
+        "targetDate": "2026-11-27T05:31:04.341000030Z"
+      },
+      {
+        "key": "TKME-2379",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85854,
+        "targetDate": "2026-10-16T13:23:55.356000001Z"
+      },
+      {
+        "key": "TKME-2379",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1223272,
+        "targetDate": "2026-11-05T13:23:55.356000015Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85937,
+        "targetDate": "2026-09-17T08:08:38.502000001Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 685955,
+        "targetDate": "2026-10-28T08:08:38.502000030Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86254,
+        "targetDate": "2026-09-21T04:19:58.710000001Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 922714,
+        "targetDate": "2026-11-02T02:54:37.529000031Z"
+      },
+      {
+        "key": "GMT-22427",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85808,
+        "targetDate": "2026-10-18T19:31:09.203000001Z"
+      },
+      {
+        "key": "GMT-22427",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 381306,
+        "targetDate": "2026-10-22T19:31:09.203000005Z"
+      },
+      {
+        "key": "TKME-2377",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86398,
+        "targetDate": "2026-10-16T05:17:18.911000001Z"
+      },
+      {
+        "key": "TKME-2377",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2576736,
+        "targetDate": "2026-11-27T05:21:38.812000031Z"
+      },
+      {
+        "key": "SAME-4024",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86243,
+        "targetDate": "2026-10-16T12:25:18.509000001Z"
+      },
+      {
+        "key": "SAME-4024",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 355755,
+        "targetDate": "2026-10-22T12:25:18.509000005Z"
+      },
+      {
+        "key": "SAME-4019",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86398,
+        "targetDate": "2026-10-16T05:16:55.206000001Z"
+      },
+      {
+        "key": "SAME-4019",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2496236,
+        "targetDate": "2026-11-26T06:59:59.595000030Z"
+      },
+      {
+        "key": "AEME-6527",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86020,
+        "targetDate": "2026-09-01T07:46:25.907000001Z"
+      },
+      {
+        "key": "AEME-6527",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 990365,
+        "targetDate": "2026-10-18T21:25:13.757000035Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85660,
+        "targetDate": "2026-09-15T08:21:25.088000001Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1211372,
+        "targetDate": "2026-10-13T12:51:05.986000021Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86179,
+        "targetDate": "2026-09-30T08:16:57.595000001Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1269633,
+        "targetDate": "2026-10-20T08:16:57.595000015Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
     "standupText": "Yesterday: 0.25h on AEME-6582, 0.25h on MHME-1463, 3.75h on SAM-18531, 1.33h on SAM-18530, 1.5h on PC-55464, 0.33h on AEME-6637, 0.33h on PKHME-945, 0.33h on SAME-4019, 0.33h on TKME-2377, 0.01h on JHME-1818, 1h on EHME-943\nToday: MHME-1462, AUTEU-41862, AEME-6640, TKME-2377, GMT-21163\nBlockers: AEME-6527, SAME-4019, PC-55443, PC-53923"
