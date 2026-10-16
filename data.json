@@ -1,7 +1,76 @@
 {
-  "generatedAt": "2026-10-16T10:38:07.968Z",
-  "totalTickets": 25,
+  "generatedAt": "2026-10-16T10:38:58.577Z",
+  "totalTickets": 26,
   "tickets": [
+    {
+      "key": "AEME-6596",
+      "summary": "Expert Care Orders Stuck || 29-Sep",
+      "status": "QA Server Review",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "UAE Maintenance & Enhancements",
+      "projectKey": "AEME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-16T19:38:49.000+0900",
+      "created": "2026-09-29T17:09:55.000+0900",
+      "statusChangedAt": "2026-10-08T20:39:36.195+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\n \n\nThe expert care orders below are being stuck with Shipped status. Kindly check and fix the issue\n\nAE260917-86564020 -SHIPPED\nAE260917-86564071- SHIPPED\nAE260922-91048112 -SHIPPED\nAE260922-91000993 -SHIPPED\nAE260928-97214836 -SHIPPED\n\nAE260922-91467505 -SHIPPED\n\n \n\nRegards\n\nJaffar",
+      "commentsCount": 21,
+      "recentComments": [
+        {
+          "author": "Dilip Boddula",
+          "date": "2026-10-16T19:38:49.847+0900",
+          "snippet": "Dear ~@email"
+        },
+        {
+          "author": "Dilip Boddula",
+          "date": "2026-10-12T15:52:09.597+0900",
+          "snippet": "~@email : I have shared steps with cs team internally. please follow up and let me know incase of any issues.\n\nRegards\n\nDilip"
+        }
+      ],
+      "lastCommentBy": "Dilip Boddula",
+      "lastCommentSnippet": "Dear ~@email",
+      "lastCommentDate": "2026-10-16T19:38:49.847+0900",
+      "url": "https://jira.secext.samsung.net/browse/AEME-6596",
+      "linkedTickets": [
+        {
+          "key": "PC-54773",
+          "summary": "Reset GCIC Expert Care ExternalService from ERROR to NEW and restart order process",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        },
+        {
+          "key": "PC-55196",
+          "summary": "Set gerpBillingNr and restart consignment process for GCIC activation (AEME-6596)",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        },
+        {
+          "key": "PC-55204",
+          "summary": "Script to set billing number and trigger GCIC activation for AE260922-91467505",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "Expert Care Orders Stuck || 29-Sep\r\nGenerated: 2026-10-02T18:00:00+09:00\r\n\r\nIssue:\r\n6 UAE Expert Care (GCIC) orders were reported stuck at SHIPPED status on 29-Sep. The orders are Galaxy Expert Care standalone service orders with GCIC_EXPERT_CARE_STANDALONE external service integration. DB verification on 2-Oct shows that 5 of the 6 orders have already been remediated and are now COMPLETED. One order (AE260922-91467505) remains stuck at SHIPPING_REQUESTED with a fundamentally different root cause from the other 5.\r\n\r\nRCA:\r\nTwo distinct issues affected these orders:\r\n\r\nGroup 1 — 5 orders already remediated (AE260917-86564020, AE260917-86564071, AE260922-91048112, AE260922-91000993, AE260928-97214836):\r\nAll 5 had ExternalService (GCIC_EXPERT_CARE_STANDALONE) in ERROR status because the GCIC API call failed during order processing. The ExternalService ERROR state blocked the order process from completing, leaving consignments stuck at SHIPPED and the order process in ERROR state. These were remediated by PC-54773, which reset the ExternalService from ERROR to NEW and restarted the order process from processExternalServicesAction. All 5 are now COMPLETED with ExternalService status UPDATED and processes SUCCEEDED. Delivery mode for all 5 was ae-galaxy-expertCare-CarryIn, payment mode was ae-CheckoutDotComFlowPaymentMode.\r\n\r\nGroup 2 — 1 order still stuck (AE260922-91467505):\r\nThis order is fundamentally different. Key differences from Group 1:\r\n- Order status is SHIPPING_REQUESTED (not SHIPPED) — the order never reached SHIPPED\r\n- Consignment status is SHIPPING_REQUESTED with no shipped or completed dates, no GERP billing\r\n- ExternalService (GCIC_EXPERT_CARE_STANDALONE) is in NEW status — the GCIC API was never called, the service was never attempted (not ERROR)\r\n- Order process (order-process-v25-69) is in RUNNING state (not ERROR) — the process is alive but waiting\r\n- Consignment process (consignment-process-v11-36) is also RUNNING\r\n- Delivery mode is ae-galaxy-expertCare (without CarryIn) — a different fulfillment path from the other 5\r\n- Payment mode is ae-tamaraPayment (Tamara BNPL) — different from the other 5 which used Checkout.com\r\n- Process last action is isDelayedFiRequired — the process is stalled waiting for delayed financial integration\r\n\r\nThe order completed checkout and payment capture successfully (Tamara authorization and capture both ACCEPTED for 804 AED + 120 AED = 924 AED). However, the order process is stuck at the isDelayedFiRequired action. The ExternalService was created (status NEW) but the GCIC API call was never triggered because the process never reached the point where the external service would be activated for this delivery mode and payment flow. The Tamara BNPL payment path and the ae-galaxy-expertCare delivery mode (non-CarryIn) route through a different process branch that requires delayed FI posting before the consignment can progress. The delayed FI event from GERP was never received, causing the process to stall at isDelayedFiRequired. As a result, the consignment remains at SHIPPING_REQUESTED and the GCIC service activation was never initiated.\r\n\r\nSimilar tickets: AEME-5925 (Order Stuck | Expert Cleaning Orders) and AEME-6272 (Orders stuck at processExternalServices [GCIC_EXPERT_CLEANING_STANDALONE]) dealt with the same GCIC ExternalService ERROR pattern as Group 1. AE260922-91467505 does not match this pattern.\r\n\r\nPossible remediation:\r\nFor the 5 already remediated orders: No action needed. All 5 are COMPLETED with processes SUCCEEDED. PC-54773 script was executed successfully.\r\n\r\nFor AE260922-91467505:\r\nThe remediation approach differs from the other 5 because the ExternalService is NEW (not ERROR) and the process is RUNNING (not ERROR). The following steps are recommended:\r\n\r\n1. Set the consignment status from SHIPPING_REQUESTED to COMPLETED to simulate the service completion. This order is a standalone Expert Care service (ae-galaxy-expertCare) — there is no physical shipment, so the consignment completion represents the service being rendered.\r\n\r\n2. Trigger the GCIC ExternalService by updating its status to trigger the GCIC API call, or manually setting the ExternalService to UPDATED if the service was already fulfilled out-of-band.\r\n\r\n3. Restart the order process from the isDelayedFiRequired action to push it past the stalled FI wait, or alternatively restart from processExternalServicesAction to re-attempt the GCIC integration after setting the consignment to COMPLETED.\r\n\r\n4. Verify the order progresses to COMPLETED and the order process reaches SUCCEEDED state.\r\n\r\nPC-54773 is reusable for this ticket but the existing script only covers the 5 already-remediated orders. A new script or modification is needed for AE260922-91467505 with the different remediation approach (consignment status change + process restart from a different action). Alternatively, PC-46538 (TKME-2056: Orders stuck at processExternalServices [GCIC_EXPERT_CLEANING_STANDALONE]) may provide a reusable pattern for the consignment completion approach.\r\n\r\nThe existing PC-54773 script (script-AEME-6596-expert-care-remediation.groovy) is in the bin directory and can be adapted. The script should be updated to include AE260922-91467505 with the modified logic: set consignment to COMPLETED, optionally trigger GCIC, and restart the order process from the appropriate action.",
+        "sections": {
+          "issue": "6 UAE Expert Care (GCIC) orders were reported stuck at SHIPPED status on 29-Sep. The orders are Galaxy Expert Care standalone service orders with GCIC_EXPERT_CARE_STANDALONE external service integration. DB verification on 2-Oct shows that 5 of the 6 orders have already been remediated and are now COMPLETED. One order (AE260922-91467505) remains stuck at SHIPPING_REQUESTED with a fundamentally different root cause from the other 5.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-02T06:25:29.973Z"
+      }
+    },
     {
       "key": "SAHME-3482",
       "summary": "Stuck order on Hybris",
@@ -1317,7 +1386,7 @@
       }
     ],
     "pid": 13056,
-    "uptime": 20959,
+    "uptime": 21014,
     "failures": 0,
     "activeJobCount": 4,
     "jobs": [
@@ -1326,28 +1395,28 @@
         "issueTitle": "Investigate ticket SAHME-3482",
         "snippet": "Auto-triggered investigation for new ticket SAHME-3482.\n\nTicket: SAHME-3482\nSummary: Stuck order on Hybris\n\nUse the inve",
         "pid": 32396,
-        "elapsed": 869
+        "elapsed": 924
       },
       {
         "issueNum": 768,
         "issueTitle": "Investigate ticket TKME-2381",
         "snippet": "Auto-triggered investigation for new ticket TKME-2381.\n\nTicket: TKME-2381\nSummary: Stuck order on Hybris\n\nUse the invest",
         "pid": 24996,
-        "elapsed": 870
+        "elapsed": 925
       },
       {
         "issueNum": 770,
         "issueTitle": "Investigate ticket MHME-1465",
         "snippet": "Auto-triggered investigation for new ticket MHME-1465.\n\nTicket: MHME-1465\nSummary: Stuck order on Hybris\n\nUse the invest",
         "pid": 24972,
-        "elapsed": 872
+        "elapsed": 927
       },
       {
         "issueNum": 771,
         "issueTitle": "Investigate ticket AEME-6642",
         "snippet": "Auto-triggered investigation for new ticket AEME-6642.\n\nTicket: AEME-6642\nSummary: Stuck order on Hybris\n\nUse the invest",
         "pid": 35392,
-        "elapsed": 873
+        "elapsed": 928
       }
     ],
     "startTime": "2026-10-16T04:48:44.342Z",
@@ -1358,7 +1427,7 @@
       {
         "pid": 23212,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 14896,
+        "ageSeconds": 14941,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -1368,7 +1437,7 @@
       {
         "pid": 5444,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 14892,
+        "ageSeconds": 14937,
         "status": "running",
         "isChild": false,
         "taskSummary": "First assign all the tickets to me. dont assume it is. verify these are assigned to me. then give...",
@@ -1378,7 +1447,7 @@
       {
         "pid": 704,
         "cwd": "c:\\windows",
-        "ageSeconds": 14800,
+        "ageSeconds": 14845,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1388,7 +1457,7 @@
       {
         "pid": 27344,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 7952,
+        "ageSeconds": 7997,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -5035,11 +5104,11 @@
         ]
       }
     },
-    "bridgeLogTail": "    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-10-16T10:38:15.527Z] aipro stderr for #767: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
+    "bridgeLogTail": "[2026-10-16T10:39:02.592Z] STDOUT data for #771: 107 bytes\n[2026-10-16T10:39:02.595Z] LIVE events write for #771: 166 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_771.txt\n[2026-10-16T10:39:02.603Z] STDOUT data for #771: 112 bytes\n[2026-10-16T10:39:02.606Z] LIVE events write for #771: 167 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_771.txt\n[2026-10-16T10:39:02.613Z] STDOUT data for #771: 107 bytes\n[2026-10-16T10:39:02.615Z] LIVE events write for #771: 168 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_771.txt\n[2026-10-16T10:39:02.623Z] STDOUT data for #771: 114 bytes\n[2026-10-16T10:39:02.627Z] LIVE events write for #771: 169 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_771.txt\n[2026-10-16T10:39:02.631Z] STDOUT data for #771: 107 bytes\n[2026-10-16T10:39:02.633Z] LIVE events write for #771: 170 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_771.txt\n[2026-10-16T10:39:02.641Z] STDOUT data for #771: 110 bytes\n[2026-10-16T10:39:02.644Z] LIVE events write for #771: 171 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_771.txt\n[2026-10-16T10:39:02.652Z] STDOUT data for #771: 114 bytes\n[2026-10-16T10:39:02.655Z] LIVE events write for #771: 172 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_771.txt\n[2026-10-16T10:39:02.661Z] STDOUT data for #771: 108 bytes\n[2026-10-16T10:39:02.664Z] LIVE events write for #771: 173 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_771.txt\n[2026-10-16T10:39:03.358Z] STDOUT data for #771: 450 bytes\n[2026-10-16T10:39:03.361Z] LIVE events write for #771: 174 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_771.txt\n[2026-10-16T10:39:03.365Z] STDOUT data for #771: 822 bytes\n[2026-10-16T10:39:03.368Z] LIVE events write for #771: 176 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_771.txt",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-16T09:27:44.819Z",
-      "ageMs": 4234215
+      "ageMs": 4278832
     },
     "watchdogLogTail": "[2026-10-16T08:02:00.323Z] Killed dashboard PID 17244\n[2026-10-16T08:02:09.513Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 17244) not found\n[2026-10-16T08:02:12.427Z] Could not kill dashboard PID 17244: Command failed: taskkill /PID 17244 /F /T\n[2026-10-16T08:02:12.513Z] Starting jira-dashboard-server.js...\n[2026-10-16T08:02:12.772Z] Dashboard started with PID 20628 (restart #3, 3 in last hour)\n[2026-10-16T08:02:19.589Z] Starting jira-dashboard-server.js...\n[2026-10-16T08:02:19.785Z] Dashboard started with PID 26972 (restart #4, 4 in last hour)\n[2026-10-16T08:02:28.983Z] DUPLICATE jira-dashboard-server detected: PID 20628 — killing\n[2026-10-16T08:32:40.930Z] DUPLICATE watchdog detected: PID 32252 — killing\n[2026-10-16T09:27:44.818Z] DUPLICATE watchdog detected: PID 33664 — killing",
     "jobOutputs": {}
@@ -5399,6 +5468,18 @@
         "statusChangedAt": "2026-10-06T14:05:18.355+0900"
       },
       {
+        "key": "AEME-6596",
+        "summary": "Expert Care Orders Stuck || 29-Sep",
+        "priority": "None",
+        "status": "QA Server Review",
+        "category": "blocked",
+        "reason": "Waiting for QA/review team",
+        "whatToDo": "",
+        "url": "https://jira.secext.samsung.net/browse/AEME-6596",
+        "updated": "2026-10-16T19:38:49.000+0900",
+        "statusChangedAt": "2026-10-08T20:39:36.195+0900"
+      },
+      {
         "key": "MHME-1465",
         "summary": "Stuck order on Hybris",
         "priority": "None",
@@ -5492,7 +5573,7 @@
     "totals": {
       "zero": 15,
       "actionable": 1,
-      "blocked": 7,
+      "blocked": 8,
       "queued": 2
     }
   },
@@ -5544,262 +5625,7 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": {
-    "byTicket": [
-      {
-        "key": "TKME-2381",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86394,
-        "targetDate": "2026-10-19T10:19:08.243000001Z"
-      },
-      {
-        "key": "TKME-2381",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2590861,
-        "targetDate": "2026-11-27T10:19:08.243000030Z"
-      },
-      {
-        "key": "SAHME-3482",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86395,
-        "targetDate": "2026-10-19T10:19:21.214000001Z"
-      },
-      {
-        "key": "SAHME-3482",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2590874,
-        "targetDate": "2026-11-27T11:19:21.214000030Z"
-      },
-      {
-        "key": "SAME-4027",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86394,
-        "targetDate": "2026-10-19T10:18:54.906000001Z"
-      },
-      {
-        "key": "SAME-4027",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2590847,
-        "targetDate": "2026-11-27T10:18:54.906000030Z"
-      },
-      {
-        "key": "GMT-21163",
-        "slaName": "GMT Issue Response SLA(GMT+5.5)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85937,
-        "targetDate": "2026-09-17T08:08:38.502000001Z"
-      },
-      {
-        "key": "GMT-21163",
-        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
-        "slaStatus": "STILL",
-        "remainingDuration": 682231,
-        "targetDate": "2026-10-28T08:08:38.502000030Z"
-      },
-      {
-        "key": "AEME-6642",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86395,
-        "targetDate": "2026-10-19T10:19:51.243000001Z"
-      },
-      {
-        "key": "AEME-6642",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2590904,
-        "targetDate": "2026-11-27T10:19:51.243000030Z"
-      },
-      {
-        "key": "GMT-22427",
-        "slaName": "GMT Issue Response SLA(GMT+5.5)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85808,
-        "targetDate": "2026-10-18T19:31:09.203000001Z"
-      },
-      {
-        "key": "GMT-22427",
-        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
-        "slaStatus": "STILL",
-        "remainingDuration": 377582,
-        "targetDate": "2026-10-22T19:31:09.203000005Z"
-      },
-      {
-        "key": "MHME-1465",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86395,
-        "targetDate": "2026-10-19T10:18:42.786000001Z"
-      },
-      {
-        "key": "MHME-1465",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2590835,
-        "targetDate": "2026-11-27T11:18:42.786000030Z"
-      },
-      {
-        "key": "MHME-1462",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85471,
-        "targetDate": "2026-10-14T05:24:28.367000001Z"
-      },
-      {
-        "key": "MHME-1462",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1191268,
-        "targetDate": "2026-11-05T06:32:35.651000017Z"
-      },
-      {
-        "key": "TKME-2377",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86398,
-        "targetDate": "2026-10-16T05:17:18.911000001Z"
-      },
-      {
-        "key": "TKME-2377",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2573011,
-        "targetDate": "2026-11-27T05:21:38.812000031Z"
-      },
-      {
-        "key": "SAME-4019",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86398,
-        "targetDate": "2026-10-16T05:16:55.206000001Z"
-      },
-      {
-        "key": "SAME-4019",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2492512,
-        "targetDate": "2026-11-26T06:59:59.595000030Z"
-      },
-      {
-        "key": "AEME-6640",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85858,
-        "targetDate": "2026-10-19T05:31:04.341000001Z"
-      },
-      {
-        "key": "AEME-6640",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2573577,
-        "targetDate": "2026-11-27T05:31:04.341000030Z"
-      },
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86254,
-        "targetDate": "2026-09-21T04:19:58.710000001Z"
-      },
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "STILL",
-        "remainingDuration": 918990,
-        "targetDate": "2026-11-02T02:54:37.529000031Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86397,
-        "targetDate": "2026-09-29T16:09:08.750000001Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2172320,
-        "targetDate": "2026-11-20T14:03:27.584000039Z"
-      },
-      {
-        "key": "TKME-2379",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85854,
-        "targetDate": "2026-10-16T13:23:55.356000001Z"
-      },
-      {
-        "key": "TKME-2379",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1219548,
-        "targetDate": "2026-11-05T13:23:55.356000015Z"
-      },
-      {
-        "key": "AEME-6527",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86020,
-        "targetDate": "2026-09-01T07:46:25.907000001Z"
-      },
-      {
-        "key": "AEME-6527",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 990365,
-        "targetDate": "2026-10-18T21:25:13.757000035Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85660,
-        "targetDate": "2026-09-15T08:21:25.088000001Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1211372,
-        "targetDate": "2026-10-13T12:51:05.986000021Z"
-      },
-      {
-        "key": "SAME-4024",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86243,
-        "targetDate": "2026-10-16T12:25:18.509000001Z"
-      },
-      {
-        "key": "SAME-4024",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 352031,
-        "targetDate": "2026-10-22T12:25:18.509000005Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86179,
-        "targetDate": "2026-09-30T08:16:57.595000001Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1269633,
-        "targetDate": "2026-10-20T08:16:57.595000015Z"
-      }
-    ]
-  },
+  "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
     "standupText": "Yesterday: 0.25h on AEME-6582, 0.25h on MHME-1463, 3.75h on SAM-18531, 1.33h on SAM-18530, 1.5h on PC-55464, 0.33h on AEME-6637, 0.33h on PKHME-945, 0.33h on SAME-4019, 0.33h on TKME-2377, 0.01h on JHME-1818, 1h on EHME-943\nToday: SAHME-3482, TKME-2381, SAME-4027, MHME-1465, AEME-6642\nBlockers: AEME-6527, SAME-4019, PC-55443, PC-53923"
