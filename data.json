@@ -1,47 +1,7 @@
 {
-  "generatedAt": "2026-10-16T07:37:36.277Z",
-  "totalTickets": 23,
+  "generatedAt": "2026-10-16T07:38:22.880Z",
+  "totalTickets": 22,
   "tickets": [
-    {
-      "key": "TKME-2374",
-      "summary": "Stuck order on Hybris",
-      "status": "Approved for Launch",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Turkey Maintenance & Enhancements",
-      "projectKey": "TKME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-16T16:36:29.000+0900",
-      "created": "2026-10-14T18:05:14.000+0900",
-      "statusChangedAt": "2026-10-16T16:36:29.994+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|TR260926-95700957|2026/09/26|SHIPPED|\n|TR261005-05030525|2026/10/05|SHIPPED|\n|TR261008-08140185|2026/10/08|SHIPPED|\n|TR261008-08226876|2026/10/08|SHIPPED|\n|TR261009-09383",
-      "commentsCount": 3,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-16T16:32:18.295+0900",
-          "snippet": "Hi Rajesh,\n\nThanks for confirming. Closing this ticket as no remediation is needed.\n\nRef: GMT-22353\n\nThanks,\nAryan."
-        },
-        {
-          "author": "Rajeshbabu Yatirajula",
-          "date": "2026-10-16T14:30:13.859+0900",
-          "snippet": "Hi ~@email \n\nThe mentioned orders in the description looks good, no remediation needed as there are moving further as per the business process.\n\nRegards,\nRajesh"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Rajesh,\n\nThanks for confirming. Closing this ticket as no remediation is needed.\n\nRef: GMT-22353\n\nThanks,\nAryan.",
-      "lastCommentDate": "2026-10-16T16:32:18.295+0900",
-      "url": "https://jira.secext.samsung.net/browse/TKME-2374",
-      "linkedTickets": [],
-      "solution": {
-        "status": "none",
-        "excerpt": "",
-        "source": "",
-        "foundAt": "",
-        "issueNumber": null
-      }
-    },
     {
       "key": "PC-55429",
       "summary": "Increase batch size of tr-tokotransferconsignmenttowarehousejob cronjob from 100 to 500",
@@ -142,9 +102,15 @@
       "url": "https://jira.secext.samsung.net/browse/AUTEU-41862",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-10-16T07:24:22.844Z"
+        "status": "found",
+        "excerpt": "Summary: CSAgent access required for SMI P1 and STG\r\nGenerated: 2026-10-16T12:53:00+09:00\r\n\r\nIssue:\r\nAUTEU-41862 is a service request for enabling CSAgent (Customer Service Agent) role access on SMI P1 and STG environments (STG1, STG2, STG3) for 8 team members. The requester (aryan.v1) and the listed individuals already have admin/Backoffice access but do not have the CSAgent role assigned, which is required to access the Customer Service Agent views and Assisted Service Module in the Hybris Backoffice. The ticket has been approved by ITGC (D2C) and is currently awaiting action — Nitin Kumar has asked for the Backoffice IDs for the listed accounts to proceed.\r\n\r\nRCA:\r\nThis is not a platform bug or code defect. The CSAgent role in the Samsung Toko Hybris platform is managed through Hybris user groups. The platform defines several CS-related user groups via ImpEx configuration in tokocore (user-groups.impex and cscockpit-users.impex):\r\n\r\n1. csagentgroup — \"Customer Service Agent Group\" — grants access to CS Backoffice CS Agent Group views and the Assisted Service Module. Inherits from customerservicegroup and cockpitgroup.\r\n2. customersupportagentgroup — \"CS Agent Group\" — grants CS Agent Group views and Assisted Service Module access. Inherits employeegroup and customersupportagentrole.\r\n3. customersupportmanagergroup — inherits customersupportagentgroup plus manager-level roles.\r\n4. customersupportadministratorgroup — inherits all of the above plus administrator roles.\r\n\r\nThe listed users have admin access but are not members of csagentgroup or customersupportagentgroup, so they cannot access the CSAgent views and Assisted Service Module functionality. No database or code-level issue exists — this is purely a user group membership provisioning task that must be executed via the Hybris Backoffice (or HAC ImpEx) on each target environment.\r\n\r\nPossible remediation:\r\n1. Provide the Backoffice user IDs for all 8 listed accounts as requested by Nitin Kumar in the ticket comments.\r\n2. Add each user to the csagentgroup (or customersupportagentgroup) user group on SMI P1 and all STG environments (STG1, STG2, STG3) via the Hybris Backoffice user management console, or via ImpEx:\r\n\r\n   INSERT_UPDATE Employee; UID[unique=true]; groups(uid)[mode=append]\r\n   ; <user-uid>; csagentgroup\r\n\r\n3. Verify access by logging into the Backoffice with one of the accounts and confirming the CS Agent Group views and Assisted Service Module are visible.\r\n4. No Hybris HAC script or PC ticket is required — this is a standard access provisioning action performed through the Backoffice administration UI or HAC ImpEx import.\r\n\r\nTicket URL: https://jira.secext.samsung.net/browse/AUTEU-41862",
+        "sections": {
+          "issue": "AUTEU-41862 is a service request for enabling CSAgent (Customer Service Agent) role access on SMI P1 and STG environments (STG1, STG2, STG3) for 8 team members. The requester (aryan.v1) and the listed individuals already have admin/Backoffice access but do not have the CSAgent role assigned, which is required to access the Customer Service Agent views and Assisted Service Module in the Hybris Backoffice. The ticket has been approved by ITGC (D2C) and is currently awaiting action — Nitin Kumar has asked for the Backoffice IDs for the listed accounts to proceed.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-16T07:38:10.391Z"
       }
     },
     {
@@ -1246,7 +1212,7 @@
       }
     ],
     "pid": 13056,
-    "uptime": 10131,
+    "uptime": 10179,
     "failures": 0,
     "activeJobCount": 2,
     "jobs": [
@@ -1255,14 +1221,14 @@
         "issueTitle": "Investigate ticket AUTEU-41862",
         "snippet": "Auto-triggered investigation for new ticket AUTEU-41862.\n\nTicket: AUTEU-41862\nSummary: CSAgent access required for SMI P",
         "pid": 23756,
-        "elapsed": 1086
+        "elapsed": 1133
       },
       {
         "issueNum": 762,
         "issueTitle": "Investigate ticket SAHME-3480",
         "snippet": "Auto-triggered investigation for new ticket SAHME-3480.\n\nTicket: SAHME-3480\nSummary: MSA | Fraud service | ZAF | Order n",
         "pid": 22524,
-        "elapsed": 864
+        "elapsed": 911
       }
     ],
     "startTime": "2026-10-16T04:48:44.342Z",
@@ -1273,7 +1239,7 @@
       {
         "pid": 21116,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 4064,
+        "ageSeconds": 4111,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -1283,7 +1249,7 @@
       {
         "pid": 23212,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 4058,
+        "ageSeconds": 4105,
         "status": "running",
         "isChild": false,
         "taskSummary": "verify these claims you are making",
@@ -1293,7 +1259,7 @@
       {
         "pid": 5444,
         "cwd": "c:\\windows",
-        "ageSeconds": 4054,
+        "ageSeconds": 4102,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1303,7 +1269,7 @@
       {
         "pid": 704,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 3962,
+        "ageSeconds": 4009,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -4864,11 +4830,11 @@
         ]
       }
     },
-    "bridgeLogTail": "    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-10-16T07:37:41.160Z] aipro stderr for #762: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
+    "bridgeLogTail": "    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-10-16T07:38:05.433Z] STDOUT data for #761: 106 bytes\n[2026-10-16T07:38:05.442Z] LIVE events write for #761: 93 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_761.txt\n[2026-10-16T07:38:05.458Z] STDOUT data for #761: 118 bytes\n[2026-10-16T07:38:05.460Z] LIVE events write for #761: 94 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_761.txt\n[2026-10-16T07:38:05.481Z] STDOUT data for #761: 124 bytes\n[2026-10-16T07:38:05.484Z] LIVE events write for #761: 95 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_761.txt\n[2026-10-16T07:38:05.507Z] STDOUT data for #761: 129 bytes\n[2026-10-16T07:38:05.510Z] LIVE events write for #761: 96 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_761.txt\n[2026-10-16T07:38:05.531Z] STDOUT data for #761: 112 bytes\n[2026-10-16T07:38:05.535Z] LIVE events write for #761: 97 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_761.txt\n[2026-10-16T07:38:05.906Z] STDOUT data for #761: 118 bytes\n[2026-10-16T07:38:05.908Z] LIVE events write for #761: 98 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_761.txt\n[2026-10-16T07:38:05.910Z] STDOUT data for #761: 348 bytes\n[2026-10-16T07:38:05.912Z] LIVE events write for #761: 101 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_761.txt\n[2026-10-16T07:38:10.291Z] STDOUT data for #761: 2971 bytes\n[2026-10-16T07:38:10.299Z] LIVE events write for #761: 102 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_761.txt\n[2026-10-16T07:38:10.444Z] STDOUT data for #761: 124 bytes\n[2026-10-16T07:38:10.447Z] LIVE events write for #761: 103 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_761.txt",
     "watchdog": {
       "alive": true,
       "lastWrite": "2026-10-16T07:32:43.391Z",
-      "ageMs": 298270
+      "ageMs": 347267
     },
     "watchdogLogTail": "[2026-10-16T05:13:43.448Z] Dashboard is degraded (failures: 31). Will not restart yet.\n[2026-10-16T05:15:44.348Z] Dashboard is degraded (failures: 33). Will not restart yet.\n[2026-10-16T05:57:00.214Z] Dashboard is degraded (failures: 74). Will not restart yet.\n[2026-10-16T05:57:59.406Z] Dashboard is degraded (failures: 75). Will not restart yet.\n[2026-10-16T05:59:00.793Z] Dashboard is degraded (failures: 76). Will not restart yet.\n[2026-10-16T05:59:59.241Z] Dashboard is degraded (failures: 77). Will not restart yet.\n[2026-10-16T06:01:00.045Z] Dashboard is degraded (failures: 78). Will not restart yet.\n[2026-10-16T06:01:59.875Z] Dashboard is degraded (failures: 79). Will not restart yet.\n[2026-10-16T06:03:00.704Z] Dashboard is degraded (failures: 80). Will not restart yet.\n[2026-10-16T07:32:43.389Z] DUPLICATE watchdog detected: PID 26228 — killing",
     "jobOutputs": {}
@@ -4878,7 +4844,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-16T07:37:07.635Z",
+      "lastCheck": "2026-10-16T07:38:07.584Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4887,7 +4853,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-16T07:37:07.635Z",
+      "lastCheck": "2026-10-16T07:38:07.584Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4896,9 +4862,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-16T07:37:07.635Z",
+      "lastCheck": "2026-10-16T07:38:07.584Z",
       "downSince": "2026-10-15T23:14:41.168Z",
-      "downDuration": 30146467,
+      "downDuration": 30206416,
       "alert": true
     }
   ],
@@ -5166,18 +5132,6 @@
         "statusChangedAt": "2026-10-16T15:33:50.586+0900"
       },
       {
-        "key": "TKME-2374",
-        "summary": "Stuck order on Hybris",
-        "priority": "None",
-        "status": "Approved for Launch",
-        "category": "actionable",
-        "reason": "",
-        "whatToDo": "Execute on PROD",
-        "url": "https://jira.secext.samsung.net/browse/TKME-2374",
-        "updated": "2026-10-16T16:36:29.000+0900",
-        "statusChangedAt": "2026-10-16T16:36:29.994+0900"
-      },
-      {
         "key": "AEME-6597",
         "summary": "Stuck in Shipped Status || 29-Sep",
         "priority": "None",
@@ -5296,7 +5250,7 @@
     ],
     "totals": {
       "zero": 11,
-      "actionable": 3,
+      "actionable": 2,
       "blocked": 7,
       "queued": 2
     }
