@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-16T11:32:14.863Z",
-  "totalTickets": 22,
+  "generatedAt": "2026-10-16T11:33:01.798Z",
+  "totalTickets": 21,
   "tickets": [
     {
       "key": "MHME-1466",
@@ -228,50 +228,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-10-02T06:25:29.973Z"
-      }
-    },
-    {
-      "key": "MHME-1462",
-      "summary": "Update invoice for the Order MA261008-0769928",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Morocco Maintenance & Enhancements",
-      "projectKey": "MHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-16T18:21:55.000+0900",
-      "created": "2026-10-13T14:24:28.000+0900",
-      "statusChangedAt": "2026-10-13T14:39:57.226+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team, \ncan you please help to update the invoice of the Order \nMA261008-0769928\n\nas below ? \n\nCustomer: Primelift SARL\n\nICE:  003595504000059\n\nThanks\n\nAshwani Verma\n\n \n\nCC: ~@email",
-      "commentsCount": 4,
-      "recentComments": [
-        {
-          "author": "Ashwani Verma",
-          "date": "2026-10-16T18:02:17.174+0900",
-          "snippet": "Hi ~@email\n\npayment and delivery address :  \n\nAddress ( Delivery & Facturation : Bloc D Rue 04 N17 – Ain Chock ,CASABLANCA ,MAROC  . ICE : 003595504000059 ).\n\nThanks\n\n~@email"
-        },
-        {
-          "author": "Ashwani Verma",
-          "date": "2026-10-15T14:27:13.132+0900",
-          "snippet": "Hi ~@email \n\nplease check the details to be changed.\n|AS IS|TO BE |\n|Customer :  Abderrahman  lahroussi|Customer : Primelift SARL|\n|Adress : Bloc D Rue 04 N17 - ICE 003595504000059 - Primelift SARL |Adress ( Delivery & Facturation : Bloc D Rue 04 N17 – Ain Chock ,CASABLANCA ,MAROC  . ICE : 003595504"
-        }
-      ],
-      "lastCommentBy": "Ashwani Verma",
-      "lastCommentSnippet": "Hi ~@email\n\npayment and delivery address :  \n\nAddress ( Delivery & Facturation : Bloc D Rue 04 N17 – Ain Chock ,CASABLANCA ,MAROC  . ICE : 003595504000059 ).\n\nThanks\n\n~@email",
-      "lastCommentDate": "2026-10-16T18:02:17.174+0900",
-      "url": "https://jira.secext.samsung.net/browse/MHME-1462",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: MHME-1462\nSummary: Update invoice for the Order MA261008-0769928\nGenerated: 2026-10-16T09:30:00Z\n\nIssue:\nThe reporter (Ashwani Verma) requested updating the invoice customer and address details on order MA261008-07699289 (referred to as MA261008-0769928 in the ticket, missing the trailing 9). The order is COMPLETED with the consignment also in COMPLETED status, shipped on 2026-10-08, and a GERP billing number (3249268252) has already been generated. The current invoice bears the original customer name (Abderrahman lahroussi) and address (Ain Chock, Casablanca-Settat, Morocco), but the reporter needs it updated to the new entity: Primelift SARL, ICE 003595504000059, address Bloc D Rue 04 N17, Ain Chock, Casablanca, Morocco. Both the delivery address (PK 10306956263447) and payment address (PK 10306956296215) on the order need to be updated with the new customer name, company, and ICE number.\n\nRCA:\nThe order MA261008-07699289 was placed on 2026-10-08 via CMI credit card payment (ma-cmiCreditCardPaymentMode) with total 10,324.79 MAD. The order completed normally through the full fulfillment lifecycle (order placed, consignment shipped, GERP billing generated, order status COMPLETED). There is no platform bug or code defect involved. The request is a post-fulfillment invoice data correction, which is a standard operational request for the Morocco (MHME) region.\n\nThe address fields on both delivery and payment addresses are Hybris-encrypted (attribute encryption enabled for the MA region), meaning they cannot be directly updated via SQL or ImpEx. A Groovy script through HAC is required to load the AddressModel items via getModelService, update the firstname, lastname, company, and any ICE-related fields, then save via modelService.saveAll(). This is the same remediation pattern confirmed and successfully applied in MHME-1328 (Invoice Update ICE, May 2026), MHME-773 (ICE Number Update, Jan 2024), MHME-719 (Order invoice update, Oct 2023), MHME-709 (Order details update, Sep 2023), and MHME-734 (Order invoice modification, Oct 2023). All precedent tickets were resolved as HAC remediation scripts.\n\nThe consignment has a GERP billing number (3249268252) already assigned, so the invoice has been generated in the downstream GERP system. Updating the Hybris-side address data will need to be accompanied by a GERP-side invoice correction or re-generation request to the Morocco finance/accounting team, as the GERP billing document is a separate downstream artifact.\n\nPossible remediation:\n1. Create a HAC Groovy script to update both Address items (delivery: PK 10306956263447, payment: PK 10306956296215) with the new customer details:\n   - firstname: Primelift\n   - lastname: SARL\n   - company: Primelift SARL\n   - streetname: Bloc D Rue 04 N17\n   - town: Ain Chock\n   - district: Casablanca\n   - postalcode: (as provided)\n   - Ensure ICE number 003595504000059 is set in the appropriate field (likely company or a custom attribute)\n2. Use modelService to load, modify, and save the Address items (not direct SQL, due to attribute encryption)\n3. After the Hybris update, coordinate with the Morocco GERP/finance team to regenerate or correct the downstream GERP billing document (billing number 3249268252) with the new customer and ICE details\n4. The script should follow the pattern established in MHME-1328 and MHME-773 for invoice/address updates on completed orders in the MA region\n5. No PC ticket type exists in the standard reusable library for invoice/address updates specifically, but this falls under the general data-fix remediation category — refer to MHME-1328 for the approved script template",
-        "sections": {
-          "issue": "The reporter (Ashwani Verma) requested updating the invoice customer and address details on order MA261008-07699289 (referred to as MA261008-0769928 in the ticket, missing the trailing 9). The order is COMPLETED with the consignment also in COMPLETED status, shipped on 2026-10-08, and a GERP billing number (3249268252) has already been generated. The current invoice bears the original customer name (Abderrahman lahroussi) and address (Ain Chock, Casablanca-Settat, Morocco), but the reporter needs it updated to the new entity: Primelift SARL, ICE 003595504000059, address Bloc D Rue 04 N17, Ain Chock, Casablanca, Morocco. Both the delivery address (PK 10306956263447) and payment address (PK 10306956296215) on the order need to be updated with the new customer name, company, and ICE number.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-16T09:35:29.905Z"
       }
     },
     {
@@ -1224,7 +1180,7 @@
       }
     ],
     "pid": 13056,
-    "uptime": 24209,
+    "uptime": 24254,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -1233,7 +1189,7 @@
         "issueTitle": "Investigate ticket MHME-1466",
         "snippet": "Auto-triggered investigation for new ticket MHME-1466.\n\nTicket: MHME-1466\nSummary: Unit limitations for Orange Platform ",
         "pid": 33804,
-        "elapsed": 716
+        "elapsed": 761
       }
     ],
     "startTime": "2026-10-16T04:48:44.342Z",
@@ -1244,7 +1200,7 @@
       {
         "pid": 23212,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 18138,
+        "ageSeconds": 18185,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -1254,7 +1210,7 @@
       {
         "pid": 5444,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 18135,
+        "ageSeconds": 18181,
         "status": "running",
         "isChild": false,
         "taskSummary": "create precautionary ticekts for stagnant and warning ones as well. ask the subsidiaries if any a...",
@@ -1264,7 +1220,7 @@
       {
         "pid": 704,
         "cwd": "c:\\windows",
-        "ageSeconds": 18042,
+        "ageSeconds": 18089,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1274,7 +1230,7 @@
       {
         "pid": 27344,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 11195,
+        "ageSeconds": 11241,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -4946,7 +4902,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-16T11:12:42.548Z",
-      "ageMs": 1180497
+      "ageMs": 1226451
     },
     "watchdogLogTail": "[2026-10-16T08:02:09.513Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 17244) not found\n[2026-10-16T08:02:12.427Z] Could not kill dashboard PID 17244: Command failed: taskkill /PID 17244 /F /T\n[2026-10-16T08:02:12.513Z] Starting jira-dashboard-server.js...\n[2026-10-16T08:02:12.772Z] Dashboard started with PID 20628 (restart #3, 3 in last hour)\n[2026-10-16T08:02:19.589Z] Starting jira-dashboard-server.js...\n[2026-10-16T08:02:19.785Z] Dashboard started with PID 26972 (restart #4, 4 in last hour)\n[2026-10-16T08:02:28.983Z] DUPLICATE jira-dashboard-server detected: PID 20628 — killing\n[2026-10-16T08:32:40.930Z] DUPLICATE watchdog detected: PID 32252 — killing\n[2026-10-16T09:27:44.818Z] DUPLICATE watchdog detected: PID 33664 — killing\n[2026-10-16T11:12:42.547Z] DUPLICATE watchdog detected: PID 35152 — killing",
     "jobOutputs": {}
@@ -4956,7 +4912,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-16T11:31:47.964Z",
+      "lastCheck": "2026-10-16T11:32:48.384Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4965,18 +4921,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-16T11:31:47.964Z",
+      "lastCheck": "2026-10-16T11:32:48.384Z",
       "downSince": "2026-10-16T08:04:23.215Z",
-      "downDuration": 12444749,
+      "downDuration": 12505169,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-16T11:31:47.964Z",
+      "lastCheck": "2026-10-16T11:32:48.384Z",
       "downSince": "2026-10-16T08:02:21.737Z",
-      "downDuration": 12566227,
+      "downDuration": 12626647,
       "alert": true
     }
   ],
@@ -5144,18 +5100,6 @@
         "url": "https://jira.secext.samsung.net/browse/AUTEU-41862",
         "updated": "2026-10-16T19:44:01.000+0900",
         "statusChangedAt": ""
-      },
-      {
-        "key": "MHME-1462",
-        "summary": "Update invoice for the Order MA261008-0769928",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/MHME-1462",
-        "updated": "2026-10-16T18:21:55.000+0900",
-        "statusChangedAt": "2026-10-13T14:39:57.226+0900"
       },
       {
         "key": "AEME-6640",
@@ -5361,7 +5305,7 @@
       }
     ],
     "totals": {
-      "zero": 12,
+      "zero": 11,
       "actionable": 2,
       "blocked": 6,
       "queued": 2
@@ -5418,6 +5362,6 @@
   "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 0.25h on AEME-6582, 0.25h on MHME-1463, 3.75h on SAM-18531, 1.33h on SAM-18530, 1.5h on PC-55464, 0.33h on AEME-6637, 0.33h on PKHME-945, 0.33h on SAME-4019, 0.33h on TKME-2377, 0.01h on JHME-1818, 1h on EHME-943\nToday: MHME-1466, SAME-4027, AEME-6642, AUTEU-41862, MHME-1462\nBlockers: AEME-6527, PC-55443, PC-53923"
+    "standupText": "Yesterday: 0.25h on AEME-6582, 0.25h on MHME-1463, 3.75h on SAM-18531, 1.33h on SAM-18530, 1.5h on PC-55464, 0.33h on AEME-6637, 0.33h on PKHME-945, 0.33h on SAME-4019, 0.33h on TKME-2377, 0.01h on JHME-1818, 1h on EHME-943\nToday: MHME-1466, SAME-4027, AEME-6642, AUTEU-41862, AEME-6640\nBlockers: AEME-6527, PC-55443, PC-53923"
   }
 }
