@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-17T08:51:30.254Z",
+  "generatedAt": "2026-10-17T08:52:29.045Z",
   "totalTickets": 18,
   "tickets": [
     {
@@ -109,14 +109,14 @@
       "linkedTickets": [],
       "solution": {
         "status": "found",
-        "excerpt": "# RCA: SAME-4027\nStuck order on Hybris\nGenerated: 2026-10-16T16:07:47.252Z\n\nIssue:\nTwo SA region orders are stuck with consignment process errors. SA261013-14592894 (Tabby, 3149.10 SAR) is in ORDER_SPLIT status with its consignment process in ERROR at sendConsignmentToWarehouse — the consignment was never transmitted to warehouse WC05 and remains in WAITING_FOR_TRANSFER. SA261013-13642757 (Tamara, 1099.00 SAR) is in SHIPPED status with its consignment COMPLETED and GERP billing done, but its consignment process errored at processExternalServices — the GCIC_EXPERT_CLEANING_STANDALONE external service was never registered and remains in NEW status.\n\nRCA:\nSA261013-14592894:\nThe consignment process (consignment-process-v11-36) executed 13 actions successfully, including sendConsignmentToExternalERP at 11:59:24 on 2026-10-15. The very next action, sendConsignmentToWarehouse, failed at 11:59:25 and the process entered ERROR state with endMessage \"An error occurred while executing the process.\" The order remains in ORDER_SPLIT because the parent order process (order-process-v25-69, state RUNNING) is blocked waiting for the consignment process to complete. Payment is fully captured — Tabby CAPTURE ACCEPTED for 3149.10 SAR at 14:11:19. The consignment is physically stuck — it was never sent to warehouse WC05, so no shipment or delivery has occurred. The product is SM-S938BZKIMEA (physical device). No external services are involved.\n\nThis is the same sendConsignmentToWarehouse ERROR pattern seen across multiple regions and resolved tickets (NFME-5178, KSME-1277, UAME-5154, TKME-2055, SAME-4005). Kibana logs were unavailable during this investigation so the exact exception at sendConsignmentToWarehouse could not be retrieved, but the DB process task log confirms the failure point.\n\nSA261013-13642757:\nThe consignment process (consignment-process-v11-36) executed 44 actions covering the entire fulfillment lifecycle — sendConsignmentToWarehouse succeeded, waitForWarehouse passed, receiveConsignmentStatus completed, isShippedDone confirmed, sendDispatchEmail sent, sendUpdateShipmentToFraudService completed. The consignment reached COMPLETED status with GERP billing number 3249459356 created on 2026-10-14. The order moved to SHIPPED. However, the very last action in the consignment process — processExternalServices at 00:03:02 on 2026-10-14 — failed and the process entered ERROR state.\n\nThe product P-GT-LCXOS1GW is a cleaning service product that requires external service registration with the GCIC (Galaxy Care+ / Expert Cleaning) provider. The ExternalService record (provider: GCIC_EXPERT_CLEANING_STANDALONE, serviceProduct: 11524227137537) is still in NEW status — it was never sent to the external provider. The processExternalServicesOnConsignmentAction.invokeExternalService() call failed, preventing the external service registration. Payment is fully captured — Tamara CAPTURE ACCEPTED for 1099.00 SAR.\n\nThis matches the pattern resolved in AEME-6596 (PC-55204, PC-54773) where GCIC external services were stuck at NEW after the consignment process errored at processExternalServices.\n\nPossible remediation:\nSA261013-14592894:\nRestart the consignment business process from the waitForSendToWarehouse wait node. This re-triggers the warehouse send action. Reusable PC ticket: PC-54582 (REUSABLE, approved by D2C — Sathishkumar Senamohan). SA-specific variant: PC-55037 (REUSABLE, approved for SAME-4005 by Vamseedhara Reddy Dhonadula). Script: script-retrigger-consignment-sendToWarehouse.groovy — copy and update order list to SA261013-14592894.\n\nSA261013-13642757:\nThe consignment is already COMPLETED and the order is SHIPPED — physical fulfillment is done. The consignment process cannot be restarted from processExternalServices in the normal way since the process is in ERROR at that action. Two options based on prior REUSABLE PC tickets:\n\nOption A (PC-55204, script-AEME-6596-gcic-activation-remediation.groovy): Directly invoke the GCIC activation service via Spring bean (extendedWarrantyActivationService / TokoGcicActivationServiceImpl) to register the service with the external provider. This was used when the consignment process had already SUCCEEDED and process restart was not possible.\n\nOption B (PC-54773, script-AEME-6596-expert-care-remediation.groovy): Reset the external service from its current state and restart the order process to re-trigger processExternalServices.\n\nBoth remediation approaches have approved REUSABLE PC tickets. The SA region has used the sendConsignmentToWarehouse retrigger pattern before (PC-55037 for SAME-4005).",
+        "excerpt": "# RCA: SAME-4027\nStuck order on Hybris - 2 SA region orders with consignment process errors\nGenerated: 2026-10-17T08:55:00.000Z\n\nHi Arjenelle ,\n\nI re-investigated both orders with Kibana logs now available (they were unavailable during the initial check on Oct 16).\n\nSA261013-14592894:\nThe consignment process is in ERROR state. Kibana logs show \"Config Error. No 'Warehouse' set for Consignment SA261013-14592894\" at 11:29:24 on Oct 15, indicating the warehouse assignment failed during consignment creation. A Tabby conversion error \"Order SA261013-14592894 cannot be converted to real order\" was also logged at 11:05:37. The warehouse WC05 is now set on the consignment in the DB, confirming it was assigned after the initial error. The order is at ORDER_SPLIT and the consignment is at WAITING_FOR_TRANSFER.\n\nSA261013-13642757:\nThe consignment process is in ERROR state, but the consignment itself is COMPLETED and the order is SHIPPED. Kibana logs show \"Config Error. No 'Warehouse' set for Consignment SA261013-13642757\" at 23:29:21 on Oct 13, and \"Could not find product: P-GT-LCXOS1GW\" at 23:16:37. GERP billing was completed (ref 3249459356) and the consignment reached COMPLETED at 00:02:13 on Oct 14. The GCIC external service (GCIC_EXPERT_CLEANING_STANDALONE) remains in NEW status, meaning the GCIC registration was never completed despite the consignment completing through the warehouse path. The \"No non-fulfilment entry found\" error at 00:02:13 is a known systemic issue affecting many consignments globally.\n\nRegarding remediation: Yes, retriggering the consignment process for SA261013-14592894 should be sufficient as the warehouse is now assigned (WC05). For SA261013-13642757, the consignment is already COMPLETED and the order is SHIPPED. The process ERROR is a leftover from the consignment creation phase. The GCIC external service is still NEW. We need to confirm if the GCIC registration is still required for this order or if the process can just be cleaned up.\n\nRegarding why we keep receiving stuck orders with the same error: The \"Config Error. No 'Warehouse' set for Consignment\" is a recurring issue in the SA store. It occurs when the warehouse assignment fails during consignment creation. The SA store does not have an autoheal mechanism for this error type, so each occurrence requires manual remediation. Without an auto-retry or autoheal cronjob, any warehouse assignment failure will cause the consignment process to go ERROR and require manual intervention.\n\nRegards\n\nAryan",
         "sections": {
-          "issue": "Two SA region orders are stuck with consignment process errors. SA261013-14592894 (Tabby, 3149.10 SAR) is in ORDER_SPLIT status with its consignment process in ERROR at sendConsignmentToWarehouse — the consignment was never transmitted to warehouse WC05 and remains in WAITING_FOR_TRANSFER. SA261013-13642757 (Tamara, 1099.00 SAR) is in SHIPPED status with its consignment COMPLETED and GERP billing done, but its consignment process errored at processExternalServices — the GCIC_EXPERT_CLEANING_STANDALONE external service was never registered and remains in NEW status.",
-          "rca": "",
+          "issue": "",
+          "rca": "# RCA: SAME-4027\nStuck order on Hybris - 2 SA region orders with consignment process errors\nGenerated: 2026-10-17T08:55:00.000Z\n\nHi Arjenelle ,\n\nI re-investigated both orders with Kibana logs now available (they were unavailable during the initial check on Oct 16).\n\nSA261013-14592894:\nThe consignment process is in ERROR state. Kibana logs show \"Config Error. No 'Warehouse' set for Consignment SA261013-14592894\" at 11:29:24 on Oct 15, indicating the warehouse assignment failed during consignment creation. A Tabby conversion error \"Order SA261013-14592894 cannot be converted to real order\" was also logged at 11:05:37. The warehouse WC05 is now set on the consignment in the DB, confirming it was assigned after the initial error. The order is at ORDER_SPLIT and the consignment is at WAITING_FOR_TRANSFER.\n\nSA261013-13642757:\nThe consignment process is in ERROR state, but the consignment itself is COMPLETED and the order is SHIPPED. Kibana logs show \"Config Error. No 'Warehouse' set for Consignment SA261013-13642757\" at 23:29:21 on Oct 13, and \"Could not find product: P-GT-LCXOS1GW\" at 23:16:37. GERP billing was completed (ref 3249459356) and the consignment reached COMPLETED at 00:02:13 on Oct 14. The GCIC external service (GCIC_EXPERT_CLEANING_STANDALONE) remains in NEW status, meaning the GCIC registration was never completed despite the consignment completing through the warehouse path. The \"No non-fulfilment entry found\" error at 00:02:13 is a known systemic issue affecting many consignments globally.\n\nRegarding remediation: Yes, retriggering the consignment process for SA261013-14592894 should be sufficient as the warehouse is now assigned (WC05). For SA261013-13642757, the consignment is already COMPLETED and the order is SHIPPED. The process ERROR is a leftover from the consignment creation phase. The GCIC external service is still NEW. We need to confirm if the GCIC registration is still required for this order or if the process can just be cleaned up.\n\nRegarding why we keep receiving stuck orders with the same error: The \"Config Error. No 'Warehouse' set for Consignment\" is a recurring issue in the SA store. It occurs when the warehouse assignment fails during consignment creation. The SA store does not have an autoheal mechanism for this error type, so each occurrence requires manual remediation. Without an auto-retry or autoheal cronjob, any warehouse assignment failure will cause the consignment process to go ERROR and require manual intervention.\n\nRegards\n\nAryan",
           "remediation": ""
         },
         "source": "RCA MD",
-        "foundAt": "2026-10-16T10:37:47.646Z"
+        "foundAt": "2026-10-17T08:51:55.862Z"
       }
     },
     {
@@ -705,7 +705,7 @@
         {
           "author": "Talib Raza Zaidi",
           "date": "2026-08-10T14:39:48.587+0900",
-          "snippet": "Hi,\n\n \n\nPlease update on this.\n\n \n\nRegards\n\nTalib"
+          "snippet": "Hi,\n\n��\n\nPlease update on this.\n\n \n\nRegards\n\nTalib"
         }
       ],
       "lastCommentBy": "Talib Raza Zaidi",
@@ -1049,7 +1049,7 @@
       }
     ],
     "pid": 18024,
-    "uptime": 10769,
+    "uptime": 10829,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1061,7 +1061,7 @@
       {
         "pid": 17932,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 9639,
+        "ageSeconds": 9704,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -1071,7 +1071,7 @@
       {
         "pid": 904,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 9577,
+        "ageSeconds": 9642,
         "status": "running",
         "isChild": false,
         "taskSummary": "SAME-4027",
@@ -1081,7 +1081,7 @@
       {
         "pid": 5784,
         "cwd": "c:\\windows",
-        "ageSeconds": 9557,
+        "ageSeconds": 9622,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -4755,7 +4755,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-17T07:07:39.996Z",
-      "ageMs": 6236541
+      "ageMs": 6298938
     },
     "watchdogLogTail": "[2026-10-17T00:21:48.370Z] RESTART NEEDED: Bridge process (PID 3124) not found\n[2026-10-17T00:21:50.077Z] Could not kill PID 3124: Command failed: taskkill /PID 3124 /F /T\n[2026-10-17T00:21:52.334Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 17404) not found\n[2026-10-17T00:21:54.558Z] Could not kill dashboard PID 17404: Command failed: taskkill /PID 17404 /F /T\n[2026-10-17T00:21:55.082Z] Starting bridge.js...\n[2026-10-17T00:21:55.271Z] Bridge started with PID 18024 (restart #1, 1 in last hour)\n[2026-10-17T00:21:59.588Z] Starting jira-dashboard-server.js...\n[2026-10-17T00:21:59.764Z] Dashboard started with PID 11736 (restart #1, 1 in last hour)\n[2026-10-17T00:22:13.418Z] DUPLICATE jira-dashboard-server detected: PID 14456 — killing\n[2026-10-17T07:07:39.994Z] DUPLICATE watchdog detected: PID 24660 — killing"
   },
@@ -4764,7 +4764,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-17T08:50:33.177Z",
+      "lastCheck": "2026-10-17T08:51:38.396Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4773,7 +4773,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-17T08:50:33.177Z",
+      "lastCheck": "2026-10-17T08:51:38.396Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4782,9 +4782,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-17T08:50:33.177Z",
+      "lastCheck": "2026-10-17T08:51:38.396Z",
       "downSince": "2026-10-17T05:52:03.936Z",
-      "downDuration": 10709241,
+      "downDuration": 10774460,
       "alert": true
     }
   ],
