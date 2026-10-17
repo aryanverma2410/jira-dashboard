@@ -1,7 +1,51 @@
 {
-  "generatedAt": "2026-10-17T07:18:25.062Z",
+  "generatedAt": "2026-10-17T07:19:08.643Z",
   "totalTickets": 19,
   "tickets": [
+    {
+      "key": "AEME-6642",
+      "summary": "Stuck order on Hybris",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "UAE Maintenance & Enhancements",
+      "projectKey": "AEME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-17T16:18:57.000+0900",
+      "created": "2026-10-16T19:19:51.000+0900",
+      "statusChangedAt": "2026-10-16T19:19:55.390+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nFollowing order was found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|AE261013-14424301|2026/10/13|SHIPPED|\n\n\nThanks",
+      "commentsCount": 3,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-17T16:18:57.339+0900",
+          "snippet": "Hi Talib,\n\nThe consignment process for AE261013-14424301 has been restarted from the isAdditionalInfoCollected action. The process completed successfully this time. Process state is now SUCCEEDED. Order has moved to WAITING_FOR_FINANCIAL. Consignment is COMPLETED with GERP DO 7370113960 and billing "
+        },
+        {
+          "author": "Talib Raza Zaidi",
+          "date": "2026-10-16T20:18:02.006+0900",
+          "snippet": "Hi ~@email,\n\n \n\nPlease proceed to remediate the order.\n\n\nRegards\n\nTalib\n\nCC: ~@email"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Talib,\n\nThe consignment process for AE261013-14424301 has been restarted from the isAdditionalInfoCollected action. The process completed successfully this time. Process state is now SUCCEEDED. Order has moved to WAITING_FOR_FINANCIAL. Consignment is COMPLETED with GERP DO 7370113960 and billing ",
+      "lastCommentDate": "2026-10-17T16:18:57.339+0900",
+      "url": "https://jira.secext.samsung.net/browse/AEME-6642",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "Stuck order on Hybris\r\nGenerated: 2026-10-16T19:30:00Z\r\n\r\nIssue:\r\nOrder AE261013-14424301 (SHIPPED, AED 1525.50, ae-cybersourceSamsungPay) has its consignment process in ERROR state. The consignment itself is COMPLETED with tracking number 55077419213, shipped on 2026-10-14, and GERP billing posted (3249562006). The consignment process (consignment-process-v11-36) failed at the isAdditionalInfoCollected action with an I/O error (Read timed out). The order process (order-process-v25-69) is still in RUNNING state, waiting for the consignment process to complete.\r\n\r\nRCA:\r\nThe consignment process failed at IsAdditionalInfoCollectedAction.executeAction() in com.samsung.toko.fulfilmentprocess.actions.consignment.IsAdditionalInfoCollectedAction. This action calls tokoConsignmentService.isConsignmentMissingAdditionalInfo(), tokoConfigPropertyService.getPropertyBooleanValueFromDB(), and tokoFulfilmentService.updateConsignmentAdditionalInfo() during its execution. One of these service calls encountered an I/O timeout (Read timed out), which caused the Hybris process engine to set the consignment process to ERROR state with endMessage \"An error occurred while executing the process.\"\r\n\r\nThis is a transient infrastructure issue, not a code defect or data issue. The consignment is already COMPLETED with all logistics data present (tracking, shipment date, GERP billing, warehouse assignment). The I/O timeout occurred during a DB or service query within the action, not during any business-critical operation. The process simply needs to be restarted from the isAdditionalInfoCollected action to continue through the remaining workflow steps.\r\n\r\nThis is a well-known recurring pattern with 320+ similar resolved tickets across all regional projects (PEME-3308, MXME-4939, CBME-3942, CSME-6370, CLME-3686, CAME-12905, RMME-4189, KSME-3011, NGME-16525, SCME-2556, and many more).\r\n\r\nPossible remediation:\r\nRestart the consignment process from the isAdditionalInfoCollected action using businessProcessService.restartProcess(). The reusable PC ticket PC-52605 (script-TKME-2279-retrigger-business-process.groovy) handles process restart for ERROR-state processes, but it only iterates order.orderProcess and checks for processDefinitionName containing \"order-process-v\". Since the consignment process has definition name \"consignment-process-v11-36\", the script needs to be adapted to also iterate consignment processes. Alternatively, a targeted script can restart just this single consignment process by fetching it by process code, removing its current tasks, and calling restartProcess with the last actionId from task logs.\r\n\r\nSince the consignment is already COMPLETED with all data present, the isAdditionalInfoCollected check will return OK on restart, and the process will continue to completion. This will also allow the parent order process (currently RUNNING and waiting) to proceed.\r\n\r\n## Remediation\r\nReusable PC ticket: PC-52605 (process-restart, script: script-TKME-2279-retrigger-business-process.groovy)\r\nNote: Script needs adaptation to handle consignment processes in addition to order processes.",
+        "sections": {
+          "issue": "Order AE261013-14424301 (SHIPPED, AED 1525.50, ae-cybersourceSamsungPay) has its consignment process in ERROR state. The consignment itself is COMPLETED with tracking number 55077419213, shipped on 2026-10-14, and GERP billing posted (3249562006). The consignment process (consignment-process-v11-36) failed at the isAdditionalInfoCollected action with an I/O error (Read timed out). The order process (order-process-v25-69) is still in RUNNING state, waiting for the consignment process to complete.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-16T10:52:33.399Z"
+      }
+    },
     {
       "key": "GMT-22427",
       "summary": "SMI | 4xx Failure rate increase - /tokocommercewebservices/v2/tr/users/anonymous/carts",
@@ -117,50 +161,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-10-16T10:37:47.646Z"
-      }
-    },
-    {
-      "key": "AEME-6642",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-16T20:18:28.000+0900",
-      "created": "2026-10-16T19:19:51.000+0900",
-      "statusChangedAt": "2026-10-16T19:19:55.390+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing order was found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|AE261013-14424301|2026/10/13|SHIPPED|\n\n\nThanks",
-      "commentsCount": 2,
-      "recentComments": [
-        {
-          "author": "Talib Raza Zaidi",
-          "date": "2026-10-16T20:18:02.006+0900",
-          "snippet": "Hi ~@email,\n\n \n\nPlease proceed to remediate the order.\n\n\nRegards\n\nTalib\n\nCC: ~@email"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-16T19:19:53.713+0900",
-          "snippet": "Hi Team,\n\nFor the mentioned order, the consignment process is in ERROR at isAdditionalInfoCollected. The order is in SHIPPED status but the consignment process failed with an I/O error (Read timed out) when calling the additional info collection service.\n\nConsignment process ERROR at isAdditionalInf"
-        }
-      ],
-      "lastCommentBy": "Talib Raza Zaidi",
-      "lastCommentSnippet": "Hi ~@email,\n\n \n\nPlease proceed to remediate the order.\n\n\nRegards\n\nTalib\n\nCC: ~@email",
-      "lastCommentDate": "2026-10-16T20:18:02.006+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6642",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Stuck order on Hybris\r\nGenerated: 2026-10-16T19:30:00Z\r\n\r\nIssue:\r\nOrder AE261013-14424301 (SHIPPED, AED 1525.50, ae-cybersourceSamsungPay) has its consignment process in ERROR state. The consignment itself is COMPLETED with tracking number 55077419213, shipped on 2026-10-14, and GERP billing posted (3249562006). The consignment process (consignment-process-v11-36) failed at the isAdditionalInfoCollected action with an I/O error (Read timed out). The order process (order-process-v25-69) is still in RUNNING state, waiting for the consignment process to complete.\r\n\r\nRCA:\r\nThe consignment process failed at IsAdditionalInfoCollectedAction.executeAction() in com.samsung.toko.fulfilmentprocess.actions.consignment.IsAdditionalInfoCollectedAction. This action calls tokoConsignmentService.isConsignmentMissingAdditionalInfo(), tokoConfigPropertyService.getPropertyBooleanValueFromDB(), and tokoFulfilmentService.updateConsignmentAdditionalInfo() during its execution. One of these service calls encountered an I/O timeout (Read timed out), which caused the Hybris process engine to set the consignment process to ERROR state with endMessage \"An error occurred while executing the process.\"\r\n\r\nThis is a transient infrastructure issue, not a code defect or data issue. The consignment is already COMPLETED with all logistics data present (tracking, shipment date, GERP billing, warehouse assignment). The I/O timeout occurred during a DB or service query within the action, not during any business-critical operation. The process simply needs to be restarted from the isAdditionalInfoCollected action to continue through the remaining workflow steps.\r\n\r\nThis is a well-known recurring pattern with 320+ similar resolved tickets across all regional projects (PEME-3308, MXME-4939, CBME-3942, CSME-6370, CLME-3686, CAME-12905, RMME-4189, KSME-3011, NGME-16525, SCME-2556, and many more).\r\n\r\nPossible remediation:\r\nRestart the consignment process from the isAdditionalInfoCollected action using businessProcessService.restartProcess(). The reusable PC ticket PC-52605 (script-TKME-2279-retrigger-business-process.groovy) handles process restart for ERROR-state processes, but it only iterates order.orderProcess and checks for processDefinitionName containing \"order-process-v\". Since the consignment process has definition name \"consignment-process-v11-36\", the script needs to be adapted to also iterate consignment processes. Alternatively, a targeted script can restart just this single consignment process by fetching it by process code, removing its current tasks, and calling restartProcess with the last actionId from task logs.\r\n\r\nSince the consignment is already COMPLETED with all data present, the isAdditionalInfoCollected check will return OK on restart, and the process will continue to completion. This will also allow the parent order process (currently RUNNING and waiting) to proceed.\r\n\r\n## Remediation\r\nReusable PC ticket: PC-52605 (process-restart, script: script-TKME-2279-retrigger-business-process.groovy)\r\nNote: Script needs adaptation to handle consignment processes in addition to order processes.",
-        "sections": {
-          "issue": "Order AE261013-14424301 (SHIPPED, AED 1525.50, ae-cybersourceSamsungPay) has its consignment process in ERROR state. The consignment itself is COMPLETED with tracking number 55077419213, shipped on 2026-10-14, and GERP billing posted (3249562006). The consignment process (consignment-process-v11-36) failed at the isAdditionalInfoCollected action with an I/O error (Read timed out). The order process (order-process-v25-69) is still in RUNNING state, waiting for the consignment process to complete.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-16T10:52:33.399Z"
       }
     },
     {
@@ -680,7 +680,7 @@
         {
           "author": "Rajeshbabu Yatirajula",
           "date": "2026-10-09T19:11:28.799+0900",
-          "snippet": "Hi ~@email \n\nWe'd shared the data with the business, but they've a concern that the data shared with them was split into two separate sheets, “Dealers” and “Users.” There is no common field linking them, so business cannot see which dealer uses which account and cannot complete the mapping. The data"
+          "snippet": "Hi ~@email \n\nWe'd shared the data with the business, but they've a concern that the data shared with them was split into two separate sheets, “Dealers” and “Users.��� There is no common field linking them, so business cannot see which dealer uses which account and cannot complete the mapping. The da"
         }
       ],
       "lastCommentBy": "Aryan Verma",
@@ -1093,7 +1093,7 @@
       }
     ],
     "pid": 18024,
-    "uptime": 5184,
+    "uptime": 5230,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1105,7 +1105,7 @@
       {
         "pid": 17932,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 4055,
+        "ageSeconds": 4097,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -1115,17 +1115,17 @@
       {
         "pid": 904,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 3992,
+        "ageSeconds": 4034,
         "status": "running",
         "isChild": false,
-        "taskSummary": "no need for \" all 16 remaining actions executed without error: {code:java} isAdditionalInfoCollec...",
-        "lastExchange": "no need for \" all 16 remaining actions executed without error:\n\n  {code:java}\n  isAdditionalInfoCollected → OK\n  isConsignmentFIRequired → NOK\n  sendDispatchEmail → OK\n  sendUpdateShipmentToFraudService → OK\n  processExternalServices → OK\n  isShippedComplete → OK\n  sendDeliveryUpdateToERP → OK\n  isIODFIPostingRequired → NOK\n  sendCreditNoteInfoToExternalParty → OK\n  sendShippedCompleteNotification → OK\n  regenerateTaxInvoice → OK\n  hadInFlightCancellations → NOK\n  handleInFlightCancelledExternalServiceSkus → OK\n  triggerSubscriptionServiceProcess → OK\n  subprocessEnd → OK\n  {code}\n\"",
+        "taskSummary": "post this with 25m logs, assign back, put to LV and update labels",
+        "lastExchange": "post this with 25m logs, assign back, put to  LV and update labels",
         "sessionId": "bin"
       },
       {
         "pid": 5784,
         "cwd": "c:\\windows",
-        "ageSeconds": 3973,
+        "ageSeconds": 4015,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -4799,7 +4799,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-17T07:07:39.996Z",
-      "ageMs": 649754
+      "ageMs": 691377
     },
     "watchdogLogTail": "[2026-10-17T00:21:48.370Z] RESTART NEEDED: Bridge process (PID 3124) not found\n[2026-10-17T00:21:50.077Z] Could not kill PID 3124: Command failed: taskkill /PID 3124 /F /T\n[2026-10-17T00:21:52.334Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 17404) not found\n[2026-10-17T00:21:54.558Z] Could not kill dashboard PID 17404: Command failed: taskkill /PID 17404 /F /T\n[2026-10-17T00:21:55.082Z] Starting bridge.js...\n[2026-10-17T00:21:55.271Z] Bridge started with PID 18024 (restart #1, 1 in last hour)\n[2026-10-17T00:21:59.588Z] Starting jira-dashboard-server.js...\n[2026-10-17T00:21:59.764Z] Dashboard started with PID 11736 (restart #1, 1 in last hour)\n[2026-10-17T00:22:13.418Z] DUPLICATE jira-dashboard-server detected: PID 14456 — killing\n[2026-10-17T07:07:39.994Z] DUPLICATE watchdog detected: PID 24660 — killing"
   },
@@ -4962,6 +4962,18 @@
         "statusChangedAt": "2026-10-09T18:07:10.311+0900"
       },
       {
+        "key": "AEME-6642",
+        "summary": "Stuck order on Hybris",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/AEME-6642",
+        "updated": "2026-10-17T16:18:57.000+0900",
+        "statusChangedAt": "2026-10-16T19:19:55.390+0900"
+      },
+      {
         "key": "GMT-22427",
         "summary": "SMI | 4xx Failure rate increase - /tokocommercewebservices/v2/tr/users/anonymous/carts",
         "priority": "None",
@@ -4984,18 +4996,6 @@
         "url": "https://jira.secext.samsung.net/browse/MHME-1466",
         "updated": "2026-10-16T20:20:05.000+0900",
         "statusChangedAt": "2026-10-16T20:20:05.357+0900"
-      },
-      {
-        "key": "AEME-6642",
-        "summary": "Stuck order on Hybris",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/AEME-6642",
-        "updated": "2026-10-16T20:18:28.000+0900",
-        "statusChangedAt": "2026-10-16T19:19:55.390+0900"
       },
       {
         "key": "AUTEU-41862",
@@ -5231,9 +5231,180 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "AEME-6642",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86395,
+        "targetDate": "2026-10-19T10:19:51.243000001Z"
+      },
+      {
+        "key": "AEME-6642",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2557675,
+        "targetDate": "2026-11-27T10:27:55.529000030Z"
+      },
+      {
+        "key": "GMT-22427",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 6608,
+        "targetDate": "2026-10-15T21:31:09.203Z"
+      },
+      {
+        "key": "GMT-22427",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 46869,
+        "targetDate": "2026-10-19T07:31:09.203000001Z"
+      },
+      {
+        "key": "MHME-1466",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85724,
+        "targetDate": "2026-10-19T11:08:49.611000001Z"
+      },
+      {
+        "key": "MHME-1466",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1256929,
+        "targetDate": "2026-11-06T12:08:49.611000015Z"
+      },
+      {
+        "key": "SAME-4027",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86394,
+        "targetDate": "2026-10-19T10:18:54.906000001Z"
+      },
+      {
+        "key": "SAME-4027",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2554102,
+        "targetDate": "2026-11-27T10:28:22.789000030Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86397,
+        "targetDate": "2026-09-29T16:09:08.750000001Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2135007,
+        "targetDate": "2026-11-20T14:03:27.584000039Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86254,
+        "targetDate": "2026-09-21T04:19:58.710000001Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 878077,
+        "targetDate": "2026-11-02T02:54:37.529000031Z"
+      },
+      {
+        "key": "AEME-6527",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86020,
+        "targetDate": "2026-09-01T07:46:25.907000001Z"
+      },
+      {
+        "key": "AEME-6527",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 990365,
+        "targetDate": "2026-10-18T21:25:13.757000035Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85937,
+        "targetDate": "2026-09-17T08:08:38.502000001Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 653918,
+        "targetDate": "2026-10-28T08:08:38.502000030Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85660,
+        "targetDate": "2026-09-15T08:21:25.088000001Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1211372,
+        "targetDate": "2026-10-13T12:51:05.986000021Z"
+      },
+      {
+        "key": "AEME-6640",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85858,
+        "targetDate": "2026-10-19T05:31:04.341000001Z"
+      },
+      {
+        "key": "AEME-6640",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2539864,
+        "targetDate": "2026-11-27T05:31:04.341000030Z"
+      },
+      {
+        "key": "TKME-2379",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85854,
+        "targetDate": "2026-10-16T13:23:55.356000001Z"
+      },
+      {
+        "key": "TKME-2379",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1182235,
+        "targetDate": "2026-11-05T13:23:55.356000015Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86179,
+        "targetDate": "2026-09-30T08:16:57.595000001Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1269633,
+        "targetDate": "2026-10-20T08:16:57.595000015Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 0.75h on AEME-6527, 0.25h on TKME-2374, 0.75h on AEME-6640, 0.75h on SAHME-3480, 0.33h on MHME-1465, 0.33h on SAME-4027, 0.33h on TKME-2381, 0.33h on SAHME-3482, 0.33h on AEME-6642, 1.5h on SAM-18531, 1.33h on SAM-18530, 0.75h on SAME-4019, 0.75h on TKME-2377, 0.33h on AEME-6643, 0.33h on EHME-947, 0.33h on ISHME-812, 0.33h on JHME-1819, 0.33h on MHME-1467, 0.33h on PKHME-946, 0.33h on SAME-4028, 0.33h on TKME-2382, 0.33h on SAHME-3483, 1h on AEME-6596\nToday: GMT-22427, MHME-1466, SAME-4027, AEME-6642, AUTEU-41862\nBlockers: AEME-6527, PC-55443, PC-53923"
+    "standupText": "Yesterday: 0.75h on AEME-6527, 0.25h on TKME-2374, 0.75h on AEME-6640, 0.75h on SAHME-3480, 0.33h on MHME-1465, 0.33h on SAME-4027, 0.33h on TKME-2381, 0.33h on SAHME-3482, 0.33h on AEME-6642, 1.5h on SAM-18531, 1.33h on SAM-18530, 0.75h on SAME-4019, 0.75h on TKME-2377, 0.33h on AEME-6643, 0.33h on EHME-947, 0.33h on ISHME-812, 0.33h on JHME-1819, 0.33h on MHME-1467, 0.33h on PKHME-946, 0.33h on SAME-4028, 0.33h on TKME-2382, 0.33h on SAHME-3483, 1h on AEME-6596\nToday: AEME-6642, GMT-22427, MHME-1466, SAME-4027, AUTEU-41862\nBlockers: AEME-6527, PC-55443, PC-53923"
   }
 }
