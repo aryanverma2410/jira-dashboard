@@ -1,88 +1,416 @@
 {
-  "generatedAt": "2026-10-18T03:30:07.098Z",
-  "totalTickets": 19,
+  "generatedAt": "2026-10-19T02:47:20.237Z",
+  "totalTickets": 26,
   "tickets": [
     {
-      "key": "RT-747436",
-      "summary": "Regression - SMI - STG2 - TR: Cannot place order with Iyzico payments",
+      "key": "AEME-6637",
+      "summary": "Stuck order on Hybris | Overselling issue",
       "status": "In Progress",
       "statusCategory": "In Progress",
-      "priority": "Blocker",
-      "project": "Regression Test",
-      "projectKey": "RT",
-      "issuetype": "Bug",
-      "updated": "2026-10-17T21:00:44.000+0900",
-      "created": "2026-10-17T11:46:52.000+0900",
-      "statusChangedAt": "2026-10-17T19:22:30.962+0900",
+      "priority": "None",
+      "project": "UAE Maintenance & Enhancements",
+      "projectKey": "AEME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-19T16:36:05.000+0900",
+      "created": "2026-10-15T14:16:08.000+0900",
+      "statusChangedAt": "2026-10-15T14:16:10.935+0900",
       "assignedToMeAt": "",
-      "description": "Step to reproduce\n1. Access TR storefront: [Internal Link]\n2. Add any product (SM-S931BDBDTUR) to cart\n3. Go to Payment page\n4. Select any Iyzico payment to pay\n\nActual results\n4.1. Bank Transfer: Expanded view keeps loading infinitely (TR261017-09802144)\n !image-2026-10-17-09-39-56-883.png|thumbnai",
-      "commentsCount": 3,
+      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n|Order|Creation_Date|Status|\n|AE261014-15868813|2026/10/14|WAITING_FOR_SEND_FINANCIAL|\n|AE261007-06950515|2026/10/07|WAITING_FOR_SEND_FINANCIAL|\n\nThanks",
+      "commentsCount": 2,
       "recentComments": [
         {
-          "author": "Dennis N",
-          "date": "2026-10-17T21:00:44.814+0900",
-          "snippet": "Hi ~@email - in this case, who should we reach out to fix this ?  \nThanks!~"
+          "author": "Jaffar Ali",
+          "date": "2026-10-19T16:35:37.225+0900",
+          "snippet": "Hi ~@email \n\n \n\nWe have available stock for the orders below. Please remediate them.\n\nAE261014-15868813\n\nAE261007-06950515\n\n \n\nRegards\n\nJaffar"
         },
         {
           "author": "Aryan Verma",
-          "date": "2026-10-17T19:20:47.285+0900",
-          "snippet": "Hi ~@email ,\n\nWe checked it, it seeems like a IP Whitelisting issue inside VDI which is blocking the script running in the sandboxed div.\n\nI checked it on outside network and its working fine:\n\n!image-2026-10-17-15-49-44-273.png!\n\nRegards\n\nAryan"
+          "date": "2026-10-15T14:21:34.056+0900",
+          "snippet": "Hi Team,\n\nThese orders are stuck at splitOrder due to missing warehouse assignment on the consignment model. The consignments cannot be created because no warehouse is mapped for the product/site combination.\n\nKindly update the stock in warehouse so we can push the orders further.\n\nRef: GMT-22353\n\nT"
         }
       ],
-      "lastCommentBy": "Dennis N",
-      "lastCommentSnippet": "Hi ~@email - in this case, who should we reach out to fix this ?  \nThanks!~",
-      "lastCommentDate": "2026-10-17T21:00:44.814+0900",
-      "url": "https://jira.secext.samsung.net/browse/RT-747436",
+      "lastCommentBy": "Jaffar Ali",
+      "lastCommentSnippet": "Hi ~@email \n\n \n\nWe have available stock for the orders below. Please remediate them.\n\nAE261014-15868813\n\nAE261007-06950515\n\n \n\nRegards\n\nJaffar",
+      "lastCommentDate": "2026-10-19T16:35:37.225+0900",
+      "url": "https://jira.secext.samsung.net/browse/AEME-6637",
       "linkedTickets": [
         {
-          "key": "RT-726026",
-          "summary": "[92RC1_TR_SanityTest_TC73] Verify if user is able to place order with Iyzico Wallet and move to Shipping Requested",
-          "status": "Blocked-ES",
-          "statusCategory": "To Do",
-          "relation": "relates to",
+          "key": "AEME-6622",
+          "summary": "[Stuck Orders] 9 order(s) requiring maintenance fix",
+          "status": "Launch Verification",
+          "statusCategory": "Done",
+          "relation": "blocks",
           "assignee": null
         },
         {
-          "key": "RT-726027",
-          "summary": "[92RC1_TR_SanityTest_TC74] Verify if user is able to place order with Iyzico Credit and move to Shipping Requested",
-          "status": "Blocked-ES",
-          "statusCategory": "To Do",
-          "relation": "relates to",
+          "key": "AEME-6628",
+          "summary": "[Stuck Orders] 5 order(s) requiring maintenance fix",
+          "status": "Launch Verification",
+          "statusCategory": "Done",
+          "relation": "blocks",
           "assignee": null
         },
         {
-          "key": "RT-726029",
-          "summary": "[92RC1_TR_SanityTest_TC76] Verify if user is able to place order with Bank Transfer and move to Shipping Requested",
-          "status": "Blocked-ES",
-          "statusCategory": "To Do",
-          "relation": "relates to",
+          "key": "AEME-6630",
+          "summary": "[PROD] Overselling Issue - Order Placed without Stock | 14th Oct",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "relation": "blocks",
           "assignee": null
         },
         {
-          "key": "RT-726030",
-          "summary": "[92RC1_TR_SanityTest_TC77] Verify if user is able to place order with Iyzico Marketplace and move to Shipping Requested",
-          "status": "Blocked-ES",
-          "statusCategory": "To Do",
-          "relation": "relates to",
-          "assignee": null
-        },
-        {
-          "key": "RT-726031",
-          "summary": "[92RC1_TR_SanityTest_TC78] Verify if user is able to place order with Masterpass Marketplace and move to Shipping Requested",
-          "status": "Blocked-ES",
-          "statusCategory": "To Do",
-          "relation": "relates to",
-          "assignee": null
-        },
-        {
-          "key": "RT-726032",
-          "summary": "[92RC1_TR_SanityTest_TC79] Thank you page should display correctly",
-          "status": "Blocked-ES",
-          "statusCategory": "To Do",
+          "key": "GMT-22353",
+          "summary": "SMI- MENA | Order Stuck in Multiple State",
+          "status": "On-Hold",
+          "statusCategory": "Done",
           "relation": "relates to",
           "assignee": null
         }
       ],
+      "solution": {
+        "status": "none",
+        "excerpt": "",
+        "source": "",
+        "foundAt": "",
+        "issueNumber": null
+      }
+    },
+    {
+      "key": "TKME-2383",
+      "summary": "Stuck order on Hybris",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Turkey Maintenance & Enhancements",
+      "projectKey": "TKME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-19T16:33:11.000+0900",
+      "created": "2026-10-17T15:32:37.000+0900",
+      "statusChangedAt": "2026-10-17T15:32:40.056+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|TR261016-18103127|2026/10/16|ORDER_SPLIT|\n|TR261016-18062476|2026/10/16|ORDER_SPLIT|\n|TR261014-15689886|2026/10/16|REFUND_FAILED|\n|TR261015-16837515|2026/10/16|ORDER_SPLI",
+      "commentsCount": 2,
+      "recentComments": [
+        {
+          "author": "Rajeshbabu Yatirajula",
+          "date": "2026-10-19T16:33:04.943+0900",
+          "snippet": "Hi ~@email \n\nAs mentioned in  TKME-2381, any I/O error orders should be retriggered. Please check.\n\nRegards,\nRajesh"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-17T15:32:38.939+0900",
+          "snippet": "Hi Team,\n\nFollowing orders were found to be stuck with process errors. These are new orders not covered by existing ticket TKME-2381.\n\nsendConsignmentToWarehouse ERROR (4 orders):\nConsignment process ERROR at sendConsignmentToWarehouse rc= - sendConsignmentToWarehouse: I/O error: Connection reset\nAf"
+        }
+      ],
+      "lastCommentBy": "Rajeshbabu Yatirajula",
+      "lastCommentSnippet": "Hi ~@email \n\nAs mentioned in  TKME-2381, any I/O error orders should be retriggered. Please check.\n\nRegards,\nRajesh",
+      "lastCommentDate": "2026-10-19T16:33:04.943+0900",
+      "url": "https://jira.secext.samsung.net/browse/TKME-2383",
+      "linkedTickets": [],
+      "solution": {
+        "status": "none",
+        "excerpt": "",
+        "source": "",
+        "foundAt": "",
+        "issueNumber": null
+      }
+    },
+    {
+      "key": "TKME-2382",
+      "summary": "Stuck order on Hybris",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Turkey Maintenance & Enhancements",
+      "projectKey": "TKME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-19T16:31:34.000+0900",
+      "created": "2026-10-16T20:35:38.000+0900",
+      "statusChangedAt": "2026-10-16T20:35:43.027+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nPrecautionary ticket for 297 orders in WARNING state found during MENA healthcheck.\n\n|Issue Type|Order Count|\n|No consignments created - order stuck at CREATED|1|\n|No shipping date (consignment age: 1d)|255|\n|Cancel DO blocked by WMS|6|\n|No shipping date (consignment age: 2d)|9|\n|No GERP D",
+      "commentsCount": 2,
+      "recentComments": [
+        {
+          "author": "Rajeshbabu Yatirajula",
+          "date": "2026-10-19T16:31:27.316+0900",
+          "snippet": "Hi ~@email \n\nCould you please share the No shipping date (consignment age: 1d) (255 orders) list in excel sheet.\n\nRegards,\nRajesh"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-16T21:05:02.297+0900",
+          "snippet": "Hi Team,\n\nDuring the MENA healthcheck (lookback: 5 days), 297 orders were found in WARNING state for Turkey. These orders are not in ERROR yet but are showing warning signs that may need attention.\n\nNo consignments created - order stuck at CREATED (1 orders):\nTR261016-17633278\n\nNo shipping date (con"
+        }
+      ],
+      "lastCommentBy": "Rajeshbabu Yatirajula",
+      "lastCommentSnippet": "Hi ~@email \n\nCould you please share the No shipping date (consignment age: 1d) (255 orders) list in excel sheet.\n\nRegards,\nRajesh",
+      "lastCommentDate": "2026-10-19T16:31:27.316+0900",
+      "url": "https://jira.secext.samsung.net/browse/TKME-2382",
+      "linkedTickets": [],
+      "solution": {
+        "status": "none",
+        "excerpt": "",
+        "source": "",
+        "foundAt": "",
+        "issueNumber": null
+      }
+    },
+    {
+      "key": "TKME-2381",
+      "summary": "Stuck order on Hybris",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Turkey Maintenance & Enhancements",
+      "projectKey": "TKME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-19T15:53:19.000+0900",
+      "created": "2026-10-16T19:19:08.000+0900",
+      "statusChangedAt": "2026-10-16T19:19:13.359+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|TR261003-03360414|2026/10/15|ORDER_SPLIT|\n|TR261014-16036338|2026/10/15|ORDER_SPLIT|\n|TR261015-16842055|2026/10/15|WAITING_FOR_SEND_FINANCIAL|\n|TR261015-16770938|2026/10/",
+      "commentsCount": 2,
+      "recentComments": [
+        {
+          "author": "Rajeshbabu Yatirajula",
+          "date": "2026-10-19T15:53:12.049+0900",
+          "snippet": "Hi ~@email \n\nAny orders stuck due to the I/O error must be retriggered as the SO request not reached to NERP. Please remediate them by retriggering from the last action.\n\nRegards,\nRajesh"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-16T19:19:11.661+0900",
+          "snippet": "Hi Team,\n\nFollowing orders were found to be stuck with various process errors.\n\nsendConsignmentToWarehouse ERROR (4 orders):\nConsignment process ERROR at sendConsignmentToWarehouse rc= - sendConsignmentToWarehouse: I/O error: Connection reset; nested exception is java.net.SocketException: Connection"
+        }
+      ],
+      "lastCommentBy": "Rajeshbabu Yatirajula",
+      "lastCommentSnippet": "Hi ~@email \n\nAny orders stuck due to the I/O error must be retriggered as the SO request not reached to NERP. Please remediate them by retriggering from the last action.\n\nRegards,\nRajesh",
+      "lastCommentDate": "2026-10-19T15:53:12.049+0900",
+      "url": "https://jira.secext.samsung.net/browse/TKME-2381",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "Stuck order on Hybris — 13 TR-region orders across 6 error categories\r\nGenerated: 2026-10-16T00:00:00\r\n\r\nIssue:\r\nTKME-2381 reports 13 stuck TR-region orders across 6 distinct error categories. All orders were created on 2026/10/14-15 and are stuck at various stages of the order fulfillment process. The error breakdown is as follows:\r\n\r\n1. splitOrder ERROR — 5 orders (TR261015-16842055, TR261015-16805269, TR261008-08332438, TR261003-02929746, TR261002-01958606): All at WAITING_FOR_SEND_FINANCIAL status. The order process errors at the splitOrder action with \"missing values for [warehouse] in model ConsignmentModel () to create a new Consignment\" thrown by de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator. This means when the order process attempts to split the order into consignments, the warehouse attribute on the newly created ConsignmentModel is null. The MandatoryAttributesValidator intercepts the save and rejects it because warehouse is a mandatory attribute on ConsignmentModel. This is a known pattern — Jira cross-reference found PC-55386 (AEME-6614) and PC-54279, both closed, where the fix was a manual BackOffice retrigger of the order process from the splitOrder action node. The retrigger re-executes the split logic and, on second attempt, the warehouse assignment succeeds.\r\n\r\n2. sendConsignmentToWarehouse ERROR — 3 orders (TR261003-03360414, TR261014-16036338, TR261009-09297116): All at ORDER_SPLIT status. The consignment process errors at sendConsignmentToWarehouse with \"I/O error: Connection reset; nested exception is java.net.SocketException: Connection reset\". This is a NERP integration connectivity issue — Hybris sends consignment data to the warehouse via NERP, and the connection is reset mid-transfer. This is a well-documented known issue in the TR tenant. Jira cross-reference found TKME-2343 (closed, 12 TR orders with identical error), TKME-2308 (closed, 21 orders), and PM-658 (global NERP I/O tracking). PC-55336 deployed an autoheal cronjob (autoheal-tr-IOErroredOrdersRemediationCronJob) that runs every 4 hours in PROD, finds errored consignment processes with I/O error patterns, and restarts them from sendConsignmentToWarehouse. These 3 orders should be auto-remediated by the autoheal if it is running.\r\n\r\n3. isAdditionalInfoCollected ERROR — 2 orders (TR261015-16768317, TR261015-16672509): Both at SHIPPED status. The consignment process errors at isAdditionalInfoCollected with \"I/O error: Connection reset; nested exception is java.net.SocketException: Connection reset\". Same NERP connectivity root cause as Category 2 — the autoheal cronjob PC-55336 explicitly handles isAdditionalInfoCollected as well. These should also be auto-remediated.\r\n\r\n4. completeFinancialUpdate ERROR — 1 order (TR261011-11999937): At WAITING_FOR_FINANCIAL status. The order process errors at completeFinancialUpdate with \"I/O error: Read timed out; nested exception is java.net.SocketTimeoutException: Read timed out\". This is a NERP response timeout — NERP takes too long to respond during the financial update step and Hybris times out. PM-658 explicitly lists completeFinancialUpdate as one of 8 actions affected by NERP I/O errors. PC-30574 (closed) updated the failedAndErrorOrdersJob Groovy script with action mapping: completeFinancialUpdate maps to completeFinancialUpdate for retrigger. The order process needs to be restarted from the completeFinancialUpdate action.\r\n\r\n5. REFUND_FAILED — 1 order (TR261015-16770938): At REFUND_FAILED status. The payment entry status is REFUND_FOLLOW_ON:ERROR. This indicates the refund follow-on transaction was attempted but the payment gateway returned an ERROR status. No reusable PC ticket was found in the TR region for REFUND_FOLLOW_ON:ERROR — this is the first occurrence of this specific refund error type in TR. This requires payment team investigation to determine the gateway-side reason for the rejection before a retrigger can be attempted.\r\n\r\n6. commitStock ERROR — 1 order (TR261011-11725431): At SHIPPED status. The consignment process errors at commitStock with \"no stock level for product [TURKEY-B2C-SMP-Tier5-ADH-24M] found in warehouse name [D2C MX] warehouse code [WC17-S751]\". The product has no StockLevel entry in warehouse WC17-S751 (D2C MX). Without a stock level record, the commitStock action cannot reserve stock and the process errors. Jira cross-reference found TKME-2322 (closed, exact same warehouse + product pattern for a different Tier product) and GMT-21026 (parent GMT ticket). The established remediation is two-step: (1) ImpEx to create or update StockLevel for the product in warehouse WC17-S751 with forceInStock status (reusable from PC-52623), then (2) restart the consignment process from the commitStock action node (reusable from PC-52825 / PC-55096).\r\n\r\nKibana was unavailable during this investigation (browser extension relay inactive). HAC authenticated successfully but flexsearch queries timed out. The error information above was sourced from the ticket description and Aryan's remediation comment, which contain the exact error messages extracted from the system. Jira cross-reference was performed successfully with 18 highly relevant resolved tickets found.\r\n\r\nRCA:\r\nThe root causes fall into three distinct categories:\r\n\r\nNERP Integration I/O Errors (Categories 2, 3, 4 — 6 orders): The TR tenant experiences intermittent NERP connectivity issues where connections are reset (SocketException: Connection reset) or time out (SocketTimeoutException: Read timed out) during warehouse communication. NERP is the middleware that handles warehouse integration for the TR region. When Hybris sends data to NERP (consignment data at sendConsignmentToWarehouse, additional info at isAdditionalInfoCollected, financial data at completeFinancialUpdate), NERP occasionally drops the connection or fails to respond within the timeout window. This is a known systemic issue tracked under PM-658 and PM-711 (global), with autoheal cronjobs deployed (PC-55336 for TR). The root cause is on the NERP/network infrastructure side, not in Hybris code.\r\n\r\nMissing Warehouse on ConsignmentModel (Category 1 — 5 orders): The splitOrder action in the order process creates new ConsignmentModel instances. The MandatoryAttributesValidator rejects the save because the warehouse attribute is null. This occurs when the warehouse assignment logic during order split fails to resolve a warehouse for the consignment. The retrigger pattern (manual BO retrigger from splitOrder) works because the second attempt re-evaluates the warehouse assignment and succeeds — suggesting a transient data resolution issue rather than a configuration gap. Established pattern from PC-55386 and PC-54279.\r\n\r\nMissing Stock Level (Category 6 — 1 order): The product TURKEY-B2C-SMP-Tier5-ADH-24M has no StockLevel record in warehouse WC17-S751 (D2C MX). The commitStock action requires a stock level to reserve inventory. Without the record, the action fails. This is a master data issue — the stock level was never created for this product-warehouse combination. Same pattern as TKME-2322 (closed).\r\n\r\nPayment Gateway Rejection (Category 5 — 1 order): The refund follow-on payment transaction entry returned ERROR status from the payment gateway. This is a gateway-side rejection, not a Hybris code issue. The specific reason for the rejection needs to be determined from the payment gateway logs before a retrigger can be safely attempted.\r\n\r\nPossible remediation:\r\n\r\nCategories 2 and 3 (5 orders, sendConsignmentToWarehouse + isAdditionalInfoCollected I/O errors): Verify that the PC-55336 autoheal cronjob is running. If it is, these 5 orders should be auto-remediated within the next 4-hour cycle. If the autoheal is not running or these orders persist after the next cycle, a manual retrigger of the consignment processes from their respective error action nodes is needed. No new PC ticket required — reuse PC-55336.\r\n\r\nCategory 1 (5 orders, splitOrder missing warehouse): Manual BackOffice retrigger of the order process from the splitOrder action node for all 5 orders. This is the established pattern from PC-55386 and PC-54279. A new PC ticket is needed for this batch.\r\n\r\nCategory 4 (1 order, completeFinancialUpdate timeout): Restart the order process from completeFinancialUpdate action. The failedAndErrorOrdersJob script from PC-30574 has the action mapping for this. Can reuse PC-30574 or create a new PC ticket.\r\n\r\nCategory 5 (1 order, REFUND_FAILED): Requires payment team investigation to determine the gateway-side reason for REFUND_FOLLOW_ON:ERROR before retrigger. No Hybris-side fix can be applied blindly without understanding why the gateway rejected the refund.\r\n\r\nCategory 6 (1 order, commitStock no stock level): Two-step remediation — (1) ImpEx to create StockLevel for TURKEY-B2C-SMP-Tier5-ADH-24M in warehouse WC17-S751 with forceInStock status (reuse PC-52623 pattern), (2) restart consignment process from commitStock action (reuse PC-52825 / PC-55096 pattern). Business confirmation needed on whether this product should have stock in D2C MX warehouse.\r\n\r\n## Remediation\r\n\r\nReusable PC tickets:\r\n- PC-55336 (Closed, REUSABLE): Autoheal cronjob for TR I/O errored orders — handles sendConsignmentToWarehouse + isAdditionalInfoCollected\r\n- PC-55386 (Closed): splitOrder missing warehouse — manual BO retrigger pattern\r\n- PC-54279 (Closed): splitOrder missing warehouse — same pattern\r\n- PC-30574 (Closed): failedAndErrorOrdersJob — completeFinancialUpdate action mapping\r\n- PC-52623 (Closed): ImpEx StockLevel update for commitStock\r\n- PC-52825 (Closed): Groovy restart from commitStock after stock fix\r\n- PC-55096 (Closed): Batch commitStock process restart script\r\n- PC-46275 (Closed): Earlier autoheal for omnichannel I/O errors (superseded by PC-55336)\r\n\r\nNo reusable PC ticket found for REFUND_FAILED / REFUND_FOLLOW_ON:ERROR in TR region.",
+        "sections": {
+          "issue": "TKME-2381 reports 13 stuck TR-region orders across 6 distinct error categories. All orders were created on 2026/10/14-15 and are stuck at various stages of the order fulfillment process. The error breakdown is as follows:\r\n\r\n1. splitOrder ERROR — 5 orders (TR261015-16842055, TR261015-16805269, TR261008-08332438, TR261003-02929746, TR261002-01958606): All at WAITING_FOR_SEND_FINANCIAL status. The order process errors at the splitOrder action with \"missing values for [warehouse] in model ConsignmentModel () to create a new Consignment\" thrown by de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator. This means when the order process attempts to split the order into consignments, the warehouse attribute on the newly created ConsignmentModel is null. The MandatoryAttributesValidator intercepts the save and rejects it because warehouse is a mandatory attribute on ConsignmentModel. This is a known pattern — Jira cross-reference found PC-55386 (AEME-6614) and PC-54279, both closed, where the fix was a manual BackOffice retrigger of the order process from the splitOrder action node. The retrigger re-executes the split logic and, on second attempt, the warehouse assignment succeeds.\r\n\r\n2. sendConsignmentToWarehouse ERROR — 3 orders (TR261003-03360414, TR261014-16036338, TR261009-09297116): All at ORDER_SPLIT status. The consignment process errors at sendConsignmentToWarehouse with \"I/O error: Connection reset; nested exception is java.net.SocketException: Connection reset\". This is a NERP integration connectivity issue — Hybris sends consignment data to the warehouse via NERP, and the connection is reset mid-transfer. This is a well-documented known issue in the TR tenant. Jira cross-reference found TKME-2343 (closed, 12 TR orders with identical error), TKME-2308 (closed, 21 orders), and PM-658 (global NERP I/O tracking). PC-55336 deployed an autoheal cronjob (autoheal-tr-IOErroredOrdersRemediationCronJob) that runs every 4 hours in PROD, finds errored consignment processes with I/O error patterns, and restarts them from sendConsignmentToWarehouse. These 3 orders should be auto-remediated by the autoheal if it is running.\r\n\r\n3. isAdditionalInfoCollected ERROR — 2 orders (TR261015-16768317, TR261015-16672509): Both at SHIPPED status. The consignment process errors at isAdditionalInfoCollected with \"I/O error: Connection reset; nested exception is java.net.SocketException: Connection reset\". Same NERP connectivity root cause as Category 2 — the autoheal cronjob PC-55336 explicitly handles isAdditionalInfoCollected as well. These should also be auto-remediated.\r\n\r\n4. completeFinancialUpdate ERROR — 1 order (TR261011-11999937): At WAITING_FOR_FINANCIAL status. The order process errors at completeFinancialUpdate with \"I/O error: Read timed out; nested exception is java.net.SocketTimeoutException: Read timed out\". This is a NERP response timeout — NERP takes too long to respond during the financial update step and Hybris times out. PM-658 explicitly lists completeFinancialUpdate as one of 8 actions affected by NERP I/O errors. PC-30574 (closed) updated the failedAndErrorOrdersJob Groovy script with action mapping: completeFinancialUpdate maps to completeFinancialUpdate for retrigger. The order process needs to be restarted from the completeFinancialUpdate action.\r\n\r\n5. REFUND_FAILED — 1 order (TR261015-16770938): At REFUND_FAILED status. The payment entry status is REFUND_FOLLOW_ON:ERROR. This indicates the refund follow-on transaction was attempted but the payment gateway returned an ERROR status. No reusable PC ticket was found in the TR region for REFUND_FOLLOW_ON:ERROR — this is the first occurrence of this specific refund error type in TR. This requires payment team investigation to determine the gateway-side reason for the rejection before a retrigger can be attempted.\r\n\r\n6. commitStock ERROR — 1 order (TR261011-11725431): At SHIPPED status. The consignment process errors at commitStock with \"no stock level for product [TURKEY-B2C-SMP-Tier5-ADH-24M] found in warehouse name [D2C MX] warehouse code [WC17-S751]\". The product has no StockLevel entry in warehouse WC17-S751 (D2C MX). Without a stock level record, the commitStock action cannot reserve stock and the process errors. Jira cross-reference found TKME-2322 (closed, exact same warehouse + product pattern for a different Tier product) and GMT-21026 (parent GMT ticket). The established remediation is two-step: (1) ImpEx to create or update StockLevel for the product in warehouse WC17-S751 with forceInStock status (reusable from PC-52623), then (2) restart the consignment process from the commitStock action node (reusable from PC-52825 / PC-55096).\r\n\r\nKibana was unavailable during this investigation (browser extension relay inactive). HAC authenticated successfully but flexsearch queries timed out. The error information above was sourced from the ticket description and Aryan's remediation comment, which contain the exact error messages extracted from the system. Jira cross-reference was performed successfully with 18 highly relevant resolved tickets found.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-16T11:28:51.141Z"
+      }
+    },
+    {
+      "key": "SAME-4019",
+      "summary": "Stuck order on Hybris",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Kingdom of Saudi Arabia Maintenance & Enhancements",
+      "projectKey": "SAME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-19T15:47:33.000+0900",
+      "created": "2026-10-15T14:16:55.000+0900",
+      "statusChangedAt": "2026-10-15T14:16:57.002+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|SA260721-35202154|2026/07/21|ORDER_SPLIT|\n|SA261010-11152901|2026/10/10|ORDER_SPLIT|\n|SA260920-89460090|2026/09/20|EXTERNAL_FRAUD_RESULT_PROCESSED|\n\n\nThanks",
+      "commentsCount": 4,
+      "recentComments": [
+        {
+          "author": "Arjenelle Acabado",
+          "date": "2026-10-19T15:47:27.373+0900",
+          "snippet": "Hi ~@email \n\nSA260920-89460090\n\nOkay to remove the 0 sku entry and repush since amount is still captured on PG\n\n!image-2026-10-19-10-47-24-067.png!\n\n \n\nThanks,\n\nArj\n\n~@email"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-16T20:16:36.887+0900",
+          "snippet": "Hi Arjenelle,\n\nBoth confirmed orders have been retriggered on PROD under PC-52605. Current status as verified:\n\nSA260721-35202154 — Moved from ORDER_SPLIT to SHIPPING_PREPARATION.\nSA261010-11152901 — Moved from ORDER_SPLIT to SHIPPING_PREPARATION.\n\nBoth orders are progressing normally.\n\nSA260920-894"
+        }
+      ],
+      "lastCommentBy": "Arjenelle Acabado",
+      "lastCommentSnippet": "Hi ~@email \n\nSA260920-89460090\n\nOkay to remove the 0 sku entry and repush since amount is still captured on PG\n\n!image-2026-10-19-10-47-24-067.png!\n\n \n\nThanks,\n\nArj\n\n~@email",
+      "lastCommentDate": "2026-10-19T15:47:27.373+0900",
+      "url": "https://jira.secext.samsung.net/browse/SAME-4019",
+      "linkedTickets": [
+        {
+          "key": "SAME-4006",
+          "summary": "[URGENT] Orders Stuck - SC+ With Zero Quantity",
+          "status": "QA Server Review",
+          "statusCategory": "In Progress",
+          "relation": "is blocked by",
+          "assignee": null
+        },
+        {
+          "key": "GMT-22353",
+          "summary": "SMI- MENA | Order Stuck in Multiple State",
+          "status": "On-Hold",
+          "statusCategory": "Done",
+          "relation": "relates to",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "none",
+        "excerpt": "",
+        "source": "",
+        "foundAt": "",
+        "issueNumber": null
+      }
+    },
+    {
+      "key": "AEME-6644",
+      "summary": "Stuck order on Hybris",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "UAE Maintenance & Enhancements",
+      "projectKey": "AEME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-19T15:42:38.000+0900",
+      "created": "2026-10-17T15:32:09.000+0900",
+      "statusChangedAt": "2026-10-17T15:32:12.546+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|AE261005-04805037|2026/10/16|WAITING_FOR_SEND_FINANCIAL|\n|AE261016-17665659|2026/10/16|SHIPPED|\n|AE261007-07351473|2026/10/14|SHIPPED|\n\n\nThanks",
+      "commentsCount": 2,
+      "recentComments": [
+        {
+          "author": "Jaffar Ali",
+          "date": "2026-10-19T15:42:18.277+0900",
+          "snippet": "Hi ~@email \n\nAE261005-04805037 - WAITING_FOR_SEND_FINANCIAL\nStock updated on Hybris, Please push the order\n\n \n\nAE261016-17665659, AE261007-07351473\n\nPlease let us know if you need anything from my end\n\n \n\nRegards\n\nJaffar"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-17T15:32:11.451+0900",
+          "snippet": "Hi Team,\n\nFollowing orders were found to be stuck with process errors.\n\nAE261005-04805037 (splitOrder ERROR):\nOrder process ERROR at splitOrder rc= - splitOrder: de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator: missing values for warehouse in model ConsignmentModel\nKind"
+        }
+      ],
+      "lastCommentBy": "Jaffar Ali",
+      "lastCommentSnippet": "Hi ~@email \n\nAE261005-04805037 - WAITING_FOR_SEND_FINANCIAL\nStock updated on Hybris, Please push the order\n\n \n\nAE261016-17665659, AE261007-07351473\n\nPlease let us know if you need anything from my end\n\n \n\nRegards\n\nJaffar",
+      "lastCommentDate": "2026-10-19T15:42:18.277+0900",
+      "url": "https://jira.secext.samsung.net/browse/AEME-6644",
+      "linkedTickets": [
+        {
+          "key": "AEME-6645",
+          "summary": "Stuck order on Hybris",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "relation": "is cloned by",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "none",
+        "excerpt": "",
+        "source": "",
+        "foundAt": "",
+        "issueNumber": null
+      }
+    },
+    {
+      "key": "AUTEU-41862",
+      "summary": "CSAgent access required for SMI P1 and STG",
+      "status": "To do",
+      "statusCategory": "To Do",
+      "priority": "Assign Priority",
+      "project": "Add A User To An Environment (USER)",
+      "projectKey": "AUTEU",
+      "issuetype": "User Task",
+      "updated": "2026-10-19T12:59:19.000+0900",
+      "created": "2026-10-09T16:25:20.000+0900",
+      "statusChangedAt": "",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nI already have admin access to SMI P1 and STG environments, but I need CSAgent access to be enabled as well.\n\nKindly give access to following IDs: \n|Name|Email ID|\n|Aryan|`@email`|\n|Pallavi|`@email`|\n|Prateek|`@email`|\n|Sudhanshu|`@email`|\n|Suresh|`@email`|\n|Chandan|`@email`|\n|Abhishek|`@e",
+      "commentsCount": 5,
+      "recentComments": [
+        {
+          "author": "Nitin Kumar",
+          "date": "2026-10-16T16:18:44.866+0900",
+          "snippet": "Hi ~@email \nPlease share BO id for the mentioned accounts.\n\nBest Regards\nNitin"
+        },
+        {
+          "author": "ESHOP.ITGC",
+          "date": "2026-10-13T19:59:38.832+0900",
+          "snippet": "~@email \n\nWould you check and proceed with the request?"
+        }
+      ],
+      "lastCommentBy": "Nitin Kumar",
+      "lastCommentSnippet": "Hi ~@email \nPlease share BO id for the mentioned accounts.\n\nBest Regards\nNitin",
+      "lastCommentDate": "2026-10-16T16:18:44.866+0900",
+      "url": "https://jira.secext.samsung.net/browse/AUTEU-41862",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "Summary: CSAgent access required for SMI P1 and STG\r\nGenerated: 2026-10-16T12:53:00+09:00\r\n\r\nIssue:\r\nAUTEU-41862 is a service request for enabling CSAgent (Customer Service Agent) role access on SMI P1 and STG environments (STG1, STG2, STG3) for 8 team members. The requester (aryan.v1) and the listed individuals already have admin/Backoffice access but do not have the CSAgent role assigned, which is required to access the Customer Service Agent views and Assisted Service Module in the Hybris Backoffice. The ticket has been approved by ITGC (D2C) and is currently awaiting action — Nitin Kumar has asked for the Backoffice IDs for the listed accounts to proceed.\r\n\r\nRCA:\r\nThis is not a platform bug or code defect. The CSAgent role in the Samsung Toko Hybris platform is managed through Hybris user groups. The platform defines several CS-related user groups via ImpEx configuration in tokocore (user-groups.impex and cscockpit-users.impex):\r\n\r\n1. csagentgroup — \"Customer Service Agent Group\" — grants access to CS Backoffice CS Agent Group views and the Assisted Service Module. Inherits from customerservicegroup and cockpitgroup.\r\n2. customersupportagentgroup — \"CS Agent Group\" — grants CS Agent Group views and Assisted Service Module access. Inherits employeegroup and customersupportagentrole.\r\n3. customersupportmanagergroup — inherits customersupportagentgroup plus manager-level roles.\r\n4. customersupportadministratorgroup — inherits all of the above plus administrator roles.\r\n\r\nThe listed users have admin access but are not members of csagentgroup or customersupportagentgroup, so they cannot access the CSAgent views and Assisted Service Module functionality. No database or code-level issue exists — this is purely a user group membership provisioning task that must be executed via the Hybris Backoffice (or HAC ImpEx) on each target environment.\r\n\r\nPossible remediation:\r\n1. Provide the Backoffice user IDs for all 8 listed accounts as requested by Nitin Kumar in the ticket comments.\r\n2. Add each user to the csagentgroup (or customersupportagentgroup) user group on SMI P1 and all STG environments (STG1, STG2, STG3) via the Hybris Backoffice user management console, or via ImpEx:\r\n\r\n   INSERT_UPDATE Employee; UID[unique=true]; groups(uid)[mode=append]\r\n   ; <user-uid>; csagentgroup\r\n\r\n3. Verify access by logging into the Backoffice with one of the accounts and confirming the CS Agent Group views and Assisted Service Module are visible.\r\n4. No Hybris HAC script or PC ticket is required — this is a standard access provisioning action performed through the Backoffice administration UI or HAC ImpEx import.\r\n\r\nTicket URL: https://jira.secext.samsung.net/browse/AUTEU-41862",
+        "sections": {
+          "issue": "AUTEU-41862 is a service request for enabling CSAgent (Customer Service Agent) role access on SMI P1 and STG environments (STG1, STG2, STG3) for 8 team members. The requester (aryan.v1) and the listed individuals already have admin/Backoffice access but do not have the CSAgent role assigned, which is required to access the Customer Service Agent views and Assisted Service Module in the Hybris Backoffice. The ticket has been approved by ITGC (D2C) and is currently awaiting action — Nitin Kumar has asked for the Backoffice IDs for the listed accounts to proceed.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-16T07:38:10.391Z"
+      }
+    },
+    {
+      "key": "GMT-22511",
+      "summary": "SMI | Samsung care + Order in error status",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Global Monitoring",
+      "projectKey": "GMT",
+      "issuetype": "Issue - Global Hybris",
+      "updated": "2026-10-19T12:49:04.000+0900",
+      "created": "2026-10-18T01:40:26.000+0900",
+      "statusChangedAt": "2026-10-18T15:26:04.179+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nWe had noticed the SC+ status is in error state for the below mentioned order. Could you please check on this?\n|orderid|order_status|SC+ status|\n|IN261017-19160190|COMPLETED|ERROR|\n|IN261009-09129206|COMPLETED|UPDATE_ERROR|\n|AE261007-07351473|SHIPPED|UPDATE_ERROR|\n\n \n\nGrafana Link\n\n!image-",
+      "commentsCount": 1,
+      "recentComments": [
+        {
+          "author": "Kyungwon Kang",
+          "date": "2026-10-18T01:45:32.728+0900",
+          "snippet": "(This is generated by AI)\n\nTitle: Samsung SC+ Order Status Error\nWhen: 2026-10-18T01:40:26.000+0900\nWhere: EWD1-Monitoring System ([Internal Link]\nImpact: Two orders (IN261017-19160190 and IN261009-09129206) are in error status; one order (IN261007-07351473) is in shipped status with an update error"
+        }
+      ],
+      "lastCommentBy": "Kyungwon Kang",
+      "lastCommentSnippet": "(This is generated by AI)\n\nTitle: Samsung SC+ Order Status Error\nWhen: 2026-10-18T01:40:26.000+0900\nWhere: EWD1-Monitoring System ([Internal Link]\nImpact: Two orders (IN261017-19160190 and IN261009-09129206) are in error status; one order (IN261007-07351473) is in shipped status with an update error",
+      "lastCommentDate": "2026-10-18T01:45:32.728+0900",
+      "url": "https://jira.secext.samsung.net/browse/GMT-22511",
+      "linkedTickets": [],
+      "solution": {
+        "status": "none",
+        "excerpt": "",
+        "source": "",
+        "foundAt": "",
+        "issueNumber": null
+      }
+    },
+    {
+      "key": "GMT-22529",
+      "summary": "SMI | Order Stuck in Multiple State",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Global Monitoring",
+      "projectKey": "GMT",
+      "issuetype": "Issue - Global Hybris",
+      "updated": "2026-10-19T12:48:39.000+0900",
+      "created": "2026-10-19T01:42:04.000+0900",
+      "statusChangedAt": "2026-10-19T09:17:08.216+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nWe had noticed the below orders are stuck in multiple state with past RDD. Could you please check on this?\n\n \n|orderid|order_status|order_created_date|order_modified_date|order_entry_requesteddeliverydate|\n|IN261011-12079226|SHIPPED|2026-10-14T18:28:35Z|2026-10-15T07:47:56Z|2026-10-14 00:0",
+      "commentsCount": 1,
+      "recentComments": [
+        {
+          "author": "Kyungwon Kang",
+          "date": "2026-10-19T01:51:01.926+0900",
+          "snippet": "(This is generated by AI)\n\nTitle: Global Monitoring - Order Status Issues\n\nDescription:\nMultiple orders (IN2610xx, AE2610xx, MA2610xx, TR2610xx, ZA2610xx, JO2610xx) are currently stuck in various states including \"SHIPPED\", \"ORDER_SPLIT\", \"SHIPPING_PREPARATION\", \"WAIT_FOR_REFUND_APPROVAL\", \"SUSPENDE"
+        }
+      ],
+      "lastCommentBy": "Kyungwon Kang",
+      "lastCommentSnippet": "(This is generated by AI)\n\nTitle: Global Monitoring - Order Status Issues\n\nDescription:\nMultiple orders (IN2610xx, AE2610xx, MA2610xx, TR2610xx, ZA2610xx, JO2610xx) are currently stuck in various states including \"SHIPPED\", \"ORDER_SPLIT\", \"SHIPPING_PREPARATION\", \"WAIT_FOR_REFUND_APPROVAL\", \"SUSPENDE",
+      "lastCommentDate": "2026-10-19T01:51:01.926+0900",
+      "url": "https://jira.secext.samsung.net/browse/GMT-22529",
+      "linkedTickets": [],
       "solution": {
         "status": "none",
         "excerpt": "",
@@ -100,7 +428,7 @@
       "project": "Global Monitoring",
       "projectKey": "GMT",
       "issuetype": "Issue - Global Hybris",
-      "updated": "2026-10-17T16:13:26.000+0900",
+      "updated": "2026-10-19T10:53:43.000+0900",
       "created": "2026-10-16T04:31:09.000+0900",
       "statusChangedAt": "2026-10-16T04:41:00.756+0900",
       "assignedToMeAt": "",
@@ -206,50 +534,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-10-17T08:51:55.862Z"
-      }
-    },
-    {
-      "key": "AUTEU-41862",
-      "summary": "CSAgent access required for SMI P1 and STG",
-      "status": "To do",
-      "statusCategory": "To Do",
-      "priority": "Assign Priority",
-      "project": "Add A User To An Environment (USER)",
-      "projectKey": "AUTEU",
-      "issuetype": "User Task",
-      "updated": "2026-10-16T19:44:01.000+0900",
-      "created": "2026-10-09T16:25:20.000+0900",
-      "statusChangedAt": "",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nI already have admin access to SMI P1 and STG environments, but I need CSAgent access to be enabled as well.\n\nKindly give access to following IDs: \n|Name|Email ID|\n|Aryan|`@email`|\n|Pallavi|`@email`|\n|Prateek|`@email`|\n|Sudhanshu|`@email`|\n|Suresh|`@email`|\n|Chandan|`@email`|\n|Abhishek|`@e",
-      "commentsCount": 5,
-      "recentComments": [
-        {
-          "author": "Nitin Kumar",
-          "date": "2026-10-16T16:18:44.866+0900",
-          "snippet": "Hi ~@email \nPlease share BO id for the mentioned accounts.\n\nBest Regards\nNitin"
-        },
-        {
-          "author": "ESHOP.ITGC",
-          "date": "2026-10-13T19:59:38.832+0900",
-          "snippet": "~@email \n\nWould you check and proceed with the request?"
-        }
-      ],
-      "lastCommentBy": "Nitin Kumar",
-      "lastCommentSnippet": "Hi ~@email \nPlease share BO id for the mentioned accounts.\n\nBest Regards\nNitin",
-      "lastCommentDate": "2026-10-16T16:18:44.866+0900",
-      "url": "https://jira.secext.samsung.net/browse/AUTEU-41862",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Summary: CSAgent access required for SMI P1 and STG\r\nGenerated: 2026-10-16T12:53:00+09:00\r\n\r\nIssue:\r\nAUTEU-41862 is a service request for enabling CSAgent (Customer Service Agent) role access on SMI P1 and STG environments (STG1, STG2, STG3) for 8 team members. The requester (aryan.v1) and the listed individuals already have admin/Backoffice access but do not have the CSAgent role assigned, which is required to access the Customer Service Agent views and Assisted Service Module in the Hybris Backoffice. The ticket has been approved by ITGC (D2C) and is currently awaiting action — Nitin Kumar has asked for the Backoffice IDs for the listed accounts to proceed.\r\n\r\nRCA:\r\nThis is not a platform bug or code defect. The CSAgent role in the Samsung Toko Hybris platform is managed through Hybris user groups. The platform defines several CS-related user groups via ImpEx configuration in tokocore (user-groups.impex and cscockpit-users.impex):\r\n\r\n1. csagentgroup — \"Customer Service Agent Group\" — grants access to CS Backoffice CS Agent Group views and the Assisted Service Module. Inherits from customerservicegroup and cockpitgroup.\r\n2. customersupportagentgroup — \"CS Agent Group\" — grants CS Agent Group views and Assisted Service Module access. Inherits employeegroup and customersupportagentrole.\r\n3. customersupportmanagergroup — inherits customersupportagentgroup plus manager-level roles.\r\n4. customersupportadministratorgroup — inherits all of the above plus administrator roles.\r\n\r\nThe listed users have admin access but are not members of csagentgroup or customersupportagentgroup, so they cannot access the CSAgent views and Assisted Service Module functionality. No database or code-level issue exists — this is purely a user group membership provisioning task that must be executed via the Hybris Backoffice (or HAC ImpEx) on each target environment.\r\n\r\nPossible remediation:\r\n1. Provide the Backoffice user IDs for all 8 listed accounts as requested by Nitin Kumar in the ticket comments.\r\n2. Add each user to the csagentgroup (or customersupportagentgroup) user group on SMI P1 and all STG environments (STG1, STG2, STG3) via the Hybris Backoffice user management console, or via ImpEx:\r\n\r\n   INSERT_UPDATE Employee; UID[unique=true]; groups(uid)[mode=append]\r\n   ; <user-uid>; csagentgroup\r\n\r\n3. Verify access by logging into the Backoffice with one of the accounts and confirming the CS Agent Group views and Assisted Service Module are visible.\r\n4. No Hybris HAC script or PC ticket is required — this is a standard access provisioning action performed through the Backoffice administration UI or HAC ImpEx import.\r\n\r\nTicket URL: https://jira.secext.samsung.net/browse/AUTEU-41862",
-        "sections": {
-          "issue": "AUTEU-41862 is a service request for enabling CSAgent (Customer Service Agent) role access on SMI P1 and STG environments (STG1, STG2, STG3) for 8 team members. The requester (aryan.v1) and the listed individuals already have admin/Backoffice access but do not have the CSAgent role assigned, which is required to access the Customer Service Agent views and Assisted Service Module in the Hybris Backoffice. The ticket has been approved by ITGC (D2C) and is currently awaiting action — Nitin Kumar has asked for the Backoffice IDs for the listed accounts to proceed.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-16T07:38:10.391Z"
       }
     },
     {
@@ -1137,47 +1421,16 @@
         "responseSnippet": ""
       }
     ],
-    "pid": 30168,
-    "uptime": 266,
+    "pid": 17644,
+    "uptime": 101,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
-    "startTime": "2026-10-18T03:25:38.100Z",
+    "startTime": "2026-10-19T08:15:44.869Z",
     "version": "v3",
     "lastResponseAt": "2026-10-16T12:15:46.934Z",
     "lastResponseIssue": 772,
-    "ideSessions": [
-      {
-        "pid": 17932,
-        "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 76756,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
-        "lastExchange": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 mins after the other tabs and it will be working then",
-        "sessionId": "aryan-v1"
-      },
-      {
-        "pid": 904,
-        "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 76693,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "Access to XMLHttpRequest at 'https://k-eu1.az.contentsquare.net/v2/recording?ct=2&let=17922317337...",
-        "lastExchange": "Access to XMLHttpRequest at 'https://k-eu1.az.contentsquare.net/v2/recording?ct=2&let=1792231733738&pid=50624&pn=9&ri=3&rst=1792231709335&rt=5&sn=1&uu=7c162863-adef-a1b5-aeac-c5b0d2ee8037&v=15.266.3' from origin 'https://stg2.shop.samsung.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.\npolyfills-es2022.YZEH67BR.js:1  POST https://k-eu1.az.contentsquare.net/v2/recording?ct=2&let=1792231733738&pid=50624&pn=9&ri=3&rst=1792231709335&rt=5&sn=1&uu=7c162863-adef-a1b5-aeac-c5b0d2ee8037&v=15.266.3 net::ERR_FAILED 403 (Deny_ads)\ny @ polyfills-es2022.YZEH67BR.js:1\nscheduleTask @ polyfills-es2022.YZEH67BR.js:1\nscheduleTask @ polyfills-es2022.YZEH67BR.js:1\nscheduleMacroTask @ polyfills-es2022.YZEH67BR.js:1\nUe @ polyfills-es2022.YZEH67BR.js:1\n(anonymous) @ polyfills-es2022.YZEH67BR.js:1\nt.<computed> @ polyfills-es2022.YZEH67BR.js:1\nXMLHttpRequest.send @ VM247:5\n(anonymous) @ 3fe2104-5f838a65.js:6\nLl @ 3fe2104-5f838a65.js:16\nZg @ 3fe2104-5f838a65.js:16\nsend @ 3fe2104-5f838a65.js:16\nvN @ 3fe2104-5f838a65.js:26\nfN @ 3fe2104-5f838a65.js:26\nawait in fN\nrecover @ 3fe2104-5f838a65.js:26\nrecover @ 3fe2104-5f838a65.js:26\nrecover @ 3fe2104-5f838a65.js:26\n(anonymous) @ 3fe2104-5f838a65.js:1\ne.value @ 3fe2104-5f838a65.js:1\n(anonymous) @ 3fe2104-5f838a65.js:26\none?step=CHECKOUT_STEP_PAYMENT:1 Access to XMLHttpRequest at 'https://k-eu1.az.contentsquare.net/v2/recording?ct=2&let=1792231698582&pid=50624&pn=7&ri=4&rst=1792231697174&rt=5&sn=1&uu=7c162863-adef-a1b5-aeac-c5b0d2ee8037&v=15.266.3' from origin 'https://stg2.shop.samsung.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.\npolyfills-es2022.YZEH67BR.js:1  POST https://k-eu1.az.contentsquare.net/v2/recording?ct=2&let=1792231698582&pid=50624&pn=7&ri=4&rst=1792231697174&rt=5&sn=1&uu=7c162863-adef-a1b5-aeac-c5b0d2ee8037&v=15.266.3 net::ERR_FAILED 403 (Deny_ads)\ny @ polyfills-es2022.YZEH67BR.js:1\nscheduleTask @ polyfills-es2022.YZEH67BR.js:1\nscheduleTask @ polyfills-es2022.YZEH67BR.js:1\nscheduleMacroTask @ polyfills-es2022.YZEH67BR.js:1\nUe @ polyfills-es2022.YZEH67BR.js:1\n(anonymous) @ polyfills-es2022.YZEH67BR.js:1\nt.<computed> @ polyfills-es2022.YZEH67BR.js:1\nXMLHttpRequest.send @ VM247:5\n(anonymous) @ 3fe2104-5f838a65.js:6\nLl @ 3fe2104-5f838a65.js:16\nZg @ 3fe2104-5f838a65.js:16\nsend @ 3fe2104-5f838a65.js:16\nvN @ 3fe2104-5f838a65.js:26\nfN @ 3fe2104-5f838a65.js:26\nawait in fN\nrecover @ 3fe2104-5f838a65.js:26\nrecover @ 3fe2104-5f838a65.js:26\nrecover @ 3fe2104-5f838a65.js:26\n(anonymous) @ 3fe2104-5f838a65.js:1\ne.value @ 3fe2104-5f838a65.js:1\n(anonymous) @ 3fe2104-5f838a65.js:26\none?step=CHECKOUT_STEP_PAYMENT:1 Access to XMLHttpRequest at 'https://k-eu1.az.contentsquare.net/v2/recording?ct=2&let=1792230572207&pid=50624&pn=1&ri=1&rst=1792230572203&rt=5&sn=1&uu=7c162863-adef-a1b5-aeac-c5b0d2ee8037&v=15.266.3' from origin 'https://stg2.shop.samsung.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.\npolyfills-es2022.YZEH67BR.js:1  POST https://k-eu1.az.contentsquare.net/v2/recording?ct=2&let=1792230572207&pid=50624&pn=1&ri=1&rst=1792230572203&rt=5&sn=1&uu=7c162863-adef-a1b5-aeac-c5b0d2ee8037&v=15.266.3 net::ERR_FAILED 403 (Deny_ads)\ny @ polyfills-es2022.YZEH67BR.js:1\nscheduleTask @ polyfills-es2022.YZEH67BR.js:1\nscheduleTask @ polyfills-es2022.YZEH67BR.js:1\nscheduleMacroTask @ polyfills-es2022.YZEH67BR.js:1\nUe @ polyfills-es2022.YZEH67BR.js:1\n(anonymous) @ polyfills-es2022.YZEH67BR.js:1\nt.<computed> @ polyfills-es2022.YZEH67BR.js:1\nXMLHttpRequest.send @ VM247:5\n(anonymous) @ 3fe2104-5f838a65.js:6\nLl @ 3fe2104-5f838a65.js:16\nZg @ 3fe2104-5f838a65.js:16\nsend @ 3fe2104-5f838a65.js:16\nvN @ 3fe2104-5f838a65.js:26\nfN @ 3fe2104-5f838a65.js:26\nawait in fN\nrecover @ 3fe2104-5f838a65.js:26\nrecover @ 3fe2104-5f838a65.js:26\nrecover @ 3fe2104-5f838a65.js:26\n(anonymous) @ 3fe2104-5f838a65.js:1\ne.value @ 3fe2104-5f838a65.js:1\n(anonymous) @ 3fe2104-5f838a65.js:26\none?step=CHECKOUT_STEP_PAYMENT:1 Access to XMLHttpRequest at 'https://k-eu1.az.contentsquare.net/v2/recording?ct=2&let=1792231709336&pid=50624&pn=9&ri=1&rst=1792231709335&rt=5&sn=1&uu=7c162863-adef-a1b5-aeac-c5b0d2ee8037&v=15.266.3' from origin 'https://stg2.shop.samsung.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.\npolyfills-es2022.YZEH67BR.js:1  POST https://k-eu1.az.contentsquare.net/v2/recording?ct=2&let=1792231709336&pid=50624&pn=9&ri=1&rst=1792231709335&rt=5&sn=1&uu=7c162863-adef-a1b5-aeac-c5b0d2ee8037&v=15.266.3 net::ERR_FAILED 403 (Deny_ads)\ny @ polyfills-es2022.YZEH67BR.js:1\nscheduleTask @ polyfills-es2022.YZEH67BR.js:1\nscheduleTask @ polyfills-es2022.YZEH67BR.js:1\nscheduleMacroTask @ polyfills-es2022.YZEH67BR.js:1\nUe @ polyfills-es2022.YZEH67BR.js:1\n(anonymous) @ polyfills-es2022.YZEH67BR.js:1\nt.<computed> @ polyfills-es2022.YZEH67BR.js:1\nXMLHttpRequest.send @ VM247:5\n(anonymous) @ 3fe2104-5f838a65.js:6\nLl @ 3fe2104-5f838a65.js:16\nZg @ 3fe2104-5f838a65.js:16\nsend @ 3fe2104-5f838a65.js:16\nvN @ 3fe2104-5f838a65.js:26\nfN @ 3fe2104-5f838a65.js:26\nawait in fN\nrecover @ 3fe2104-5f838a65.js:26\nrecover @ 3fe2104-5f838a65.js:26\nrecover @ 3fe2104-5f838a65.js:26\n(anonymous) @ 3fe2104-5f838a65.js:1\ne.value @ 3fe2104-5f838a65.js:1\n(anonymous) @ 3fe2104-5f838a65.js:26\none?step=CHECKOUT_STEP_PAYMENT:1 Access to XMLHttpRequest at 'https://k-eu1.az.contentsquare.net/v2/recording?ct=2&let=1792230613994&pid=50624&pn=3&ri=1&rst=1792230613994&rt=5&sn=1&uu=7c162863-adef-a1b5-aeac-c5b0d2ee8037&v=15.266.3' from origin 'https://stg2.shop.samsung.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.\npolyfills-es2022.YZEH67BR.js:1  POST https://k-eu1.az.contentsquare.net/v2/recording?ct=2&let=1792230613994&pid=50624&pn=3&ri=1&rst=1792230613994&rt=5&sn=1&uu=7c162863-adef-a1b5-aeac-c5b0d2ee8037&v=15.266.3 net::ERR_FAILED 403 (Deny_ads)\ny @ polyfills-es2022.YZEH67BR.js:1\nscheduleTask @ polyfills-es2022.YZEH67BR.js:1\nscheduleTask @ polyfills-es2022.YZEH67BR.js:1\nscheduleMacroTask @ polyfills-es2022.YZEH67BR.js:1\nUe @ polyfills-es2022.YZEH67BR.js:1\n(anonymous) @ polyfills-es2022.YZEH67BR.js:1\nt.<computed> @ polyfills-es2022.YZEH67BR.js:1\nXMLHttpRequest.send @ VM247:5\n(anonymous) @ 3fe2104-5f838a65.js:6\nLl @ 3fe2104-5f838a65.js:16\nZg @ 3fe2104-5f838a65.js:16\nsend @ 3fe2104-5f838a65.js:16\nvN @ 3fe2104-5f838a65.js:26\nfN @ 3fe2104-5f838a65.js:26\nawait in fN\nrecover @ 3fe2104-5f838a65.js:26\nrecover @ 3fe2104-5f838a65.js:26\nrecover @ 3fe2104-5f838a65.js:26\n(anonymous) @ 3fe2104-5f838a65.js:1\ne.value @ 3fe2104-5f838a65.js:1\n(anonymous) @ 3fe2104-5f838a65.js:26\none?step=CHECKOUT_STEP_PAYMENT:1 Access to XMLHttpRequest at 'https://k-eu1.az.contentsquare.net/v2/recording?ct=2&let=1792230682489&pid=50624&pn=4&ri=2&rst=1792230663475&rt=5&sn=1&uu=7c162863-adef-a1b5-aeac-c5b0d2ee8037&v=15.266.3' from origin 'https://stg2.shop.samsung.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.\npolyfills-es2022.YZEH67BR.js:1  POST https://k-eu1.az.contentsquare.net/v2/recording?ct=2&let=1792230682489&pid=50624&pn=4&ri=2&rst=1792230663475&rt=5&sn=1&uu=7c162863-adef-a1b5-aeac-c5b0d2ee8037&v=15.266.3 net::ERR_FAILED 403 (Deny_ads)\ny @ polyfills-es2022.YZEH67BR.js:1\nscheduleTask @ polyfills-es2022.YZEH67BR.js:1\nscheduleTask @ polyfills-es2022.YZEH67BR.js:1\nscheduleMacroTask @ polyfills-es2022.YZEH67BR.js:1\nUe @ polyfills-es2022.YZEH67BR.js:1\n(anonymous) @ polyfills-es2022.YZEH67BR.js:1\nt.<computed> @ polyfills-es2022.YZEH67BR.js:1\nXMLHttpRequest.send @ VM247:5\n(anonymous) @ 3fe2104-5f838a65.js:6\nLl @ 3fe2104-5f838a65.js:16\nZg @ 3fe2104-5f838a65.js:16\nsend @ 3fe2104-5f838a65.js:16\nvN @ 3fe2104-5f838a65.js:26\nfN @ 3fe2104-5f838a65.js:26\nawait in fN\nrecover @ 3fe2104-5f838a65.js:26\nrecover @ 3fe2104-5f838a65.js:26\nrecover @ 3fe2104-5f838a65.js:26\n(anonymous) @ 3fe2104-5f838a65.js:1\ne.value @ 3fe2104-5f838a65.js:1\n(anonymous) @ 3fe2104-5f838a65.js:26\n3fe2104-5f838a65.js:1  POST https://k-eu1.az.contentsquare.net/v2/recording?v=15.266.3&pid=50624&pn=11&sn=1&uu=7c162863-adef-a1b5-aeac-c5b0d2ee8037&let=1792231851931&rst=1792231760558&rt=5&ri=8&ct=0 403 (Deny_ads)\nAl.o.c @ 3fe2104-5f838a65.js:1\nl @ 3fe2104-5f838a65.js:1\nLP @ 3fe2104-5f838a65.js:25\nsend @ 3fe2104-5f838a65.js:25\nZv @ 3fe2104-5f838a65.js:26\n(anonymous) @ 3fe2104-5f838a65.js:26\nyi @ 3fe2104-5f838a65.js:26\n3fe2104-5f838a65.js:1  POST https://c.az.contentsquare.net/v2/events?uu=7c162863-adef-a1b5-aeac-c5b0d2ee8037&sn=1&hd=1792231760&v=15.266.3&pid=50624&pn=11&str=808&di=889&dc=1194&fl=1194&sr=100&mdh=3746&ct=0 403 (Deny_ads)",
-        "sessionId": "bin"
-      },
-      {
-        "pid": 5784,
-        "cwd": "c:\\windows",
-        "ageSeconds": 76673,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "windows",
-        "lastExchange": null,
-        "sessionId": "windows"
-      }
-    ],
+    "ideSessions": [],
     "activityLog": [
       {
         "id": "1792229312688-5mxfpu",
@@ -4853,29 +5106,29 @@
         ]
       }
     },
-    "bridgeLogTail": "[2026-10-17T20:43:49.890Z] ==========================================\n[2026-10-17T20:43:49.934Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-17T20:43:49.935Z] === with Aipro Auto-Launch ===\n[2026-10-17T20:43:49.937Z] ==========================================\n[2026-10-17T20:43:49.938Z] PID: 35648\n[2026-10-17T20:43:49.939Z] Repo: aryanverma2410/agent-bridge\n[2026-10-17T20:43:49.940Z] Poll interval: 10000ms\n[2026-10-17T20:43:49.941Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-17T20:43:49.942Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-17T20:43:49.944Z] Waiting for messages...\n[2026-10-18T03:25:38.083Z] ==========================================\n[2026-10-18T03:25:38.086Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-18T03:25:38.087Z] === with Aipro Auto-Launch ===\n[2026-10-18T03:25:38.088Z] ==========================================\n[2026-10-18T03:25:38.089Z] PID: 30168\n[2026-10-18T03:25:38.090Z] Repo: aryanverma2410/agent-bridge\n[2026-10-18T03:25:38.091Z] Poll interval: 10000ms\n[2026-10-18T03:25:38.092Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-18T03:25:38.092Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-18T03:25:38.094Z] Waiting for messages...",
+    "bridgeLogTail": "[2026-10-18T03:31:05.573Z] ==========================================\n[2026-10-18T03:31:05.575Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-18T03:31:05.576Z] === with Aipro Auto-Launch ===\n[2026-10-18T03:31:05.577Z] ==========================================\n[2026-10-18T03:31:05.577Z] PID: 34228\n[2026-10-18T03:31:05.578Z] Repo: aryanverma2410/agent-bridge\n[2026-10-18T03:31:05.578Z] Poll interval: 10000ms\n[2026-10-18T03:31:05.579Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-18T03:31:05.580Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-18T03:31:05.581Z] Waiting for messages...\n[2026-10-19T08:15:43.309Z] ==========================================\n[2026-10-19T08:15:43.844Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-19T08:15:43.935Z] === with Aipro Auto-Launch ===\n[2026-10-19T08:15:44.084Z] ==========================================\n[2026-10-19T08:15:44.207Z] PID: 17644\n[2026-10-19T08:15:44.346Z] Repo: aryanverma2410/agent-bridge\n[2026-10-19T08:15:44.375Z] Poll interval: 10000ms\n[2026-10-19T08:15:44.443Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-19T08:15:44.557Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-19T08:15:44.712Z] Waiting for messages...",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-18T03:30:08.137Z",
-      "ageMs": 1938
+      "lastWrite": "2026-10-19T02:46:31.659Z",
+      "ageMs": 53396
     },
-    "watchdogLogTail": "[2026-10-18T03:29:35.230Z] RESTART NEEDED: Bridge process (PID 25296) not found\n[2026-10-18T03:29:37.786Z] Could not kill PID 25296: Command failed: taskkill /PID 25296 /F /T\n[2026-10-18T03:29:46.068Z] Starting bridge.js...\n[2026-10-18T03:29:46.226Z] Bridge started with PID 31532 (restart #53, 18 in last hour)\n[2026-10-18T03:29:50.237Z] RESTART NEEDED: Bridge process (PID 31532) not found\n[2026-10-18T03:29:52.642Z] Could not kill PID 31532: Command failed: taskkill /PID 31532 /F /T\n[2026-10-18T03:30:03.222Z] Starting bridge.js...\n[2026-10-18T03:30:03.402Z] Bridge started with PID 34976 (restart #54, 19 in last hour)\n[2026-10-18T03:30:05.242Z] RESTART NEEDED: Bridge process (PID 34976) not found\n[2026-10-18T03:30:08.135Z] Could not kill PID 34976: Command failed: taskkill /PID 34976 /F /T"
+    "watchdogLogTail": "[2026-10-19T08:15:40.776Z] Starting bridge.js...\n[2026-10-19T08:15:41.653Z] Bridge started with PID 17644 (restart #1, 1 in last hour)\n[2026-10-19T08:15:41.767Z] Dashboard not running. Starting fresh.\n[2026-10-19T08:15:41.997Z] Starting jira-dashboard-server.js...\n[2026-10-19T08:15:42.856Z] Dashboard started with PID 18316 (restart #1, 1 in last hour)\n[2026-10-19T08:15:49.154Z] Clock sync: Checking drift against Jira server...\n[2026-10-19T08:15:49.671Z] Clock sync: VDI hw=2026-10-19T13:45:49.671Z Jira=2026-10-19T08:15:49.000Z drift=-19801s\n[2026-10-19T02:45:52.954Z] Clock sync: FAILED to adjust clock: spawnSync C:\\WINDOWS\\system32\\cmd.exe ETIMEDOUT\n[2026-10-19T02:46:11.868Z] DUPLICATE jira-dashboard-server detected: PID 14560 — killing\n[2026-10-19T02:46:31.658Z] DUPLICATE watchdog detected: PID 19124 — killing"
   },
   "mcps": [
     {
       "name": "Jira",
-      "status": "up",
-      "httpStatus": 200,
-      "lastCheck": "2026-10-18T03:29:41.901Z",
-      "downSince": null,
-      "downDuration": 0,
+      "status": "down",
+      "httpStatus": 401,
+      "lastCheck": "2026-10-19T02:46:38.827Z",
+      "downSince": "2026-10-19T08:15:46.077Z",
+      "downDuration": -19747250,
       "alert": false
     },
     {
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-18T03:29:41.901Z",
+      "lastCheck": "2026-10-19T02:46:38.827Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4884,16 +5137,16 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-18T03:29:41.901Z",
-      "downSince": "2026-10-18T03:25:42.532Z",
-      "downDuration": 239369,
+      "lastCheck": "2026-10-19T02:46:38.827Z",
+      "downSince": "2026-10-19T08:15:46.077Z",
+      "downDuration": -19747250,
       "alert": false
     }
   ],
   "hacReport": {
-    "generatedAt": "2026-10-17T05:52:00.767Z",
-    "generatedAtLocal": "Oct 17, 2026, 11:22:00 AM",
-    "queryDate": "2026-10-16",
+    "generatedAt": "2026-10-18T03:31:18.356Z",
+    "generatedAtLocal": "Oct 18, 2026, 09:01:18 AM",
+    "queryDate": "2026-10-17",
     "modified": {
       "headers": [
         "CLUSTER",
@@ -4908,8 +5161,8 @@
           "CLUSTER": "SMI",
           "YEAR": "2026",
           "MONTH": "Oct",
-          "DAY": "16",
-          "COUNT": "969",
+          "DAY": "17",
+          "COUNT": "821",
           "TYPE": "MODIFIED"
         }
       ],
@@ -4929,14 +5182,14 @@
           "CLUSTER": "SMI",
           "YEAR": "2026",
           "MONTH": "Oct",
-          "DAY": "16",
-          "COUNT": "363",
+          "DAY": "17",
+          "COUNT": "250",
           "TYPE": "CREATED"
         }
       ],
       "error": null
     },
-    "textReport": "Hi Reglo, Tin,\nPFA the results for SMI\n\nCLUSTER\tYEAR\tMONTH\tDAY\tCOUNT\tTYPE\nSMI\t2026\tOct\t16\t969\tMODIFIED\n\nCLUSTER\tYEAR\tMONTH\tDAY\tCOUNT\tTYPE\nSMI\t2026\tOct\t16\t363\tCREATED"
+    "textReport": "Hi Reglo, Tin,\nPFA the results for SMI\n\nCLUSTER\tYEAR\tMONTH\tDAY\tCOUNT\tTYPE\nSMI\t2026\tOct\t17\t821\tMODIFIED\n\nCLUSTER\tYEAR\tMONTH\tDAY\tCOUNT\tTYPE\nSMI\t2026\tOct\t17\t250\tCREATED"
   },
   "scheduledJobs": {
     "jobs": [
@@ -4952,11 +5205,11 @@
         },
         "enabled": true,
         "createdAt": "2026-09-03T05:31:01.816Z",
-        "lastRunAt": "2026-10-17T03:30:57.451Z",
-        "lastOutput": "Warning: Ignoring extra certs from `C:\\SDSI_GDC.crt`, load failed: error:80000002:system library::No such file or directory\r\nWarning: 256-color support not detected. Using a terminal with at least 256-color support is recommended for a better visual experience.\nYOLO mode is enabled. All tool calls will be automatically approved.\nYOLO mode is enabled. All tool calls will be automatically approved.\n(node:26364) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.\n(Use `node --trace-warnings ...` to show where the warning was created)\nRipgrep is not available. Falling back to GrepTool.\nRunning the HAC daily report script now.\nC:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\n\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\n\r\nNode.js v22.22.0\r\nScript executed successfully. Results:\n\n| CLUSTER | YEAR | MONTH | DAY | COUNT | TYPE |\n|---------|------|-------|-----|-------|--------|\n| SMI | 2026 | Oct | 16 | **989** | MODIFIED |\n| SMI | 2026 | Oct | 16 | **363** | CREATED |\n\nReport saved to `hac-report.json`. Note: TLS cert warnings are expected (corporate cert config) and did not affect execution.\n",
-        "lastOutputAt": "2026-10-17T03:30:57.451Z",
+        "lastRunAt": "2026-10-18T03:31:25.455Z",
+        "lastOutput": "Warning: Ignoring extra certs from `C:\\SDSI_GDC.crt`, load failed: error:80000002:system library::No such file or directory\r\nWarning: 256-color support not detected. Using a terminal with at least 256-color support is recommended for a better visual experience.\nYOLO mode is enabled. All tool calls will be automatically approved.\nYOLO mode is enabled. All tool calls will be automatically approved.\n(node:25220) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.\n(Use `node --trace-warnings ...` to show where the warning was created)\nRipgrep is not available. Falling back to GrepTool.\nC:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\n\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\n\r\nNode.js v22.22.0\r\nDone. The script authenticated to HAC, ran both queries, and saved results to `hac-report.json`.\n\n**Results — SMI cluster, Oct 17 2026:**\n| Type | Count |\n|------|-------|\n| Modified Orders | 821 |\n| Created Orders | 250 |\n",
+        "lastOutputAt": "2026-10-18T03:31:25.455Z",
         "lastStatus": "success",
-        "nextRunAt": "2026-10-18T03:30:00.000Z"
+        "nextRunAt": "2026-10-19T03:30:00.000Z"
       }
     ],
     "queue": {
@@ -5030,16 +5283,88 @@
   "actionItems": {
     "zero": [
       {
-        "key": "RT-747436",
-        "summary": "Regression - SMI - STG2 - TR: Cannot place order with Iyzico payments",
-        "priority": "Blocker",
+        "key": "AEME-6637",
+        "summary": "Stuck order on Hybris | Overselling issue",
+        "priority": "None",
         "status": "In Progress",
         "category": "zero",
         "reason": "",
         "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/RT-747436",
-        "updated": "2026-10-17T21:00:44.000+0900",
-        "statusChangedAt": "2026-10-17T19:22:30.962+0900"
+        "url": "https://jira.secext.samsung.net/browse/AEME-6637",
+        "updated": "2026-10-19T16:36:05.000+0900",
+        "statusChangedAt": "2026-10-15T14:16:10.935+0900"
+      },
+      {
+        "key": "TKME-2383",
+        "summary": "Stuck order on Hybris",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/TKME-2383",
+        "updated": "2026-10-19T16:33:11.000+0900",
+        "statusChangedAt": "2026-10-17T15:32:40.056+0900"
+      },
+      {
+        "key": "TKME-2382",
+        "summary": "Stuck order on Hybris",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/TKME-2382",
+        "updated": "2026-10-19T16:31:34.000+0900",
+        "statusChangedAt": "2026-10-16T20:35:43.027+0900"
+      },
+      {
+        "key": "TKME-2381",
+        "summary": "Stuck order on Hybris",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/TKME-2381",
+        "updated": "2026-10-19T15:53:19.000+0900",
+        "statusChangedAt": "2026-10-16T19:19:13.359+0900"
+      },
+      {
+        "key": "AUTEU-41862",
+        "summary": "CSAgent access required for SMI P1 and STG",
+        "priority": "Assign Priority",
+        "status": "To do",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/AUTEU-41862",
+        "updated": "2026-10-19T12:59:19.000+0900",
+        "statusChangedAt": ""
+      },
+      {
+        "key": "GMT-22511",
+        "summary": "SMI | Samsung care + Order in error status",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/GMT-22511",
+        "updated": "2026-10-19T12:49:04.000+0900",
+        "statusChangedAt": "2026-10-18T15:26:04.179+0900"
+      },
+      {
+        "key": "GMT-22529",
+        "summary": "SMI | Order Stuck in Multiple State",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/GMT-22529",
+        "updated": "2026-10-19T12:48:39.000+0900",
+        "statusChangedAt": "2026-10-19T09:17:08.216+0900"
       },
       {
         "key": "GMT-22427",
@@ -5050,7 +5375,7 @@
         "reason": "",
         "whatToDo": "Investigate or continue work",
         "url": "https://jira.secext.samsung.net/browse/GMT-22427",
-        "updated": "2026-10-17T16:13:26.000+0900",
+        "updated": "2026-10-19T10:53:43.000+0900",
         "statusChangedAt": "2026-10-16T04:41:00.756+0900"
       },
       {
@@ -5064,18 +5389,6 @@
         "url": "https://jira.secext.samsung.net/browse/MHME-1466",
         "updated": "2026-10-16T20:20:05.000+0900",
         "statusChangedAt": "2026-10-16T20:20:05.357+0900"
-      },
-      {
-        "key": "AUTEU-41862",
-        "summary": "CSAgent access required for SMI P1 and STG",
-        "priority": "Assign Priority",
-        "status": "To do",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/AUTEU-41862",
-        "updated": "2026-10-16T19:44:01.000+0900",
-        "statusChangedAt": ""
       },
       {
         "key": "AEME-6640",
@@ -5139,6 +5452,18 @@
       }
     ],
     "actionable": [
+      {
+        "key": "AEME-6644",
+        "summary": "Stuck order on Hybris",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "actionable",
+        "reason": "",
+        "whatToDo": "Respond to Jaffar Ali",
+        "url": "https://jira.secext.samsung.net/browse/AEME-6644",
+        "updated": "2026-10-19T15:42:38.000+0900",
+        "statusChangedAt": "2026-10-17T15:32:12.546+0900"
+      },
       {
         "key": "SAME-4027",
         "summary": "Stuck order on Hybris",
@@ -5214,6 +5539,18 @@
         "statusChangedAt": "2026-09-03T19:16:47.372+0900"
       },
       {
+        "key": "SAME-4019",
+        "summary": "Stuck order on Hybris",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "blocked",
+        "reason": "Blocked by SAME-4006 (QA Server Review)",
+        "whatToDo": "",
+        "url": "https://jira.secext.samsung.net/browse/SAME-4019",
+        "updated": "2026-10-19T15:47:33.000+0900",
+        "statusChangedAt": "2026-10-15T14:16:57.002+0900"
+      },
+      {
         "key": "TKME-2324",
         "summary": "O2O Dealers PII Data Request for SETK Hybris Enhancement",
         "priority": "None",
@@ -5253,22 +5590,22 @@
       }
     ],
     "totals": {
-      "zero": 9,
-      "actionable": 2,
-      "blocked": 5,
+      "zero": 14,
+      "actionable": 3,
+      "blocked": 6,
       "queued": 3
     }
   },
   "worklogTotals": {
     "todayHours": 0,
-    "weekHours": 55.17,
+    "weekHours": 0,
     "dailyHours": [
       0,
-      10.58,
-      11.92,
-      9.42,
-      12.5,
-      10.75,
+      0,
+      0,
+      0,
+      0,
+      0,
       0
     ],
     "dayLabels": [
@@ -5280,8 +5617,8 @@
       "Sat",
       "Sun"
     ],
-    "weekStart": "2026-10-12",
-    "todayIndex": 6
+    "weekStart": "2026-10-19",
+    "todayIndex": 0
   },
   "tempoApproval": {
     "status": "open",
@@ -5310,60 +5647,88 @@
   "slaCards": {
     "byTicket": [
       {
-        "key": "GMT-22427",
-        "slaName": "GMT Issue Response SLA(GMT+5.5)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 6608,
-        "targetDate": "2026-10-15T21:31:09.203Z"
-      },
-      {
-        "key": "GMT-22427",
-        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
-        "slaStatus": "STILL",
-        "remainingDuration": 46869,
-        "targetDate": "2026-10-19T07:31:09.203000001Z"
-      },
-      {
-        "key": "SAME-4027",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86394,
-        "targetDate": "2026-10-19T10:18:54.906000001Z"
-      },
-      {
-        "key": "SAME-4027",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2554102,
-        "targetDate": "2026-11-27T10:28:22.789000030Z"
-      },
-      {
-        "key": "GMT-21163",
-        "slaName": "GMT Issue Response SLA(GMT+5.5)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85937,
-        "targetDate": "2026-09-17T08:08:38.502000001Z"
-      },
-      {
-        "key": "GMT-21163",
-        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
-        "slaStatus": "STILL",
-        "remainingDuration": 653918,
-        "targetDate": "2026-10-28T08:08:38.502000030Z"
-      },
-      {
-        "key": "AEME-6597",
+        "key": "AEME-6637",
         "slaName": "Maintenance Response (GMT+4)",
         "slaStatus": "SUCCESS",
-        "remainingDuration": 86179,
-        "targetDate": "2026-09-30T08:16:57.595000001Z"
+        "remainingDuration": 86397,
+        "targetDate": "2026-10-16T05:16:08.892000001Z"
       },
       {
-        "key": "AEME-6597",
+        "key": "AEME-6637",
         "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2589098,
+        "targetDate": "2026-11-30T07:29:01.048000032Z"
+      },
+      {
+        "key": "TKME-2383",
+        "slaName": "Maintenance Response (GMT+3)",
         "slaStatus": "SUCCESS",
-        "remainingDuration": 1269633,
-        "targetDate": "2026-10-20T08:16:57.595000015Z"
+        "remainingDuration": 86400,
+        "targetDate": "2026-10-19T21:00:00.000000001Z"
+      },
+      {
+        "key": "TKME-2383",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2589348,
+        "targetDate": "2026-11-30T07:33:11.299000030Z"
+      },
+      {
+        "key": "GMT-22511",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86400,
+        "targetDate": "2026-10-19T18:30:00.000000001Z"
+      },
+      {
+        "key": "GMT-22511",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1246357,
+        "targetDate": "2026-11-08T18:30:00.000000015Z"
+      },
+      {
+        "key": "GMT-22427",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85808,
+        "targetDate": "2026-10-18T19:31:09.203000001Z"
+      },
+      {
+        "key": "GMT-22427",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 299626,
+        "targetDate": "2026-10-22T19:31:09.203000005Z"
+      },
+      {
+        "key": "GMT-22529",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 65571,
+        "targetDate": "2026-10-19T18:30:00.000000001Z"
+      },
+      {
+        "key": "GMT-22529",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 382356,
+        "targetDate": "2026-10-25T18:30:00.000000005Z"
+      },
+      {
+        "key": "SAME-4019",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86398,
+        "targetDate": "2026-10-16T05:16:55.206000001Z"
+      },
+      {
+        "key": "SAME-4019",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2484760,
+        "targetDate": "2026-11-27T02:30:03.999000031Z"
       },
       {
         "key": "TKME-2324",
@@ -5380,6 +5745,48 @@
         "targetDate": "2026-10-13T12:51:05.986000021Z"
       },
       {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86179,
+        "targetDate": "2026-09-30T08:16:57.595000001Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1269633,
+        "targetDate": "2026-10-20T08:16:57.595000015Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86254,
+        "targetDate": "2026-09-21T04:19:58.710000001Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 841034,
+        "targetDate": "2026-11-02T02:54:37.529000031Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86397,
+        "targetDate": "2026-09-29T16:09:08.750000001Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2094364,
+        "targetDate": "2026-11-20T14:03:27.584000039Z"
+      },
+      {
         "key": "AEME-6640",
         "slaName": "Maintenance Response (GMT+4)",
         "slaStatus": "SUCCESS",
@@ -5390,7 +5797,7 @@
         "key": "AEME-6640",
         "slaName": "Maintenance Resolution (GMT+4)",
         "slaStatus": "STILL",
-        "remainingDuration": 2539864,
+        "remainingDuration": 2495620,
         "targetDate": "2026-11-27T05:31:04.341000030Z"
       },
       {
@@ -5404,8 +5811,50 @@
         "key": "TKME-2379",
         "slaName": "Maintenance Resolution (GMT+3)",
         "slaStatus": "STILL",
-        "remainingDuration": 1182235,
+        "remainingDuration": 1141591,
         "targetDate": "2026-11-05T13:23:55.356000015Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85937,
+        "targetDate": "2026-09-17T08:08:38.502000001Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 604275,
+        "targetDate": "2026-10-28T08:08:38.502000030Z"
+      },
+      {
+        "key": "TKME-2382",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86399,
+        "targetDate": "2026-10-19T11:35:42.030000001Z"
+      },
+      {
+        "key": "TKME-2382",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2589194,
+        "targetDate": "2026-11-30T07:30:38.364000031Z"
+      },
+      {
+        "key": "MHME-1466",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85724,
+        "targetDate": "2026-10-19T11:08:49.611000001Z"
+      },
+      {
+        "key": "MHME-1466",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1219886,
+        "targetDate": "2026-11-06T12:08:49.611000015Z"
       },
       {
         "key": "AEME-6527",
@@ -5422,51 +5871,51 @@
         "targetDate": "2026-10-18T21:25:13.757000035Z"
       },
       {
-        "key": "MHME-1466",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85724,
-        "targetDate": "2026-10-19T11:08:49.611000001Z"
-      },
-      {
-        "key": "MHME-1466",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1256929,
-        "targetDate": "2026-11-06T12:08:49.611000015Z"
-      },
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86254,
-        "targetDate": "2026-09-21T04:19:58.710000001Z"
-      },
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "STILL",
-        "remainingDuration": 878077,
-        "targetDate": "2026-11-02T02:54:37.529000031Z"
-      },
-      {
-        "key": "TKME-2348",
+        "key": "TKME-2381",
         "slaName": "Maintenance Response (GMT+3)",
         "slaStatus": "SUCCESS",
-        "remainingDuration": 86397,
-        "targetDate": "2026-09-29T16:09:08.750000001Z"
+        "remainingDuration": 86394,
+        "targetDate": "2026-10-19T10:19:08.243000001Z"
       },
       {
-        "key": "TKME-2348",
+        "key": "TKME-2381",
         "slaName": "Maintenance Resolution (GMT+3)",
         "slaStatus": "STILL",
-        "remainingDuration": 2135007,
-        "targetDate": "2026-11-20T14:03:27.584000039Z"
+        "remainingDuration": 2583877,
+        "targetDate": "2026-11-30T06:02:00.597000031Z"
+      },
+      {
+        "key": "AEME-6644",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86400,
+        "targetDate": "2026-10-19T20:00:00.000000001Z"
+      },
+      {
+        "key": "AEME-6644",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2586304,
+        "targetDate": "2026-11-30T06:42:27.844000030Z"
+      },
+      {
+        "key": "SAME-4027",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86394,
+        "targetDate": "2026-10-19T10:18:54.906000001Z"
+      },
+      {
+        "key": "SAME-4027",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2513459,
+        "targetDate": "2026-11-27T10:28:22.789000030Z"
       }
     ]
   },
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 2.5h on RT-747436, 1h on GMT-22480, 1.33h on GMT-22481, 0.33h on AEME-6644, 0.33h on TKME-2383, 0.33h on PKHME-947, 1h on SAM-18531, 0.75h on SAME-4024, 2.75h on GMT-22427, 0.42h on AEME-6642\nToday: RT-747436, GMT-22427, MHME-1466, SAME-4027, AUTEU-41862\nBlockers: AEME-6527, PC-55443, PC-53923"
+    "standupText": "Yesterday: no worklogs\nToday: AEME-6637, TKME-2383, TKME-2382, TKME-2381, SAME-4019\nBlockers: SAME-4019, AEME-6527, PC-55443, PC-53923"
   }
 }
