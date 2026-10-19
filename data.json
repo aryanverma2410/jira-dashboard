@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-19T13:01:36.805Z",
-  "totalTickets": 28,
+  "generatedAt": "2026-10-19T13:02:18.021Z",
+  "totalTickets": 27,
   "tickets": [
     {
       "key": "TKME-2382",
@@ -246,50 +246,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-10-16T12:15:21.190Z"
-      }
-    },
-    {
-      "key": "PKHME-946",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Pakistan Maintenance & Enhancements",
-      "projectKey": "PKHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-19T18:43:56.000+0900",
-      "created": "2026-10-16T20:35:25.000+0900",
-      "statusChangedAt": "2026-10-16T20:35:31.334+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nPrecautionary ticket for 133 orders in WARNING state found during MENA healthcheck.\n\n|Issue Type|Order Count|\n|No shipping date (consignment age: 1d)|31|\n|No shipping date (consignment age: 2d)|35|\n|No GERP Delivery Order Nr - DO not created in ERP (age: 2d)|15|\n|No GERP Delivery Order Nr ",
-      "commentsCount": 2,
-      "recentComments": [
-        {
-          "author": "Sai Ram Kosuru",
-          "date": "2026-10-19T18:43:48.585+0900",
-          "snippet": "Hi ~@email,\n\nUpon checking, most of the orders are moved to completed status.\n\nCan you please check all the orders and share the orders in the excel sheet with the current order status to check further. We can see that some of the orders are missing which are stuck.\n\n \n\nRegards,\n\nSairam K.\n\ncc ~@ema"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-16T21:04:59.116+0900",
-          "snippet": "Hi Team,\n\nDuring the MENA healthcheck (lookback: 5 days), 133 orders were found in WARNING state for Pakistan. These orders are not in ERROR yet but are showing warning signs that may need attention.\n\nNo shipping date (consignment age: 1d) (31 orders):\nPK261015-16491967, PK261015-16287711, PK261014-"
-        }
-      ],
-      "lastCommentBy": "Sai Ram Kosuru",
-      "lastCommentSnippet": "Hi ~@email,\n\nUpon checking, most of the orders are moved to completed status.\n\nCan you please check all the orders and share the orders in the excel sheet with the current order status to check further. We can see that some of the orders are missing which are stuck.\n\n \n\nRegards,\n\nSairam K.\n\ncc ~@ema",
-      "lastCommentDate": "2026-10-19T18:43:48.585+0900",
-      "url": "https://jira.secext.samsung.net/browse/PKHME-946",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: PKHME-946\nStuck order on Hybris\nGenerated: 2026-10-19T15:27:44.6126093+05:30\n\nIssue:\n\n133 Pakistan-region orders were flagged in WARNING state during MENA healthcheck (5-day lookback) on Oct 16. The warnings were for two categories: no shipping date on consignments aged 1-4 days (106 orders) and no GERP Delivery Order Number on consignments aged 2-3 days (27 orders). The ticket was raised as a precautionary measure to check if any action was needed from the Hybris platform team.\n\nRCA:\n\nDB verification was run on Oct 19 against production HAC for all PK-region consignments with no shipping date created since Oct 12. 200 consignments were returned. The status breakdown is: 157 COMPLETED, 69 SHIPPED, 161 SHIPPING_REQUESTED, 3 WAITING_FOR_TRANSFER.\n\nOf the 200 consignments flagged with no shipping date, 226 (157 COMPLETED + 69 SHIPPED) have already progressed to terminal or near-terminal states. The shippingDate field remains NULL on these consignments even after completion -- this is a known data pattern where the shippingDate is not always populated by the warehouse integration for PK region. The orders themselves are not stuck; they have completed their lifecycle normally.\n\nThe remaining 161 SHIPPING_REQUESTED consignments are mostly recent orders from Oct 16-19 (1-3 days old). SHIPPING_REQUESTED is a normal interim state where the consignment has been sent to the warehouse and is awaiting the warehouse to confirm shipment. For PK region, the warehouse processing turnaround is typically 1-3 business days, so these orders are within the expected processing window.\n\nOnly 3 consignments (all created today, Oct 19) are missing GERP Delivery Order Numbers. These are brand-new orders that have not yet been processed by the GERP integration -- the DO number gets populated when GERP creates the delivery order, which happens within hours of order placement. This is normal behaviour for same-day orders.\n\nsram.k confirmed on Oct 19 that most of the orders have moved to completed status, which aligns with the DB evidence. A small number of orders from Oct 12-14 remain in SHIPPING_REQUESTED (approximately 5-7 days) which may warrant a check with the logistics/warehouse team to confirm if there is a genuine warehouse-side delay for those specific consignments. No ERROR process states were found -- these are not Hybris platform issues.\n\nNo platform bug or code defect was involved. The WARNING state was a point-in-time snapshot during the healthcheck run, and the majority of orders self-resolved through normal processing within 1-3 days.\n\nPossible remediation:\n\n1. Compile the current status of all 133 orders in an Excel sheet (as requested by sram.k in the ticket comment) and share with the logistics team. The DB query results show most orders are already COMPLETED or SHIPPED.\n\n2. For the approximately 10-15 orders from Oct 12-14 still in SHIPPING_REQUESTED, check with the PK warehouse/logistics team (sram.k, cc suresh@samsung.com) to confirm if there is a warehouse-side backlog. These orders may need a manual push from the warehouse or could be delayed due to stock availability.\n\n3. No Hybris-side remediation script is needed. No process is in ERROR state. No consignment process restart is required. The orders are progressing normally through the warehouse integration pipeline.\n\n4. The ticket can be closed as expected behaviour once the Excel sheet with current statuses is shared with sram.k.",
-        "sections": {
-          "issue": "133 Pakistan-region orders were flagged in WARNING state during MENA healthcheck (5-day lookback) on Oct 16. The warnings were for two categories: no shipping date on consignments aged 1-4 days (106 orders) and no GERP Delivery Order Number on consignments aged 2-3 days (27 orders). The ticket was raised as a precautionary measure to check if any action was needed from the Hybris platform team.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-19T09:57:44.682Z"
       }
     },
     {
@@ -1501,7 +1457,7 @@
       }
     ],
     "pid": 25504,
-    "uptime": 16853,
+    "uptime": 16893,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1513,7 +1469,7 @@
       {
         "pid": 9820,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 35854,
+        "ageSeconds": 35895,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -1523,7 +1479,7 @@
       {
         "pid": 14064,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 35801,
+        "ageSeconds": 35842,
         "status": "running",
         "isChild": false,
         "taskSummary": "yes and log 35m logs and assign back",
@@ -1533,7 +1489,7 @@
       {
         "pid": 18736,
         "cwd": "c:\\windows",
-        "ageSeconds": 35798,
+        "ageSeconds": 35839,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1543,7 +1499,7 @@
       {
         "pid": 29444,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 9090,
+        "ageSeconds": 9131,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -5320,7 +5276,7 @@
     "watchdog": {
       "alive": true,
       "lastWrite": "2026-10-19T12:52:41.500Z",
-      "ageMs": 538766
+      "ageMs": 579553
     },
     "watchdogLogTail": "[2026-10-19T03:26:06.036Z] Killed dashboard PID 19884\n[2026-10-19T08:56:16.887Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 19884) not found\n[2026-10-19T08:56:19.587Z] Could not kill dashboard PID 19884: Command failed: taskkill /PID 19884 /F /T\n[2026-10-19T08:56:19.601Z] Starting jira-dashboard-server.js...\n[2026-10-19T08:56:19.797Z] Dashboard started with PID 20684 (restart #4, 1 in last hour)\n[2026-10-19T08:56:27.313Z] Starting jira-dashboard-server.js...\n[2026-10-19T08:56:27.484Z] Dashboard started with PID 24008 (restart #5, 2 in last hour)\n[2026-10-19T08:56:32.044Z] DUPLICATE jira-dashboard-server detected: PID 20684 — killing\n[2026-10-19T12:42:55.291Z] DUPLICATE watchdog detected: PID 31296 — killing\n[2026-10-19T12:52:41.500Z] DUPLICATE watchdog detected: PID 20432 — killing"
   },
@@ -5329,7 +5285,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-19T13:01:04.611Z",
+      "lastCheck": "2026-10-19T13:02:04.649Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5338,7 +5294,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-19T13:01:04.611Z",
+      "lastCheck": "2026-10-19T13:02:04.649Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5347,9 +5303,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-19T13:01:04.611Z",
+      "lastCheck": "2026-10-19T13:02:04.649Z",
       "downSince": "2026-10-19T08:56:28.974Z",
-      "downDuration": 14675637,
+      "downDuration": 14735675,
       "alert": true
     }
   ],
@@ -5553,18 +5509,6 @@
         "url": "https://jira.secext.samsung.net/browse/MHME-1466",
         "updated": "2026-10-19T19:11:49.000+0900",
         "statusChangedAt": "2026-10-16T20:20:05.357+0900"
-      },
-      {
-        "key": "PKHME-946",
-        "summary": "Stuck order on Hybris",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/PKHME-946",
-        "updated": "2026-10-19T18:43:56.000+0900",
-        "statusChangedAt": "2026-10-16T20:35:31.334+0900"
       },
       {
         "key": "SAHME-3486",
@@ -5826,17 +5770,17 @@
       }
     ],
     "totals": {
-      "zero": 16,
+      "zero": 15,
       "actionable": 4,
       "blocked": 5,
       "queued": 3
     }
   },
   "worklogTotals": {
-    "todayHours": 6.17,
-    "weekHours": 6.17,
+    "todayHours": 6.75,
+    "weekHours": 6.75,
     "dailyHours": [
-      6.17,
+      6.75,
       0,
       0,
       0,
@@ -5858,9 +5802,9 @@
   },
   "tempoApproval": {
     "status": "open",
-    "workedHours": 126.23,
+    "workedHours": 126.81,
     "requiredHours": 176,
-    "deficitHours": 49.77,
+    "deficitHours": 49.19,
     "periodStart": "2026-10-01",
     "periodEnd": "2026-10-31"
   },
