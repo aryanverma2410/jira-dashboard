@@ -1,341 +1,7 @@
 {
-  "generatedAt": "2026-10-19T13:23:33.664Z",
-  "totalTickets": 25,
+  "generatedAt": "2026-10-19T13:24:19.015Z",
+  "totalTickets": 18,
   "tickets": [
-    {
-      "key": "AEME-6640",
-      "summary": "[Stuck Orders] 3 order(s) requiring maintenance fix",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-19T22:23:20.000+0900",
-      "created": "2026-10-16T14:31:02.000+0900",
-      "statusChangedAt": "2026-10-16T14:40:05.982+0900",
-      "assignedToMeAt": "",
-      "description": "Stuck Orders Requiring Maintenance Fix\n\nThe following orders are stuck and require maintenance team intervention:\n\nOrder Stuck in Hybris (1)\n\n||Order Code||Product||Status||Consignment||Order Date||Payment Mode||Delivery Mode||Hours Stuck||Site||\n|AE261014-15886242|Galaxy Tab S10 FE 5G   \\| GRAY   \\",
-      "commentsCount": 2,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-19T22:23:18.907+0900",
-          "snippet": "Hi Talib,\n\nAE261014-15886242 has been retriggered from splitOrder under PC-52605. The order has progressed from WAITING_FOR_SEND_FINANCIAL to SHIPPING_PREPARATION. The split order succeeded and the order is now moving forward.\n\nFor the two trade-in orders (AE260929-98885921 and AE261013-14287760), b"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-16T17:02:16.561+0900",
-          "snippet": "Hi Talib,\n\nAE261014-15886242 (WAITING_FOR_SEND_FINANCIAL):\n\nThe order process is in ERROR at SplitOrderAction. Kibana shows \"Config Error. No 'Warehouse' set for Consignment AE261014-15886242\" at 16:25 UTC on Oct 14. The product (Galaxy Tab S10 FE 5G, 128GB Gray) could not be mapped to a warehouse, "
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Talib,\n\nAE261014-15886242 has been retriggered from splitOrder under PC-52605. The order has progressed from WAITING_FOR_SEND_FINANCIAL to SHIPPING_PREPARATION. The split order succeeded and the order is now moving forward.\n\nFor the two trade-in orders (AE260929-98885921 and AE261013-14287760), b",
-      "lastCommentDate": "2026-10-19T22:23:18.907+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6640",
-      "linkedTickets": [],
-      "solution": {
-        "status": "none",
-        "excerpt": "",
-        "source": "",
-        "foundAt": "",
-        "issueNumber": null
-      }
-    },
-    {
-      "key": "SAME-4027",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Kingdom of Saudi Arabia Maintenance & Enhancements",
-      "projectKey": "SAME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-19T22:23:17.000+0900",
-      "created": "2026-10-16T19:18:54.000+0900",
-      "statusChangedAt": "2026-10-16T19:19:00.638+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|SA261013-14592894|2026/10/15|ORDER_SPLIT|\n|SA261013-13642757|2026/10/14|SHIPPED|\n\n\nThanks",
-      "commentsCount": 3,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-19T22:23:16.435+0900",
-          "snippet": "Hi Arj,\n\nSA261013-13642757 has been retriggered under PC-52605 and has moved from SHIPPED to WAITING_FOR_FINANCIAL. The processExternalServices consignment process is now progressing.\n\nSA261013-14592894 is still at ORDER_SPLIT — the sendConsignmentToWarehouse retrigger did not push it through. We ar"
-        },
-        {
-          "author": "Arjenelle Acabado",
-          "date": "2026-10-16T20:19:49.178+0900",
-          "snippet": "Hi ~@email \n\nPlease confirm the remediation to be done, will it only be retriggering the process?\n\nCan you please confirm why we keep receiving stuck orders w/ the same error?\n\n \n\nThanks,\n\nArj\n\n~@email"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Arj,\n\nSA261013-13642757 has been retriggered under PC-52605 and has moved from SHIPPED to WAITING_FOR_FINANCIAL. The processExternalServices consignment process is now progressing.\n\nSA261013-14592894 is still at ORDER_SPLIT — the sendConsignmentToWarehouse retrigger did not push it through. We ar",
-      "lastCommentDate": "2026-10-19T22:23:16.435+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAME-4027",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: SAME-4027\nStuck order on Hybris - 2 SA region orders with consignment process errors\nGenerated: 2026-10-17T08:55:00.000Z\n\nHi Arjenelle ,\n\nI re-investigated both orders with Kibana logs now available (they were unavailable during the initial check on Oct 16).\n\nSA261013-14592894:\nThe consignment process is in ERROR state. Kibana logs show \"Config Error. No 'Warehouse' set for Consignment SA261013-14592894\" at 11:29:24 on Oct 15, indicating the warehouse assignment failed during consignment creation. A Tabby conversion error \"Order SA261013-14592894 cannot be converted to real order\" was also logged at 11:05:37. The warehouse WC05 is now set on the consignment in the DB, confirming it was assigned after the initial error. The order is at ORDER_SPLIT and the consignment is at WAITING_FOR_TRANSFER.\n\nSA261013-13642757:\nThe consignment process is in ERROR state, but the consignment itself is COMPLETED and the order is SHIPPED. Kibana logs show \"Config Error. No 'Warehouse' set for Consignment SA261013-13642757\" at 23:29:21 on Oct 13, and \"Could not find product: P-GT-LCXOS1GW\" at 23:16:37. GERP billing was completed (ref 3249459356) and the consignment reached COMPLETED at 00:02:13 on Oct 14. The GCIC external service (GCIC_EXPERT_CLEANING_STANDALONE) remains in NEW status, meaning the GCIC registration was never completed despite the consignment completing through the warehouse path. The \"No non-fulfilment entry found\" error at 00:02:13 is a known systemic issue affecting many consignments globally.\n\nRegarding remediation: Yes, retriggering the consignment process for SA261013-14592894 should be sufficient as the warehouse is now assigned (WC05). For SA261013-13642757, the consignment is already COMPLETED and the order is SHIPPED. The process ERROR is a leftover from the consignment creation phase. The GCIC external service is still NEW. We need to confirm if the GCIC registration is still required for this order or if the process can just be cleaned up.\n\nRegarding why we keep receiving stuck orders with the same error: The \"Config Error. No 'Warehouse' set for Consignment\" is a recurring issue in the SA store. It occurs when the warehouse assignment fails during consignment creation. The SA store does not have an autoheal mechanism for this error type, so each occurrence requires manual remediation. Without an auto-retry or autoheal cronjob, any warehouse assignment failure will cause the consignment process to go ERROR and require manual intervention.\n\nRegards\n\nAryan",
-        "sections": {
-          "issue": "",
-          "rca": "# RCA: SAME-4027\nStuck order on Hybris - 2 SA region orders with consignment process errors\nGenerated: 2026-10-17T08:55:00.000Z\n\nHi Arjenelle ,\n\nI re-investigated both orders with Kibana logs now available (they were unavailable during the initial check on Oct 16).\n\nSA261013-14592894:\nThe consignment process is in ERROR state. Kibana logs show \"Config Error. No 'Warehouse' set for Consignment SA261013-14592894\" at 11:29:24 on Oct 15, indicating the warehouse assignment failed during consignment creation. A Tabby conversion error \"Order SA261013-14592894 cannot be converted to real order\" was also logged at 11:05:37. The warehouse WC05 is now set on the consignment in the DB, confirming it was assigned after the initial error. The order is at ORDER_SPLIT and the consignment is at WAITING_FOR_TRANSFER.\n\nSA261013-13642757:\nThe consignment process is in ERROR state, but the consignment itself is COMPLETED and the order is SHIPPED. Kibana logs show \"Config Error. No 'Warehouse' set for Consignment SA261013-13642757\" at 23:29:21 on Oct 13, and \"Could not find product: P-GT-LCXOS1GW\" at 23:16:37. GERP billing was completed (ref 3249459356) and the consignment reached COMPLETED at 00:02:13 on Oct 14. The GCIC external service (GCIC_EXPERT_CLEANING_STANDALONE) remains in NEW status, meaning the GCIC registration was never completed despite the consignment completing through the warehouse path. The \"No non-fulfilment entry found\" error at 00:02:13 is a known systemic issue affecting many consignments globally.\n\nRegarding remediation: Yes, retriggering the consignment process for SA261013-14592894 should be sufficient as the warehouse is now assigned (WC05). For SA261013-13642757, the consignment is already COMPLETED and the order is SHIPPED. The process ERROR is a leftover from the consignment creation phase. The GCIC external service is still NEW. We need to confirm if the GCIC registration is still required for this order or if the process can just be cleaned up.\n\nRegarding why we keep receiving stuck orders with the same error: The \"Config Error. No 'Warehouse' set for Consignment\" is a recurring issue in the SA store. It occurs when the warehouse assignment fails during consignment creation. The SA store does not have an autoheal mechanism for this error type, so each occurrence requires manual remediation. Without an auto-retry or autoheal cronjob, any warehouse assignment failure will cause the consignment process to go ERROR and require manual intervention.\n\nRegards\n\nAryan",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-17T08:51:55.862Z"
-      }
-    },
-    {
-      "key": "SAME-4033",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Kingdom of Saudi Arabia Maintenance & Enhancements",
-      "projectKey": "SAME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-19T22:23:15.000+0900",
-      "created": "2026-10-19T19:48:37.000+0900",
-      "statusChangedAt": "2026-10-19T19:48:39.197+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing order was found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|SA261013-14592894|2026/10/15|ORDER_SPLIT|\n\n\nThanks",
-      "commentsCount": 3,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-19T22:23:13.161+0900",
-          "snippet": "Hi Arj,\n\nSA261013-14592894 was retriggered but is still at ORDER_SPLIT. The consignment process may have failed again at sendConsignmentToWarehouse. We are checking the process state and will update once we have more info.\n\nRegards,\nAryan"
-        },
-        {
-          "author": "Arjenelle Acabado",
-          "date": "2026-10-19T20:43:41.055+0900",
-          "snippet": "Hi ~@email \n\nPlease let us know once order has been pushed.\n\n \n\nTHanks,\n\nArj\n\n~@email"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Arj,\n\nSA261013-14592894 was retriggered but is still at ORDER_SPLIT. The consignment process may have failed again at sendConsignmentToWarehouse. We are checking the process state and will update once we have more info.\n\nRegards,\nAryan",
-      "lastCommentDate": "2026-10-19T22:23:13.161+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAME-4033",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Stuck order on Hybris\r\nGenerated: 2026-10-19T20:45:00.000Z\r\n\r\nIssue:\r\nOrder SA261013-14592894 (SA region, Tabby payment, 3149.10 SAR, product SM-S938BZKIMEA) is stuck at ORDER_SPLIT status. The consignment process (consignment-process-v11-36) errored at the sendConsignmentToWarehouse action with an empty returnCode, indicating an unhandled exception was thrown rather than a business logic NOK return. The ticket comment confirms this was an I/O error: Connection reset when Hybris attempted to transmit the consignment data to the warehouse system.\r\n\r\nRCA:\r\nThe consignment process for SA261013-14592894 is in ERROR state. ProcessTaskLog shows the failing action is sendConsignmentToWarehouse with an empty returnCode, which means an exception was thrown at this action rather than the process returning NOK through normal business logic. The endMessage is the generic \"An error occurred while executing the process.\" with no BusinessProcessParameter stack trace stored in the DB.\r\n\r\nThe ticket comment by Aryan already captured the specific error: \"Consignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: I/O error: Connection\". This is a transient infrastructure failure where the warehouse endpoint (GERP/WMS) dropped the TCP connection while Hybris was sending the consignment creation request. The connection was reset mid-transmission, causing an IOException in the integration layer.\r\n\r\nPayment is not a factor - the Tabby authorization (3149.10 SAR) was accepted and capture was completed successfully on 2026-10-15 14:11. The consignment was correctly created (warehouse WC05, delivery mode sa-delivery-calendar-PSND, status WAITING_FOR_TRANSFER) but the warehouse notification step failed due to the connection reset.\r\n\r\nThis is a well-known recurring pattern with 600+ similar tickets in Jira (UAME-806, CAME-9762, TKME-2055, GRME-779, NNHME-9503, etc.) and dedicated remediation PC tickets (PC-54225, PC-54438 for I/O error: Connection reset). The consignment data is intact in the DB - only the process needs to be retried from the sendConsignmentToWarehouse action.\r\n\r\nPossible remediation:\r\nRestart the consignment process from the sendConsignmentToWarehouse action. The consignment data is already correctly persisted in the DB (status WAITING_FOR_TRANSFER, warehouse WC05 assigned), so retriggering the process will attempt the warehouse notification again. If the warehouse endpoint is now reachable, the process will continue past sendConsignmentToWarehouse to waitForSendToWarehouse and proceed normally.\r\n\r\nThis is the same remediation pattern as reusable PC-52605 (script-TKME-2279-retrigger-business-process.groovy) which restarts business processes stuck at ERROR. Alternatively, PC-54225 and PC-54438 are dedicated tickets for I/O error: Connection reset remediation on consignment processes.\r\n\r\nTicket URL: https://jira.secext.samsung.net/browse/SAME-4033",
-        "sections": {
-          "issue": "Order SA261013-14592894 (SA region, Tabby payment, 3149.10 SAR, product SM-S938BZKIMEA) is stuck at ORDER_SPLIT status. The consignment process (consignment-process-v11-36) errored at the sendConsignmentToWarehouse action with an empty returnCode, indicating an unhandled exception was thrown rather than a business logic NOK return. The ticket comment confirms this was an I/O error: Connection reset when Hybris attempted to transmit the consignment data to the warehouse system.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-19T11:47:05.485Z"
-      }
-    },
-    {
-      "key": "TKME-2383",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Turkey Maintenance & Enhancements",
-      "projectKey": "TKME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-19T22:23:11.000+0900",
-      "created": "2026-10-17T15:32:37.000+0900",
-      "statusChangedAt": "2026-10-17T15:32:40.056+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|TR261016-18103127|2026/10/16|ORDER_SPLIT|\n|TR261016-18062476|2026/10/16|ORDER_SPLIT|\n|TR261014-15689886|2026/10/16|REFUND_FAILED|\n|TR261015-16837515|2026/10/16|ORDER_SPLI",
-      "commentsCount": 3,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-19T22:23:10.721+0900",
-          "snippet": "Hi Rajesh,\n\nAll four sendConsignmentToWarehouse I/O error orders have been retriggered under PC-52605. TR261016-18103127, TR261016-18062476, TR261015-16837515, and TR261016-17869156 have all progressed to SHIPPED status.\n\nFor the remaining orders in this ticket:\n• TR261011-12111148 (commitStock) is "
-        },
-        {
-          "author": "Rajeshbabu Yatirajula",
-          "date": "2026-10-19T16:33:04.943+0900",
-          "snippet": "Hi ~@email \n\nAs mentioned in  TKME-2381, any I/O error orders should be retriggered. Please check.\n\nRegards,\nRajesh"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Rajesh,\n\nAll four sendConsignmentToWarehouse I/O error orders have been retriggered under PC-52605. TR261016-18103127, TR261016-18062476, TR261015-16837515, and TR261016-17869156 have all progressed to SHIPPED status.\n\nFor the remaining orders in this ticket:\n• TR261011-12111148 (commitStock) is ",
-      "lastCommentDate": "2026-10-19T22:23:10.721+0900",
-      "url": "https://jira.secext.samsung.net/browse/TKME-2383",
-      "linkedTickets": [],
-      "solution": {
-        "status": "none",
-        "excerpt": "",
-        "source": "",
-        "foundAt": "",
-        "issueNumber": null
-      }
-    },
-    {
-      "key": "AEME-6650",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-19T22:23:09.000+0900",
-      "created": "2026-10-19T19:49:14.000+0900",
-      "statusChangedAt": "2026-10-19T19:49:16.670+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|AE261018-19769996|2026/10/18|SHIPPED|\n|AE261017-18856697|2026/10/17|SHIPPED|\n|AE261005-04805037|2026/10/16|WAITING_FOR_SEND_FINANCIAL|\n|AE261016-17665659|2026/10/16|SHIPP",
-      "commentsCount": 3,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-19T22:23:07.196+0900",
-          "snippet": "Hi Talib,\n\nThe processExternalServices orders have been retriggered under PC-52605. AE261017-18856697 has moved to WAITING_FOR_FINANCIAL and AE261015-17002746 is in SHIPPED status.\n\nAE261016-17665659 and AE261007-07351473 were already COMPLETED before the retrigger — no action was needed. AE261018-1"
-        },
-        {
-          "author": "Talib Raza Zaidi",
-          "date": "2026-10-19T20:44:08.459+0900",
-          "snippet": "Hi ~@email,\n\n \n\nI will check on \n - AE261005-04805037\n - AE261014-15868813\n - AE261007-06950515\n\nPlease check of the other orders stuck and fix them.\n\n\nRegards\n\nTalib\n\nCC: ~@email"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Talib,\n\nThe processExternalServices orders have been retriggered under PC-52605. AE261017-18856697 has moved to WAITING_FOR_FINANCIAL and AE261015-17002746 is in SHIPPED status.\n\nAE261016-17665659 and AE261007-07351473 were already COMPLETED before the retrigger — no action was needed. AE261018-1",
-      "lastCommentDate": "2026-10-19T22:23:07.196+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6650",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Ticket Summary: Stuck order on Hybris\r\nGenerated: 2026-10-19T10:55:00.000Z\r\n\r\nHi [~shop.sds@samsung.com] ,\r\n\r\nWe checked all 8 orders listed in the ticket against the production database. 5 of the 8 orders have already progressed to terminal states and require no remediation. 2 orders are still in transit (SHIPPING_PREPARATION) and may progress naturally. Only 3 orders are genuinely stuck and require remediation.\r\n\r\nAE261018-19769996:\r\nAlready COMPLETED. Order process SUCCEEDED, consignment process SUCCEEDED, GERP billing done (3249957246). All payment transactions ACCEPTED. External service GCIC_EXPERT_CLEANING_STANDALONE in UPDATED state. No action needed.\r\n\r\nAE261016-17665659:\r\nAlready COMPLETED. Order process SUCCEEDED, consignment process SUCCEEDED, GERP billing done (3249768021). All payment transactions ACCEPTED. External service GCIC_EXPERT_CARE_STANDALONE in UPDATED state. No action needed.\r\n\r\nAE261007-07351473:\r\nAlready COMPLETED. Order process SUCCEEDED, consignment process SUCCEEDED, GERP billing done (3249768025). Tracking assigned (55077643891). External service SMC shows UPDATE_ERROR but the order completed successfully regardless. No action needed.\r\n\r\nAE261014-15868813:\r\nCurrently in SHIPPING_PREPARATION, not WAITING_FOR_SEND_FINANCIAL as listed in the ticket. Both order process and consignment process are in RUNNING state (not ERROR). Consignment has shipped date of 2026-10-19 with delivery mode ae-mx-calendar-delivery. This order is likely waiting for the scheduled delivery date to arrive. No process errors found. Recommend monitoring — if it does not progress past the shipping date, further investigation may be needed.\r\n\r\nAE261007-06950515:\r\nCurrently in SHIPPING_PREPARATION, not WAITING_FOR_SEND_FINANCIAL as listed. Both order process and consignment process are in RUNNING state. Consignment shipped 2026-10-19 with delivery mode ae-mx-dubai-nextday-delivery. Tabby payment with a pending NOTIFICATION entry (status CREATED). No process errors found. Recommend monitoring — may progress after delivery date.\r\n\r\nAE261017-18856697:\r\nStuck at SHIPPED. The consignment process (consignment-process-v11-36) is in ERROR state. The external service GCIC_EXPERT_CARE_STANDALONE is also in ERROR state with no status message recorded. The consignment itself shows COMPLETED status with GERP billing done (3249909677), but the process chain is broken. The order process (order-process-v25-69) remains in RUNNING state, blocked at the waitForFinancialInitialUpdate action because it cannot proceed past the failed consignment subprocess. Payment was captured successfully (230.00 AED via Checkout.com). The root cause is the GCIC_EXPERT_CARE_STANDALONE external service failure which caused the consignment process to error out, blocking the order process from completing the financial initial update step.\r\n\r\nAE261015-17002746:\r\nStuck at SHIPPED. This order has 2 consignments — the first (AE261015-17002746) was CANCELLED, the second (AE261015-17002746_1) is COMPLETED with tracking (55077825574) and GERP billing (3249830317). However, the consignment process for _1 (consignment-process-v11-36) is in ERROR state. Two NORTHLADDER external service entries exist — one in ADDITIONAL_INFO_REQUIRED and one in ERROR. The order process (order-process-v25-69) is in RUNNING state, blocked at waitForWarehouseSubprocessEnd because the errored consignment subprocess will never signal completion. Payment captured successfully (2139.00 AED via Cybersource Samsung Pay). The root cause is the NORTHLADDER external service failure which caused the consignment process for _1 to error, blocking the order process at the warehouse subprocess wait stage.\r\n\r\nAE261005-04805037:\r\nStuck at WAITING_FOR_SEND_FINANCIAL. The order process (order-process-v25-69) is in ERROR state. No consignments were ever created — the order is frozen before fulfilment. Payment was captured (1659.60 AED via Checkout.com). Task logs show the splitOrder action appearing twice, suggesting a retry, followed by sendFinancialUpdate and waitForFinancialInitialUpdate. The process errored during the financial initial update phase. This matches the recurring NERP connection timeout pattern documented in AEME-5181 (master RCA), AEME-5238, and AEME-5220 — where Hybris sends the MT_CREATED_PARKED_DOCU SOAP request to NERP and the connection resets or times out. The order will not self-recover.\r\n\r\nSummary of required remediation:\r\n1. AE261017-18856697 — Reset the GCIC_EXPERT_CARE_STANDALONE external service to NEW, restart the consignment process, which will unblock the order process at waitForFinancialInitialUpdate\r\n2. AE261015-17002746 — Reset the NORTHLADDER external service in ERROR to NEW, restart the consignment process for _1, which will unblock the order process at waitForWarehouseSubprocessEnd\r\n3. AE261005-04805037 — Restart the order process from sendFinancialUpdate to retry the NERP FI posting. If NERP is still not responding, this order will error again and the NERP team needs to be engaged\r\n\r\nWe have reusable PC tickets available for the process restart remediation — PC-52605 (process-restart, REUSABLE) covers restarting business processes stuck at ERROR, and PC-52596 (push-to-completed, REUSABLE) covers pushing orders from SHIPPED to COMPLETED. We can reuse these scripts with the updated order list.\r\n\r\nThanks,\r\n\r\nAryan",
-        "sections": {
-          "issue": "",
-          "rca": "Ticket Summary: Stuck order on Hybris\r\nGenerated: 2026-10-19T10:55:00.000Z\r\n\r\nHi [~shop.sds@samsung.com] ,\r\n\r\nWe checked all 8 orders listed in the ticket against the production database. 5 of the 8 orders have already progressed to terminal states and require no remediation. 2 orders are still in transit (SHIPPING_PREPARATION) and may progress naturally. Only 3 orders are genuinely stuck and require remediation.\r\n\r\nAE261018-19769996:\r\nAlready COMPLETED. Order process SUCCEEDED, consignment process SUCCEEDED, GERP billing done (3249957246). All payment transactions ACCEPTED. External service GCIC_EXPERT_CLEANING_STANDALONE in UPDATED state. No action needed.\r\n\r\nAE261016-17665659:\r\nAlready COMPLETED. Order process SUCCEEDED, consignment process SUCCEEDED, GERP billing done (3249768021). All payment transactions ACCEPTED. External service GCIC_EXPERT_CARE_STANDALONE in UPDATED state. No action needed.\r\n\r\nAE261007-07351473:\r\nAlready COMPLETED. Order process SUCCEEDED, consignment process SUCCEEDED, GERP billing done (3249768025). Tracking assigned (55077643891). External service SMC shows UPDATE_ERROR but the order completed successfully regardless. No action needed.\r\n\r\nAE261014-15868813:\r\nCurrently in SHIPPING_PREPARATION, not WAITING_FOR_SEND_FINANCIAL as listed in the ticket. Both order process and consignment process are in RUNNING state (not ERROR). Consignment has shipped date of 2026-10-19 with delivery mode ae-mx-calendar-delivery. This order is likely waiting for the scheduled delivery date to arrive. No process errors found. Recommend monitoring — if it does not progress past the shipping date, further investigation may be needed.\r\n\r\nAE261007-06950515:\r\nCurrently in SHIPPING_PREPARATION, not WAITING_FOR_SEND_FINANCIAL as listed. Both order process and consignment process are in RUNNING state. Consignment shipped 2026-10-19 with delivery mode ae-mx-dubai-nextday-delivery. Tabby payment with a pending NOTIFICATION entry (status CREATED). No process errors found. Recommend monitoring — may progress after delivery date.\r\n\r\nAE261017-18856697:\r\nStuck at SHIPPED. The consignment process (consignment-process-v11-36) is in ERROR state. The external service GCIC_EXPERT_CARE_STANDALONE is also in ERROR state with no status message recorded. The consignment itself shows COMPLETED status with GERP billing done (3249909677), but the process chain is broken. The order process (order-process-v25-69) remains in RUNNING state, blocked at the waitForFinancialInitialUpdate action because it cannot proceed past the failed consignment subprocess. Payment was captured successfully (230.00 AED via Checkout.com). The root cause is the GCIC_EXPERT_CARE_STANDALONE external service failure which caused the consignment process to error out, blocking the order process from completing the financial initial update step.\r\n\r\nAE261015-17002746:\r\nStuck at SHIPPED. This order has 2 consignments — the first (AE261015-17002746) was CANCELLED, the second (AE261015-17002746_1) is COMPLETED with tracking (55077825574) and GERP billing (3249830317). However, the consignment process for _1 (consignment-process-v11-36) is in ERROR state. Two NORTHLADDER external service entries exist — one in ADDITIONAL_INFO_REQUIRED and one in ERROR. The order process (order-process-v25-69) is in RUNNING state, blocked at waitForWarehouseSubprocessEnd because the errored consignment subprocess will never signal completion. Payment captured successfully (2139.00 AED via Cybersource Samsung Pay). The root cause is the NORTHLADDER external service failure which caused the consignment process for _1 to error, blocking the order process at the warehouse subprocess wait stage.\r\n\r\nAE261005-04805037:\r\nStuck at WAITING_FOR_SEND_FINANCIAL. The order process (order-process-v25-69) is in ERROR state. No consignments were ever created — the order is frozen before fulfilment. Payment was captured (1659.60 AED via Checkout.com). Task logs show the splitOrder action appearing twice, suggesting a retry, followed by sendFinancialUpdate and waitForFinancialInitialUpdate. The process errored during the financial initial update phase. This matches the recurring NERP connection timeout pattern documented in AEME-5181 (master RCA), AEME-5238, and AEME-5220 — where Hybris sends the MT_CREATED_PARKED_DOCU SOAP request to NERP and the connection resets or times out. The order will not self-recover.\r\n\r\nSummary of required remediation:\r\n1. AE261017-18856697 — Reset the GCIC_EXPERT_CARE_STANDALONE external service to NEW, restart the consignment process, which will unblock the order process at waitForFinancialInitialUpdate\r\n2. AE261015-17002746 — Reset the NORTHLADDER external service in ERROR to NEW, restart the consignment process for _1, which will unblock the order process at waitForWarehouseSubprocessEnd\r\n3. AE261005-04805037 — Restart the order process from sendFinancialUpdate to retry the NERP FI posting. If NERP is still not responding, this order will error again and the NERP team needs to be engaged\r\n\r\nWe have reusable PC tickets available for the process restart remediation — PC-52605 (process-restart, REUSABLE) covers restarting business processes stuck at ERROR, and PC-52596 (push-to-completed, REUSABLE) covers pushing orders from SHIPPED to COMPLETED. We can reuse these scripts with the updated order list.\r\n\r\nThanks,\r\n\r\nAryan",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-19T11:03:02.760Z"
-      }
-    },
-    {
-      "key": "AEME-6644",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-19T22:23:05.000+0900",
-      "created": "2026-10-17T15:32:09.000+0900",
-      "statusChangedAt": "2026-10-17T15:32:12.546+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|AE261005-04805037|2026/10/16|WAITING_FOR_SEND_FINANCIAL|\n|AE261016-17665659|2026/10/16|SHIPPED|\n|AE261007-07351473|2026/10/14|SHIPPED|\n\n\nThanks",
-      "commentsCount": 3,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-19T22:23:04.657+0900",
-          "snippet": "Hi Jaffar,\n\nAE261005-04805037 was retriggered from splitOrder but is still at WAITING_FOR_SEND_FINANCIAL. The order process may have hit the same warehouse mapping issue again. Could you please reconfirm the stock is available for this product on the AE site?\n\nAE261016-17665659 and AE261007-07351473"
-        },
-        {
-          "author": "Jaffar Ali",
-          "date": "2026-10-19T15:42:18.277+0900",
-          "snippet": "Hi ~@email \n\nAE261005-04805037 - WAITING_FOR_SEND_FINANCIAL\nStock updated on Hybris, Please push the order\n\n \n\nAE261016-17665659, AE261007-07351473\n\nPlease let us know if you need anything from my end\n\n \n\nRegards\n\nJaffar"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Jaffar,\n\nAE261005-04805037 was retriggered from splitOrder but is still at WAITING_FOR_SEND_FINANCIAL. The order process may have hit the same warehouse mapping issue again. Could you please reconfirm the stock is available for this product on the AE site?\n\nAE261016-17665659 and AE261007-07351473",
-      "lastCommentDate": "2026-10-19T22:23:04.657+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6644",
-      "linkedTickets": [
-        {
-          "key": "AEME-6645",
-          "summary": "Stuck order on Hybris",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "is cloned by",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "none",
-        "excerpt": "",
-        "source": "",
-        "foundAt": "",
-        "issueNumber": null
-      }
-    },
-    {
-      "key": "AEME-6637",
-      "summary": "Stuck order on Hybris | Overselling issue",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-19T22:23:03.000+0900",
-      "created": "2026-10-15T14:16:08.000+0900",
-      "statusChangedAt": "2026-10-15T14:16:10.935+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n|Order|Creation_Date|Status|\n|AE261014-15868813|2026/10/14|WAITING_FOR_SEND_FINANCIAL|\n|AE261007-06950515|2026/10/07|WAITING_FOR_SEND_FINANCIAL|\n\nThanks",
-      "commentsCount": 3,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-19T22:23:02.175+0900",
-          "snippet": "Hi Jaffar,\n\nBoth orders have been retriggered under PC-52605. AE261014-15868813 and AE261007-06950515 are now in SHIPPING_PREPARATION status. The consignment processes are progressing normally.\n\nRegards,\nAryan"
-        },
-        {
-          "author": "Jaffar Ali",
-          "date": "2026-10-19T16:35:37.225+0900",
-          "snippet": "Hi ~@email \n\n \n\nWe have available stock for the orders below. Please remediate them.\n\nAE261014-15868813\n\nAE261007-06950515\n\n \n\nRegards\n\nJaffar"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Jaffar,\n\nBoth orders have been retriggered under PC-52605. AE261014-15868813 and AE261007-06950515 are now in SHIPPING_PREPARATION status. The consignment processes are progressing normally.\n\nRegards,\nAryan",
-      "lastCommentDate": "2026-10-19T22:23:02.175+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6637",
-      "linkedTickets": [
-        {
-          "key": "AEME-6622",
-          "summary": "[Stuck Orders] 9 order(s) requiring maintenance fix",
-          "status": "Launch Verification",
-          "statusCategory": "Done",
-          "relation": "blocks",
-          "assignee": null
-        },
-        {
-          "key": "AEME-6628",
-          "summary": "[Stuck Orders] 5 order(s) requiring maintenance fix",
-          "status": "Launch Verification",
-          "statusCategory": "Done",
-          "relation": "blocks",
-          "assignee": null
-        },
-        {
-          "key": "AEME-6630",
-          "summary": "[PROD] Overselling Issue - Order Placed without Stock | 14th Oct",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
-          "relation": "blocks",
-          "assignee": null
-        },
-        {
-          "key": "GMT-22353",
-          "summary": "SMI- MENA | Order Stuck in Multiple State",
-          "status": "On-Hold",
-          "statusCategory": "Done",
-          "relation": "relates to",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "none",
-        "excerpt": "",
-        "source": "",
-        "foundAt": "",
-        "issueNumber": null
-      }
-    },
     {
       "key": "TKME-2382",
       "summary": "Stuck order on Hybris",
@@ -1320,7 +986,7 @@
       }
     ],
     "pid": 25504,
-    "uptime": 18167,
+    "uptime": 18212,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1332,7 +998,7 @@
       {
         "pid": 9820,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 37171,
+        "ageSeconds": 37216,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -1342,7 +1008,7 @@
       {
         "pid": 14064,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 37119,
+        "ageSeconds": 37164,
         "status": "running",
         "isChild": false,
         "taskSummary": "log 25m logs on each, post comment , assign back and update labels",
@@ -1352,7 +1018,7 @@
       {
         "pid": 18736,
         "cwd": "c:\\windows",
-        "ageSeconds": 37116,
+        "ageSeconds": 37160,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1362,7 +1028,7 @@
       {
         "pid": 29444,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 10408,
+        "ageSeconds": 10452,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -5139,7 +4805,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-19T12:52:41.500Z",
-      "ageMs": 1859185
+      "ageMs": 1901059
     },
     "watchdogLogTail": "[2026-10-19T03:26:06.036Z] Killed dashboard PID 19884\n[2026-10-19T08:56:16.887Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 19884) not found\n[2026-10-19T08:56:19.587Z] Could not kill dashboard PID 19884: Command failed: taskkill /PID 19884 /F /T\n[2026-10-19T08:56:19.601Z] Starting jira-dashboard-server.js...\n[2026-10-19T08:56:19.797Z] Dashboard started with PID 20684 (restart #4, 1 in last hour)\n[2026-10-19T08:56:27.313Z] Starting jira-dashboard-server.js...\n[2026-10-19T08:56:27.484Z] Dashboard started with PID 24008 (restart #5, 2 in last hour)\n[2026-10-19T08:56:32.044Z] DUPLICATE jira-dashboard-server detected: PID 20684 — killing\n[2026-10-19T12:42:55.291Z] DUPLICATE watchdog detected: PID 31296 — killing\n[2026-10-19T12:52:41.500Z] DUPLICATE watchdog detected: PID 20432 — killing"
   },
@@ -5148,7 +4814,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-19T13:23:12.662Z",
+      "lastCheck": "2026-10-19T13:24:13.029Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5157,7 +4823,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-19T13:23:12.662Z",
+      "lastCheck": "2026-10-19T13:24:13.029Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5166,9 +4832,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-19T13:23:12.662Z",
+      "lastCheck": "2026-10-19T13:24:13.029Z",
       "downSince": "2026-10-19T08:56:28.974Z",
-      "downDuration": 16003688,
+      "downDuration": 16064055,
       "alert": true
     }
   ],
@@ -5326,30 +4992,6 @@
         "statusChangedAt": ""
       },
       {
-        "key": "SAME-4033",
-        "summary": "Stuck order on Hybris",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/SAME-4033",
-        "updated": "2026-10-19T22:23:15.000+0900",
-        "statusChangedAt": "2026-10-19T19:48:39.197+0900"
-      },
-      {
-        "key": "AEME-6644",
-        "summary": "Stuck order on Hybris",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/AEME-6644",
-        "updated": "2026-10-19T22:23:05.000+0900",
-        "statusChangedAt": "2026-10-17T15:32:12.546+0900"
-      },
-      {
         "key": "TKME-2382",
         "summary": "Stuck order on Hybris",
         "priority": "None",
@@ -5486,42 +5128,6 @@
     ],
     "blocked": [
       {
-        "key": "AEME-6637",
-        "summary": "Stuck order on Hybris | Overselling issue",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "blocked",
-        "reason": "Waiting for PC-52605 approval (not assigned to you)",
-        "whatToDo": "",
-        "url": "https://jira.secext.samsung.net/browse/AEME-6637",
-        "updated": "2026-10-19T22:23:03.000+0900",
-        "statusChangedAt": "2026-10-15T14:16:10.935+0900"
-      },
-      {
-        "key": "AEME-6640",
-        "summary": "[Stuck Orders] 3 order(s) requiring maintenance fix",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "blocked",
-        "reason": "Waiting for PC-52605 approval (not assigned to you)",
-        "whatToDo": "",
-        "url": "https://jira.secext.samsung.net/browse/AEME-6640",
-        "updated": "2026-10-19T22:23:20.000+0900",
-        "statusChangedAt": "2026-10-16T14:40:05.982+0900"
-      },
-      {
-        "key": "AEME-6650",
-        "summary": "Stuck order on Hybris",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "blocked",
-        "reason": "Waiting for PC-52605 approval (not assigned to you)",
-        "whatToDo": "",
-        "url": "https://jira.secext.samsung.net/browse/AEME-6650",
-        "updated": "2026-10-19T22:23:09.000+0900",
-        "statusChangedAt": "2026-10-19T19:49:16.670+0900"
-      },
-      {
         "key": "PC-53923",
         "summary": "Update SC+ Automated Report — column renames, initial order payment mode, Payment Cycle reorder, recipient update, Qatar",
         "priority": "Low",
@@ -5546,18 +5152,6 @@
         "statusChangedAt": "2026-09-03T19:16:47.372+0900"
       },
       {
-        "key": "SAME-4027",
-        "summary": "Stuck order on Hybris",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "blocked",
-        "reason": "Waiting for PC-52605 approval (not assigned to you)",
-        "whatToDo": "",
-        "url": "https://jira.secext.samsung.net/browse/SAME-4027",
-        "updated": "2026-10-19T22:23:17.000+0900",
-        "statusChangedAt": "2026-10-16T19:19:00.638+0900"
-      },
-      {
         "key": "TKME-2324",
         "summary": "O2O Dealers PII Data Request for SETK Hybris Enhancement",
         "priority": "None",
@@ -5568,18 +5162,6 @@
         "url": "https://jira.secext.samsung.net/browse/TKME-2324",
         "updated": "2026-10-14T20:29:22.000+0900",
         "statusChangedAt": "2026-09-23T21:27:31.640+0900"
-      },
-      {
-        "key": "TKME-2383",
-        "summary": "Stuck order on Hybris",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "blocked",
-        "reason": "Waiting for PC-52605 approval (not assigned to you)",
-        "whatToDo": "",
-        "url": "https://jira.secext.samsung.net/browse/TKME-2383",
-        "updated": "2026-10-19T22:23:11.000+0900",
-        "statusChangedAt": "2026-10-17T15:32:40.056+0900"
       }
     ],
     "queued": [
@@ -5609,9 +5191,9 @@
       }
     ],
     "totals": {
-      "zero": 13,
+      "zero": 11,
       "actionable": 1,
-      "blocked": 8,
+      "blocked": 3,
       "queued": 3
     }
   },
@@ -5663,9 +5245,166 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "TKME-2382",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86399,
+        "targetDate": "2026-10-19T11:35:42.030000001Z"
+      },
+      {
+        "key": "TKME-2382",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2570780,
+        "targetDate": "2026-11-30T07:30:38.364000031Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86397,
+        "targetDate": "2026-09-29T16:09:08.750000001Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2075949,
+        "targetDate": "2026-11-20T14:03:27.584000039Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85937,
+        "targetDate": "2026-09-17T08:08:38.502000001Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 585860,
+        "targetDate": "2026-10-28T08:08:38.502000030Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86254,
+        "targetDate": "2026-09-21T04:19:58.710000001Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 822619,
+        "targetDate": "2026-11-02T02:54:37.529000031Z"
+      },
+      {
+        "key": "TKME-2379",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85854,
+        "targetDate": "2026-10-16T13:23:55.356000001Z"
+      },
+      {
+        "key": "TKME-2379",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1123177,
+        "targetDate": "2026-11-05T13:23:55.356000015Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85660,
+        "targetDate": "2026-09-15T08:21:25.088000001Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1211372,
+        "targetDate": "2026-10-13T12:51:05.986000021Z"
+      },
+      {
+        "key": "SAHME-3486",
+        "slaName": "Maintenance Response (GMT+2)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86132,
+        "targetDate": "2026-10-20T08:34:48.801000001Z"
+      },
+      {
+        "key": "SAHME-3486",
+        "slaName": "Maintenance Resolution (GMT+2)",
+        "slaStatus": "STILL",
+        "remainingDuration": 414630,
+        "targetDate": "2026-10-26T09:34:48.801000005Z"
+      },
+      {
+        "key": "SAME-4031",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85687,
+        "targetDate": "2026-10-20T10:13:37.341000001Z"
+      },
+      {
+        "key": "SAME-4031",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 420559,
+        "targetDate": "2026-10-26T10:13:37.341000005Z"
+      },
+      {
+        "key": "SAME-4024",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86243,
+        "targetDate": "2026-10-16T12:25:18.509000001Z"
+      },
+      {
+        "key": "SAME-4024",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 296415,
+        "targetDate": "2026-10-22T23:44:33.751000006Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86179,
+        "targetDate": "2026-09-30T08:16:57.595000001Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1269633,
+        "targetDate": "2026-10-20T08:16:57.595000015Z"
+      },
+      {
+        "key": "MHME-1466",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85724,
+        "targetDate": "2026-10-19T11:08:49.611000001Z"
+      },
+      {
+        "key": "MHME-1466",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1201471,
+        "targetDate": "2026-11-06T12:08:49.611000015Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: no worklogs\nToday: AEME-6640, SAME-4027, SAME-4033, TKME-2383, AEME-6650\nBlockers: PC-53923"
+    "standupText": "Yesterday: no worklogs\nToday: TKME-2382, PC-55646, SAME-4031, MHME-1466, SAHME-3486\nBlockers: PC-53923"
   }
 }
