@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-19T11:47:18.653Z",
+  "generatedAt": "2026-10-19T11:48:00.979Z",
   "totalTickets": 29,
   "tickets": [
     {
@@ -35,9 +35,15 @@
       "url": "https://jira.secext.samsung.net/browse/SAME-4033",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-10-19T11:40:55.828Z"
+        "status": "found",
+        "excerpt": "Stuck order on Hybris\r\nGenerated: 2026-10-19T20:45:00.000Z\r\n\r\nIssue:\r\nOrder SA261013-14592894 (SA region, Tabby payment, 3149.10 SAR, product SM-S938BZKIMEA) is stuck at ORDER_SPLIT status. The consignment process (consignment-process-v11-36) errored at the sendConsignmentToWarehouse action with an empty returnCode, indicating an unhandled exception was thrown rather than a business logic NOK return. The ticket comment confirms this was an I/O error: Connection reset when Hybris attempted to transmit the consignment data to the warehouse system.\r\n\r\nRCA:\r\nThe consignment process for SA261013-14592894 is in ERROR state. ProcessTaskLog shows the failing action is sendConsignmentToWarehouse with an empty returnCode, which means an exception was thrown at this action rather than the process returning NOK through normal business logic. The endMessage is the generic \"An error occurred while executing the process.\" with no BusinessProcessParameter stack trace stored in the DB.\r\n\r\nThe ticket comment by Aryan already captured the specific error: \"Consignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: I/O error: Connection\". This is a transient infrastructure failure where the warehouse endpoint (GERP/WMS) dropped the TCP connection while Hybris was sending the consignment creation request. The connection was reset mid-transmission, causing an IOException in the integration layer.\r\n\r\nPayment is not a factor - the Tabby authorization (3149.10 SAR) was accepted and capture was completed successfully on 2026-10-15 14:11. The consignment was correctly created (warehouse WC05, delivery mode sa-delivery-calendar-PSND, status WAITING_FOR_TRANSFER) but the warehouse notification step failed due to the connection reset.\r\n\r\nThis is a well-known recurring pattern with 600+ similar tickets in Jira (UAME-806, CAME-9762, TKME-2055, GRME-779, NNHME-9503, etc.) and dedicated remediation PC tickets (PC-54225, PC-54438 for I/O error: Connection reset). The consignment data is intact in the DB - only the process needs to be retried from the sendConsignmentToWarehouse action.\r\n\r\nPossible remediation:\r\nRestart the consignment process from the sendConsignmentToWarehouse action. The consignment data is already correctly persisted in the DB (status WAITING_FOR_TRANSFER, warehouse WC05 assigned), so retriggering the process will attempt the warehouse notification again. If the warehouse endpoint is now reachable, the process will continue past sendConsignmentToWarehouse to waitForSendToWarehouse and proceed normally.\r\n\r\nThis is the same remediation pattern as reusable PC-52605 (script-TKME-2279-retrigger-business-process.groovy) which restarts business processes stuck at ERROR. Alternatively, PC-54225 and PC-54438 are dedicated tickets for I/O error: Connection reset remediation on consignment processes.\r\n\r\nTicket URL: https://jira.secext.samsung.net/browse/SAME-4033",
+        "sections": {
+          "issue": "Order SA261013-14592894 (SA region, Tabby payment, 3149.10 SAR, product SM-S938BZKIMEA) is stuck at ORDER_SPLIT status. The consignment process (consignment-process-v11-36) errored at the sendConsignmentToWarehouse action with an empty returnCode, indicating an unhandled exception was thrown rather than a business logic NOK return. The ticket comment confirms this was an I/O error: Connection reset when Hybris attempted to transmit the consignment data to the warehouse system.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-19T11:47:05.485Z"
       }
     },
     {
@@ -1410,8 +1416,8 @@
         "issueNum": 804,
         "title": "Investigate ticket SAME-4033",
         "received": "2026-10-19T11:41:08.967Z",
-        "responded": "",
-        "responseSnippet": ""
+        "responded": "2026-10-19T11:47:42.903Z",
+        "responseSnippet": "Starting Phase 0 - reading past learnings, checking for existing RCA/cache files, and probing MCP availability.Good. I have the ticket details:\n- Order: SA261013-14592894, created 2026/10/15, status: ORDER_SPLIT\n- Comment mentions: Consignment process ERROR at [sendConsignmentToWarehouse], I/O error: Connection\n\nNow launching Phase 1 parallel fan-out investigation. Let me run all independent investigations simultaneously.Good DB state data. The consignment process (consignment-process-v11-36) is"
       },
       {
         "issueNum": 803,
@@ -1548,27 +1554,19 @@
       }
     ],
     "pid": 25504,
-    "uptime": 12393,
+    "uptime": 12433,
     "failures": 0,
-    "activeJobCount": 1,
-    "jobs": [
-      {
-        "issueNum": 804,
-        "issueTitle": "Investigate ticket SAME-4033",
-        "snippet": "Auto-triggered investigation for new ticket SAME-4033.\n\nTicket: SAME-4033\nSummary: Stuck order on Hybris\n\nUse the invest",
-        "pid": 20432,
-        "elapsed": 367
-      }
-    ],
+    "activeJobCount": 0,
+    "jobs": [],
     "startTime": "2026-10-19T02:50:42.697Z",
     "version": "v3",
-    "lastResponseAt": "2026-10-19T11:05:01.394Z",
-    "lastResponseIssue": 803,
+    "lastResponseAt": "2026-10-19T11:47:42.918Z",
+    "lastResponseIssue": 804,
     "ideSessions": [
       {
         "pid": 9820,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 31396,
+        "ageSeconds": 31438,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -1578,17 +1576,17 @@
       {
         "pid": 14064,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 31343,
+        "ageSeconds": 31385,
         "status": "running",
         "isChild": false,
-        "taskSummary": "verify",
-        "lastExchange": "verify",
+        "taskSummary": "draft a comment, especiall a reply to the latest comment",
+        "lastExchange": "draft a comment, especiall a reply to the latest comment",
         "sessionId": "bin"
       },
       {
         "pid": 18736,
         "cwd": "c:\\windows",
-        "ageSeconds": 31340,
+        "ageSeconds": 31382,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1598,7 +1596,7 @@
       {
         "pid": 29444,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 4632,
+        "ageSeconds": 4674,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -1607,6 +1605,15 @@
       }
     ],
     "activityLog": [
+      {
+        "id": "1792410462921-spytds",
+        "timestamp": "2026-10-19T11:47:42.921Z",
+        "type": "agent-response",
+        "source": "bridge",
+        "title": "Investigate ticket SAME-4033",
+        "detail": "Starting Phase 0 - reading past learnings, checking for existing RCA/cache files, and probing MCP availability.Good. I have the ticket details:\n- Order: SA261013-14592894, created 2026/10/15, status: ",
+        "status": "success"
+      },
       {
         "id": "1792410069811-pgufcc",
         "timestamp": "2026-10-19T11:41:09.811Z",
@@ -1866,15 +1873,6 @@
         "source": "aryanverma2410",
         "title": "Investigate ticket SAHME-3480",
         "detail": "#762",
-        "status": "pending"
-      },
-      {
-        "id": "1792135168950-3254lw",
-        "timestamp": "2026-10-16T07:19:28.950Z",
-        "type": "command",
-        "source": "aryanverma2410",
-        "title": "Investigate ticket AUTEU-41862",
-        "detail": "#761",
         "status": "pending"
       }
     ],
@@ -5360,23 +5358,24 @@
         "issueNum": 804,
         "title": "Investigate ticket SAME-4033",
         "startTime": "2026-10-19T11:41:09.991Z",
-        "status": "thinking",
+        "status": "done",
         "commandHistory": [
           {
             "title": "Investigate ticket SAME-4033",
             "time": "2026-10-19T11:41:09.991Z"
           }
-        ]
+        ],
+        "endTime": "2026-10-19T11:47:42.922Z",
+        "lastOutput": "Starting Phase 0 - reading past learnings, checking for existing RCA/cache files, and probing MCP availability.Good. I have the ticket details:\n- Order: SA261013-14592894, created 2026/10/15, status: ORDER_SPLIT\n- Comment mentions: Consignment process ERROR at [sendConsignmentToWarehouse], I/O error: Connection\n\nNow launching Phase 1 parallel fan-out investigation. Let me run all independent investigations simultaneously.Good DB state data. The consignment process (consignment-process-v11-36) is"
       }
     },
-    "bridgeLogTail": "[2026-10-19T11:47:03.101Z] STDOUT data for #804: 108 bytes\n[2026-10-19T11:47:03.104Z] LIVE events write for #804: 150 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_804.txt\n[2026-10-19T11:47:03.111Z] STDOUT data for #804: 104 bytes\n[2026-10-19T11:47:03.113Z] LIVE events write for #804: 151 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_804.txt\n[2026-10-19T11:47:05.466Z] STDOUT data for #804: 3187 bytes\n[2026-10-19T11:47:05.469Z] LIVE events write for #804: 152 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_804.txt\n[2026-10-19T11:47:05.494Z] STDOUT data for #804: 124 bytes\n[2026-10-19T11:47:05.496Z] LIVE events write for #804: 153 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_804.txt\n[2026-10-19T11:47:06.399Z] STDOUT data for #804: 138 bytes\n[2026-10-19T11:47:06.402Z] LIVE events write for #804: 154 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_804.txt\n[2026-10-19T11:47:06.403Z] STDOUT data for #804: 112 bytes\n[2026-10-19T11:47:06.405Z] LIVE events write for #804: 155 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_804.txt\n[2026-10-19T11:47:06.415Z] STDOUT data for #804: 116 bytes\n[2026-10-19T11:47:06.417Z] LIVE events write for #804: 156 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_804.txt\n[2026-10-19T11:47:06.422Z] STDOUT data for #804: 124 bytes\n[2026-10-19T11:47:06.424Z] LIVE events write for #804: 157 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_804.txt\n[2026-10-19T11:47:06.432Z] STDOUT data for #804: 104 bytes\n[2026-10-19T11:47:06.434Z] LIVE events write for #804: 158 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_804.txt\n[2026-10-19T11:47:07.038Z] STDOUT data for #804: 831 bytes\n[2026-10-19T11:47:07.040Z] LIVE events write for #804: 159 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_804.txt",
+    "bridgeLogTail": "[2026-10-19T11:47:40.043Z] STDOUT data for #804: 107 bytes\n[2026-10-19T11:47:40.046Z] LIVE events write for #804: 287 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_804.txt\n[2026-10-19T11:47:40.054Z] STDOUT data for #804: 122 bytes\n[2026-10-19T11:47:40.058Z] LIVE events write for #804: 288 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_804.txt\n[2026-10-19T11:47:40.062Z] STDOUT data for #804: 127 bytes\n[2026-10-19T11:47:40.066Z] LIVE events write for #804: 289 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_804.txt\n[2026-10-19T11:47:40.074Z] STDOUT data for #804: 110 bytes\n[2026-10-19T11:47:40.078Z] LIVE events write for #804: 290 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_804.txt\n[2026-10-19T11:47:40.086Z] STDOUT data for #804: 116 bytes\n[2026-10-19T11:47:40.089Z] LIVE events write for #804: 291 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_804.txt\n[2026-10-19T11:47:40.094Z] STDOUT data for #804: 118 bytes\n[2026-10-19T11:47:40.097Z] LIVE events write for #804: 292 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_804.txt\n[2026-10-19T11:47:40.104Z] STDOUT data for #804: 119 bytes\n[2026-10-19T11:47:40.108Z] LIVE events write for #804: 293 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_804.txt\n[2026-10-19T11:47:40.117Z] STDOUT data for #804: 108 bytes\n[2026-10-19T11:47:40.121Z] LIVE events write for #804: 294 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_804.txt\n[2026-10-19T11:47:40.132Z] STDOUT data for #804: 344 bytes\n[2026-10-19T11:47:40.135Z] LIVE events write for #804: 295 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_804.txt\n[2026-10-19T11:47:42.051Z] aipro completed for #804 (2856 chars)\n[2026-10-19T11:47:42.902Z] Comment posted on #804",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-19T08:56:32.046Z",
-      "ageMs": 10250397
+      "ageMs": 10292326
     },
-    "watchdogLogTail": "[2026-10-19T03:08:26.196Z] DUPLICATE jira-dashboard-server detected: PID 16056 — killing\n[2026-10-19T03:26:02.155Z] DASHBOARD RESTART NEEDED: No dashboard heartbeat file found\n[2026-10-19T03:26:06.036Z] Killed dashboard PID 19884\n[2026-10-19T08:56:16.887Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 19884) not found\n[2026-10-19T08:56:19.587Z] Could not kill dashboard PID 19884: Command failed: taskkill /PID 19884 /F /T\n[2026-10-19T08:56:19.601Z] Starting jira-dashboard-server.js...\n[2026-10-19T08:56:19.797Z] Dashboard started with PID 20684 (restart #4, 1 in last hour)\n[2026-10-19T08:56:27.313Z] Starting jira-dashboard-server.js...\n[2026-10-19T08:56:27.484Z] Dashboard started with PID 24008 (restart #5, 2 in last hour)\n[2026-10-19T08:56:32.044Z] DUPLICATE jira-dashboard-server detected: PID 20684 — killing",
-    "jobOutputs": {}
+    "watchdogLogTail": "[2026-10-19T03:08:26.196Z] DUPLICATE jira-dashboard-server detected: PID 16056 — killing\n[2026-10-19T03:26:02.155Z] DASHBOARD RESTART NEEDED: No dashboard heartbeat file found\n[2026-10-19T03:26:06.036Z] Killed dashboard PID 19884\n[2026-10-19T08:56:16.887Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 19884) not found\n[2026-10-19T08:56:19.587Z] Could not kill dashboard PID 19884: Command failed: taskkill /PID 19884 /F /T\n[2026-10-19T08:56:19.601Z] Starting jira-dashboard-server.js...\n[2026-10-19T08:56:19.797Z] Dashboard started with PID 20684 (restart #4, 1 in last hour)\n[2026-10-19T08:56:27.313Z] Starting jira-dashboard-server.js...\n[2026-10-19T08:56:27.484Z] Dashboard started with PID 24008 (restart #5, 2 in last hour)\n[2026-10-19T08:56:32.044Z] DUPLICATE jira-dashboard-server detected: PID 20684 — killing"
   },
   "mcps": [
     {
@@ -5946,7 +5945,304 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "SAME-4033",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86398,
+        "targetDate": "2026-10-20T10:48:37.198000001Z"
+      },
+      {
+        "key": "SAME-4033",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2590647,
+        "targetDate": "2026-11-30T11:25:27.795000030Z"
+      },
+      {
+        "key": "SAME-4024",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86243,
+        "targetDate": "2026-10-16T12:25:18.509000001Z"
+      },
+      {
+        "key": "SAME-4024",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 302193,
+        "targetDate": "2026-10-22T23:44:33.751000006Z"
+      },
+      {
+        "key": "AEME-6637",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86397,
+        "targetDate": "2026-10-16T05:16:08.892000001Z"
+      },
+      {
+        "key": "AEME-6637",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2576460,
+        "targetDate": "2026-11-30T07:29:01.048000032Z"
+      },
+      {
+        "key": "AEME-6640",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85858,
+        "targetDate": "2026-10-19T05:31:04.341000001Z"
+      },
+      {
+        "key": "AEME-6640",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2482984,
+        "targetDate": "2026-11-27T05:31:04.341000030Z"
+      },
+      {
+        "key": "MHME-1466",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85724,
+        "targetDate": "2026-10-19T11:08:49.611000001Z"
+      },
+      {
+        "key": "MHME-1466",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1207249,
+        "targetDate": "2026-11-06T12:08:49.611000015Z"
+      },
+      {
+        "key": "AEME-6650",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86398,
+        "targetDate": "2026-10-20T10:49:14.868000001Z"
+      },
+      {
+        "key": "AEME-6650",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2590878,
+        "targetDate": "2026-11-30T11:29:19.074000030Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86254,
+        "targetDate": "2026-09-21T04:19:58.710000001Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 828397,
+        "targetDate": "2026-11-02T02:54:37.529000031Z"
+      },
+      {
+        "key": "SAHME-3486",
+        "slaName": "Maintenance Response (GMT+2)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86132,
+        "targetDate": "2026-10-20T08:34:48.801000001Z"
+      },
+      {
+        "key": "SAHME-3486",
+        "slaName": "Maintenance Resolution (GMT+2)",
+        "slaStatus": "STILL",
+        "remainingDuration": 420408,
+        "targetDate": "2026-10-26T09:34:48.801000005Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85937,
+        "targetDate": "2026-09-17T08:08:38.502000001Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 591637,
+        "targetDate": "2026-10-28T08:08:38.502000030Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86397,
+        "targetDate": "2026-09-29T16:09:08.750000001Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2081727,
+        "targetDate": "2026-11-20T14:03:27.584000039Z"
+      },
+      {
+        "key": "TKME-2382",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86399,
+        "targetDate": "2026-10-19T11:35:42.030000001Z"
+      },
+      {
+        "key": "TKME-2382",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2576557,
+        "targetDate": "2026-11-30T07:30:38.364000031Z"
+      },
+      {
+        "key": "SAME-4027",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86394,
+        "targetDate": "2026-10-19T10:18:54.906000001Z"
+      },
+      {
+        "key": "SAME-4027",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2500822,
+        "targetDate": "2026-11-27T10:28:22.789000030Z"
+      },
+      {
+        "key": "TKME-2379",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85854,
+        "targetDate": "2026-10-16T13:23:55.356000001Z"
+      },
+      {
+        "key": "TKME-2379",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1128954,
+        "targetDate": "2026-11-05T13:23:55.356000015Z"
+      },
+      {
+        "key": "SAME-4031",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85687,
+        "targetDate": "2026-10-20T10:13:37.341000001Z"
+      },
+      {
+        "key": "SAME-4031",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 426336,
+        "targetDate": "2026-10-26T10:13:37.341000005Z"
+      },
+      {
+        "key": "TKME-2383",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86400,
+        "targetDate": "2026-10-19T21:00:00.000000001Z"
+      },
+      {
+        "key": "TKME-2383",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2576710,
+        "targetDate": "2026-11-30T07:33:11.299000030Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86179,
+        "targetDate": "2026-09-30T08:16:57.595000001Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1269633,
+        "targetDate": "2026-10-20T08:16:57.595000015Z"
+      },
+      {
+        "key": "AEME-6595",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86334,
+        "targetDate": "2026-09-30T07:32:47.469000001Z"
+      },
+      {
+        "key": "AEME-6595",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 766353,
+        "targetDate": "2026-10-27T09:47:25.714000020Z"
+      },
+      {
+        "key": "AEME-6527",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86020,
+        "targetDate": "2026-09-01T07:46:25.907000001Z"
+      },
+      {
+        "key": "AEME-6527",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 990365,
+        "targetDate": "2026-10-18T21:25:13.757000035Z"
+      },
+      {
+        "key": "AEME-6644",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86400,
+        "targetDate": "2026-10-19T20:00:00.000000001Z"
+      },
+      {
+        "key": "AEME-6644",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2573667,
+        "targetDate": "2026-11-30T06:42:27.844000030Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85660,
+        "targetDate": "2026-09-15T08:21:25.088000001Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1211372,
+        "targetDate": "2026-10-13T12:51:05.986000021Z"
+      },
+      {
+        "key": "PKHME-946",
+        "slaName": "Maintenance Response (GMT+5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86398,
+        "targetDate": "2026-10-19T11:35:29.536000001Z"
+      },
+      {
+        "key": "PKHME-946",
+        "slaName": "Maintenance Resolution (GMT+5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2584490,
+        "targetDate": "2026-11-30T09:42:51.085000031Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
     "standupText": "Yesterday: no worklogs\nToday: SAME-4033, AEME-6650, PC-55646, SAME-4031, MHME-1466\nBlockers: AEME-6527, PC-55443, PC-53923"
