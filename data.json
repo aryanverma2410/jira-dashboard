@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-19T10:34:26.672Z",
+  "generatedAt": "2026-10-19T10:35:08.673Z",
   "totalTickets": 28,
   "tickets": [
     {
@@ -24,9 +24,15 @@
       "url": "https://jira.secext.samsung.net/browse/SAME-4031",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-10-19T10:25:55.098Z"
+        "status": "found",
+        "excerpt": "Ticket Summary: Order Refund - SIT Return - SA260916-85802827\r\nGenerated: 2026-10-19T10:30:00.000Z\r\n\r\n## Issue\r\n\r\nOrder SA260916-85802827 (SA region, Tabby payment, 3419.10 SAR) has a SIT Return detected on the sizing kit consignment (SA260916-85802827_1) but the refund has not been processed. The order is stuck at SHIPPED status with the order process blocked at waitForWarehouseSubprocessEnd.\r\n\r\n## RCA\r\n\r\nHi [~arjenelle.a@samsung.com] ,\r\n\r\nThe order has two consignments: the main consignment (SM-S938BZTOMEA, status COMPLETED since Oct 10) and the sizing kit consignment (ET-YQ500KBEGWW, consignment code SA260916-85802827_1, still at SHIPPED).\r\n\r\nOn Oct 19, GERP detected a SIT Return on the sizing kit consignment and logged \"Consignment [SA260916-85802827_1] contains SIT Return. Marking it as COMPLETED\" at both 09:48:41 and 10:18:37 UTC. However, the consignment status in the database remained SHIPPED. Kibana confirms the consignment was \"updated from [SHIPPED] to [SHIPPED]\", meaning no actual status transition occurred despite the log message.\r\n\r\nThe consignment process for the sizing kit (order-process-v25-69-SA260916-85802827-1789579486159_2, definition consignment-process-v11-36) is still in RUNNING state. The shipping readiness check returned NOK both times, preventing the consignment process from advancing. The order process (order-process-v25-69) is blocked at waitForWarehouseSubprocessEnd/isProcessCompleted, waiting for all consignment processes to complete before proceeding.\r\n\r\nNo ReturnRequest was created in the system. Without a ReturnRequest, no ReturnRequestProcess was initiated, and therefore no refund flow was triggered. The payment transactions show only AUTHORIZATION and CAPTURE entries (3419.10 SAR captured on Sep 16) with no refund or reversal entries.\r\n\r\nThe BILLING-CALLBACK-RECEIVED process parameter warning (\"Process parameter with name BILLING-CALLBACK-RECEIVED does not exist\") appeared during both SIT Return detection cycles, indicating the billing callback required for the process to advance was never registered.\r\n\r\nNo ERROR-level logs were found in Kibana for this order. The failure is silent — the SIT Return was detected but the consignment status update did not persist, blocking the entire downstream flow without throwing any exception.\r\n\r\nThis is the same pattern documented in UAME-3621 (SIT Return present but refund not processed) and matches the SAME-3941 remediation scenario.\r\n\r\n## Possible Remediation\r\n\r\n1. Manually update the sizing kit consignment (SA260916-85802827_1) status from SHIPPED to COMPLETED to align with the GERP SIT Return detection.\r\n2. Restart the stuck consignment process _2 (order-process-v25-69-SA260916-85802827-1789579486159_2) so it advances past the shipping check.\r\n3. This should unblock the order process at waitForWarehouseSubprocessEnd, allowing it to complete and trigger the refund flow.\r\n4. If the order process completion alone does not trigger the refund, a ReturnRequest may need to be created manually with sitReturn=true, followed by triggering the return-refund process.\r\n\r\nPC-52765 (script-SAME-3941-sa260722-return-refund-retrigger.groovy) was reviewed but cannot be reused directly because it requires an existing ReturnRequestProcess, and this order has no ReturnRequest at all. A new script would be needed if manual consignment completion does not auto-trigger the refund.\r\n\r\nThanks,\r\n\r\nAryan",
+        "sections": {
+          "issue": "Order SA260916-85802827 (SA region, Tabby payment, 3419.10 SAR) has a SIT Return detected on the sizing kit consignment (SA260916-85802827_1) but the refund has not been processed. The order is stuck at SHIPPED status with the order process blocked at waitForWarehouseSubprocessEnd.",
+          "rca": "Hi [~arjenelle.a@samsung.com] ,\r\n\r\nThe order has two consignments: the main consignment (SM-S938BZTOMEA, status COMPLETED since Oct 10) and the sizing kit consignment (ET-YQ500KBEGWW, consignment code SA260916-85802827_1, still at SHIPPED).\r\n\r\nOn Oct 19, GERP detected a SIT Return on the sizing kit consignment and logged \"Consignment [SA260916-85802827_1] contains SIT Return. Marking it as COMPLETED\" at both 09:48:41 and 10:18:37 UTC. However, the consignment status in the database remained SHIPPED. Kibana confirms the consignment was \"updated from [SHIPPED] to [SHIPPED]\", meaning no actual status transition occurred despite the log message.\r\n\r\nThe consignment process for the sizing kit (order-process-v25-69-SA260916-85802827-1789579486159_2, definition consignment-process-v11-36) is still in RUNNING state. The shipping readiness check returned NOK both times, preventing the consignment process from advancing. The order process (order-process-v25-69) is blocked at waitForWarehouseSubprocessEnd/isProcessCompleted, waiting for all consignment processes to complete before proceeding.\r\n\r\nNo ReturnRequest was created in the system. Without a ReturnRequest, no ReturnRequestProcess was initiated, and therefore no refund flow was triggered. The payment transactions show only AUTHORIZATION and CAPTURE entries (3419.10 SAR captured on Sep 16) with no refund or reversal entries.\r\n\r\nThe BILLING-CALLBACK-RECEIVED process parameter warning (\"Process parameter with name BILLING-CALLBACK-RECEIVED does not exist\") appeared during both SIT Return detection cycles, indicating the billing callback required for the process to advance was never registered.\r\n\r\nNo ERROR-level logs were found in Kibana for this order. The failure is silent — the SIT Return was detected but the consignment status update did not persist, blocking the entire downstream flow without throwing any exception.\r\n\r\nThis is the same pattern documented in UAME-3621 (SIT Return present but refund not processed) and matches the SAME-3941 remediation scenario.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-19T10:34:42.879Z"
       }
     },
     {
@@ -1377,8 +1383,8 @@
         "issueNum": 801,
         "title": "Investigate ticket SAME-4031",
         "received": "2026-10-19T10:26:05.878Z",
-        "responded": "",
-        "responseSnippet": ""
+        "responded": "2026-10-19T10:34:56.587Z",
+        "responseSnippet": "Starting the investigation for SAME-4031. Let me kick off Phase 0 pre-flight checks in parallel.Good — learnings loaded, no cache file exists (fresh investigation), lock file already present from dashboard trigger. Let me proceed with ticket fetch and parallel pre-flight checks.Launching Phase 1 parallel fan-out — 3 sub-agents for HAC DB state, Kibana logs, and Jira cross-reference + PC reuse search.Kibana logs and Jira cross-reference returned rich findings. HAC sub-agent was interrupted — I ne"
       },
       {
         "issueNum": 800,
@@ -1515,27 +1521,19 @@
       }
     ],
     "pid": 25504,
-    "uptime": 8019,
+    "uptime": 8064,
     "failures": 0,
-    "activeJobCount": 1,
-    "jobs": [
-      {
-        "issueNum": 801,
-        "issueTitle": "Investigate ticket SAME-4031",
-        "snippet": "Auto-triggered investigation for new ticket SAME-4031.\n\nTicket: SAME-4031\nSummary: Order Refund - SIT Return - SA260916-",
-        "pid": 29964,
-        "elapsed": 496
-      }
-    ],
+    "activeJobCount": 0,
+    "jobs": [],
     "startTime": "2026-10-19T02:50:42.697Z",
     "version": "v3",
-    "lastResponseAt": "2026-10-19T09:58:00.411Z",
-    "lastResponseIssue": 800,
+    "lastResponseAt": "2026-10-19T10:34:56.599Z",
+    "lastResponseIssue": 801,
     "ideSessions": [
       {
         "pid": 9820,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 27024,
+        "ageSeconds": 27066,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -1545,7 +1543,7 @@
       {
         "pid": 14064,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 26971,
+        "ageSeconds": 27013,
         "status": "running",
         "isChild": false,
         "taskSummary": "post the comments except for AEME-6644 , assign back and log 45mins on each",
@@ -1555,7 +1553,7 @@
       {
         "pid": 18736,
         "cwd": "c:\\windows",
-        "ageSeconds": 26968,
+        "ageSeconds": 27010,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1565,7 +1563,7 @@
       {
         "pid": 29444,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 260,
+        "ageSeconds": 302,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -1574,6 +1572,15 @@
       }
     ],
     "activityLog": [
+      {
+        "id": "1792406096604-o5zczl",
+        "timestamp": "2026-10-19T10:34:56.604Z",
+        "type": "agent-response",
+        "source": "bridge",
+        "title": "Investigate ticket SAME-4031",
+        "detail": "Starting the investigation for SAME-4031. Let me kick off Phase 0 pre-flight checks in parallel.Good — learnings loaded, no cache file exists (fresh investigation), lock file already present from dash",
+        "status": "success"
+      },
       {
         "id": "1792405566920-7axe8y",
         "timestamp": "2026-10-19T10:26:06.920Z",
@@ -1833,15 +1840,6 @@
         "source": "dashboard",
         "title": "AUTOLOGIN: Run Samsung Auto Login",
         "detail": "#722",
-        "status": "pending"
-      },
-      {
-        "id": "1792105319815-isirh7",
-        "timestamp": "2026-10-15T23:01:59.815Z",
-        "type": "command",
-        "source": "aryanverma2410",
-        "title": "Investigate ticket SAHME-3473",
-        "detail": "#723",
         "status": "pending"
       }
     ],
@@ -5282,31 +5280,32 @@
         "issueNum": 801,
         "title": "Investigate ticket SAME-4031",
         "startTime": "2026-10-19T10:26:07.105Z",
-        "status": "thinking",
+        "status": "done",
         "commandHistory": [
           {
             "title": "Investigate ticket SAME-4031",
             "time": "2026-10-19T10:26:07.105Z"
           }
-        ]
+        ],
+        "endTime": "2026-10-19T10:34:56.605Z",
+        "lastOutput": "Starting the investigation for SAME-4031. Let me kick off Phase 0 pre-flight checks in parallel.Good — learnings loaded, no cache file exists (fresh investigation), lock file already present from dashboard trigger. Let me proceed with ticket fetch and parallel pre-flight checks.Launching Phase 1 parallel fan-out — 3 sub-agents for HAC DB state, Kibana logs, and Jira cross-reference + PC reuse search.Kibana logs and Jira cross-reference returned rich findings. HAC sub-agent was interrupted — I ne"
       }
     },
-    "bridgeLogTail": "[2026-10-19T10:33:57.923Z] STDOUT data for #801: 121 bytes\n[2026-10-19T10:33:57.928Z] LIVE events write for #801: 199 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_801.txt\n[2026-10-19T10:33:57.931Z] STDOUT data for #801: 113 bytes\n[2026-10-19T10:33:57.933Z] LIVE events write for #801: 200 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_801.txt\n[2026-10-19T10:33:57.943Z] STDOUT data for #801: 122 bytes\n[2026-10-19T10:33:57.945Z] LIVE events write for #801: 201 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_801.txt\n[2026-10-19T10:33:57.954Z] STDOUT data for #801: 107 bytes\n[2026-10-19T10:33:57.957Z] LIVE events write for #801: 202 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_801.txt\n[2026-10-19T10:33:57.965Z] STDOUT data for #801: 116 bytes\n[2026-10-19T10:33:57.967Z] LIVE events write for #801: 203 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_801.txt\n[2026-10-19T10:33:57.987Z] STDOUT data for #801: 117 bytes\n[2026-10-19T10:33:57.989Z] LIVE events write for #801: 204 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_801.txt\n[2026-10-19T10:33:58.901Z] STDOUT data for #801: 864 bytes\n[2026-10-19T10:33:58.903Z] LIVE events write for #801: 205 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_801.txt\n[2026-10-19T10:33:58.912Z] STDOUT data for #801: 878 bytes\n[2026-10-19T10:33:58.915Z] LIVE events write for #801: 206 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_801.txt\n[2026-10-19T10:34:27.060Z] STDOUT data for #801: 114 bytes\n[2026-10-19T10:34:27.062Z] LIVE events write for #801: 207 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_801.txt\n[2026-10-19T10:34:27.065Z] STDOUT data for #801: 236 bytes\n[2026-10-19T10:34:27.069Z] LIVE events write for #801: 209 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_801.txt",
+    "bridgeLogTail": "[2026-10-19T10:34:53.490Z] STDOUT data for #801: 109 bytes\n[2026-10-19T10:34:53.501Z] LIVE events write for #801: 396 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_801.txt\n[2026-10-19T10:34:53.504Z] STDOUT data for #801: 122 bytes\n[2026-10-19T10:34:53.507Z] LIVE events write for #801: 397 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_801.txt\n[2026-10-19T10:34:53.519Z] STDOUT data for #801: 125 bytes\n[2026-10-19T10:34:53.521Z] LIVE events write for #801: 398 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_801.txt\n[2026-10-19T10:34:53.539Z] STDOUT data for #801: 114 bytes\n[2026-10-19T10:34:53.550Z] LIVE events write for #801: 399 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_801.txt\n[2026-10-19T10:34:53.551Z] STDOUT data for #801: 115 bytes\n[2026-10-19T10:34:53.554Z] LIVE events write for #801: 400 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_801.txt\n[2026-10-19T10:34:53.558Z] STDOUT data for #801: 122 bytes\n[2026-10-19T10:34:53.561Z] LIVE events write for #801: 401 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_801.txt\n[2026-10-19T10:34:53.573Z] STDOUT data for #801: 110 bytes\n[2026-10-19T10:34:53.580Z] LIVE events write for #801: 402 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_801.txt\n[2026-10-19T10:34:53.588Z] STDOUT data for #801: 104 bytes\n[2026-10-19T10:34:53.591Z] LIVE events write for #801: 403 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_801.txt\n[2026-10-19T10:34:53.598Z] STDOUT data for #801: 344 bytes\n[2026-10-19T10:34:53.601Z] LIVE events write for #801: 404 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_801.txt\n[2026-10-19T10:34:55.355Z] aipro completed for #801 (5016 chars)\n[2026-10-19T10:34:56.587Z] Comment posted on #801",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-19T08:56:32.046Z",
-      "ageMs": 5877362
+      "ageMs": 5919570
     },
-    "watchdogLogTail": "[2026-10-19T03:08:26.196Z] DUPLICATE jira-dashboard-server detected: PID 16056 — killing\n[2026-10-19T03:26:02.155Z] DASHBOARD RESTART NEEDED: No dashboard heartbeat file found\n[2026-10-19T03:26:06.036Z] Killed dashboard PID 19884\n[2026-10-19T08:56:16.887Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 19884) not found\n[2026-10-19T08:56:19.587Z] Could not kill dashboard PID 19884: Command failed: taskkill /PID 19884 /F /T\n[2026-10-19T08:56:19.601Z] Starting jira-dashboard-server.js...\n[2026-10-19T08:56:19.797Z] Dashboard started with PID 20684 (restart #4, 1 in last hour)\n[2026-10-19T08:56:27.313Z] Starting jira-dashboard-server.js...\n[2026-10-19T08:56:27.484Z] Dashboard started with PID 24008 (restart #5, 2 in last hour)\n[2026-10-19T08:56:32.044Z] DUPLICATE jira-dashboard-server detected: PID 20684 — killing",
-    "jobOutputs": {}
+    "watchdogLogTail": "[2026-10-19T03:08:26.196Z] DUPLICATE jira-dashboard-server detected: PID 16056 — killing\n[2026-10-19T03:26:02.155Z] DASHBOARD RESTART NEEDED: No dashboard heartbeat file found\n[2026-10-19T03:26:06.036Z] Killed dashboard PID 19884\n[2026-10-19T08:56:16.887Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 19884) not found\n[2026-10-19T08:56:19.587Z] Could not kill dashboard PID 19884: Command failed: taskkill /PID 19884 /F /T\n[2026-10-19T08:56:19.601Z] Starting jira-dashboard-server.js...\n[2026-10-19T08:56:19.797Z] Dashboard started with PID 20684 (restart #4, 1 in last hour)\n[2026-10-19T08:56:27.313Z] Starting jira-dashboard-server.js...\n[2026-10-19T08:56:27.484Z] Dashboard started with PID 24008 (restart #5, 2 in last hour)\n[2026-10-19T08:56:32.044Z] DUPLICATE jira-dashboard-server detected: PID 20684 — killing"
   },
   "mcps": [
     {
       "name": "Jira",
-      "status": "down",
-      "httpStatus": 401,
-      "lastCheck": "2026-10-19T10:33:50.671Z",
-      "downSince": "2026-10-19T10:33:50.671Z",
+      "status": "up",
+      "httpStatus": 200,
+      "lastCheck": "2026-10-19T10:34:50.683Z",
+      "downSince": null,
       "downDuration": 0,
       "alert": false
     },
@@ -5314,7 +5313,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-19T10:33:50.671Z",
+      "lastCheck": "2026-10-19T10:34:50.683Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5323,9 +5322,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-19T10:33:50.671Z",
+      "lastCheck": "2026-10-19T10:34:50.683Z",
       "downSince": "2026-10-19T08:56:28.974Z",
-      "downDuration": 5841697,
+      "downDuration": 5901709,
       "alert": true
     }
   ],
@@ -5856,7 +5855,304 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "MHME-1466",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85724,
+        "targetDate": "2026-10-19T11:08:49.611000001Z"
+      },
+      {
+        "key": "MHME-1466",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1211621,
+        "targetDate": "2026-11-06T12:08:49.611000015Z"
+      },
+      {
+        "key": "SAME-4031",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85687,
+        "targetDate": "2026-10-20T10:13:37.341000001Z"
+      },
+      {
+        "key": "SAME-4031",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 430709,
+        "targetDate": "2026-10-26T10:13:37.341000005Z"
+      },
+      {
+        "key": "SAME-4024",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86243,
+        "targetDate": "2026-10-16T12:25:18.509000001Z"
+      },
+      {
+        "key": "SAME-4024",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 306565,
+        "targetDate": "2026-10-22T23:44:33.751000006Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86397,
+        "targetDate": "2026-09-29T16:09:08.750000001Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2086099,
+        "targetDate": "2026-11-20T14:03:27.584000039Z"
+      },
+      {
+        "key": "AEME-6637",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86397,
+        "targetDate": "2026-10-16T05:16:08.892000001Z"
+      },
+      {
+        "key": "AEME-6637",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2580833,
+        "targetDate": "2026-11-30T07:29:01.048000032Z"
+      },
+      {
+        "key": "SAHME-3486",
+        "slaName": "Maintenance Response (GMT+2)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86132,
+        "targetDate": "2026-10-20T08:34:48.801000001Z"
+      },
+      {
+        "key": "SAHME-3486",
+        "slaName": "Maintenance Resolution (GMT+2)",
+        "slaStatus": "STILL",
+        "remainingDuration": 424780,
+        "targetDate": "2026-10-26T09:34:48.801000005Z"
+      },
+      {
+        "key": "TKME-2383",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86400,
+        "targetDate": "2026-10-19T21:00:00.000000001Z"
+      },
+      {
+        "key": "TKME-2383",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2581083,
+        "targetDate": "2026-11-30T07:33:11.299000030Z"
+      },
+      {
+        "key": "AEME-6595",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86334,
+        "targetDate": "2026-09-30T07:32:47.469000001Z"
+      },
+      {
+        "key": "AEME-6595",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 766353,
+        "targetDate": "2026-10-27T09:47:25.714000020Z"
+      },
+      {
+        "key": "SAME-4027",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86394,
+        "targetDate": "2026-10-19T10:18:54.906000001Z"
+      },
+      {
+        "key": "SAME-4027",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2505194,
+        "targetDate": "2026-11-27T10:28:22.789000030Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85660,
+        "targetDate": "2026-09-15T08:21:25.088000001Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1211372,
+        "targetDate": "2026-10-13T12:51:05.986000021Z"
+      },
+      {
+        "key": "TKME-2382",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86399,
+        "targetDate": "2026-10-19T11:35:42.030000001Z"
+      },
+      {
+        "key": "TKME-2382",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2580930,
+        "targetDate": "2026-11-30T07:30:38.364000031Z"
+      },
+      {
+        "key": "TKME-2381",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86394,
+        "targetDate": "2026-10-19T10:19:08.243000001Z"
+      },
+      {
+        "key": "TKME-2381",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2575612,
+        "targetDate": "2026-11-30T06:02:00.597000031Z"
+      },
+      {
+        "key": "AEME-6640",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85858,
+        "targetDate": "2026-10-19T05:31:04.341000001Z"
+      },
+      {
+        "key": "AEME-6640",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2487356,
+        "targetDate": "2026-11-27T05:31:04.341000030Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85937,
+        "targetDate": "2026-09-17T08:08:38.502000001Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 596010,
+        "targetDate": "2026-10-28T08:08:38.502000030Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86179,
+        "targetDate": "2026-09-30T08:16:57.595000001Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1269633,
+        "targetDate": "2026-10-20T08:16:57.595000015Z"
+      },
+      {
+        "key": "PKHME-946",
+        "slaName": "Maintenance Response (GMT+5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86398,
+        "targetDate": "2026-10-19T11:35:29.536000001Z"
+      },
+      {
+        "key": "PKHME-946",
+        "slaName": "Maintenance Resolution (GMT+5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2588863,
+        "targetDate": "2026-11-30T09:42:51.085000031Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86254,
+        "targetDate": "2026-09-21T04:19:58.710000001Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 832769,
+        "targetDate": "2026-11-02T02:54:37.529000031Z"
+      },
+      {
+        "key": "AEME-6527",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86020,
+        "targetDate": "2026-09-01T07:46:25.907000001Z"
+      },
+      {
+        "key": "AEME-6527",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 990365,
+        "targetDate": "2026-10-18T21:25:13.757000035Z"
+      },
+      {
+        "key": "TKME-2379",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85854,
+        "targetDate": "2026-10-16T13:23:55.356000001Z"
+      },
+      {
+        "key": "TKME-2379",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1133327,
+        "targetDate": "2026-11-05T13:23:55.356000015Z"
+      },
+      {
+        "key": "SAME-4019",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86398,
+        "targetDate": "2026-10-16T05:16:55.206000001Z"
+      },
+      {
+        "key": "SAME-4019",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2476495,
+        "targetDate": "2026-11-27T02:30:03.999000031Z"
+      },
+      {
+        "key": "AEME-6644",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86400,
+        "targetDate": "2026-10-19T20:00:00.000000001Z"
+      },
+      {
+        "key": "AEME-6644",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2578039,
+        "targetDate": "2026-11-30T06:42:27.844000030Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
     "standupText": "Yesterday: no worklogs\nToday: SAME-4031, MHME-1466, PKHME-946, AEME-6595, SAHME-3486\nBlockers: SAME-4019, AEME-6527, PC-55443, PC-53923"
