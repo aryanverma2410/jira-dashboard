@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-19T09:14:09.772Z",
+  "generatedAt": "2026-10-19T09:14:52.104Z",
   "totalTickets": 29,
   "tickets": [
     {
@@ -77,11 +77,15 @@
       "url": "https://jira.secext.samsung.net/browse/SAHME-3486",
       "linkedTickets": [],
       "solution": {
-        "status": "none",
-        "excerpt": "",
-        "source": "",
-        "foundAt": "",
-        "issueNumber": null
+        "status": "found",
+        "excerpt": "Order stuck in Temporary state - ZA261012-13555684_261012195645107\r\nGenerated: 2026-10-19T03:30:00.000Z\r\n\r\nIssue:\r\n\r\nOrder ZA261012-13555684_261012195645107 is stuck in TEMPORARY status. The customer confirmed payment was made via PayGate (za-dpoPayGatePaymentMode), but the order was never converted from a temporary order to a real order. The order has no paymentInfo, no deliveryMode, no paymentStatus, no consignments, no business processes, and no PaymentTransactionEntries. A second temp order (ZA261012-13555684_261012195227557) was created by the same customer 4 minutes earlier, also stuck in TEMPORARY.\r\n\r\nRCA:\r\n\r\nThe order was created during checkout at 2026-10-12 19:56:45 with TEMPORARY status, which is the pre-payment state Hybris assigns when a temp order is generated before redirecting the customer to the PayGate payment page. PayGate is a redirect-based payment gateway — the customer is redirected to PayGate's hosted payment page, completes payment there, and PayGate sends an asynchronous callback to Hybris to confirm the transaction. Upon receiving this callback, Hybris should create a PaymentTransactionEntry (type AUTHORIZATION or CAPTURE), link the paymentInfo to the order, set paymentStatus, and convert the order from TEMPORARY to CREATED. This conversion triggers consignment creation, business process startup, and the rest of the fulfillment pipeline.\r\n\r\nThe DB state confirms this callback was never processed:\r\n\r\n1. PaymentTransaction (ZA261012-13555684_4a08e9d0-74c1-49f5-9bdc-9b199e60b3ec) has 2 requestIds (72DA1E77-B88D-4301-A33E-2125145C358C and 2C176F3F-E6A5-4B93-8D39-C2FF5820913E) but no paymentProvider, no info (paymentInfo link), no requestToken, and no currency. This means two payment requests were initiated to PayGate but neither was confirmed back to Hybris.\r\n\r\n2. Zero PaymentTransactionEntries exist — no AUTHORIZATION, CAPTURE, or any other entry type was ever created. The payment gateway callback that should have created these entries was either not received or failed to process.\r\n\r\n3. The order's paymentInfo is NULL, paymentStatus is NULL, and deliveryMode is NULL — all fields that would be set during the checkout completion flow after payment confirmation.\r\n\r\n4. No consignments, no business processes, and no task logs exist — the order never progressed past the pre-fulfillment stage.\r\n\r\nThe presence of a second temp order from the same user 4 minutes earlier (ZA261012-13555684_261012195227557, created 19:52:27) with the same total (10149.10 ZAR) and same NULL fields indicates the customer attempted checkout twice. Both orders remained in TEMPORARY, confirming the payment callback failure is not a one-time glitch but a systemic issue with PayGate callbacks not reaching Hybris for this session timeframe.\r\n\r\nThe customer confirmed they made the payment, which is consistent with PayGate processing the payment on their end but the callback to Hybris failing — either due to a network interruption, PayGate callback endpoint being unavailable, or Hybris failing to process the callback response.\r\n\r\nThis is the same pattern seen in SAHME-3230 (PC-48014) and SAHME-3209 (PC-47373), both ZA region PayGate orders stuck in Temporary state that were resolved by converting the order status and running a Groovy script to complete the temp-to-real order conversion.\r\n\r\nNote: Kibana log analysis was not available during this investigation (Kibana MCP not accessible in this environment). The RCA is based on DB state evidence and Jira cross-reference with identical resolved tickets. If Kibana becomes available, a log trace for the PayGate callback endpoint around 2026-10-12 19:56-20:10 would confirm whether the callback was sent but failed to process, or was never received.\r\n\r\nPossible remediation:\r\n\r\nThe remediation follows the established pattern from PC-48014 (SAHME-3230) and PC-47373 (SAHME-3209):\r\n\r\n1. Verify with the PayGate payment team that the payment was actually captured for merchantRef ZA261012-13555684_261012195645107. Obtain the PAY_REQUEST_ID and TRANSACTION_STATUS from PayGate's records. The two requestIds in the PaymentTransaction (72DA1E77-B88D-4301-A33E-2125145C358C and 2C176F3F-E6A5-4B93-8D39-C2FF5820913E) should be cross-referenced against PayGate's transaction log.\r\n\r\n2. If PayGate confirms the payment was successful, run the Groovy script (same pattern as PC-48014/PC-47373) to: (a) create/link the paymentInfo to the order, (b) set the paymentStatus to PAID, (c) set the deliveryMode if it was selected during checkout, (d) create the PaymentTransactionEntry with the confirmed transaction status, (e) convert the order status from TEMPORARY to CREATED, which will trigger consignment creation and the order fulfillment business process.\r\n\r\n3. The older temp order (ZA261012-13555684_261012195227557) should be expired or cancelled as it was the first failed attempt. Only the latest temp order (_261012195645107) should be converted if PayGate confirms the payment for that specific request.\r\n\r\n4. A new PC ticket should be created for this remediation, referencing PC-48014 and PC-47373 as precedents for the same ZA/PayGate temp order conversion pattern.\r\n\r\nReference tickets: SAHME-3230 (PC-48014), SAHME-3209 (PC-47373) — same region, same payment provider, same resolution approach.",
+        "sections": {
+          "issue": "Order ZA261012-13555684_261012195645107 is stuck in TEMPORARY status. The customer confirmed payment was made via PayGate (za-dpoPayGatePaymentMode), but the order was never converted from a temporary order to a real order. The order has no paymentInfo, no deliveryMode, no paymentStatus, no consignments, no business processes, and no PaymentTransactionEntries. A second temp order (ZA261012-13555684_261012195227557) was created by the same customer 4 minutes earlier, also stuck in TEMPORARY.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-19T09:14:45.009Z"
       }
     },
     {
@@ -1544,7 +1548,7 @@
       }
     ],
     "pid": 25504,
-    "uptime": 3204,
+    "uptime": 3248,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -1553,7 +1557,7 @@
         "issueTitle": "Investigate ticket SAHME-3486",
         "snippet": "Auto-triggered investigation for new ticket SAHME-3486.\n\nTicket: SAHME-3486\nSummary: Order stuck in Temporary state\n\nUse",
         "pid": 23624,
-        "elapsed": 21212
+        "elapsed": 21256
       }
     ],
     "startTime": "2026-10-19T02:50:42.697Z",
@@ -1564,7 +1568,7 @@
       {
         "pid": 9820,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 22206,
+        "ageSeconds": 22249,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -1574,7 +1578,7 @@
       {
         "pid": 14064,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 22154,
+        "ageSeconds": 22196,
         "status": "running",
         "isChild": false,
         "taskSummary": "write 1 reemdiation script for all the reemdaition tickets I have that have confirmation/aproval ...",
@@ -1584,7 +1588,7 @@
       {
         "pid": 18736,
         "cwd": "c:\\windows",
-        "ageSeconds": 22151,
+        "ageSeconds": 22193,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -5280,11 +5284,11 @@
         ]
       }
     },
-    "bridgeLogTail": "    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-10-19T09:14:12.165Z] STDOUT data for #798: 108 bytes\n[2026-10-19T09:14:12.168Z] LIVE events write for #798: 173 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_798.txt\n[2026-10-19T09:14:12.189Z] STDOUT data for #798: 119 bytes\n[2026-10-19T09:14:12.192Z] LIVE events write for #798: 174 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_798.txt\n[2026-10-19T09:14:12.207Z] STDOUT data for #798: 116 bytes\n[2026-10-19T09:14:12.209Z] LIVE events write for #798: 175 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_798.txt\n[2026-10-19T09:14:12.224Z] STDOUT data for #798: 105 bytes\n[2026-10-19T09:14:12.227Z] LIVE events write for #798: 176 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_798.txt\n[2026-10-19T09:14:12.245Z] STDOUT data for #798: 121 bytes\n[2026-10-19T09:14:12.248Z] LIVE events write for #798: 177 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_798.txt\n[2026-10-19T09:14:12.269Z] STDOUT data for #798: 114 bytes\n[2026-10-19T09:14:12.271Z] LIVE events write for #798: 178 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_798.txt\n[2026-10-19T09:14:12.285Z] STDOUT data for #798: 126 bytes\n[2026-10-19T09:14:12.289Z] LIVE events write for #798: 179 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_798.txt\n[2026-10-19T09:14:12.306Z] STDOUT data for #798: 116 bytes\n[2026-10-19T09:14:12.309Z] LIVE events write for #798: 180 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_798.txt\n[2026-10-19T09:14:12.323Z] STDOUT data for #798: 104 bytes\n[2026-10-19T09:14:12.326Z] LIVE events write for #798: 181 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_798.txt",
+    "bridgeLogTail": "[2026-10-19T09:14:31.483Z] STDOUT data for #798: 110 bytes\n[2026-10-19T09:14:31.485Z] LIVE events write for #798: 184 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_798.txt\n[2026-10-19T09:14:31.487Z] STDOUT data for #798: 676 bytes\n[2026-10-19T09:14:31.489Z] LIVE events write for #798: 190 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_798.txt\n[2026-10-19T09:14:31.498Z] STDOUT data for #798: 118 bytes\n[2026-10-19T09:14:31.501Z] LIVE events write for #798: 191 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_798.txt\n[2026-10-19T09:14:31.645Z] STDOUT data for #798: 120 bytes\n[2026-10-19T09:14:31.648Z] LIVE events write for #798: 192 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_798.txt\n[2026-10-19T09:14:31.650Z] STDOUT data for #798: 234 bytes\n[2026-10-19T09:14:31.652Z] LIVE events write for #798: 194 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_798.txt\n[2026-10-19T09:14:44.734Z] STDOUT data for #798: 5557 bytes\n[2026-10-19T09:14:44.737Z] LIVE events write for #798: 195 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_798.txt\n[2026-10-19T09:14:45.022Z] STDOUT data for #798: 124 bytes\n[2026-10-19T09:14:45.025Z] LIVE events write for #798: 196 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_798.txt\n[2026-10-19T09:14:49.329Z] STDOUT data for #798: 113 bytes\n[2026-10-19T09:14:49.332Z] LIVE events write for #798: 197 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_798.txt\n[2026-10-19T09:14:49.334Z] STDOUT data for #798: 355 bytes\n[2026-10-19T09:14:49.335Z] LIVE events write for #798: 200 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_798.txt\n[2026-10-19T09:14:49.352Z] STDOUT data for #798: 115 bytes\n[2026-10-19T09:14:49.355Z] LIVE events write for #798: 201 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_798.txt",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-19T08:56:32.046Z",
-      "ageMs": 1060918
+      "ageMs": 1102998
     },
     "watchdogLogTail": "[2026-10-19T03:08:26.196Z] DUPLICATE jira-dashboard-server detected: PID 16056 — killing\n[2026-10-19T03:26:02.155Z] DASHBOARD RESTART NEEDED: No dashboard heartbeat file found\n[2026-10-19T03:26:06.036Z] Killed dashboard PID 19884\n[2026-10-19T08:56:16.887Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 19884) not found\n[2026-10-19T08:56:19.587Z] Could not kill dashboard PID 19884: Command failed: taskkill /PID 19884 /F /T\n[2026-10-19T08:56:19.601Z] Starting jira-dashboard-server.js...\n[2026-10-19T08:56:19.797Z] Dashboard started with PID 20684 (restart #4, 1 in last hour)\n[2026-10-19T08:56:27.313Z] Starting jira-dashboard-server.js...\n[2026-10-19T08:56:27.484Z] Dashboard started with PID 24008 (restart #5, 2 in last hour)\n[2026-10-19T08:56:32.044Z] DUPLICATE jira-dashboard-server detected: PID 20684 — killing",
     "jobOutputs": {}
@@ -5294,7 +5298,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-19T09:13:33.707Z",
+      "lastCheck": "2026-10-19T09:14:33.377Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5303,7 +5307,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-19T09:13:33.707Z",
+      "lastCheck": "2026-10-19T09:14:33.377Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5312,9 +5316,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-19T09:13:33.707Z",
+      "lastCheck": "2026-10-19T09:14:33.377Z",
       "downSince": "2026-10-19T08:56:28.974Z",
-      "downDuration": 1024733,
+      "downDuration": 1084403,
       "alert": true
     }
   ],
@@ -5857,7 +5861,318 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "SAHME-3486",
+        "slaName": "Maintenance Response (GMT+2)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86132,
+        "targetDate": "2026-10-20T08:34:48.801000001Z"
+      },
+      {
+        "key": "SAHME-3486",
+        "slaName": "Maintenance Resolution (GMT+2)",
+        "slaStatus": "STILL",
+        "remainingDuration": 429598,
+        "targetDate": "2026-10-26T09:34:48.801000005Z"
+      },
+      {
+        "key": "AEME-6595",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86334,
+        "targetDate": "2026-09-30T07:32:47.469000001Z"
+      },
+      {
+        "key": "AEME-6595",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 766353,
+        "targetDate": "2026-10-27T09:47:25.714000020Z"
+      },
+      {
+        "key": "AEME-6644",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86400,
+        "targetDate": "2026-10-19T20:00:00.000000001Z"
+      },
+      {
+        "key": "AEME-6644",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2582857,
+        "targetDate": "2026-11-30T06:42:27.844000030Z"
+      },
+      {
+        "key": "TKME-2381",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86394,
+        "targetDate": "2026-10-19T10:19:08.243000001Z"
+      },
+      {
+        "key": "TKME-2381",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2580429,
+        "targetDate": "2026-11-30T06:02:00.597000031Z"
+      },
+      {
+        "key": "SAME-4024",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86243,
+        "targetDate": "2026-10-16T12:25:18.509000001Z"
+      },
+      {
+        "key": "SAME-4024",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 311383,
+        "targetDate": "2026-10-22T23:44:33.751000006Z"
+      },
+      {
+        "key": "TKME-2382",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86399,
+        "targetDate": "2026-10-19T11:35:42.030000001Z"
+      },
+      {
+        "key": "TKME-2382",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2585747,
+        "targetDate": "2026-11-30T07:30:38.364000031Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86397,
+        "targetDate": "2026-09-29T16:09:08.750000001Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2090916,
+        "targetDate": "2026-11-20T14:03:27.584000039Z"
+      },
+      {
+        "key": "AEME-6637",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86397,
+        "targetDate": "2026-10-16T05:16:08.892000001Z"
+      },
+      {
+        "key": "AEME-6637",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2585650,
+        "targetDate": "2026-11-30T07:29:01.048000032Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86179,
+        "targetDate": "2026-09-30T08:16:57.595000001Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1269633,
+        "targetDate": "2026-10-20T08:16:57.595000015Z"
+      },
+      {
+        "key": "GMT-22529",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 65571,
+        "targetDate": "2026-10-19T18:30:00.000000001Z"
+      },
+      {
+        "key": "GMT-22529",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 378909,
+        "targetDate": "2026-10-25T18:30:00.000000005Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86254,
+        "targetDate": "2026-09-21T04:19:58.710000001Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 837586,
+        "targetDate": "2026-11-02T02:54:37.529000031Z"
+      },
+      {
+        "key": "MHME-1466",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85724,
+        "targetDate": "2026-10-19T11:08:49.611000001Z"
+      },
+      {
+        "key": "MHME-1466",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1216438,
+        "targetDate": "2026-11-06T12:08:49.611000015Z"
+      },
+      {
+        "key": "TKME-2379",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85854,
+        "targetDate": "2026-10-16T13:23:55.356000001Z"
+      },
+      {
+        "key": "TKME-2379",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1138144,
+        "targetDate": "2026-11-05T13:23:55.356000015Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85660,
+        "targetDate": "2026-09-15T08:21:25.088000001Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1211372,
+        "targetDate": "2026-10-13T12:51:05.986000021Z"
+      },
+      {
+        "key": "AEME-6640",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85858,
+        "targetDate": "2026-10-19T05:31:04.341000001Z"
+      },
+      {
+        "key": "AEME-6640",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2492173,
+        "targetDate": "2026-11-27T05:31:04.341000030Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85937,
+        "targetDate": "2026-09-17T08:08:38.502000001Z"
+      },
+      {
+        "key": "GMT-21163",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 600827,
+        "targetDate": "2026-10-28T08:08:38.502000030Z"
+      },
+      {
+        "key": "SAME-4019",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86398,
+        "targetDate": "2026-10-16T05:16:55.206000001Z"
+      },
+      {
+        "key": "SAME-4019",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2481313,
+        "targetDate": "2026-11-27T02:30:03.999000031Z"
+      },
+      {
+        "key": "AEME-6527",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86020,
+        "targetDate": "2026-09-01T07:46:25.907000001Z"
+      },
+      {
+        "key": "AEME-6527",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 990365,
+        "targetDate": "2026-10-18T21:25:13.757000035Z"
+      },
+      {
+        "key": "GMT-22511",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86400,
+        "targetDate": "2026-10-19T18:30:00.000000001Z"
+      },
+      {
+        "key": "GMT-22511",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1242909,
+        "targetDate": "2026-11-08T18:30:00.000000015Z"
+      },
+      {
+        "key": "SAME-4027",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86394,
+        "targetDate": "2026-10-19T10:18:54.906000001Z"
+      },
+      {
+        "key": "SAME-4027",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2510011,
+        "targetDate": "2026-11-27T10:28:22.789000030Z"
+      },
+      {
+        "key": "TKME-2383",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86400,
+        "targetDate": "2026-10-19T21:00:00.000000001Z"
+      },
+      {
+        "key": "TKME-2383",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2585900,
+        "targetDate": "2026-11-30T07:33:11.299000030Z"
+      },
+      {
+        "key": "GMT-22427",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85808,
+        "targetDate": "2026-10-18T19:31:09.203000001Z"
+      },
+      {
+        "key": "GMT-22427",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 296178,
+        "targetDate": "2026-10-22T19:31:09.203000005Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
     "standupText": "Yesterday: no worklogs\nToday: AEME-6595, SAHME-3486, SAME-4024, AEME-6637, TKME-2383\nBlockers: SAME-4019, AEME-6527, PC-55443, PC-53923"
