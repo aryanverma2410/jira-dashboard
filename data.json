@@ -1,7 +1,87 @@
 {
-  "generatedAt": "2026-10-19T03:19:44.686Z",
-  "totalTickets": 27,
+  "generatedAt": "2026-10-19T03:20:26.919Z",
+  "totalTickets": 29,
   "tickets": [
+    {
+      "key": "AEME-6595",
+      "summary": "Incomplete NorthLadder Orders || 29-Sep",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "UAE Maintenance & Enhancements",
+      "projectKey": "AEME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-19T17:50:13.000+0900",
+      "created": "2026-09-29T16:32:45.000+0900",
+      "statusChangedAt": "2026-10-19T17:50:13.911+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\n \n\nConsignment completed, order still shipped\n|Order Code|Order Creation Date Time|Order Status|Consignment Status|TradeIn Status|\n|AE260924-93470498|24/09/2026 14:41|SHIPPED|COMPLETED|ADDITIONAL_INFO_REQUIRED|\n\n \n\nThe trade-in status not updated in the NL system  (NL does not know that Or",
+      "commentsCount": 14,
+      "recentComments": [
+        {
+          "author": "Talib Raza Zaidi",
+          "date": "2026-10-19T17:50:03.644+0900",
+          "snippet": "Hi ~@email ,\n\n \n\nFor order AE260723-37343410, the fullfilment request to NL is still pending. Can you please check if it was triggered earlir from hybris or not and if triggered then can you please share the request and resoponse for it?\n\n \n\nRegards\n\nTalib"
+        },
+        {
+          "author": "Dilip Boddula",
+          "date": "2026-10-14T21:46:33.745+0900",
+          "snippet": "~@email : Please validate and let me know the current status of this ticket."
+        }
+      ],
+      "lastCommentBy": "Talib Raza Zaidi",
+      "lastCommentSnippet": "Hi ~@email ,\n\n \n\nFor order AE260723-37343410, the fullfilment request to NL is still pending. Can you please check if it was triggered earlir from hybris or not and if triggered then can you please share the request and resoponse for it?\n\n \n\nRegards\n\nTalib",
+      "lastCommentDate": "2026-10-19T17:50:03.644+0900",
+      "url": "https://jira.secext.samsung.net/browse/AEME-6595",
+      "linkedTickets": [
+        {
+          "key": "PC-55234",
+          "summary": "Script to Push Order from SHIPPED to COMPLETED",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "Incomplete NorthLadder Orders || 29-Sep\r\nGenerated: 2026-09-29T18:05:00.000Z\r\n\r\nIssue\r\n\r\nTwo AE-region orders with NorthLadder trade-in integration are not reaching their expected terminal state on the NorthLadder side. Order AE260924-93470498 is SHIPPED with consignment COMPLETED but the order process is still RUNNING, and the NorthLadder ExternalService remains in ADDITIONAL_INFO_REQUIRED status. Order AE260723-37343410 is fully COMPLETED on the Hybris side (including a partial return and refund) but NorthLadder has not received the terminal status update — their system shows \"Awaiting confirmation\".\r\n\r\nRCA\r\n\r\nBoth orders exhibit the same root cause: NorthLadder's claim/appraisal API returned a requestId during the initial submitOrder call, which correctly set the ExternalService status to ADDITIONAL_INFO_REQUIRED. This is by design — the code in TokoNorthladderExternalServicesServiceImpl.submitOrder() (tokonorthladderintegration extension) sets ADDITIONAL_INFO_REQUIRED whenever the NorthLadder claim API returns a non-empty requestId, then returns true. The process engine transitions to WAIT, and processAdditionalInfo() is hardcoded to return false for NorthLadder, meaning the process cannot self-advance at the order level.\r\n\r\nThe process is designed to advance only when one of three events occurs:\r\n1. NorthLadder sends a notification callback to TokoNorthLadderNotificationController with the appraisal confirmation\r\n2. The TokoNorthLadderStatusCheckStrategy cronjob polls NorthLadder and detects a terminal status\r\n3. The consignment-level updateAppraisalForExternalService() call fires when the consignment ships, calling NorthLadder's modify API to fetch updated appraisal details\r\n\r\nFor AE260924-93470498: The consignment completed on 25-Sep at 12:02:08. The NorthLadder ExternalService was modified 11 seconds later at 12:02:19, confirming that the consignment-level updateAppraisalForExternalService() did fire. However, the ES remained in ADDITIONAL_INFO_REQUIRED, meaning NorthLadder's modify API either returned a non-200 response, or the response indicated the appraisal is still pending additional info from the customer. The consignment process (consignment-process-v11-36) is still RUNNING, and the order process is stuck at isDelayedFiRequired, waiting for the consignment process to complete. The consignment process cannot complete because the NL update did not resolve the ADDITIONAL_INFO_REQUIRED status. The order will remain stuck until NorthLadder confirms the appraisal.\r\n\r\nFor AE260723-37343410: This order went through a complete lifecycle — created 24-Jul, consignments completed 30-Jul, a partial return processed (765 AED refunded on 27-Aug), and the order reached COMPLETED status. The order has two NorthLadder ExternalService entries: the original at ADDITIONAL_INFO_REQUIRED (created 24-Jul) and a second at UPDATED status (created during the return flow). Both SMC ExternalService entries are CANCELLED. The order process is still RUNNING and looping at isProcessCompleted. Despite the order being COMPLETED on the Hybris side, NorthLadder never received the terminal status notification. The return-refund process (return-refund-process-v8-33) succeeded, but the NL terminal status was never pushed to NorthLadder's system. This is a NorthLadder-side gap — their system shows \"Awaiting confirmation\" because the terminal status update was either never sent by Hybris or was not processed by NorthLadder.\r\n\r\nThe same pattern was seen in AEME-4325 (Oct 2024), where multiple orders were stuck at SHIPPED with NL ADDITIONAL_INFO_REQUIRED due to NorthLadder API returning HTML instead of JSON (a NorthLadder-side outage). The resolution was to ensure the ES is at ADDITIONAL_INFO_REQUIRED and retrigger the consignment process from processExternalService.\r\n\r\nPossible remediation\r\n\r\nFor AE260924-93470498 (SHIPPED, consignment COMPLETED, NL ES at ADDITIONAL_INFO_REQUIRED):\r\n- Step 1: Verify the ExternalService is still at ADDITIONAL_INFO_REQUIRED (confirmed via DB query — status PK 8799422152795)\r\n- Step 2: Retrigger the consignment process from the processExternalService action. This will cause updateAppraisalForExternalService() to call NorthLadder's modify API again. If NorthLadder has since processed the appraisal, the ES will move to UPDATED and the process will advance.\r\n- Step 3: If NorthLadder still returns ADDITIONAL_INFO_REQUIRED after retrigger, this is a NorthLadder-side issue — the customer has not completed the appraisal questionnaire on NorthLadder's portal. No Hybris-side fix can resolve this. The NorthLadder team needs to follow up with the customer.\r\n\r\nFor AE260723-37343410 (COMPLETED, NL terminal status not sent):\r\n- This order is already COMPLETED on the Hybris side. The issue is that NorthLadder's system never received the terminal status. Since the order process is looping at isProcessCompleted, the process engine thinks the order is not fully done. The NL ES has an UPDATED entry from the return flow, but the original ADDITIONAL_INFO_REQUIRED entry was never resolved.\r\n- Step 1: Check with the NorthLadder team whether their system received any status update for this order. The \"Awaiting confirmation\" status suggests they are still expecting a callback.\r\n- Step 2: If Hybris needs to resend the terminal status, retrigger the NL ExternalService by resetting the ADDITIONAL_INFO_REQUIRED entry to NEW and retriggering the consignment process. However, since the order is already COMPLETED and has a completed return, this needs careful coordination with the NorthLadder team to avoid duplicate appraisals.\r\n- Step 3: Alternatively, if NorthLadder confirms they can manually update the status on their side, no Hybris-side action is needed.\r\n\r\nReusable PC ticket: PC-44806 (AEME-6104, Closed) and PC-11659 (Closed) both describe the same remediation pattern: Step 1 ensure ES at ADDITIONAL_INFO_REQUIRED, Step 2 retrigger consignment process from processExternalService. Neither has a local script in the pc-script-library.json, but the remediation steps are documented in the ticket descriptions.",
+        "sections": {
+          "issue": "",
+          "rca": "Incomplete NorthLadder Orders || 29-Sep\r\nGenerated: 2026-09-29T18:05:00.000Z\r\n\r\nIssue\r\n\r\nTwo AE-region orders with NorthLadder trade-in integration are not reaching their expected terminal state on the NorthLadder side. Order AE260924-93470498 is SHIPPED with consignment COMPLETED but the order process is still RUNNING, and the NorthLadder ExternalService remains in ADDITIONAL_INFO_REQUIRED status. Order AE260723-37343410 is fully COMPLETED on the Hybris side (including a partial return and refund) but NorthLadder has not received the terminal status update — their system shows \"Awaiting confirmation\".\r\n\r\nRCA\r\n\r\nBoth orders exhibit the same root cause: NorthLadder's claim/appraisal API returned a requestId during the initial submitOrder call, which correctly set the ExternalService status to ADDITIONAL_INFO_REQUIRED. This is by design — the code in TokoNorthladderExternalServicesServiceImpl.submitOrder() (tokonorthladderintegration extension) sets ADDITIONAL_INFO_REQUIRED whenever the NorthLadder claim API returns a non-empty requestId, then returns true. The process engine transitions to WAIT, and processAdditionalInfo() is hardcoded to return false for NorthLadder, meaning the process cannot self-advance at the order level.\r\n\r\nThe process is designed to advance only when one of three events occurs:\r\n1. NorthLadder sends a notification callback to TokoNorthLadderNotificationController with the appraisal confirmation\r\n2. The TokoNorthLadderStatusCheckStrategy cronjob polls NorthLadder and detects a terminal status\r\n3. The consignment-level updateAppraisalForExternalService() call fires when the consignment ships, calling NorthLadder's modify API to fetch updated appraisal details\r\n\r\nFor AE260924-93470498: The consignment completed on 25-Sep at 12:02:08. The NorthLadder ExternalService was modified 11 seconds later at 12:02:19, confirming that the consignment-level updateAppraisalForExternalService() did fire. However, the ES remained in ADDITIONAL_INFO_REQUIRED, meaning NorthLadder's modify API either returned a non-200 response, or the response indicated the appraisal is still pending additional info from the customer. The consignment process (consignment-process-v11-36) is still RUNNING, and the order process is stuck at isDelayedFiRequired, waiting for the consignment process to complete. The consignment process cannot complete because the NL update did not resolve the ADDITIONAL_INFO_REQUIRED status. The order will remain stuck until NorthLadder confirms the appraisal.\r\n\r\nFor AE260723-37343410: This order went through a complete lifecycle — created 24-Jul, consignments completed 30-Jul, a partial return processed (765 AED refunded on 27-Aug), and the order reached COMPLETED status. The order has two NorthLadder ExternalService entries: the original at ADDITIONAL_INFO_REQUIRED (created 24-Jul) and a second at UPDATED status (created during the return flow). Both SMC ExternalService entries are CANCELLED. The order process is still RUNNING and looping at isProcessCompleted. Despite the order being COMPLETED on the Hybris side, NorthLadder never received the terminal status notification. The return-refund process (return-refund-process-v8-33) succeeded, but the NL terminal status was never pushed to NorthLadder's system. This is a NorthLadder-side gap — their system shows \"Awaiting confirmation\" because the terminal status update was either never sent by Hybris or was not processed by NorthLadder.\r\n\r\nThe same pattern was seen in AEME-4325 (Oct 2024), where multiple orders were stuck at SHIPPED with NL ADDITIONAL_INFO_REQUIRED due to NorthLadder API returning HTML instead of JSON (a NorthLadder-side outage). The resolution was to ensure the ES is at ADDITIONAL_INFO_REQUIRED and retrigger the consignment process from processExternalService.\r\n\r\nPossible remediation\r\n\r\nFor AE260924-93470498 (SHIPPED, consignment COMPLETED, NL ES at ADDITIONAL_INFO_REQUIRED):\r\n- Step 1: Verify the ExternalService is still at ADDITIONAL_INFO_REQUIRED (confirmed via DB query — status PK 8799422152795)\r\n- Step 2: Retrigger the consignment process from the processExternalService action. This will cause updateAppraisalForExternalService() to call NorthLadder's modify API again. If NorthLadder has since processed the appraisal, the ES will move to UPDATED and the process will advance.\r\n- Step 3: If NorthLadder still returns ADDITIONAL_INFO_REQUIRED after retrigger, this is a NorthLadder-side issue — the customer has not completed the appraisal questionnaire on NorthLadder's portal. No Hybris-side fix can resolve this. The NorthLadder team needs to follow up with the customer.\r\n\r\nFor AE260723-37343410 (COMPLETED, NL terminal status not sent):\r\n- This order is already COMPLETED on the Hybris side. The issue is that NorthLadder's system never received the terminal status. Since the order process is looping at isProcessCompleted, the process engine thinks the order is not fully done. The NL ES has an UPDATED entry from the return flow, but the original ADDITIONAL_INFO_REQUIRED entry was never resolved.\r\n- Step 1: Check with the NorthLadder team whether their system received any status update for this order. The \"Awaiting confirmation\" status suggests they are still expecting a callback.\r\n- Step 2: If Hybris needs to resend the terminal status, retrigger the NL ExternalService by resetting the ADDITIONAL_INFO_REQUIRED entry to NEW and retriggering the consignment process. However, since the order is already COMPLETED and has a completed return, this needs careful coordination with the NorthLadder team to avoid duplicate appraisals.\r\n- Step 3: Alternatively, if NorthLadder confirms they can manually update the status on their side, no Hybris-side action is needed.\r\n\r\nReusable PC ticket: PC-44806 (AEME-6104, Closed) and PC-11659 (Closed) both describe the same remediation pattern: Step 1 ensure ES at ADDITIONAL_INFO_REQUIRED, Step 2 retrigger consignment process from processExternalService. Neither has a local script in the pc-script-library.json, but the remediation steps are documented in the ticket descriptions.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-29T17:42:24.504Z"
+      }
+    },
+    {
+      "key": "SAHME-3486",
+      "summary": "Order stuck in Temporary state",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "South Africa Maintenance & Enhancements",
+      "projectKey": "SAHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-19T17:49:43.000+0900",
+      "created": "2026-10-19T17:34:46.000+0900",
+      "statusChangedAt": "2026-10-19T17:39:16.744+0900",
+      "assignedToMeAt": "",
+      "description": "Good day,\n\nOrder is stuck in Temporary state and customer has confirmed that payment was made. Please process the order: ZA261012-13555684_261012195645107. Please convert the order into a normal order.\n\n!image-2026-10-19-10-33-04-149.png!\n\nKind regards,\n\nLerato",
+      "commentsCount": 0,
+      "recentComments": [],
+      "lastCommentBy": "",
+      "lastCommentSnippet": "",
+      "lastCommentDate": "",
+      "url": "https://jira.secext.samsung.net/browse/SAHME-3486",
+      "linkedTickets": [],
+      "solution": {
+        "status": "investigating",
+        "issueNumber": null,
+        "lockedAt": "2026-10-19T03:20:23.942Z"
+      }
+    },
     {
       "key": "SAME-4024",
       "summary": "Order Refund Failed - SA260811-57368840 (SC+)",
@@ -1462,7 +1542,7 @@
       }
     ],
     "pid": 25504,
-    "uptime": 1742,
+    "uptime": 1782,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1474,7 +1554,7 @@
       {
         "pid": 9820,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 942,
+        "ageSeconds": 984,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -1484,7 +1564,7 @@
       {
         "pid": 14064,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 889,
+        "ageSeconds": 931,
         "status": "running",
         "isChild": false,
         "taskSummary": "write 1 reemdiation script for all the reemdaition tickets I have that have confirmation/aproval ...",
@@ -1494,7 +1574,7 @@
       {
         "pid": 18736,
         "cwd": "c:\\windows",
-        "ageSeconds": 886,
+        "ageSeconds": 928,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -5181,7 +5261,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-19T03:08:26.197Z",
-      "ageMs": 680994
+      "ageMs": 722950
     },
     "watchdogLogTail": "[2026-10-19T03:02:40.467Z] DUPLICATE watchdog detected: PID 21756 — killing\n[2026-10-19T03:08:02.945Z] DASHBOARD RESTART NEEDED: No dashboard heartbeat file found\n[2026-10-19T03:08:05.049Z] Killed dashboard PID 24784\n[2026-10-19T03:08:11.698Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 24784) not found\n[2026-10-19T03:08:13.698Z] Could not kill dashboard PID 24784: Command failed: taskkill /PID 24784 /F /T\n[2026-10-19T03:08:13.704Z] Starting jira-dashboard-server.js...\n[2026-10-19T03:08:13.875Z] Dashboard started with PID 16056 (restart #2, 2 in last hour)\n[2026-10-19T03:08:18.707Z] Starting jira-dashboard-server.js...\n[2026-10-19T03:08:18.891Z] Dashboard started with PID 19884 (restart #3, 3 in last hour)\n[2026-10-19T03:08:26.196Z] DUPLICATE jira-dashboard-server detected: PID 16056 — killing"
   },
@@ -5190,7 +5270,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-19T03:19:21.809Z",
+      "lastCheck": "2026-10-19T03:20:21.845Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5199,7 +5279,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-19T03:19:21.809Z",
+      "lastCheck": "2026-10-19T03:20:21.845Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5208,9 +5288,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-19T03:19:21.809Z",
+      "lastCheck": "2026-10-19T03:20:21.845Z",
       "downSince": "2026-10-19T03:08:20.649Z",
-      "downDuration": 661160,
+      "downDuration": 721196,
       "alert": true
     }
   ],
@@ -5353,6 +5433,18 @@
   ],
   "actionItems": {
     "zero": [
+      {
+        "key": "SAHME-3486",
+        "summary": "Order stuck in Temporary state",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/SAHME-3486",
+        "updated": "2026-10-19T17:49:43.000+0900",
+        "statusChangedAt": "2026-10-19T17:39:16.744+0900"
+      },
       {
         "key": "SAME-4024",
         "summary": "Order Refund Failed - SA260811-57368840 (SC+)",
@@ -5536,6 +5628,18 @@
     ],
     "actionable": [
       {
+        "key": "AEME-6595",
+        "summary": "Incomplete NorthLadder Orders || 29-Sep",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "actionable",
+        "reason": "",
+        "whatToDo": "Respond to Talib Raza Zaidi",
+        "url": "https://jira.secext.samsung.net/browse/AEME-6595",
+        "updated": "2026-10-19T17:50:13.000+0900",
+        "statusChangedAt": "2026-10-19T17:50:13.911+0900"
+      },
+      {
         "key": "AEME-6644",
         "summary": "Stuck order on Hybris",
         "priority": "None",
@@ -5673,8 +5777,8 @@
       }
     ],
     "totals": {
-      "zero": 15,
-      "actionable": 3,
+      "zero": 16,
+      "actionable": 4,
       "blocked": 6,
       "queued": 3
     }
@@ -5727,292 +5831,9 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": {
-    "byTicket": [
-      {
-        "key": "AEME-6637",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86397,
-        "targetDate": "2026-10-16T05:16:08.892000001Z"
-      },
-      {
-        "key": "AEME-6637",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2587162,
-        "targetDate": "2026-11-30T07:29:01.048000032Z"
-      },
-      {
-        "key": "SAME-4024",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86243,
-        "targetDate": "2026-10-16T12:25:18.509000001Z"
-      },
-      {
-        "key": "SAME-4024",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 312895,
-        "targetDate": "2026-10-22T23:44:33.751000006Z"
-      },
-      {
-        "key": "GMT-22511",
-        "slaName": "GMT Issue Response SLA(GMT+5.5)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86400,
-        "targetDate": "2026-10-19T18:30:00.000000001Z"
-      },
-      {
-        "key": "GMT-22511",
-        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1244421,
-        "targetDate": "2026-11-08T18:30:00.000000015Z"
-      },
-      {
-        "key": "TKME-2379",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85854,
-        "targetDate": "2026-10-16T13:23:55.356000001Z"
-      },
-      {
-        "key": "TKME-2379",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1139656,
-        "targetDate": "2026-11-05T13:23:55.356000015Z"
-      },
-      {
-        "key": "TKME-2382",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86399,
-        "targetDate": "2026-10-19T11:35:42.030000001Z"
-      },
-      {
-        "key": "TKME-2382",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2587259,
-        "targetDate": "2026-11-30T07:30:38.364000031Z"
-      },
-      {
-        "key": "GMT-21163",
-        "slaName": "GMT Issue Response SLA(GMT+5.5)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85937,
-        "targetDate": "2026-09-17T08:08:38.502000001Z"
-      },
-      {
-        "key": "GMT-21163",
-        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
-        "slaStatus": "STILL",
-        "remainingDuration": 602339,
-        "targetDate": "2026-10-28T08:08:38.502000030Z"
-      },
-      {
-        "key": "AEME-6640",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85858,
-        "targetDate": "2026-10-19T05:31:04.341000001Z"
-      },
-      {
-        "key": "AEME-6640",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2493685,
-        "targetDate": "2026-11-27T05:31:04.341000030Z"
-      },
-      {
-        "key": "GMT-22427",
-        "slaName": "GMT Issue Response SLA(GMT+5.5)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85808,
-        "targetDate": "2026-10-18T19:31:09.203000001Z"
-      },
-      {
-        "key": "GMT-22427",
-        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
-        "slaStatus": "STILL",
-        "remainingDuration": 297690,
-        "targetDate": "2026-10-22T19:31:09.203000005Z"
-      },
-      {
-        "key": "AEME-6644",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86400,
-        "targetDate": "2026-10-19T20:00:00.000000001Z"
-      },
-      {
-        "key": "AEME-6644",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2584369,
-        "targetDate": "2026-11-30T06:42:27.844000030Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86179,
-        "targetDate": "2026-09-30T08:16:57.595000001Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1269633,
-        "targetDate": "2026-10-20T08:16:57.595000015Z"
-      },
-      {
-        "key": "AEME-6527",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86020,
-        "targetDate": "2026-09-01T07:46:25.907000001Z"
-      },
-      {
-        "key": "AEME-6527",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 990365,
-        "targetDate": "2026-10-18T21:25:13.757000035Z"
-      },
-      {
-        "key": "SAME-4027",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86394,
-        "targetDate": "2026-10-19T10:18:54.906000001Z"
-      },
-      {
-        "key": "SAME-4027",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2511523,
-        "targetDate": "2026-11-27T10:28:22.789000030Z"
-      },
-      {
-        "key": "SAME-4019",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86398,
-        "targetDate": "2026-10-16T05:16:55.206000001Z"
-      },
-      {
-        "key": "SAME-4019",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2482825,
-        "targetDate": "2026-11-27T02:30:03.999000031Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85660,
-        "targetDate": "2026-09-15T08:21:25.088000001Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1211372,
-        "targetDate": "2026-10-13T12:51:05.986000021Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86397,
-        "targetDate": "2026-09-29T16:09:08.750000001Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2092428,
-        "targetDate": "2026-11-20T14:03:27.584000039Z"
-      },
-      {
-        "key": "TKME-2383",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86400,
-        "targetDate": "2026-10-19T21:00:00.000000001Z"
-      },
-      {
-        "key": "TKME-2383",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2587412,
-        "targetDate": "2026-11-30T07:33:11.299000030Z"
-      },
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86254,
-        "targetDate": "2026-09-21T04:19:58.710000001Z"
-      },
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "STILL",
-        "remainingDuration": 839098,
-        "targetDate": "2026-11-02T02:54:37.529000031Z"
-      },
-      {
-        "key": "TKME-2381",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86394,
-        "targetDate": "2026-10-19T10:19:08.243000001Z"
-      },
-      {
-        "key": "TKME-2381",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2581941,
-        "targetDate": "2026-11-30T06:02:00.597000031Z"
-      },
-      {
-        "key": "GMT-22529",
-        "slaName": "GMT Issue Response SLA(GMT+5.5)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 65571,
-        "targetDate": "2026-10-19T18:30:00.000000001Z"
-      },
-      {
-        "key": "GMT-22529",
-        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
-        "slaStatus": "STILL",
-        "remainingDuration": 380421,
-        "targetDate": "2026-10-25T18:30:00.000000005Z"
-      },
-      {
-        "key": "MHME-1466",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85724,
-        "targetDate": "2026-10-19T11:08:49.611000001Z"
-      },
-      {
-        "key": "MHME-1466",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1217950,
-        "targetDate": "2026-11-06T12:08:49.611000015Z"
-      }
-    ]
-  },
+  "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: no worklogs\nToday: SAME-4024, AEME-6637, TKME-2383, TKME-2382, TKME-2381\nBlockers: SAME-4019, AEME-6527, PC-55443, PC-53923"
+    "standupText": "Yesterday: no worklogs\nToday: AEME-6595, SAHME-3486, SAME-4024, AEME-6637, TKME-2383\nBlockers: SAME-4019, AEME-6527, PC-55443, PC-53923"
   }
 }
