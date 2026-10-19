@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-19T14:11:12.694Z",
-  "totalTickets": 17,
+  "generatedAt": "2026-10-19T14:11:55.487Z",
+  "totalTickets": 16,
   "tickets": [
     {
       "key": "SAME-4033",
@@ -116,39 +116,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-10-16T12:15:21.190Z"
-      }
-    },
-    {
-      "key": "SAHME-3486",
-      "summary": "Order stuck in Temporary state",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "South Africa Maintenance & Enhancements",
-      "projectKey": "SAHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-19T17:49:43.000+0900",
-      "created": "2026-10-19T17:34:46.000+0900",
-      "statusChangedAt": "2026-10-19T17:39:16.744+0900",
-      "assignedToMeAt": "",
-      "description": "Good day,\n\nOrder is stuck in Temporary state and customer has confirmed that payment was made. Please process the order: ZA261012-13555684_261012195645107. Please convert the order into a normal order.\n\n!image-2026-10-19-10-33-04-149.png!\n\nKind regards,\n\nLerato",
-      "commentsCount": 0,
-      "recentComments": [],
-      "lastCommentBy": "",
-      "lastCommentSnippet": "",
-      "lastCommentDate": "",
-      "url": "https://jira.secext.samsung.net/browse/SAHME-3486",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Order stuck in Temporary state — ZA261012-13555684_261012195645107\r\nGenerated: 2026-10-19T17:55:00Z\r\n\r\nHi [~l.mbambisa@samsung.com] ,\r\n\r\nOrder ZA261012-13555684_261012195645107 is stuck in TEMPORARY status because the temporary order to normal order conversion failed silently during the DPO PayGate payment notification callback processing.\r\n\r\nKibana logs confirm that DPO PayGate sent a successful payment notification at 19:57:51 on 12 October with TRANSACTION_STATUS=1 and PAY_REQUEST_ID=2C176F3F-E6A5-4B93-8D39-C2FF5820913E. A follow-up query request was sent to DPO PayGate and a response was received at 19:57:52. However, the temp order conversion never completed. No converted order (ZA261012-13555684) exists in the database. The PaymentTransaction has zero entries (no authorization PTE was created). No business process or consignment was started.\r\n\r\nThe code path is: TokoDpoPayGatePaymentNotificationServiceImpl.processNotification() receives the callback, checks TRANSACTION_STATUS equals \"1\" (success), then calls TokoDpoPayGatePaymentNotificaionEventStrategyImpl.triggerNotificationAction() which sends a follow-up query to DPO PayGate, verifies the response, and calls TemporaryOrderServiceImpl.checkTempOrderAndConvert() to convert the temp order to a real order. The handler strategy TokoDpoNotificationHandlerStrategyImpl catches all RuntimeExceptions and always returns HTTP 200 OK to the DPO PayGate gateway, so any exception during the conversion is silently swallowed and the gateway never retries.\r\n\r\nThere was also a first checkout attempt at 19:52:27 (ZA261012-13555684_261012195227557) which also remains TEMPORARY. This was likely an abandoned attempt where the customer did not complete the payment redirect and retried.\r\n\r\nThe database state is:\r\n- ZA261012-13555684_261012195645107: TEMPORARY, total 10149.10 ZAR, payment mode za-dpoPayGatePaymentMode, no PTEs, no process, no consignment\r\n- ZA261012-13555684_261012195227557: TEMPORARY (first abandoned attempt)\r\n- No converted order ZA261012-13555684 exists\r\n\r\nRemediation: We can convert the temp order to a normal order by calling temporaryOrderService.checkTempOrderAndConvert() with the PAY_REQUEST_ID from DPO PayGate. This is the same remediation approach used in PC-53917 (AEME-6548) and PC-47736 (SAHME-3230). The first abandoned temp order should be cleaned up.\r\n\r\nKindly confirm if we can proceed with the conversion.\r\n\r\nThanks,\r\n\r\nAryan\r\n\r\n## Remediation\r\n\r\n- Reusable PC ticket: PC-53917 (AEME-6548, Closed, REUSABLE) — script-AEME-6548-order2-temp-expired-remediation.groovy\r\n- Similar resolved: PC-47736 (SAHME-3230), PC-47373 (SAHME-3209), PC-48014 (SAHME-3230)\r\n- PAY_REQUEST_ID: 2C176F3F-E6A5-4B93-8D39-C2FF5820913E\r\n- Order is already TEMPORARY (not TEMPORARY_EXPIRED), so status reset step is not needed\r\n- Script adaptation: Update ITGC header, order code, PAY_REQUEST_ID, remove status reset step\r\n- First temp order (ZA261012-13555684_261012195227557) should be cancelled/cleaned up\r\n\r\n## Key Findings\r\n\r\n1. Order status: TEMPORARY (not TEMPORARY_EXPIRED — no status reset needed)\r\n2. Payment notification received: TRANSACTION_STATUS=1 (success) at 19:57:51\r\n3. Follow-up query sent and response received at 19:57:52\r\n4. No PTEs created (PaymentTransaction has 0 entries)\r\n5. No converted order exists (ZA261012-13555684 returns 0 results)\r\n6. No business process or consignment process exists\r\n7. Cart was deleted (0 results)\r\n8. Two temp orders exist for same base code (second attempt is the valid one)\r\n9. Second payment notification received at 19:59:00 (duplicate callback from different IP)\r\n10. Customer checked order on Oct 16 — NotFoundException (order not found because not converted)\r\n\r\n## Data Sources\r\n\r\n- Jira: SAHME-3486 ticket (description + 0 comments)\r\n- Kibana: 818 events in 7d timeline, 7 ERROR hits, 4 PayGate-specific hits, 0 conversion-result hits\r\n- HAC: 8 FlexibleSearch queries (order, PT, PTE, processes, cart, all versions, converted order check)\r\n- Codebase: Full DPO PayGate flow traced (notification handler, event strategy, temp order service, cleanup cronjob)\r\n- Jira cross-ref: PC-53917 (REUSABLE), PC-47736, PC-47373, PC-48014, SAHME-3230/3209/1599/1340",
-        "sections": {
-          "issue": "",
-          "rca": "Order stuck in Temporary state — ZA261012-13555684_261012195645107\r\nGenerated: 2026-10-19T17:55:00Z\r\n\r\nHi [~l.mbambisa@samsung.com] ,\r\n\r\nOrder ZA261012-13555684_261012195645107 is stuck in TEMPORARY status because the temporary order to normal order conversion failed silently during the DPO PayGate payment notification callback processing.\r\n\r\nKibana logs confirm that DPO PayGate sent a successful payment notification at 19:57:51 on 12 October with TRANSACTION_STATUS=1 and PAY_REQUEST_ID=2C176F3F-E6A5-4B93-8D39-C2FF5820913E. A follow-up query request was sent to DPO PayGate and a response was received at 19:57:52. However, the temp order conversion never completed. No converted order (ZA261012-13555684) exists in the database. The PaymentTransaction has zero entries (no authorization PTE was created). No business process or consignment was started.\r\n\r\nThe code path is: TokoDpoPayGatePaymentNotificationServiceImpl.processNotification() receives the callback, checks TRANSACTION_STATUS equals \"1\" (success), then calls TokoDpoPayGatePaymentNotificaionEventStrategyImpl.triggerNotificationAction() which sends a follow-up query to DPO PayGate, verifies the response, and calls TemporaryOrderServiceImpl.checkTempOrderAndConvert() to convert the temp order to a real order. The handler strategy TokoDpoNotificationHandlerStrategyImpl catches all RuntimeExceptions and always returns HTTP 200 OK to the DPO PayGate gateway, so any exception during the conversion is silently swallowed and the gateway never retries.\r\n\r\nThere was also a first checkout attempt at 19:52:27 (ZA261012-13555684_261012195227557) which also remains TEMPORARY. This was likely an abandoned attempt where the customer did not complete the payment redirect and retried.\r\n\r\nThe database state is:\r\n- ZA261012-13555684_261012195645107: TEMPORARY, total 10149.10 ZAR, payment mode za-dpoPayGatePaymentMode, no PTEs, no process, no consignment\r\n- ZA261012-13555684_261012195227557: TEMPORARY (first abandoned attempt)\r\n- No converted order ZA261012-13555684 exists\r\n\r\nRemediation: We can convert the temp order to a normal order by calling temporaryOrderService.checkTempOrderAndConvert() with the PAY_REQUEST_ID from DPO PayGate. This is the same remediation approach used in PC-53917 (AEME-6548) and PC-47736 (SAHME-3230). The first abandoned temp order should be cleaned up.\r\n\r\nKindly confirm if we can proceed with the conversion.\r\n\r\nThanks,\r\n\r\nAryan\r\n\r\n## Remediation\r\n\r\n- Reusable PC ticket: PC-53917 (AEME-6548, Closed, REUSABLE) — script-AEME-6548-order2-temp-expired-remediation.groovy\r\n- Similar resolved: PC-47736 (SAHME-3230), PC-47373 (SAHME-3209), PC-48014 (SAHME-3230)\r\n- PAY_REQUEST_ID: 2C176F3F-E6A5-4B93-8D39-C2FF5820913E\r\n- Order is already TEMPORARY (not TEMPORARY_EXPIRED), so status reset step is not needed\r\n- Script adaptation: Update ITGC header, order code, PAY_REQUEST_ID, remove status reset step\r\n- First temp order (ZA261012-13555684_261012195227557) should be cancelled/cleaned up\r\n\r\n## Key Findings\r\n\r\n1. Order status: TEMPORARY (not TEMPORARY_EXPIRED — no status reset needed)\r\n2. Payment notification received: TRANSACTION_STATUS=1 (success) at 19:57:51\r\n3. Follow-up query sent and response received at 19:57:52\r\n4. No PTEs created (PaymentTransaction has 0 entries)\r\n5. No converted order exists (ZA261012-13555684 returns 0 results)\r\n6. No business process or consignment process exists\r\n7. Cart was deleted (0 results)\r\n8. Two temp orders exist for same base code (second attempt is the valid one)\r\n9. Second payment notification received at 19:59:00 (duplicate callback from different IP)\r\n10. Customer checked order on Oct 16 — NotFoundException (order not found because not converted)\r\n\r\n## Data Sources\r\n\r\n- Jira: SAHME-3486 ticket (description + 0 comments)\r\n- Kibana: 818 events in 7d timeline, 7 ERROR hits, 4 PayGate-specific hits, 0 conversion-result hits\r\n- HAC: 8 FlexibleSearch queries (order, PT, PTE, processes, cart, all versions, converted order check)\r\n- Codebase: Full DPO PayGate flow traced (notification handler, event strategy, temp order service, cleanup cronjob)\r\n- Jira cross-ref: PC-53917 (REUSABLE), PC-47736, PC-47373, PC-48014, SAHME-3230/3209/1599/1340",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-19T13:30:11.518Z"
       }
     },
     {
@@ -944,7 +911,7 @@
       }
     ],
     "pid": 25504,
-    "uptime": 21029,
+    "uptime": 21069,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -956,7 +923,7 @@
       {
         "pid": 9820,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 40031,
+        "ageSeconds": 40073,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -966,17 +933,17 @@
       {
         "pid": 14064,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 39978,
+        "ageSeconds": 40021,
         "status": "running",
         "isChild": false,
-        "taskSummary": "post comment, assign back and update labels. log 45m for tomorrow",
-        "lastExchange": "post comment, assign back and update labels. log 45m for tomorrow",
+        "taskSummary": "SAME-4031",
+        "lastExchange": "SAME-4031",
         "sessionId": "bin"
       },
       {
         "pid": 18736,
         "cwd": "c:\\windows",
-        "ageSeconds": 39975,
+        "ageSeconds": 40018,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -986,7 +953,7 @@
       {
         "pid": 29444,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 13267,
+        "ageSeconds": 13310,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -4763,7 +4730,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-19T13:52:41.679Z",
-      "ageMs": 1115745
+      "ageMs": 1158736
     },
     "watchdogLogTail": "[2026-10-19T08:56:27.313Z] Starting jira-dashboard-server.js...\n[2026-10-19T08:56:27.484Z] Dashboard started with PID 24008 (restart #5, 2 in last hour)\n[2026-10-19T08:56:32.044Z] DUPLICATE jira-dashboard-server detected: PID 20684 — killing\n[2026-10-19T12:42:55.291Z] DUPLICATE watchdog detected: PID 31296 — killing\n[2026-10-19T12:52:41.500Z] DUPLICATE watchdog detected: PID 20432 — killing\n[2026-10-19T13:27:41.899Z] DUPLICATE watchdog detected: PID 16788 — killing\n[2026-10-19T13:37:41.075Z] DUPLICATE watchdog detected: PID 16788 — killing\n[2026-10-19T13:42:41.448Z] DUPLICATE watchdog detected: PID 29356 — killing\n[2026-10-19T13:47:42.415Z] DUPLICATE watchdog detected: PID 12024 — killing\n[2026-10-19T13:52:41.678Z] DUPLICATE watchdog detected: PID 3264 — killing"
   },
@@ -4772,7 +4739,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-19T14:10:25.529Z",
+      "lastCheck": "2026-10-19T14:11:25.293Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4781,7 +4748,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-19T14:10:25.529Z",
+      "lastCheck": "2026-10-19T14:11:25.293Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4790,9 +4757,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-19T14:10:25.529Z",
+      "lastCheck": "2026-10-19T14:11:25.293Z",
       "downSince": "2026-10-19T08:56:28.974Z",
-      "downDuration": 18836555,
+      "downDuration": 18896319,
       "alert": true
     }
   ],
@@ -4974,18 +4941,6 @@
         "statusChangedAt": "2026-10-16T20:20:05.357+0900"
       },
       {
-        "key": "SAHME-3486",
-        "summary": "Order stuck in Temporary state",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/SAHME-3486",
-        "updated": "2026-10-19T17:49:43.000+0900",
-        "statusChangedAt": "2026-10-19T17:39:16.744+0900"
-      },
-      {
         "key": "SAME-4024",
         "summary": "Order Refund Failed - SA260811-57368840 (SC+)",
         "priority": "None",
@@ -5137,7 +5092,7 @@
       }
     ],
     "totals": {
-      "zero": 10,
+      "zero": 9,
       "actionable": 1,
       "blocked": 3,
       "queued": 3
@@ -5194,6 +5149,6 @@
   "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: no worklogs\nToday: SAME-4033, SAME-4031, MHME-1466, SAHME-3486, SAME-4024\nBlockers: PC-53923"
+    "standupText": "Yesterday: no worklogs\nToday: SAME-4033, SAME-4031, MHME-1466, SAME-4024, AUTEU-41862\nBlockers: PC-53923"
   }
 }
