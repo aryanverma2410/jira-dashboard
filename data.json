@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-21T10:27:09.823Z",
+  "generatedAt": "2026-10-21T10:27:52.249Z",
   "totalTickets": 19,
   "tickets": [
     {
@@ -82,9 +82,15 @@
         }
       ],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-10-21T10:03:49.195Z"
+        "status": "found",
+        "excerpt": "SC+ Policy Creation 20.10.2026\r\nGenerated: 2026-10-21T19:10:00.000Z\r\n\r\nIssue:\r\n11 South Africa (ZA) Samsung Care Plus orders were reported where the ExternalService status shows REGISTERED but SC+ policies were never created at the provider side. The orders span January to April 2026 and are between 4 to 9 months old. The ticket reporter (Nosipho Mkhungo) requested retriggering of SC+ policy creation with provided IMEI and serial numbers. The ticket clones SAHME-3484 (SC+ Policy Creation 16.10.2026) where the same issue was reported for July-August 2026 orders and the SMC API returned HTTP 400 with the error \"South Africa Identity Book is invalid\".\r\n\r\nRCA:\r\nDatabase verification confirmed two distinct failure patterns across the 11 orders:\r\n\r\nOrders 1-10 (ZA260106-73444598 through ZA260404-41787510 excluding ZA260404): All 10 orders are in COMPLETED status with consignments COMPLETED and order processes SUCCEEDED. The ExternalService records all show status=REGISTERED with statusMessage=\"OK\" and isExternalProcessedFailed=null. However, serviceID and registrationID are both empty on every record. This means the SC+ registration step completed in Hybris (the ES was moved to REGISTERED) but the actual policy creation at the SMC provider never returned a service ID or registration ID. The system did not flag this as an error because the registration step itself returned a success response. The policy creation step that should have followed either failed silently or was never triggered. No consignment process records exist for any of these 10 orders, confirming that the process engine has already cleaned up or completed all process records for these old orders.\r\n\r\nOrder 11 (ZA260404-41787510): This order has a more severe cascading failure. The order is stuck at SHIPPED (never reached COMPLETED), the order process is still RUNNING with an empty endMessage, the consignment process is in ERROR state, and the ExternalService is at NEW (registration never started). This order needs the process to be restarted before SC+ remediation can even begin.\r\n\r\nThe clone ticket SAHME-3484 revealed the root cause for the ZA region: the SMC (Samsung Care+) API rejects the policy creation request with HTTP 400 and the error \"South Africa Identity Book is invalid\". This indicates the South African identity document format passed to the SC+ registration API does not match the expected format on the provider side. The registration step in Hybris marks the ExternalService as REGISTERED, but the subsequent policy creation call to the SMC provider fails because the identity document validation fails. Since the registration step succeeded and the error occurs at the policy creation step, the system does not flag isExternalProcessedFailed and the statusMessage remains \"OK\" from the registration response.\r\n\r\nPossible remediation:\r\nFor orders 1-10: The ExternalService status needs to be reset from REGISTERED back to NEW (clearing the statusMessage), then the SC+ registration and policy creation process needs to be re-triggered. Since no consignment processes exist for these old orders, the standard approach of restarting processExternalServices on the consignment process will not work. A manual Groovy script is needed that either directly calls the SMC registration API or creates a new process to handle the re-registration. The script should follow the PC-52678 reusable pattern (script-AEME-6495-scplus-remediation.groovy) but must be adapted to handle the REGISTERED status (standard script only resets ERROR/UPDATE_ERROR/NEW). The IMEI and serial numbers from the ticket should be verified and potentially updated on the ExternalService records before re-triggering.\r\n\r\nFor order 11 (ZA260404-41787510): The order process and consignment process need to be unstuck first. The consignment process is in ERROR state and needs to be restarted. Once the order reaches COMPLETED and the ExternalService is in a processable state, the SC+ registration can be re-triggered using the same script approach.\r\n\r\nThe existing reusable PC ticket PC-52678 (script-AEME-6495-scplus-remediation.groovy) provides the base pattern but needs adaptation for this scenario: (1) resetting REGISTERED status to NEW instead of just ERROR/UPDATE_ERROR, and (2) handling the absence of consignment processes for old orders. Previous SAHME SC+ remediation scripts (script-SAHME-3424, script-SAHME-3435) used the same PC-52678 pattern for similar ZA region SC+ issues.",
+        "sections": {
+          "issue": "11 South Africa (ZA) Samsung Care Plus orders were reported where the ExternalService status shows REGISTERED but SC+ policies were never created at the provider side. The orders span January to April 2026 and are between 4 to 9 months old. The ticket reporter (Nosipho Mkhungo) requested retriggering of SC+ policy creation with provided IMEI and serial numbers. The ticket clones SAHME-3484 (SC+ Policy Creation 16.10.2026) where the same issue was reported for July-August 2026 orders and the SMC API returned HTTP 400 with the error \"South Africa Identity Book is invalid\".",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-21T10:27:26.795Z"
       }
     },
     {
@@ -1049,7 +1055,7 @@
       }
     ],
     "pid": 41252,
-    "uptime": 4531,
+    "uptime": 4571,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -1058,7 +1064,7 @@
         "issueTitle": "Investigate ticket SAHME-3490",
         "snippet": "Auto-triggered investigation for new ticket SAHME-3490.\n\nTicket: SAHME-3490\nSummary: SC+ Policy Creation 20.10.2026\n\nUse",
         "pid": 24116,
-        "elapsed": 1390
+        "elapsed": 1430
       }
     ],
     "startTime": "2026-10-21T09:11:36.552Z",
@@ -1069,7 +1075,7 @@
       {
         "pid": 1064,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 88367,
+        "ageSeconds": 88409,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -1079,7 +1085,7 @@
       {
         "pid": 708,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 88316,
+        "ageSeconds": 88358,
         "status": "running",
         "isChild": false,
         "taskSummary": "post comments for tkme-2381, aeme-6637 . log 15m on each and cose them. for tkme 2383, check the ...",
@@ -1089,7 +1095,7 @@
       {
         "pid": 900,
         "cwd": "c:\\windows",
-        "ageSeconds": 88308,
+        "ageSeconds": 88350,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1099,7 +1105,7 @@
       {
         "pid": 4508,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 88296,
+        "ageSeconds": 88338,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -5034,11 +5040,11 @@
         ]
       }
     },
-    "bridgeLogTail": "[2026-10-21T10:27:01.120Z] STDOUT data for #831: 111 bytes\n[2026-10-21T10:27:01.123Z] LIVE events write for #831: 151 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_831.txt\n[2026-10-21T10:27:01.133Z] STDOUT data for #831: 121 bytes\n[2026-10-21T10:27:01.136Z] LIVE events write for #831: 152 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_831.txt\n[2026-10-21T10:27:01.148Z] STDOUT data for #831: 105 bytes\n[2026-10-21T10:27:01.151Z] LIVE events write for #831: 153 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_831.txt\n[2026-10-21T10:27:01.158Z] STDOUT data for #831: 107 bytes\n[2026-10-21T10:27:01.161Z] LIVE events write for #831: 154 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_831.txt\n[2026-10-21T10:27:01.176Z] STDOUT data for #831: 113 bytes\n[2026-10-21T10:27:01.178Z] LIVE events write for #831: 155 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_831.txt\n[2026-10-21T10:27:01.188Z] STDOUT data for #831: 123 bytes\n[2026-10-21T10:27:01.191Z] LIVE events write for #831: 156 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_831.txt\n[2026-10-21T10:27:01.204Z] STDOUT data for #831: 116 bytes\n[2026-10-21T10:27:01.206Z] LIVE events write for #831: 157 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_831.txt\n[2026-10-21T10:27:01.220Z] STDOUT data for #831: 104 bytes\n[2026-10-21T10:27:01.222Z] LIVE events write for #831: 158 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_831.txt\n[2026-10-21T10:27:02.032Z] STDOUT data for #831: 784 bytes\n[2026-10-21T10:27:02.034Z] LIVE events write for #831: 159 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_831.txt\n[2026-10-21T10:27:02.041Z] STDOUT data for #831: 798 bytes\n[2026-10-21T10:27:02.043Z] LIVE events write for #831: 160 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_831.txt",
+    "bridgeLogTail": "[2026-10-21T10:27:20.034Z] STDOUT data for #831: 106 bytes\n[2026-10-21T10:27:20.037Z] LIVE events write for #831: 161 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_831.txt\n[2026-10-21T10:27:20.082Z] STDOUT data for #831: 120 bytes\n[2026-10-21T10:27:20.086Z] LIVE events write for #831: 162 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_831.txt\n[2026-10-21T10:27:20.088Z] STDOUT data for #831: 223 bytes\n[2026-10-21T10:27:20.091Z] LIVE events write for #831: 164 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_831.txt\n[2026-10-21T10:27:26.775Z] STDOUT data for #831: 4741 bytes\n[2026-10-21T10:27:26.778Z] LIVE events write for #831: 165 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_831.txt\n[2026-10-21T10:27:26.805Z] STDOUT data for #831: 124 bytes\n[2026-10-21T10:27:26.807Z] LIVE events write for #831: 166 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_831.txt\n[2026-10-21T10:27:28.977Z] STDOUT data for #831: 119 bytes\n[2026-10-21T10:27:28.980Z] LIVE events write for #831: 167 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_831.txt\n[2026-10-21T10:27:28.990Z] STDOUT data for #831: 122 bytes\n[2026-10-21T10:27:28.993Z] LIVE events write for #831: 168 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_831.txt\n[2026-10-21T10:27:29.006Z] STDOUT data for #831: 124 bytes\n[2026-10-21T10:27:29.009Z] LIVE events write for #831: 169 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_831.txt\n[2026-10-21T10:27:29.021Z] STDOUT data for #831: 104 bytes\n[2026-10-21T10:27:29.024Z] LIVE events write for #831: 170 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_831.txt\n[2026-10-21T10:27:42.611Z] STDOUT data for #831: 8506 bytes\n[2026-10-21T10:27:42.615Z] LIVE events write for #831: 171 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_831.txt",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-21T09:11:36.149Z",
-      "ageMs": 4537650
+      "ageMs": 4579176
     },
     "watchdogLogTail": "[2026-10-21T09:10:56.679Z] Bridge started with PID 45536 (restart #66, 46 in last hour)\n[2026-10-21T09:11:04.344Z] RESTART NEEDED: Bridge process (PID 45536) not found\n[2026-10-21T09:11:07.755Z] Could not kill PID 45536: Command failed: taskkill /PID 45536 /F /T\n[2026-10-21T09:11:19.452Z] Starting bridge.js...\n[2026-10-21T09:11:19.646Z] Bridge started with PID 29668 (restart #67, 47 in last hour)\n[2026-10-21T09:11:23.264Z] DUPLICATE \\\\bridge.js detected: PID 29056 — killing\n[2026-10-21T09:11:26.233Z] RESTART NEEDED: Bridge process (PID 29668) not found\n[2026-10-21T09:11:29.200Z] Could not kill PID 29668: Command failed: taskkill /PID 29668 /F /T\n[2026-10-21T09:11:35.918Z] Starting bridge.js...\n[2026-10-21T09:11:36.148Z] Bridge started with PID 41252 (restart #68, 48 in last hour)",
     "jobOutputs": {}
@@ -5048,7 +5054,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-21T10:26:49.091Z",
+      "lastCheck": "2026-10-21T10:27:49.165Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5057,7 +5063,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-21T10:26:49.091Z",
+      "lastCheck": "2026-10-21T10:27:49.165Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5066,9 +5072,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-21T10:26:49.091Z",
+      "lastCheck": "2026-10-21T10:27:49.165Z",
       "downSince": "2026-10-21T00:16:44.031Z",
-      "downDuration": 36605060,
+      "downDuration": 36665134,
       "alert": true
     }
   ],
@@ -5491,192 +5497,7 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": {
-    "byTicket": [
-      {
-        "key": "SAHME-3490",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86354,
-        "targetDate": "2026-10-21T07:20:19.604000001Z"
-      },
-      {
-        "key": "SAHME-3490",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1199314,
-        "targetDate": "2026-11-10T08:35:43.589000015Z"
-      },
-      {
-        "key": "TKME-2383",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86400,
-        "targetDate": "2026-10-19T21:00:00.000000001Z"
-      },
-      {
-        "key": "TKME-2383",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2556384,
-        "targetDate": "2026-12-02T00:33:32.989000032Z"
-      },
-      {
-        "key": "AEME-6590",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86065,
-        "targetDate": "2026-09-29T06:53:13.927000001Z"
-      },
-      {
-        "key": "AEME-6590",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2442235,
-        "targetDate": "2026-11-30T16:51:04.355000045Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86179,
-        "targetDate": "2026-09-30T08:16:57.595000001Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1269633,
-        "targetDate": "2026-10-20T08:16:57.595000015Z"
-      },
-      {
-        "key": "EHME-947",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86398,
-        "targetDate": "2026-10-19T11:35:05.134000001Z"
-      },
-      {
-        "key": "EHME-947",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2578988,
-        "targetDate": "2026-12-02T07:50:17.431000033Z"
-      },
-      {
-        "key": "SAME-4019",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86398,
-        "targetDate": "2026-10-16T05:16:55.206000001Z"
-      },
-      {
-        "key": "SAME-4019",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2463629,
-        "targetDate": "2026-11-30T22:47:38.265000033Z"
-      },
-      {
-        "key": "AEME-6535",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85181,
-        "targetDate": "2026-09-04T05:51:44.040000001Z"
-      },
-      {
-        "key": "AEME-6535",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1277310,
-        "targetDate": "2026-11-11T05:15:39.067257204Z"
-      },
-      {
-        "key": "SAHME-3487",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86398,
-        "targetDate": "2026-10-20T10:48:50.138000001Z"
-      },
-      {
-        "key": "SAHME-3487",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2496707,
-        "targetDate": "2026-12-01T08:58:56.578000031Z"
-      },
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86254,
-        "targetDate": "2026-09-21T04:19:58.710000001Z"
-      },
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "STILL",
-        "remainingDuration": 660448,
-        "targetDate": "2026-11-02T02:54:37.529000031Z"
-      },
-      {
-        "key": "AEME-6644",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86400,
-        "targetDate": "2026-10-19T20:00:00.000000001Z"
-      },
-      {
-        "key": "AEME-6644",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2555239,
-        "targetDate": "2026-12-02T00:14:28.649000032Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86397,
-        "targetDate": "2026-09-29T16:09:08.750000001Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1913778,
-        "targetDate": "2026-11-20T14:03:27.584000039Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85660,
-        "targetDate": "2026-09-15T08:21:25.088000001Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1211372,
-        "targetDate": "2026-10-13T12:51:05.986000021Z"
-      },
-      {
-        "key": "MHME-1466",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85724,
-        "targetDate": "2026-10-19T11:08:49.611000001Z"
-      },
-      {
-        "key": "MHME-1466",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1121931,
-        "targetDate": "2026-11-09T11:06:00.747591879Z"
-      }
-    ]
-  },
+  "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
     "standupText": "Yesterday: 1.5h on SAM-18531, 0.33h on TKME-2387, 0.33h on SAME-4035, 0.33h on SAHME-3491, 0.33h on MHME-1470, 0.42h on TKME-2350, 1.5h on PC-55693, 1.75h on TKME-2382, 0.75h on SAME-4024, 0.42h on AEME-6640, 0.42h on AEME-6643\nToday: PC-55747, SAHME-3490, AEME-6644, SAME-4019, EHME-947\nBlockers: PC-55747, SAME-4019, PC-53923"
