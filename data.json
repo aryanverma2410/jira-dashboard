@@ -1,7 +1,174 @@
 {
-  "generatedAt": "2026-10-21T10:13:38.204Z",
+  "generatedAt": "2026-10-21T10:14:24.110Z",
   "totalTickets": 26,
   "tickets": [
+    {
+      "key": "SAME-4033",
+      "summary": "Stuck order on Hybris",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Kingdom of Saudi Arabia Maintenance & Enhancements",
+      "projectKey": "SAME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-21T19:14:04.000+0900",
+      "created": "2026-10-19T19:48:37.000+0900",
+      "statusChangedAt": "2026-10-19T19:48:39.197+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nFollowing order was found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|SA261013-14592894|2026/10/15|ORDER_SPLIT|\n\n\nThanks",
+      "commentsCount": 4,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-21T19:11:53.230+0900",
+          "snippet": "Hi Arjenelle,\n\nSA261013-14592894 was already COMPLETED before our retrigger batch. Current status as verified:\n\n||Order||Error Action||Current Status||\n|SA261013-14592894|sendConsignmentToWarehouse (I/O — Connection reset)|COMPLETED|\n\nThe order has been verified as fully resolved on PROD. No further"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-19T22:23:13.161+0900",
+          "snippet": "Hi Arj,\n\nSA261013-14592894 was retriggered but is still at ORDER_SPLIT. The consignment process may have failed again at sendConsignmentToWarehouse. We are checking the process state and will update once we have more info.\n\nRegards,\nAryan"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Arjenelle,\n\nSA261013-14592894 was already COMPLETED before our retrigger batch. Current status as verified:\n\n||Order||Error Action||Current Status||\n|SA261013-14592894|sendConsignmentToWarehouse (I/O — Connection reset)|COMPLETED|\n\nThe order has been verified as fully resolved on PROD. No further",
+      "lastCommentDate": "2026-10-21T19:11:53.230+0900",
+      "url": "https://jira.secext.samsung.net/browse/SAME-4033",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "Stuck order on Hybris\r\nGenerated: 2026-10-19T20:45:00.000Z\r\n\r\nIssue:\r\nOrder SA261013-14592894 (SA region, Tabby payment, 3149.10 SAR, product SM-S938BZKIMEA) is stuck at ORDER_SPLIT status. The consignment process (consignment-process-v11-36) errored at the sendConsignmentToWarehouse action with an empty returnCode, indicating an unhandled exception was thrown rather than a business logic NOK return. The ticket comment confirms this was an I/O error: Connection reset when Hybris attempted to transmit the consignment data to the warehouse system.\r\n\r\nRCA:\r\nThe consignment process for SA261013-14592894 is in ERROR state. ProcessTaskLog shows the failing action is sendConsignmentToWarehouse with an empty returnCode, which means an exception was thrown at this action rather than the process returning NOK through normal business logic. The endMessage is the generic \"An error occurred while executing the process.\" with no BusinessProcessParameter stack trace stored in the DB.\r\n\r\nThe ticket comment by Aryan already captured the specific error: \"Consignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: I/O error: Connection\". This is a transient infrastructure failure where the warehouse endpoint (GERP/WMS) dropped the TCP connection while Hybris was sending the consignment creation request. The connection was reset mid-transmission, causing an IOException in the integration layer.\r\n\r\nPayment is not a factor - the Tabby authorization (3149.10 SAR) was accepted and capture was completed successfully on 2026-10-15 14:11. The consignment was correctly created (warehouse WC05, delivery mode sa-delivery-calendar-PSND, status WAITING_FOR_TRANSFER) but the warehouse notification step failed due to the connection reset.\r\n\r\nThis is a well-known recurring pattern with 600+ similar tickets in Jira (UAME-806, CAME-9762, TKME-2055, GRME-779, NNHME-9503, etc.) and dedicated remediation PC tickets (PC-54225, PC-54438 for I/O error: Connection reset). The consignment data is intact in the DB - only the process needs to be retried from the sendConsignmentToWarehouse action.\r\n\r\nPossible remediation:\r\nRestart the consignment process from the sendConsignmentToWarehouse action. The consignment data is already correctly persisted in the DB (status WAITING_FOR_TRANSFER, warehouse WC05 assigned), so retriggering the process will attempt the warehouse notification again. If the warehouse endpoint is now reachable, the process will continue past sendConsignmentToWarehouse to waitForSendToWarehouse and proceed normally.\r\n\r\nThis is the same remediation pattern as reusable PC-52605 (script-TKME-2279-retrigger-business-process.groovy) which restarts business processes stuck at ERROR. Alternatively, PC-54225 and PC-54438 are dedicated tickets for I/O error: Connection reset remediation on consignment processes.\r\n\r\nTicket URL: https://jira.secext.samsung.net/browse/SAME-4033",
+        "sections": {
+          "issue": "Order SA261013-14592894 (SA region, Tabby payment, 3149.10 SAR, product SM-S938BZKIMEA) is stuck at ORDER_SPLIT status. The consignment process (consignment-process-v11-36) errored at the sendConsignmentToWarehouse action with an empty returnCode, indicating an unhandled exception was thrown rather than a business logic NOK return. The ticket comment confirms this was an I/O error: Connection reset when Hybris attempted to transmit the consignment data to the warehouse system.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-19T11:47:05.485Z"
+      }
+    },
+    {
+      "key": "TKME-2385",
+      "summary": "Stuck order on Hybris",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Turkey Maintenance & Enhancements",
+      "projectKey": "TKME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-21T19:14:02.000+0900",
+      "created": "2026-10-19T19:48:43.000+0900",
+      "statusChangedAt": "2026-10-19T19:48:45.869+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|TR261018-20499081|2026/10/19|SHIPPING_PREPARATION|\n|TR261005-05008347|2026/10/18|SHIPPING_PREPARATION|\n|TR261018-20083704|2026/10/18|SHIPPED|\n|TR261005-05365742|2026/10/1",
+      "commentsCount": 3,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-21T19:11:52.648+0900",
+          "snippet": "Hi Rajesh,\n\nI/O error orders have been retriggered on PROD under PC-52605. Current status as verified:\n\nRetriggered and progressed:\n||Order||Error Action||Current Status||\n|TR261005-05365742|sendConsignmentToWarehouse (I/O — Connection reset)|ORDER_SPLIT (process RUNNING, 2nd retry)|\n|TR261016-18399"
+        },
+        {
+          "author": "Rajeshbabu Yatirajula",
+          "date": "2026-10-21T15:22:50.294+0900",
+          "snippet": "Hi ~@email \n\nAs mentioned earlier, please do retrigger the orders which are stuck due to I/O error until thep] auto-heal job is created in PROD - [TKME-2362\n\nFor no stock, business is checking the stock, if not they'll cancel the orders.\n\nRegards,\nRajesh"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Rajesh,\n\nI/O error orders have been retriggered on PROD under PC-52605. Current status as verified:\n\nRetriggered and progressed:\n||Order||Error Action||Current Status||\n|TR261005-05365742|sendConsignmentToWarehouse (I/O — Connection reset)|ORDER_SPLIT (process RUNNING, 2nd retry)|\n|TR261016-18399",
+      "lastCommentDate": "2026-10-21T19:11:52.648+0900",
+      "url": "https://jira.secext.samsung.net/browse/TKME-2385",
+      "linkedTickets": [],
+      "solution": {
+        "status": "investigating",
+        "issueNumber": null,
+        "lockedAt": "2026-10-21T08:54:15.329Z"
+      }
+    },
+    {
+      "key": "TKME-2387",
+      "summary": "Stuck order on Hybris",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Turkey Maintenance & Enhancements",
+      "projectKey": "TKME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-21T19:14:01.000+0900",
+      "created": "2026-10-20T19:07:38.000+0900",
+      "statusChangedAt": "2026-10-20T19:07:41.747+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|TR261019-21394322|2026/10/19|WAITING_FOR_SEND_FINANCIAL|\n|TR261019-21289479|2026/10/19|ORDER_SPLIT|\n|TR261014-15691344|2026/10/19|ORDER_SPLIT|\n|TR261016-18399223|2026/10/",
+      "commentsCount": 3,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-21T19:11:53.105+0900",
+          "snippet": "Hi Rajesh,\n\nAll I/O error orders have been retriggered on PROD under PC-52605. Current status as verified:\n\n||Order||Error Action||Current Status||\n|TR261019-21394322|splitOrder (I/O — divaportal timeout)|ORDER_SPLIT (process RUNNING)|\n|TR261019-21289479|sendConsignmentToWarehouse (I/O — Connection "
+        },
+        {
+          "author": "Rajeshbabu Yatirajula",
+          "date": "2026-10-21T17:12:03.506+0900",
+          "snippet": "Hi ~@email \n\nPlease retrigger the orders which are stuck due to I/O errors from NERP.\n\nRegards,\nRajesh"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Rajesh,\n\nAll I/O error orders have been retriggered on PROD under PC-52605. Current status as verified:\n\n||Order||Error Action||Current Status||\n|TR261019-21394322|splitOrder (I/O — divaportal timeout)|ORDER_SPLIT (process RUNNING)|\n|TR261019-21289479|sendConsignmentToWarehouse (I/O — Connection ",
+      "lastCommentDate": "2026-10-21T19:11:53.105+0900",
+      "url": "https://jira.secext.samsung.net/browse/TKME-2387",
+      "linkedTickets": [
+        {
+          "key": "TKME-2389",
+          "summary": "Stuck order on Hybris",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "relation": "is cloned by",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "investigating",
+        "issueNumber": null,
+        "lockedAt": "2026-10-21T08:54:09.760Z"
+      }
+    },
+    {
+      "key": "TKME-2391",
+      "summary": "Stuck order on Hybris",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Turkey Maintenance & Enhancements",
+      "projectKey": "TKME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-21T19:14:01.000+0900",
+      "created": "2026-10-21T18:07:24.000+0900",
+      "statusChangedAt": "2026-10-21T18:07:27.414+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|TR261018-20496265|2026/10/18|WAITING_FOR_FINANCIAL|\n|TR261018-20079668|2026/10/18|ORDER_SPLIT|\n|TR261017-19031266|2026/10/17|ORDER_SPLIT|\n|TR261017-18834435|2026/10/17|OR",
+      "commentsCount": 2,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-21T19:11:51.782+0900",
+          "snippet": "Hi Rajesh,\n\nAll 4 I/O error orders have been retriggered on PROD under PC-52605. Current status as verified:\n\n||Order||Error Action||Current Status||\n|TR261018-20496265|completeFinancialUpdate (I/O — Connection reset)|COMPLETED|\n|TR261018-20079668|sendConsignmentToWarehouse (I/O — Connection reset)|"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-21T18:07:29.631+0900",
+          "snippet": "Hi Team,\n\nsendConsignmentToWarehouse (3 orders):\nTR261018-20079668\nConsignment process ERROR at sendConsignmentToWarehouse rc= - sendConsignmentToWarehouse: I/O error: Connection reset; nested exception is java.net.SocketException: Connection reset\nTR261017-19031266\nConsignment process ERROR at send"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Rajesh,\n\nAll 4 I/O error orders have been retriggered on PROD under PC-52605. Current status as verified:\n\n||Order||Error Action||Current Status||\n|TR261018-20496265|completeFinancialUpdate (I/O — Connection reset)|COMPLETED|\n|TR261018-20079668|sendConsignmentToWarehouse (I/O — Connection reset)|",
+      "lastCommentDate": "2026-10-21T19:11:51.782+0900",
+      "url": "https://jira.secext.samsung.net/browse/TKME-2391",
+      "linkedTickets": [],
+      "solution": {
+        "status": "investigating",
+        "issueNumber": null,
+        "lockedAt": "2026-10-21T09:11:00.643Z"
+      }
+    },
     {
       "key": "PC-55747",
       "summary": "Script to Reassign WC12 Consignments to WC17 and Restart GERP Interface",
@@ -87,173 +254,6 @@
         "source": "",
         "foundAt": "",
         "issueNumber": null
-      }
-    },
-    {
-      "key": "SAME-4033",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Kingdom of Saudi Arabia Maintenance & Enhancements",
-      "projectKey": "SAME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-21T19:11:53.000+0900",
-      "created": "2026-10-19T19:48:37.000+0900",
-      "statusChangedAt": "2026-10-19T19:48:39.197+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing order was found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|SA261013-14592894|2026/10/15|ORDER_SPLIT|\n\n\nThanks",
-      "commentsCount": 4,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-21T19:11:53.230+0900",
-          "snippet": "Hi Arjenelle,\n\nSA261013-14592894 was already COMPLETED before our retrigger batch. Current status as verified:\n\n||Order||Error Action||Current Status||\n|SA261013-14592894|sendConsignmentToWarehouse (I/O — Connection reset)|COMPLETED|\n\nThe order has been verified as fully resolved on PROD. No further"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-19T22:23:13.161+0900",
-          "snippet": "Hi Arj,\n\nSA261013-14592894 was retriggered but is still at ORDER_SPLIT. The consignment process may have failed again at sendConsignmentToWarehouse. We are checking the process state and will update once we have more info.\n\nRegards,\nAryan"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Arjenelle,\n\nSA261013-14592894 was already COMPLETED before our retrigger batch. Current status as verified:\n\n||Order||Error Action||Current Status||\n|SA261013-14592894|sendConsignmentToWarehouse (I/O — Connection reset)|COMPLETED|\n\nThe order has been verified as fully resolved on PROD. No further",
-      "lastCommentDate": "2026-10-21T19:11:53.230+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAME-4033",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Stuck order on Hybris\r\nGenerated: 2026-10-19T20:45:00.000Z\r\n\r\nIssue:\r\nOrder SA261013-14592894 (SA region, Tabby payment, 3149.10 SAR, product SM-S938BZKIMEA) is stuck at ORDER_SPLIT status. The consignment process (consignment-process-v11-36) errored at the sendConsignmentToWarehouse action with an empty returnCode, indicating an unhandled exception was thrown rather than a business logic NOK return. The ticket comment confirms this was an I/O error: Connection reset when Hybris attempted to transmit the consignment data to the warehouse system.\r\n\r\nRCA:\r\nThe consignment process for SA261013-14592894 is in ERROR state. ProcessTaskLog shows the failing action is sendConsignmentToWarehouse with an empty returnCode, which means an exception was thrown at this action rather than the process returning NOK through normal business logic. The endMessage is the generic \"An error occurred while executing the process.\" with no BusinessProcessParameter stack trace stored in the DB.\r\n\r\nThe ticket comment by Aryan already captured the specific error: \"Consignment process ERROR at [sendConsignmentToWarehouse] rc= - [sendConsignmentToWarehouse]: I/O error: Connection\". This is a transient infrastructure failure where the warehouse endpoint (GERP/WMS) dropped the TCP connection while Hybris was sending the consignment creation request. The connection was reset mid-transmission, causing an IOException in the integration layer.\r\n\r\nPayment is not a factor - the Tabby authorization (3149.10 SAR) was accepted and capture was completed successfully on 2026-10-15 14:11. The consignment was correctly created (warehouse WC05, delivery mode sa-delivery-calendar-PSND, status WAITING_FOR_TRANSFER) but the warehouse notification step failed due to the connection reset.\r\n\r\nThis is a well-known recurring pattern with 600+ similar tickets in Jira (UAME-806, CAME-9762, TKME-2055, GRME-779, NNHME-9503, etc.) and dedicated remediation PC tickets (PC-54225, PC-54438 for I/O error: Connection reset). The consignment data is intact in the DB - only the process needs to be retried from the sendConsignmentToWarehouse action.\r\n\r\nPossible remediation:\r\nRestart the consignment process from the sendConsignmentToWarehouse action. The consignment data is already correctly persisted in the DB (status WAITING_FOR_TRANSFER, warehouse WC05 assigned), so retriggering the process will attempt the warehouse notification again. If the warehouse endpoint is now reachable, the process will continue past sendConsignmentToWarehouse to waitForSendToWarehouse and proceed normally.\r\n\r\nThis is the same remediation pattern as reusable PC-52605 (script-TKME-2279-retrigger-business-process.groovy) which restarts business processes stuck at ERROR. Alternatively, PC-54225 and PC-54438 are dedicated tickets for I/O error: Connection reset remediation on consignment processes.\r\n\r\nTicket URL: https://jira.secext.samsung.net/browse/SAME-4033",
-        "sections": {
-          "issue": "Order SA261013-14592894 (SA region, Tabby payment, 3149.10 SAR, product SM-S938BZKIMEA) is stuck at ORDER_SPLIT status. The consignment process (consignment-process-v11-36) errored at the sendConsignmentToWarehouse action with an empty returnCode, indicating an unhandled exception was thrown rather than a business logic NOK return. The ticket comment confirms this was an I/O error: Connection reset when Hybris attempted to transmit the consignment data to the warehouse system.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-19T11:47:05.485Z"
-      }
-    },
-    {
-      "key": "TKME-2387",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Turkey Maintenance & Enhancements",
-      "projectKey": "TKME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-21T19:11:53.000+0900",
-      "created": "2026-10-20T19:07:38.000+0900",
-      "statusChangedAt": "2026-10-20T19:07:41.747+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|TR261019-21394322|2026/10/19|WAITING_FOR_SEND_FINANCIAL|\n|TR261019-21289479|2026/10/19|ORDER_SPLIT|\n|TR261014-15691344|2026/10/19|ORDER_SPLIT|\n|TR261016-18399223|2026/10/",
-      "commentsCount": 3,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-21T19:11:53.105+0900",
-          "snippet": "Hi Rajesh,\n\nAll I/O error orders have been retriggered on PROD under PC-52605. Current status as verified:\n\n||Order||Error Action||Current Status||\n|TR261019-21394322|splitOrder (I/O — divaportal timeout)|ORDER_SPLIT (process RUNNING)|\n|TR261019-21289479|sendConsignmentToWarehouse (I/O — Connection "
-        },
-        {
-          "author": "Rajeshbabu Yatirajula",
-          "date": "2026-10-21T17:12:03.506+0900",
-          "snippet": "Hi ~@email \n\nPlease retrigger the orders which are stuck due to I/O errors from NERP.\n\nRegards,\nRajesh"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Rajesh,\n\nAll I/O error orders have been retriggered on PROD under PC-52605. Current status as verified:\n\n||Order||Error Action||Current Status||\n|TR261019-21394322|splitOrder (I/O — divaportal timeout)|ORDER_SPLIT (process RUNNING)|\n|TR261019-21289479|sendConsignmentToWarehouse (I/O — Connection ",
-      "lastCommentDate": "2026-10-21T19:11:53.105+0900",
-      "url": "https://jira.secext.samsung.net/browse/TKME-2387",
-      "linkedTickets": [
-        {
-          "key": "TKME-2389",
-          "summary": "Stuck order on Hybris",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
-          "relation": "is cloned by",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-10-21T08:54:09.760Z"
-      }
-    },
-    {
-      "key": "TKME-2385",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Turkey Maintenance & Enhancements",
-      "projectKey": "TKME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-21T19:11:52.000+0900",
-      "created": "2026-10-19T19:48:43.000+0900",
-      "statusChangedAt": "2026-10-19T19:48:45.869+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|TR261018-20499081|2026/10/19|SHIPPING_PREPARATION|\n|TR261005-05008347|2026/10/18|SHIPPING_PREPARATION|\n|TR261018-20083704|2026/10/18|SHIPPED|\n|TR261005-05365742|2026/10/1",
-      "commentsCount": 3,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-21T19:11:52.648+0900",
-          "snippet": "Hi Rajesh,\n\nI/O error orders have been retriggered on PROD under PC-52605. Current status as verified:\n\nRetriggered and progressed:\n||Order||Error Action||Current Status||\n|TR261005-05365742|sendConsignmentToWarehouse (I/O — Connection reset)|ORDER_SPLIT (process RUNNING, 2nd retry)|\n|TR261016-18399"
-        },
-        {
-          "author": "Rajeshbabu Yatirajula",
-          "date": "2026-10-21T15:22:50.294+0900",
-          "snippet": "Hi ~@email \n\nAs mentioned earlier, please do retrigger the orders which are stuck due to I/O error until thep] auto-heal job is created in PROD - [TKME-2362\n\nFor no stock, business is checking the stock, if not they'll cancel the orders.\n\nRegards,\nRajesh"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Rajesh,\n\nI/O error orders have been retriggered on PROD under PC-52605. Current status as verified:\n\nRetriggered and progressed:\n||Order||Error Action||Current Status||\n|TR261005-05365742|sendConsignmentToWarehouse (I/O — Connection reset)|ORDER_SPLIT (process RUNNING, 2nd retry)|\n|TR261016-18399",
-      "lastCommentDate": "2026-10-21T19:11:52.648+0900",
-      "url": "https://jira.secext.samsung.net/browse/TKME-2385",
-      "linkedTickets": [],
-      "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-10-21T08:54:15.329Z"
-      }
-    },
-    {
-      "key": "TKME-2391",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Turkey Maintenance & Enhancements",
-      "projectKey": "TKME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-21T19:11:51.000+0900",
-      "created": "2026-10-21T18:07:24.000+0900",
-      "statusChangedAt": "2026-10-21T18:07:27.414+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|TR261018-20496265|2026/10/18|WAITING_FOR_FINANCIAL|\n|TR261018-20079668|2026/10/18|ORDER_SPLIT|\n|TR261017-19031266|2026/10/17|ORDER_SPLIT|\n|TR261017-18834435|2026/10/17|OR",
-      "commentsCount": 2,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-21T19:11:51.782+0900",
-          "snippet": "Hi Rajesh,\n\nAll 4 I/O error orders have been retriggered on PROD under PC-52605. Current status as verified:\n\n||Order||Error Action||Current Status||\n|TR261018-20496265|completeFinancialUpdate (I/O — Connection reset)|COMPLETED|\n|TR261018-20079668|sendConsignmentToWarehouse (I/O — Connection reset)|"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-21T18:07:29.631+0900",
-          "snippet": "Hi Team,\n\nsendConsignmentToWarehouse (3 orders):\nTR261018-20079668\nConsignment process ERROR at sendConsignmentToWarehouse rc= - sendConsignmentToWarehouse: I/O error: Connection reset; nested exception is java.net.SocketException: Connection reset\nTR261017-19031266\nConsignment process ERROR at send"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Rajesh,\n\nAll 4 I/O error orders have been retriggered on PROD under PC-52605. Current status as verified:\n\n||Order||Error Action||Current Status||\n|TR261018-20496265|completeFinancialUpdate (I/O — Connection reset)|COMPLETED|\n|TR261018-20079668|sendConsignmentToWarehouse (I/O — Connection reset)|",
-      "lastCommentDate": "2026-10-21T19:11:51.782+0900",
-      "url": "https://jira.secext.samsung.net/browse/TKME-2391",
-      "linkedTickets": [],
-      "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-10-21T09:11:00.643Z"
       }
     },
     {
@@ -1386,7 +1386,7 @@
       }
     ],
     "pid": 41252,
-    "uptime": 3721,
+    "uptime": 3765,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -1395,7 +1395,7 @@
         "issueTitle": "Investigate ticket SAHME-3490",
         "snippet": "Auto-triggered investigation for new ticket SAHME-3490.\n\nTicket: SAHME-3490\nSummary: SC+ Policy Creation 20.10.2026\n\nUse",
         "pid": 24116,
-        "elapsed": 579
+        "elapsed": 624
       }
     ],
     "startTime": "2026-10-21T09:11:36.552Z",
@@ -1406,7 +1406,7 @@
       {
         "pid": 1064,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 87556,
+        "ageSeconds": 87602,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -1416,7 +1416,7 @@
       {
         "pid": 708,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 87505,
+        "ageSeconds": 87551,
         "status": "running",
         "isChild": false,
         "taskSummary": "post all 5 comments. put the tickets to LV where all the orders have moved further, and keep othe...",
@@ -1426,7 +1426,7 @@
       {
         "pid": 900,
         "cwd": "c:\\windows",
-        "ageSeconds": 87497,
+        "ageSeconds": 87542,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1436,7 +1436,7 @@
       {
         "pid": 4508,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 87485,
+        "ageSeconds": 87531,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -5371,11 +5371,11 @@
         ]
       }
     },
-    "bridgeLogTail": "    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-10-21T10:12:41.442Z] aipro stderr for #831: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
+    "bridgeLogTail": "    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-10-21T10:13:50.852Z] aipro stderr for #831: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-21T09:11:36.149Z",
-      "ageMs": 3728632
+      "ageMs": 3772556
     },
     "watchdogLogTail": "[2026-10-21T09:10:56.679Z] Bridge started with PID 45536 (restart #66, 46 in last hour)\n[2026-10-21T09:11:04.344Z] RESTART NEEDED: Bridge process (PID 45536) not found\n[2026-10-21T09:11:07.755Z] Could not kill PID 45536: Command failed: taskkill /PID 45536 /F /T\n[2026-10-21T09:11:19.452Z] Starting bridge.js...\n[2026-10-21T09:11:19.646Z] Bridge started with PID 29668 (restart #67, 47 in last hour)\n[2026-10-21T09:11:23.264Z] DUPLICATE \\\\bridge.js detected: PID 29056 — killing\n[2026-10-21T09:11:26.233Z] RESTART NEEDED: Bridge process (PID 29668) not found\n[2026-10-21T09:11:29.200Z] Could not kill PID 29668: Command failed: taskkill /PID 29668 /F /T\n[2026-10-21T09:11:35.918Z] Starting bridge.js...\n[2026-10-21T09:11:36.148Z] Bridge started with PID 41252 (restart #68, 48 in last hour)",
     "jobOutputs": {}
@@ -5385,7 +5385,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-21T10:12:48.940Z",
+      "lastCheck": "2026-10-21T10:13:49.061Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5394,7 +5394,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-21T10:12:48.940Z",
+      "lastCheck": "2026-10-21T10:13:49.061Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5403,9 +5403,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-21T10:12:48.940Z",
+      "lastCheck": "2026-10-21T10:13:49.061Z",
       "downSince": "2026-10-21T00:16:44.031Z",
-      "downDuration": 35764909,
+      "downDuration": 35825030,
       "alert": true
     }
   ],
@@ -5559,7 +5559,7 @@
         "reason": "",
         "whatToDo": "Investigate or continue work",
         "url": "https://jira.secext.samsung.net/browse/SAME-4033",
-        "updated": "2026-10-21T19:11:53.000+0900",
+        "updated": "2026-10-21T19:14:04.000+0900",
         "statusChangedAt": "2026-10-19T19:48:39.197+0900"
       },
       {
@@ -5803,7 +5803,7 @@
         "reason": "Waiting for PC-52605 approval (not assigned to you)",
         "whatToDo": "",
         "url": "https://jira.secext.samsung.net/browse/TKME-2385",
-        "updated": "2026-10-21T19:11:52.000+0900",
+        "updated": "2026-10-21T19:14:02.000+0900",
         "statusChangedAt": "2026-10-19T19:48:45.869+0900"
       },
       {
@@ -5815,7 +5815,7 @@
         "reason": "Waiting for PC-52605 approval (not assigned to you)",
         "whatToDo": "",
         "url": "https://jira.secext.samsung.net/browse/TKME-2387",
-        "updated": "2026-10-21T19:11:53.000+0900",
+        "updated": "2026-10-21T19:14:01.000+0900",
         "statusChangedAt": "2026-10-20T19:07:41.747+0900"
       },
       {
@@ -5827,7 +5827,7 @@
         "reason": "Waiting for PC-52605 approval (not assigned to you)",
         "whatToDo": "",
         "url": "https://jira.secext.samsung.net/browse/TKME-2391",
-        "updated": "2026-10-21T19:11:51.000+0900",
+        "updated": "2026-10-21T19:14:01.000+0900",
         "statusChangedAt": "2026-10-21T18:07:27.414+0900"
       }
     ],
@@ -5865,12 +5865,12 @@
     }
   },
   "worklogTotals": {
-    "todayHours": 4.25,
-    "weekHours": 23.5,
+    "todayHours": 7.17,
+    "weekHours": 26.42,
     "dailyHours": [
       11.17,
       8.08,
-      4.25,
+      7.17,
       0,
       0,
       0,
@@ -5890,9 +5890,9 @@
   },
   "tempoApproval": {
     "status": "open",
-    "workedHours": 143.56,
+    "workedHours": 146.48,
     "requiredHours": 176,
-    "deficitHours": 32.44,
+    "deficitHours": 29.52,
     "periodStart": "2026-10-01",
     "periodEnd": "2026-10-31"
   },
@@ -5912,292 +5912,9 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": {
-    "byTicket": [
-      {
-        "key": "TKME-2382",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86399,
-        "targetDate": "2026-10-19T11:35:42.030000001Z"
-      },
-      {
-        "key": "TKME-2382",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2553200,
-        "targetDate": "2026-12-01T23:26:57.537000033Z"
-      },
-      {
-        "key": "SAME-4019",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86398,
-        "targetDate": "2026-10-16T05:16:55.206000001Z"
-      },
-      {
-        "key": "SAME-4019",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2464440,
-        "targetDate": "2026-11-30T22:47:38.265000033Z"
-      },
-      {
-        "key": "AEME-6644",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86400,
-        "targetDate": "2026-10-19T20:00:00.000000001Z"
-      },
-      {
-        "key": "AEME-6644",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2556051,
-        "targetDate": "2026-12-02T00:14:28.649000032Z"
-      },
-      {
-        "key": "SAHME-3490",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86354,
-        "targetDate": "2026-10-21T07:20:19.604000001Z"
-      },
-      {
-        "key": "SAHME-3490",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1200126,
-        "targetDate": "2026-11-10T08:35:43.589000015Z"
-      },
-      {
-        "key": "TKME-2385",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86397,
-        "targetDate": "2026-10-20T10:48:43.434000001Z"
-      },
-      {
-        "key": "TKME-2385",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2577252,
-        "targetDate": "2026-12-02T06:07:49.865000032Z"
-      },
-      {
-        "key": "EHME-947",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86398,
-        "targetDate": "2026-10-19T11:35:05.134000001Z"
-      },
-      {
-        "key": "EHME-947",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2579800,
-        "targetDate": "2026-12-02T07:50:17.431000033Z"
-      },
-      {
-        "key": "AEME-6535",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85181,
-        "targetDate": "2026-09-04T05:51:44.040000001Z"
-      },
-      {
-        "key": "AEME-6535",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1277310,
-        "targetDate": "2026-11-11T05:02:07.497520920Z"
-      },
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86254,
-        "targetDate": "2026-09-21T04:19:58.710000001Z"
-      },
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "STILL",
-        "remainingDuration": 661260,
-        "targetDate": "2026-11-02T02:54:37.529000031Z"
-      },
-      {
-        "key": "TKME-2387",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86397,
-        "targetDate": "2026-10-21T10:07:38.893000001Z"
-      },
-      {
-        "key": "TKME-2387",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2584354,
-        "targetDate": "2026-12-02T08:06:11.533000031Z"
-      },
-      {
-        "key": "MHME-1466",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85724,
-        "targetDate": "2026-10-19T11:08:49.611000001Z"
-      },
-      {
-        "key": "MHME-1466",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1121931,
-        "targetDate": "2026-11-09T10:52:28.898590692Z"
-      },
-      {
-        "key": "SAHME-3487",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86398,
-        "targetDate": "2026-10-20T10:48:50.138000001Z"
-      },
-      {
-        "key": "SAHME-3487",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2497519,
-        "targetDate": "2026-12-01T08:58:56.578000031Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86397,
-        "targetDate": "2026-09-29T16:09:08.750000001Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1914590,
-        "targetDate": "2026-11-20T14:03:27.584000039Z"
-      },
-      {
-        "key": "TKME-2381",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86394,
-        "targetDate": "2026-10-19T10:19:08.243000001Z"
-      },
-      {
-        "key": "TKME-2381",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2495929,
-        "targetDate": "2026-12-01T07:32:27.075000032Z"
-      },
-      {
-        "key": "TKME-2383",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86400,
-        "targetDate": "2026-10-19T21:00:00.000000001Z"
-      },
-      {
-        "key": "TKME-2383",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2557195,
-        "targetDate": "2026-12-02T00:33:32.989000032Z"
-      },
-      {
-        "key": "SAME-4033",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86398,
-        "targetDate": "2026-10-20T10:48:37.198000001Z"
-      },
-      {
-        "key": "SAME-4033",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2424883,
-        "targetDate": "2026-11-30T11:48:20.674000030Z"
-      },
-      {
-        "key": "TKME-2391",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86400,
-        "targetDate": "2026-10-22T09:07:27.414000001Z"
-      },
-      {
-        "key": "TKME-2391",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2588061,
-        "targetDate": "2026-12-02T09:07:59.335000030Z"
-      },
-      {
-        "key": "AEME-6637",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86397,
-        "targetDate": "2026-10-16T05:16:08.892000001Z"
-      },
-      {
-        "key": "AEME-6637",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2558318,
-        "targetDate": "2026-12-02T00:52:16.219000034Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86179,
-        "targetDate": "2026-09-30T08:16:57.595000001Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1269633,
-        "targetDate": "2026-10-20T08:16:57.595000015Z"
-      },
-      {
-        "key": "AEME-6590",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86065,
-        "targetDate": "2026-09-29T06:53:13.927000001Z"
-      },
-      {
-        "key": "AEME-6590",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2443046,
-        "targetDate": "2026-11-30T16:51:04.355000045Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85660,
-        "targetDate": "2026-09-15T08:21:25.088000001Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1211372,
-        "targetDate": "2026-10-13T12:51:05.986000021Z"
-      }
-    ]
-  },
+  "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 1.5h on SAM-18531, 0.33h on TKME-2387, 0.33h on SAME-4035, 0.33h on SAHME-3491, 0.33h on MHME-1470, 0.42h on TKME-2350, 1.5h on PC-55693, 1.75h on TKME-2382, 0.75h on SAME-4024, 0.42h on AEME-6640, 0.42h on AEME-6643\nToday: PC-55747, TKME-2382, SAME-4033, TKME-2387, TKME-2385\nBlockers: PC-55747, SAME-4019, PC-53923"
+    "standupText": "Yesterday: 1.5h on SAM-18531, 0.33h on TKME-2387, 0.33h on SAME-4035, 0.33h on SAHME-3491, 0.33h on MHME-1470, 0.42h on TKME-2350, 1.5h on PC-55693, 1.75h on TKME-2382, 0.75h on SAME-4024, 0.42h on AEME-6640, 0.42h on AEME-6643\nToday: SAME-4033, TKME-2385, TKME-2387, TKME-2391, PC-55747\nBlockers: PC-55747, SAME-4019, PC-53923"
   }
 }
