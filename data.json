@@ -1,51 +1,7 @@
 {
-  "generatedAt": "2026-10-21T12:07:56.095Z",
-  "totalTickets": 17,
+  "generatedAt": "2026-10-21T12:08:39.711Z",
+  "totalTickets": 16,
   "tickets": [
-    {
-      "key": "SAME-4027",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Kingdom of Saudi Arabia Maintenance & Enhancements",
-      "projectKey": "SAME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-21T20:34:50.000+0900",
-      "created": "2026-10-16T19:18:54.000+0900",
-      "statusChangedAt": "2026-10-16T19:19:00.638+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|SA261013-14592894|2026/10/15|ORDER_SPLIT|\n|SA261013-13642757|2026/10/14|SHIPPED|\n\n\nThanks",
-      "commentsCount": 4,
-      "recentComments": [
-        {
-          "author": "Arjenelle Acabado",
-          "date": "2026-10-21T20:34:44.861+0900",
-          "snippet": "Hi ~@email \n\nBoth orders are in Completed status.\n\nPlease close the ticket if nothing else required.\n\n \n\nThanks,\n\nArj\n\n~@email"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-19T22:23:16.435+0900",
-          "snippet": "Hi Arj,\n\nSA261013-13642757 has been retriggered under PC-52605 and has moved from SHIPPED to WAITING_FOR_FINANCIAL. The processExternalServices consignment process is now progressing.\n\nSA261013-14592894 is still at ORDER_SPLIT — the sendConsignmentToWarehouse retrigger did not push it through. We ar"
-        }
-      ],
-      "lastCommentBy": "Arjenelle Acabado",
-      "lastCommentSnippet": "Hi ~@email \n\nBoth orders are in Completed status.\n\nPlease close the ticket if nothing else required.\n\n \n\nThanks,\n\nArj\n\n~@email",
-      "lastCommentDate": "2026-10-21T20:34:44.861+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAME-4027",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: SAME-4027\nStuck order on Hybris - 2 SA region orders with consignment process errors\nGenerated: 2026-10-17T08:55:00.000Z\n\nHi Arjenelle ,\n\nI re-investigated both orders with Kibana logs now available (they were unavailable during the initial check on Oct 16).\n\nSA261013-14592894:\nThe consignment process is in ERROR state. Kibana logs show \"Config Error. No 'Warehouse' set for Consignment SA261013-14592894\" at 11:29:24 on Oct 15, indicating the warehouse assignment failed during consignment creation. A Tabby conversion error \"Order SA261013-14592894 cannot be converted to real order\" was also logged at 11:05:37. The warehouse WC05 is now set on the consignment in the DB, confirming it was assigned after the initial error. The order is at ORDER_SPLIT and the consignment is at WAITING_FOR_TRANSFER.\n\nSA261013-13642757:\nThe consignment process is in ERROR state, but the consignment itself is COMPLETED and the order is SHIPPED. Kibana logs show \"Config Error. No 'Warehouse' set for Consignment SA261013-13642757\" at 23:29:21 on Oct 13, and \"Could not find product: P-GT-LCXOS1GW\" at 23:16:37. GERP billing was completed (ref 3249459356) and the consignment reached COMPLETED at 00:02:13 on Oct 14. The GCIC external service (GCIC_EXPERT_CLEANING_STANDALONE) remains in NEW status, meaning the GCIC registration was never completed despite the consignment completing through the warehouse path. The \"No non-fulfilment entry found\" error at 00:02:13 is a known systemic issue affecting many consignments globally.\n\nRegarding remediation: Yes, retriggering the consignment process for SA261013-14592894 should be sufficient as the warehouse is now assigned (WC05). For SA261013-13642757, the consignment is already COMPLETED and the order is SHIPPED. The process ERROR is a leftover from the consignment creation phase. The GCIC external service is still NEW. We need to confirm if the GCIC registration is still required for this order or if the process can just be cleaned up.\n\nRegarding why we keep receiving stuck orders with the same error: The \"Config Error. No 'Warehouse' set for Consignment\" is a recurring issue in the SA store. It occurs when the warehouse assignment fails during consignment creation. The SA store does not have an autoheal mechanism for this error type, so each occurrence requires manual remediation. Without an auto-retry or autoheal cronjob, any warehouse assignment failure will cause the consignment process to go ERROR and require manual intervention.\n\nRegards\n\nAryan",
-        "sections": {
-          "issue": "",
-          "rca": "# RCA: SAME-4027\nStuck order on Hybris - 2 SA region orders with consignment process errors\nGenerated: 2026-10-17T08:55:00.000Z\n\nHi Arjenelle ,\n\nI re-investigated both orders with Kibana logs now available (they were unavailable during the initial check on Oct 16).\n\nSA261013-14592894:\nThe consignment process is in ERROR state. Kibana logs show \"Config Error. No 'Warehouse' set for Consignment SA261013-14592894\" at 11:29:24 on Oct 15, indicating the warehouse assignment failed during consignment creation. A Tabby conversion error \"Order SA261013-14592894 cannot be converted to real order\" was also logged at 11:05:37. The warehouse WC05 is now set on the consignment in the DB, confirming it was assigned after the initial error. The order is at ORDER_SPLIT and the consignment is at WAITING_FOR_TRANSFER.\n\nSA261013-13642757:\nThe consignment process is in ERROR state, but the consignment itself is COMPLETED and the order is SHIPPED. Kibana logs show \"Config Error. No 'Warehouse' set for Consignment SA261013-13642757\" at 23:29:21 on Oct 13, and \"Could not find product: P-GT-LCXOS1GW\" at 23:16:37. GERP billing was completed (ref 3249459356) and the consignment reached COMPLETED at 00:02:13 on Oct 14. The GCIC external service (GCIC_EXPERT_CLEANING_STANDALONE) remains in NEW status, meaning the GCIC registration was never completed despite the consignment completing through the warehouse path. The \"No non-fulfilment entry found\" error at 00:02:13 is a known systemic issue affecting many consignments globally.\n\nRegarding remediation: Yes, retriggering the consignment process for SA261013-14592894 should be sufficient as the warehouse is now assigned (WC05). For SA261013-13642757, the consignment is already COMPLETED and the order is SHIPPED. The process ERROR is a leftover from the consignment creation phase. The GCIC external service is still NEW. We need to confirm if the GCIC registration is still required for this order or if the process can just be cleaned up.\n\nRegarding why we keep receiving stuck orders with the same error: The \"Config Error. No 'Warehouse' set for Consignment\" is a recurring issue in the SA store. It occurs when the warehouse assignment fails during consignment creation. The SA store does not have an autoheal mechanism for this error type, so each occurrence requires manual remediation. Without an auto-retry or autoheal cronjob, any warehouse assignment failure will cause the consignment process to go ERROR and require manual intervention.\n\nRegards\n\nAryan",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-17T08:51:55.862Z"
-      }
-    },
     {
       "key": "PC-55751",
       "summary": "Update SC+ Report Script - Fix Order Payment Mode (AEME-6535)",
@@ -973,7 +929,7 @@
       }
     ],
     "pid": 41252,
-    "uptime": 10575,
+    "uptime": 10620,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -985,7 +941,7 @@
       {
         "pid": 1064,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 94414,
+        "ageSeconds": 94457,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -995,7 +951,7 @@
       {
         "pid": 708,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 94363,
+        "ageSeconds": 94406,
         "status": "running",
         "isChild": false,
         "taskSummary": "post this comment with 1h logs. log these hours in tomorrow. and assign back, put to LV and updat...",
@@ -1005,7 +961,7 @@
       {
         "pid": 900,
         "cwd": "c:\\windows",
-        "ageSeconds": 94354,
+        "ageSeconds": 94398,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1015,7 +971,7 @@
       {
         "pid": 4508,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 94343,
+        "ageSeconds": 94386,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -4956,7 +4912,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-21T11:47:43.583Z",
-      "ageMs": 1217508
+      "ageMs": 1261007
     },
     "watchdogLogTail": "[2026-10-21T09:11:19.452Z] Starting bridge.js...\n[2026-10-21T09:11:19.646Z] Bridge started with PID 29668 (restart #67, 47 in last hour)\n[2026-10-21T09:11:23.264Z] DUPLICATE \\\\bridge.js detected: PID 29056 — killing\n[2026-10-21T09:11:26.233Z] RESTART NEEDED: Bridge process (PID 29668) not found\n[2026-10-21T09:11:29.200Z] Could not kill PID 29668: Command failed: taskkill /PID 29668 /F /T\n[2026-10-21T09:11:35.918Z] Starting bridge.js...\n[2026-10-21T09:11:36.148Z] Bridge started with PID 41252 (restart #68, 48 in last hour)\n[2026-10-21T11:22:42.263Z] DUPLICATE watchdog detected: PID 29928 — killing\n[2026-10-21T11:37:43.316Z] DUPLICATE watchdog detected: PID 17504 — killing\n[2026-10-21T11:47:43.582Z] DUPLICATE watchdog detected: PID 38776 — killing"
   },
@@ -4965,7 +4921,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-21T12:07:06.403Z",
+      "lastCheck": "2026-10-21T12:08:06.851Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4974,7 +4930,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-21T12:07:06.403Z",
+      "lastCheck": "2026-10-21T12:08:06.851Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4983,9 +4939,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-21T12:07:06.403Z",
+      "lastCheck": "2026-10-21T12:08:06.851Z",
       "downSince": "2026-10-21T00:16:44.031Z",
-      "downDuration": 42622372,
+      "downDuration": 42682820,
       "alert": true
     }
   ],
@@ -5267,18 +5223,6 @@
         "statusChangedAt": ""
       },
       {
-        "key": "SAME-4027",
-        "summary": "Stuck order on Hybris",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "blocked",
-        "reason": "Waiting for PC-52605 approval (not assigned to you)",
-        "whatToDo": "",
-        "url": "https://jira.secext.samsung.net/browse/SAME-4027",
-        "updated": "2026-10-21T20:34:50.000+0900",
-        "statusChangedAt": "2026-10-16T19:19:00.638+0900"
-      },
-      {
         "key": "SAME-4035",
         "summary": "Stuck order on Hybris",
         "priority": "None",
@@ -5332,7 +5276,7 @@
     "totals": {
       "zero": 5,
       "actionable": 2,
-      "blocked": 7,
+      "blocked": 6,
       "queued": 3
     }
   },
@@ -5384,166 +5328,9 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": {
-    "byTicket": [
-      {
-        "key": "SAME-4027",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86394,
-        "targetDate": "2026-10-19T10:18:54.906000001Z"
-      },
-      {
-        "key": "SAME-4027",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2493065,
-        "targetDate": "2026-12-01T08:39:00.583000032Z"
-      },
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86254,
-        "targetDate": "2026-09-21T04:19:58.710000001Z"
-      },
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "STILL",
-        "remainingDuration": 654402,
-        "targetDate": "2026-11-02T02:54:37.529000031Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86397,
-        "targetDate": "2026-09-29T16:09:08.750000001Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1907732,
-        "targetDate": "2026-11-20T14:03:27.584000039Z"
-      },
-      {
-        "key": "EHME-947",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86398,
-        "targetDate": "2026-10-19T11:35:05.134000001Z"
-      },
-      {
-        "key": "EHME-947",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2572942,
-        "targetDate": "2026-12-02T07:50:17.431000033Z"
-      },
-      {
-        "key": "SAME-4035",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86397,
-        "targetDate": "2026-10-21T10:08:08.227000001Z"
-      },
-      {
-        "key": "SAME-4035",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2503142,
-        "targetDate": "2026-12-01T11:26:57.971000030Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85660,
-        "targetDate": "2026-09-15T08:21:25.088000001Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1211372,
-        "targetDate": "2026-10-13T12:51:05.986000021Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86179,
-        "targetDate": "2026-09-30T08:16:57.595000001Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1269633,
-        "targetDate": "2026-10-20T08:16:57.595000015Z"
-      },
-      {
-        "key": "AEME-6644",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86400,
-        "targetDate": "2026-10-19T20:00:00.000000001Z"
-      },
-      {
-        "key": "AEME-6644",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2549193,
-        "targetDate": "2026-12-02T00:14:28.649000032Z"
-      },
-      {
-        "key": "AEME-6535",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85181,
-        "targetDate": "2026-09-04T05:51:44.040000001Z"
-      },
-      {
-        "key": "AEME-6535",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1277310,
-        "targetDate": "2026-11-11T06:56:25.629098838Z"
-      },
-      {
-        "key": "MHME-1466",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85724,
-        "targetDate": "2026-10-19T11:08:49.611000001Z"
-      },
-      {
-        "key": "MHME-1466",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1121931,
-        "targetDate": "2026-11-09T12:46:47.023642085Z"
-      },
-      {
-        "key": "SAHME-3490",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86354,
-        "targetDate": "2026-10-21T07:20:19.604000001Z"
-      },
-      {
-        "key": "SAHME-3490",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1193268,
-        "targetDate": "2026-11-10T08:35:43.589000015Z"
-      }
-    ]
-  },
+  "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 1.5h on SAM-18531, 0.33h on TKME-2387, 0.33h on SAME-4035, 0.33h on SAHME-3491, 0.33h on MHME-1470, 0.42h on TKME-2350, 1.5h on PC-55693, 1.75h on TKME-2382, 0.75h on SAME-4024, 0.42h on AEME-6640, 0.42h on AEME-6643\nToday: SAME-4027, PC-55751, SAME-4035, PC-55747, SAHME-3490\nBlockers: PC-55751, PC-55747"
+    "standupText": "Yesterday: 1.5h on SAM-18531, 0.33h on TKME-2387, 0.33h on SAME-4035, 0.33h on SAHME-3491, 0.33h on MHME-1470, 0.42h on TKME-2350, 1.5h on PC-55693, 1.75h on TKME-2382, 0.75h on SAME-4024, 0.42h on AEME-6640, 0.42h on AEME-6643\nToday: PC-55751, SAME-4035, PC-55747, SAHME-3490, AEME-6644\nBlockers: PC-55751, PC-55747"
   }
 }
