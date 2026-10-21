@@ -1,60 +1,7 @@
 {
-  "generatedAt": "2026-10-21T09:58:46.646Z",
-  "totalTickets": 27,
+  "generatedAt": "2026-10-21T09:59:30.300Z",
+  "totalTickets": 26,
   "tickets": [
-    {
-      "key": "MHME-1462",
-      "summary": "Update invoice for the Order MA261008-0769928",
-      "status": "QA Server Review",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Morocco Maintenance & Enhancements",
-      "projectKey": "MHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-21T18:58:41.000+0900",
-      "created": "2026-10-13T14:24:28.000+0900",
-      "statusChangedAt": "2026-10-16T20:49:49.846+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team, \ncan you please help to update the invoice of the Order \nMA261008-0769928\n\nas below ? \n\nCustomer: Primelift SARL\n\nICE:  003595504000059\n\nThanks\n\nAshwani Verma\n\n \n\nCC: ~@email",
-      "commentsCount": 6,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-21T18:58:24.363+0900",
-          "snippet": "Hi ~@email ,\n\nTax invoice regenerated as per requirement. \n\nKindly heck and validate at your end as well.\n\nThanks and Regards\n\nAryan"
-        },
-        {
-          "author": "Sudhanshu Kumar",
-          "date": "2026-10-16T20:49:36.928+0900",
-          "snippet": "Hi ~@email ,\n\nPC-55602 has been raised once it get approved we proceed further.\n\nThanks\n\nSudhanshu"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi ~@email ,\n\nTax invoice regenerated as per requirement. \n\nKindly heck and validate at your end as well.\n\nThanks and Regards\n\nAryan",
-      "lastCommentDate": "2026-10-21T18:58:24.363+0900",
-      "url": "https://jira.secext.samsung.net/browse/MHME-1462",
-      "linkedTickets": [
-        {
-          "key": "PC-55602",
-          "summary": "MHME-1462 | To Update Delivery Address & payment addess",
-          "status": "Approved-ES",
-          "statusCategory": "To Do",
-          "relation": "relates to",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: MHME-1462\nSummary: Update invoice for the Order MA261008-0769928\nGenerated: 2026-10-16T09:30:00Z\n\nIssue:\nThe reporter (Ashwani Verma) requested updating the invoice customer and address details on order MA261008-07699289 (referred to as MA261008-0769928 in the ticket, missing the trailing 9). The order is COMPLETED with the consignment also in COMPLETED status, shipped on 2026-10-08, and a GERP billing number (3249268252) has already been generated. The current invoice bears the original customer name (Abderrahman lahroussi) and address (Ain Chock, Casablanca-Settat, Morocco), but the reporter needs it updated to the new entity: Primelift SARL, ICE 003595504000059, address Bloc D Rue 04 N17, Ain Chock, Casablanca, Morocco. Both the delivery address (PK 10306956263447) and payment address (PK 10306956296215) on the order need to be updated with the new customer name, company, and ICE number.\n\nRCA:\nThe order MA261008-07699289 was placed on 2026-10-08 via CMI credit card payment (ma-cmiCreditCardPaymentMode) with total 10,324.79 MAD. The order completed normally through the full fulfillment lifecycle (order placed, consignment shipped, GERP billing generated, order status COMPLETED). There is no platform bug or code defect involved. The request is a post-fulfillment invoice data correction, which is a standard operational request for the Morocco (MHME) region.\n\nThe address fields on both delivery and payment addresses are Hybris-encrypted (attribute encryption enabled for the MA region), meaning they cannot be directly updated via SQL or ImpEx. A Groovy script through HAC is required to load the AddressModel items via getModelService, update the firstname, lastname, company, and any ICE-related fields, then save via modelService.saveAll(). This is the same remediation pattern confirmed and successfully applied in MHME-1328 (Invoice Update ICE, May 2026), MHME-773 (ICE Number Update, Jan 2024), MHME-719 (Order invoice update, Oct 2023), MHME-709 (Order details update, Sep 2023), and MHME-734 (Order invoice modification, Oct 2023). All precedent tickets were resolved as HAC remediation scripts.\n\nThe consignment has a GERP billing number (3249268252) already assigned, so the invoice has been generated in the downstream GERP system. Updating the Hybris-side address data will need to be accompanied by a GERP-side invoice correction or re-generation request to the Morocco finance/accounting team, as the GERP billing document is a separate downstream artifact.\n\nPossible remediation:\n1. Create a HAC Groovy script to update both Address items (delivery: PK 10306956263447, payment: PK 10306956296215) with the new customer details:\n   - firstname: Primelift\n   - lastname: SARL\n   - company: Primelift SARL\n   - streetname: Bloc D Rue 04 N17\n   - town: Ain Chock\n   - district: Casablanca\n   - postalcode: (as provided)\n   - Ensure ICE number 003595504000059 is set in the appropriate field (likely company or a custom attribute)\n2. Use modelService to load, modify, and save the Address items (not direct SQL, due to attribute encryption)\n3. After the Hybris update, coordinate with the Morocco GERP/finance team to regenerate or correct the downstream GERP billing document (billing number 3249268252) with the new customer and ICE details\n4. The script should follow the pattern established in MHME-1328 and MHME-773 for invoice/address updates on completed orders in the MA region\n5. No PC ticket type exists in the standard reusable library for invoice/address updates specifically, but this falls under the general data-fix remediation category — refer to MHME-1328 for the approved script template",
-        "sections": {
-          "issue": "The reporter (Ashwani Verma) requested updating the invoice customer and address details on order MA261008-07699289 (referred to as MA261008-0769928 in the ticket, missing the trailing 9). The order is COMPLETED with the consignment also in COMPLETED status, shipped on 2026-10-08, and a GERP billing number (3249268252) has already been generated. The current invoice bears the original customer name (Abderrahman lahroussi) and address (Ain Chock, Casablanca-Settat, Morocco), but the reporter needs it updated to the new entity: Primelift SARL, ICE 003595504000059, address Bloc D Rue 04 N17, Ain Chock, Casablanca, Morocco. Both the delivery address (PK 10306956263447) and payment address (PK 10306956296215) on the order need to be updated with the new customer name, company, and ICE number.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-16T09:35:29.905Z"
-      }
-    },
     {
       "key": "TKME-2382",
       "summary": "Stuck order on Hybris",
@@ -1423,7 +1370,7 @@
       }
     ],
     "pid": 41252,
-    "uptime": 2829,
+    "uptime": 2869,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -1435,7 +1382,7 @@
       {
         "pid": 1064,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 86665,
+        "ageSeconds": 86707,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -1445,7 +1392,7 @@
       {
         "pid": 708,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 86614,
+        "ageSeconds": 86657,
         "status": "running",
         "isChild": false,
         "taskSummary": "verify",
@@ -1455,7 +1402,7 @@
       {
         "pid": 900,
         "cwd": "c:\\windows",
-        "ageSeconds": 86605,
+        "ageSeconds": 86648,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1465,7 +1412,7 @@
       {
         "pid": 4508,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 86593,
+        "ageSeconds": 86636,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -5391,7 +5338,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-21T09:11:36.149Z",
-      "ageMs": 2835693
+      "ageMs": 2879593
     },
     "watchdogLogTail": "[2026-10-21T09:10:56.679Z] Bridge started with PID 45536 (restart #66, 46 in last hour)\n[2026-10-21T09:11:04.344Z] RESTART NEEDED: Bridge process (PID 45536) not found\n[2026-10-21T09:11:07.755Z] Could not kill PID 45536: Command failed: taskkill /PID 45536 /F /T\n[2026-10-21T09:11:19.452Z] Starting bridge.js...\n[2026-10-21T09:11:19.646Z] Bridge started with PID 29668 (restart #67, 47 in last hour)\n[2026-10-21T09:11:23.264Z] DUPLICATE \\\\bridge.js detected: PID 29056 — killing\n[2026-10-21T09:11:26.233Z] RESTART NEEDED: Bridge process (PID 29668) not found\n[2026-10-21T09:11:29.200Z] Could not kill PID 29668: Command failed: taskkill /PID 29668 /F /T\n[2026-10-21T09:11:35.918Z] Starting bridge.js...\n[2026-10-21T09:11:36.148Z] Bridge started with PID 41252 (restart #68, 48 in last hour)"
   },
@@ -5400,7 +5347,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-21T09:57:46.922Z",
+      "lastCheck": "2026-10-21T09:58:45.807Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5409,7 +5356,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-21T09:57:46.922Z",
+      "lastCheck": "2026-10-21T09:58:45.807Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5418,9 +5365,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-21T09:57:46.922Z",
+      "lastCheck": "2026-10-21T09:58:45.807Z",
       "downSince": "2026-10-21T00:16:44.031Z",
-      "downDuration": 34862891,
+      "downDuration": 34921776,
       "alert": true
     }
   ],
@@ -5762,18 +5709,6 @@
         "statusChangedAt": "2026-10-15T14:16:10.935+0900"
       },
       {
-        "key": "MHME-1462",
-        "summary": "Update invoice for the Order MA261008-0769928",
-        "priority": "None",
-        "status": "QA Server Review",
-        "category": "blocked",
-        "reason": "Waiting for QA/review team",
-        "whatToDo": "",
-        "url": "https://jira.secext.samsung.net/browse/MHME-1462",
-        "updated": "2026-10-21T18:58:41.000+0900",
-        "statusChangedAt": "2026-10-16T20:49:49.846+0900"
-      },
-      {
         "key": "MHME-1466",
         "summary": "Unit limitations for Orange Platform EPP",
         "priority": "None",
@@ -5887,7 +5822,7 @@
     "totals": {
       "zero": 11,
       "actionable": 3,
-      "blocked": 10,
+      "blocked": 9,
       "queued": 3
     }
   },
