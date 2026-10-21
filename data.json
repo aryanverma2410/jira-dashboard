@@ -1,7 +1,128 @@
 {
-  "generatedAt": "2026-10-21T10:20:19.158Z",
-  "totalTickets": 22,
+  "generatedAt": "2026-10-21T10:21:05.867Z",
+  "totalTickets": 21,
   "tickets": [
+    {
+      "key": "TKME-2381",
+      "summary": "Stuck order on Hybris",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Turkey Maintenance & Enhancements",
+      "projectKey": "TKME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-21T19:20:58.000+0900",
+      "created": "2026-10-16T19:19:08.000+0900",
+      "statusChangedAt": "2026-10-16T19:19:13.359+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|TR261003-03360414|2026/10/15|ORDER_SPLIT|\n|TR261014-16036338|2026/10/15|ORDER_SPLIT|\n|TR261015-16842055|2026/10/15|WAITING_FOR_SEND_FINANCIAL|\n|TR261015-16770938|2026/10/",
+      "commentsCount": 5,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-21T19:20:58.260+0900",
+          "snippet": "Hi Rajesh,\n\nThanks for confirming. All I/O error orders were retriggered under PC-52605 and have progressed successfully. The splitOrder and commitStock issues were stock-related and have been resolved.\n\nClosing this ticket. Any remaining stuck orders will be picked up in the next healthcheck cycle."
+        },
+        {
+          "author": "Rajeshbabu Yatirajula",
+          "date": "2026-10-20T21:05:41.887+0900",
+          "snippet": "Hi ~@email \n\nAll looks good, you may close the ticket if no further details needed.\n\nRegards,\nRajesh"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Rajesh,\n\nThanks for confirming. All I/O error orders were retriggered under PC-52605 and have progressed successfully. The splitOrder and commitStock issues were stock-related and have been resolved.\n\nClosing this ticket. Any remaining stuck orders will be picked up in the next healthcheck cycle.",
+      "lastCommentDate": "2026-10-21T19:20:58.260+0900",
+      "url": "https://jira.secext.samsung.net/browse/TKME-2381",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "Stuck order on Hybris — 13 TR-region orders across 6 error categories\r\nGenerated: 2026-10-16T00:00:00\r\n\r\nIssue:\r\nTKME-2381 reports 13 stuck TR-region orders across 6 distinct error categories. All orders were created on 2026/10/14-15 and are stuck at various stages of the order fulfillment process. The error breakdown is as follows:\r\n\r\n1. splitOrder ERROR — 5 orders (TR261015-16842055, TR261015-16805269, TR261008-08332438, TR261003-02929746, TR261002-01958606): All at WAITING_FOR_SEND_FINANCIAL status. The order process errors at the splitOrder action with \"missing values for [warehouse] in model ConsignmentModel () to create a new Consignment\" thrown by de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator. This means when the order process attempts to split the order into consignments, the warehouse attribute on the newly created ConsignmentModel is null. The MandatoryAttributesValidator intercepts the save and rejects it because warehouse is a mandatory attribute on ConsignmentModel. This is a known pattern — Jira cross-reference found PC-55386 (AEME-6614) and PC-54279, both closed, where the fix was a manual BackOffice retrigger of the order process from the splitOrder action node. The retrigger re-executes the split logic and, on second attempt, the warehouse assignment succeeds.\r\n\r\n2. sendConsignmentToWarehouse ERROR — 3 orders (TR261003-03360414, TR261014-16036338, TR261009-09297116): All at ORDER_SPLIT status. The consignment process errors at sendConsignmentToWarehouse with \"I/O error: Connection reset; nested exception is java.net.SocketException: Connection reset\". This is a NERP integration connectivity issue — Hybris sends consignment data to the warehouse via NERP, and the connection is reset mid-transfer. This is a well-documented known issue in the TR tenant. Jira cross-reference found TKME-2343 (closed, 12 TR orders with identical error), TKME-2308 (closed, 21 orders), and PM-658 (global NERP I/O tracking). PC-55336 deployed an autoheal cronjob (autoheal-tr-IOErroredOrdersRemediationCronJob) that runs every 4 hours in PROD, finds errored consignment processes with I/O error patterns, and restarts them from sendConsignmentToWarehouse. These 3 orders should be auto-remediated by the autoheal if it is running.\r\n\r\n3. isAdditionalInfoCollected ERROR — 2 orders (TR261015-16768317, TR261015-16672509): Both at SHIPPED status. The consignment process errors at isAdditionalInfoCollected with \"I/O error: Connection reset; nested exception is java.net.SocketException: Connection reset\". Same NERP connectivity root cause as Category 2 — the autoheal cronjob PC-55336 explicitly handles isAdditionalInfoCollected as well. These should also be auto-remediated.\r\n\r\n4. completeFinancialUpdate ERROR — 1 order (TR261011-11999937): At WAITING_FOR_FINANCIAL status. The order process errors at completeFinancialUpdate with \"I/O error: Read timed out; nested exception is java.net.SocketTimeoutException: Read timed out\". This is a NERP response timeout — NERP takes too long to respond during the financial update step and Hybris times out. PM-658 explicitly lists completeFinancialUpdate as one of 8 actions affected by NERP I/O errors. PC-30574 (closed) updated the failedAndErrorOrdersJob Groovy script with action mapping: completeFinancialUpdate maps to completeFinancialUpdate for retrigger. The order process needs to be restarted from the completeFinancialUpdate action.\r\n\r\n5. REFUND_FAILED — 1 order (TR261015-16770938): At REFUND_FAILED status. The payment entry status is REFUND_FOLLOW_ON:ERROR. This indicates the refund follow-on transaction was attempted but the payment gateway returned an ERROR status. No reusable PC ticket was found in the TR region for REFUND_FOLLOW_ON:ERROR — this is the first occurrence of this specific refund error type in TR. This requires payment team investigation to determine the gateway-side reason for the rejection before a retrigger can be attempted.\r\n\r\n6. commitStock ERROR — 1 order (TR261011-11725431): At SHIPPED status. The consignment process errors at commitStock with \"no stock level for product [TURKEY-B2C-SMP-Tier5-ADH-24M] found in warehouse name [D2C MX] warehouse code [WC17-S751]\". The product has no StockLevel entry in warehouse WC17-S751 (D2C MX). Without a stock level record, the commitStock action cannot reserve stock and the process errors. Jira cross-reference found TKME-2322 (closed, exact same warehouse + product pattern for a different Tier product) and GMT-21026 (parent GMT ticket). The established remediation is two-step: (1) ImpEx to create or update StockLevel for the product in warehouse WC17-S751 with forceInStock status (reusable from PC-52623), then (2) restart the consignment process from the commitStock action node (reusable from PC-52825 / PC-55096).\r\n\r\nKibana was unavailable during this investigation (browser extension relay inactive). HAC authenticated successfully but flexsearch queries timed out. The error information above was sourced from the ticket description and Aryan's remediation comment, which contain the exact error messages extracted from the system. Jira cross-reference was performed successfully with 18 highly relevant resolved tickets found.\r\n\r\nRCA:\r\nThe root causes fall into three distinct categories:\r\n\r\nNERP Integration I/O Errors (Categories 2, 3, 4 — 6 orders): The TR tenant experiences intermittent NERP connectivity issues where connections are reset (SocketException: Connection reset) or time out (SocketTimeoutException: Read timed out) during warehouse communication. NERP is the middleware that handles warehouse integration for the TR region. When Hybris sends data to NERP (consignment data at sendConsignmentToWarehouse, additional info at isAdditionalInfoCollected, financial data at completeFinancialUpdate), NERP occasionally drops the connection or fails to respond within the timeout window. This is a known systemic issue tracked under PM-658 and PM-711 (global), with autoheal cronjobs deployed (PC-55336 for TR). The root cause is on the NERP/network infrastructure side, not in Hybris code.\r\n\r\nMissing Warehouse on ConsignmentModel (Category 1 — 5 orders): The splitOrder action in the order process creates new ConsignmentModel instances. The MandatoryAttributesValidator rejects the save because the warehouse attribute is null. This occurs when the warehouse assignment logic during order split fails to resolve a warehouse for the consignment. The retrigger pattern (manual BO retrigger from splitOrder) works because the second attempt re-evaluates the warehouse assignment and succeeds — suggesting a transient data resolution issue rather than a configuration gap. Established pattern from PC-55386 and PC-54279.\r\n\r\nMissing Stock Level (Category 6 — 1 order): The product TURKEY-B2C-SMP-Tier5-ADH-24M has no StockLevel record in warehouse WC17-S751 (D2C MX). The commitStock action requires a stock level to reserve inventory. Without the record, the action fails. This is a master data issue — the stock level was never created for this product-warehouse combination. Same pattern as TKME-2322 (closed).\r\n\r\nPayment Gateway Rejection (Category 5 — 1 order): The refund follow-on payment transaction entry returned ERROR status from the payment gateway. This is a gateway-side rejection, not a Hybris code issue. The specific reason for the rejection needs to be determined from the payment gateway logs before a retrigger can be safely attempted.\r\n\r\nPossible remediation:\r\n\r\nCategories 2 and 3 (5 orders, sendConsignmentToWarehouse + isAdditionalInfoCollected I/O errors): Verify that the PC-55336 autoheal cronjob is running. If it is, these 5 orders should be auto-remediated within the next 4-hour cycle. If the autoheal is not running or these orders persist after the next cycle, a manual retrigger of the consignment processes from their respective error action nodes is needed. No new PC ticket required — reuse PC-55336.\r\n\r\nCategory 1 (5 orders, splitOrder missing warehouse): Manual BackOffice retrigger of the order process from the splitOrder action node for all 5 orders. This is the established pattern from PC-55386 and PC-54279. A new PC ticket is needed for this batch.\r\n\r\nCategory 4 (1 order, completeFinancialUpdate timeout): Restart the order process from completeFinancialUpdate action. The failedAndErrorOrdersJob script from PC-30574 has the action mapping for this. Can reuse PC-30574 or create a new PC ticket.\r\n\r\nCategory 5 (1 order, REFUND_FAILED): Requires payment team investigation to determine the gateway-side reason for REFUND_FOLLOW_ON:ERROR before retrigger. No Hybris-side fix can be applied blindly without understanding why the gateway rejected the refund.\r\n\r\nCategory 6 (1 order, commitStock no stock level): Two-step remediation — (1) ImpEx to create StockLevel for TURKEY-B2C-SMP-Tier5-ADH-24M in warehouse WC17-S751 with forceInStock status (reuse PC-52623 pattern), (2) restart consignment process from commitStock action (reuse PC-52825 / PC-55096 pattern). Business confirmation needed on whether this product should have stock in D2C MX warehouse.\r\n\r\n## Remediation\r\n\r\nReusable PC tickets:\r\n- PC-55336 (Closed, REUSABLE): Autoheal cronjob for TR I/O errored orders — handles sendConsignmentToWarehouse + isAdditionalInfoCollected\r\n- PC-55386 (Closed): splitOrder missing warehouse — manual BO retrigger pattern\r\n- PC-54279 (Closed): splitOrder missing warehouse — same pattern\r\n- PC-30574 (Closed): failedAndErrorOrdersJob — completeFinancialUpdate action mapping\r\n- PC-52623 (Closed): ImpEx StockLevel update for commitStock\r\n- PC-52825 (Closed): Groovy restart from commitStock after stock fix\r\n- PC-55096 (Closed): Batch commitStock process restart script\r\n- PC-46275 (Closed): Earlier autoheal for omnichannel I/O errors (superseded by PC-55336)\r\n\r\nNo reusable PC ticket found for REFUND_FAILED / REFUND_FOLLOW_ON:ERROR in TR region.",
+        "sections": {
+          "issue": "TKME-2381 reports 13 stuck TR-region orders across 6 distinct error categories. All orders were created on 2026/10/14-15 and are stuck at various stages of the order fulfillment process. The error breakdown is as follows:\r\n\r\n1. splitOrder ERROR — 5 orders (TR261015-16842055, TR261015-16805269, TR261008-08332438, TR261003-02929746, TR261002-01958606): All at WAITING_FOR_SEND_FINANCIAL status. The order process errors at the splitOrder action with \"missing values for [warehouse] in model ConsignmentModel () to create a new Consignment\" thrown by de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator. This means when the order process attempts to split the order into consignments, the warehouse attribute on the newly created ConsignmentModel is null. The MandatoryAttributesValidator intercepts the save and rejects it because warehouse is a mandatory attribute on ConsignmentModel. This is a known pattern — Jira cross-reference found PC-55386 (AEME-6614) and PC-54279, both closed, where the fix was a manual BackOffice retrigger of the order process from the splitOrder action node. The retrigger re-executes the split logic and, on second attempt, the warehouse assignment succeeds.\r\n\r\n2. sendConsignmentToWarehouse ERROR — 3 orders (TR261003-03360414, TR261014-16036338, TR261009-09297116): All at ORDER_SPLIT status. The consignment process errors at sendConsignmentToWarehouse with \"I/O error: Connection reset; nested exception is java.net.SocketException: Connection reset\". This is a NERP integration connectivity issue — Hybris sends consignment data to the warehouse via NERP, and the connection is reset mid-transfer. This is a well-documented known issue in the TR tenant. Jira cross-reference found TKME-2343 (closed, 12 TR orders with identical error), TKME-2308 (closed, 21 orders), and PM-658 (global NERP I/O tracking). PC-55336 deployed an autoheal cronjob (autoheal-tr-IOErroredOrdersRemediationCronJob) that runs every 4 hours in PROD, finds errored consignment processes with I/O error patterns, and restarts them from sendConsignmentToWarehouse. These 3 orders should be auto-remediated by the autoheal if it is running.\r\n\r\n3. isAdditionalInfoCollected ERROR — 2 orders (TR261015-16768317, TR261015-16672509): Both at SHIPPED status. The consignment process errors at isAdditionalInfoCollected with \"I/O error: Connection reset; nested exception is java.net.SocketException: Connection reset\". Same NERP connectivity root cause as Category 2 — the autoheal cronjob PC-55336 explicitly handles isAdditionalInfoCollected as well. These should also be auto-remediated.\r\n\r\n4. completeFinancialUpdate ERROR — 1 order (TR261011-11999937): At WAITING_FOR_FINANCIAL status. The order process errors at completeFinancialUpdate with \"I/O error: Read timed out; nested exception is java.net.SocketTimeoutException: Read timed out\". This is a NERP response timeout — NERP takes too long to respond during the financial update step and Hybris times out. PM-658 explicitly lists completeFinancialUpdate as one of 8 actions affected by NERP I/O errors. PC-30574 (closed) updated the failedAndErrorOrdersJob Groovy script with action mapping: completeFinancialUpdate maps to completeFinancialUpdate for retrigger. The order process needs to be restarted from the completeFinancialUpdate action.\r\n\r\n5. REFUND_FAILED — 1 order (TR261015-16770938): At REFUND_FAILED status. The payment entry status is REFUND_FOLLOW_ON:ERROR. This indicates the refund follow-on transaction was attempted but the payment gateway returned an ERROR status. No reusable PC ticket was found in the TR region for REFUND_FOLLOW_ON:ERROR — this is the first occurrence of this specific refund error type in TR. This requires payment team investigation to determine the gateway-side reason for the rejection before a retrigger can be attempted.\r\n\r\n6. commitStock ERROR — 1 order (TR261011-11725431): At SHIPPED status. The consignment process errors at commitStock with \"no stock level for product [TURKEY-B2C-SMP-Tier5-ADH-24M] found in warehouse name [D2C MX] warehouse code [WC17-S751]\". The product has no StockLevel entry in warehouse WC17-S751 (D2C MX). Without a stock level record, the commitStock action cannot reserve stock and the process errors. Jira cross-reference found TKME-2322 (closed, exact same warehouse + product pattern for a different Tier product) and GMT-21026 (parent GMT ticket). The established remediation is two-step: (1) ImpEx to create or update StockLevel for the product in warehouse WC17-S751 with forceInStock status (reusable from PC-52623), then (2) restart the consignment process from the commitStock action node (reusable from PC-52825 / PC-55096).\r\n\r\nKibana was unavailable during this investigation (browser extension relay inactive). HAC authenticated successfully but flexsearch queries timed out. The error information above was sourced from the ticket description and Aryan's remediation comment, which contain the exact error messages extracted from the system. Jira cross-reference was performed successfully with 18 highly relevant resolved tickets found.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-16T11:28:51.141Z"
+      }
+    },
+    {
+      "key": "AEME-6637",
+      "summary": "Stuck order on Hybris | Overselling issue",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "UAE Maintenance & Enhancements",
+      "projectKey": "AEME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-21T19:20:57.000+0900",
+      "created": "2026-10-15T14:16:08.000+0900",
+      "statusChangedAt": "2026-10-15T14:16:10.935+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n|Order|Creation_Date|Status|\n|AE261014-15868813|2026/10/14|WAITING_FOR_SEND_FINANCIAL|\n|AE261007-06950515|2026/10/07|WAITING_FOR_SEND_FINANCIAL|\n\nThanks",
+      "commentsCount": 5,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-21T19:20:57.974+0900",
+          "snippet": "Hi Jaffar,\n\nThanks for confirming. Both orders (AE261014-15868813 and AE261007-06950515) were retriggered under PC-52605 and have completed successfully.\n\nClosing this ticket.\n\nThanks,\nAryan."
+        },
+        {
+          "author": "Jaffar Ali",
+          "date": "2026-10-21T15:47:14.866+0900",
+          "snippet": "Hi ~@email \n\n \n\nBoth orders have been completed.\n\n \n\nRegards\n\nJaffar"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Jaffar,\n\nThanks for confirming. Both orders (AE261014-15868813 and AE261007-06950515) were retriggered under PC-52605 and have completed successfully.\n\nClosing this ticket.\n\nThanks,\nAryan.",
+      "lastCommentDate": "2026-10-21T19:20:57.974+0900",
+      "url": "https://jira.secext.samsung.net/browse/AEME-6637",
+      "linkedTickets": [
+        {
+          "key": "AEME-6622",
+          "summary": "[Stuck Orders] 9 order(s) requiring maintenance fix",
+          "status": "Launch Verification",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        },
+        {
+          "key": "AEME-6628",
+          "summary": "[Stuck Orders] 5 order(s) requiring maintenance fix",
+          "status": "Launch Verification",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        },
+        {
+          "key": "AEME-6630",
+          "summary": "[PROD] Overselling Issue - Order Placed without Stock | 14th Oct",
+          "status": "RCA Requested",
+          "statusCategory": "In Progress",
+          "relation": "blocks",
+          "assignee": null
+        },
+        {
+          "key": "GMT-22353",
+          "summary": "SMI- MENA | Order Stuck in Multiple State",
+          "status": "On-Hold",
+          "statusCategory": "Done",
+          "relation": "relates to",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "Stuck order on Hybris | Overselling issue\r\nGenerated: 2026-10-21T09:00:00.000Z\r\n\r\nIssue:\r\nTwo AE-region orders (AE261014-15868813, AE261007-06950515) were found stuck at WAITING_FOR_SEND_FINANCIAL status. Both orders were created on Oct 7 and Oct 14 respectively. The orders could not progress past the splitOrder stage because no warehouse assignment existed on the consignment model. The consignments could not be created due to missing stock/warehouse mapping for the product-site combination, which is characteristic of an overselling scenario where stock was depleted or never allocated at the time the order reached the fulfillment pipeline.\r\n\r\nRCA:\r\nThe root cause is a stock allocation failure during the order fulfillment process. When these orders were placed, the products appeared available to the customer on the storefront, but by the time the order reached the consignment creation and warehouse assignment stage (splitOrder action within the order process), no warehouse had sufficient stock mapped for the product-site combination. This caused the orders to stall at WAITING_FOR_SEND_FINANCIAL — the process could not advance past the financial posting step because the preceding consignment creation step never completed successfully.\r\n\r\nThe overselling condition arises when storefront stock levels and backend warehouse stock are not synchronised in real-time. The order was accepted at checkout based on storefront inventory counts, but the actual warehouse stock was insufficient or zero when the Hybris platform attempted to create consignments and assign a fulfilment warehouse.\r\n\r\nReferenced as GMT-22353 in the initial investigation comment.\r\n\r\nPossible remediation:\r\n1. Stock Update: The operations team (Jaffar Ali) confirmed that stock was replenished and available for both orders on Oct 19.\r\n2. Order Retrigger: Both orders were retriggered via PC-52605, which reset the order process and re-attempted consignment creation with the now-available warehouse stock. The consignment processes progressed normally, moving both orders to SHIPPING_PREPARATION status.\r\n3. Confirmation: Reporter (Jaffar Ali) confirmed on Oct 21 that both orders (AE261014-15868813 and AE261007-06950515) have reached COMPLETED status. No further remediation is needed.\r\n4. Preventive Measure: To reduce recurrence of overselling issues, the stock synchronisation frequency between storefront inventory and warehouse stock should be reviewed. Consider enabling stricter stock reservation at checkout time or reducing the sync interval between the inventory management system and the Hybris storefront.\r\n\r\n## Remediation\r\n- Remediation status: COMPLETED\r\n- PC ticket used: PC-52605\r\n- Orders remediated: AE261014-15868813, AE261007-06950515\r\n- Remediation date: 2026-10-19\r\n- Confirmed completed: 2026-10-21 by reporter (Jaffar Ali)\r\n- No further action required",
+        "sections": {
+          "issue": "Two AE-region orders (AE261014-15868813, AE261007-06950515) were found stuck at WAITING_FOR_SEND_FINANCIAL status. Both orders were created on Oct 7 and Oct 14 respectively. The orders could not progress past the splitOrder stage because no warehouse assignment existed on the consignment model. The consignments could not be created due to missing stock/warehouse mapping for the product-site combination, which is characteristic of an overselling scenario where stock was depleted or never allocated at the time the order reached the fulfillment pipeline.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-21T08:57:52.835Z"
+      }
+    },
     {
       "key": "PC-55747",
       "summary": "Script to Reassign WC12 Consignments to WC17 and Restart GERP Interface",
@@ -29,55 +150,6 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "relation": "is blocked by",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "none",
-        "excerpt": "",
-        "source": "",
-        "foundAt": "",
-        "issueNumber": null
-      }
-    },
-    {
-      "key": "TKME-2382",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Turkey Maintenance & Enhancements",
-      "projectKey": "TKME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-21T19:13:16.000+0900",
-      "created": "2026-10-16T20:35:38.000+0900",
-      "statusChangedAt": "2026-10-16T20:35:43.027+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nPrecautionary ticket for 297 orders in WARNING state found during MENA healthcheck.\n\n|Issue Type|Order Count|\n|No consignments created - order stuck at CREATED|1|\n|No shipping date (consignment age: 1d)|255|\n|Cancel DO blocked by WMS|6|\n|No shipping date (consignment age: 2d)|9|\n|No GERP D",
-      "commentsCount": 6,
-      "recentComments": [
-        {
-          "author": "Rajeshbabu Yatirajula",
-          "date": "2026-10-21T18:33:12.722+0900",
-          "snippet": "Hi ~@email \n\nThanks for the detailed explanation. \n\nUpon checking with NERP, we should cancel the existing SO's created with WC12 for 9 orders mentioned below and then we should create a {}new consignment with WC17-S751{}. Please check and let me know for any queries.\n\nNote : Few of the orders are h"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-20T20:29:33.678+0900",
-          "snippet": "Hi Rajesh,\n\nI looked into the 9 orders stuck at SHIPPING_REQUESTED. The MX products themselves are not the problem — the MX watch (SM-L340NZEATUR) is correctly assigned to WC17. The WC12 assignment is caused by the MX phone (SM-S948BZVGTUR) having zero stock at both WC12 and WC17 at the time the ord"
-        }
-      ],
-      "lastCommentBy": "Rajeshbabu Yatirajula",
-      "lastCommentSnippet": "Hi ~@email \n\nThanks for the detailed explanation. \n\nUpon checking with NERP, we should cancel the existing SO's created with WC12 for 9 orders mentioned below and then we should create a {}new consignment with WC17-S751{}. Please check and let me know for any queries.\n\nNote : Few of the orders are h",
-      "lastCommentDate": "2026-10-21T18:33:12.722+0900",
-      "url": "https://jira.secext.samsung.net/browse/TKME-2382",
-      "linkedTickets": [
-        {
-          "key": "PC-55747",
-          "summary": "Script to Reassign WC12 Consignments to WC17 and Restart GERP Interface",
-          "status": "To do",
-          "statusCategory": "To Do",
-          "relation": "blocks",
           "assignee": null
         }
       ],
@@ -346,83 +418,6 @@
       }
     },
     {
-      "key": "AEME-6637",
-      "summary": "Stuck order on Hybris | Overselling issue",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-21T15:47:24.000+0900",
-      "created": "2026-10-15T14:16:08.000+0900",
-      "statusChangedAt": "2026-10-15T14:16:10.935+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n|Order|Creation_Date|Status|\n|AE261014-15868813|2026/10/14|WAITING_FOR_SEND_FINANCIAL|\n|AE261007-06950515|2026/10/07|WAITING_FOR_SEND_FINANCIAL|\n\nThanks",
-      "commentsCount": 4,
-      "recentComments": [
-        {
-          "author": "Jaffar Ali",
-          "date": "2026-10-21T15:47:14.866+0900",
-          "snippet": "Hi ~@email \n\n \n\nBoth orders have been completed.\n\n \n\nRegards\n\nJaffar"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-19T22:23:02.175+0900",
-          "snippet": "Hi Jaffar,\n\nBoth orders have been retriggered under PC-52605. AE261014-15868813 and AE261007-06950515 are now in SHIPPING_PREPARATION status. The consignment processes are progressing normally.\n\nRegards,\nAryan"
-        }
-      ],
-      "lastCommentBy": "Jaffar Ali",
-      "lastCommentSnippet": "Hi ~@email \n\n \n\nBoth orders have been completed.\n\n \n\nRegards\n\nJaffar",
-      "lastCommentDate": "2026-10-21T15:47:14.866+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6637",
-      "linkedTickets": [
-        {
-          "key": "AEME-6622",
-          "summary": "[Stuck Orders] 9 order(s) requiring maintenance fix",
-          "status": "Launch Verification",
-          "statusCategory": "Done",
-          "relation": "blocks",
-          "assignee": null
-        },
-        {
-          "key": "AEME-6628",
-          "summary": "[Stuck Orders] 5 order(s) requiring maintenance fix",
-          "status": "Launch Verification",
-          "statusCategory": "Done",
-          "relation": "blocks",
-          "assignee": null
-        },
-        {
-          "key": "AEME-6630",
-          "summary": "[PROD] Overselling Issue - Order Placed without Stock | 14th Oct",
-          "status": "RCA Requested",
-          "statusCategory": "In Progress",
-          "relation": "blocks",
-          "assignee": null
-        },
-        {
-          "key": "GMT-22353",
-          "summary": "SMI- MENA | Order Stuck in Multiple State",
-          "status": "On-Hold",
-          "statusCategory": "Done",
-          "relation": "relates to",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "Stuck order on Hybris | Overselling issue\r\nGenerated: 2026-10-21T09:00:00.000Z\r\n\r\nIssue:\r\nTwo AE-region orders (AE261014-15868813, AE261007-06950515) were found stuck at WAITING_FOR_SEND_FINANCIAL status. Both orders were created on Oct 7 and Oct 14 respectively. The orders could not progress past the splitOrder stage because no warehouse assignment existed on the consignment model. The consignments could not be created due to missing stock/warehouse mapping for the product-site combination, which is characteristic of an overselling scenario where stock was depleted or never allocated at the time the order reached the fulfillment pipeline.\r\n\r\nRCA:\r\nThe root cause is a stock allocation failure during the order fulfillment process. When these orders were placed, the products appeared available to the customer on the storefront, but by the time the order reached the consignment creation and warehouse assignment stage (splitOrder action within the order process), no warehouse had sufficient stock mapped for the product-site combination. This caused the orders to stall at WAITING_FOR_SEND_FINANCIAL — the process could not advance past the financial posting step because the preceding consignment creation step never completed successfully.\r\n\r\nThe overselling condition arises when storefront stock levels and backend warehouse stock are not synchronised in real-time. The order was accepted at checkout based on storefront inventory counts, but the actual warehouse stock was insufficient or zero when the Hybris platform attempted to create consignments and assign a fulfilment warehouse.\r\n\r\nReferenced as GMT-22353 in the initial investigation comment.\r\n\r\nPossible remediation:\r\n1. Stock Update: The operations team (Jaffar Ali) confirmed that stock was replenished and available for both orders on Oct 19.\r\n2. Order Retrigger: Both orders were retriggered via PC-52605, which reset the order process and re-attempted consignment creation with the now-available warehouse stock. The consignment processes progressed normally, moving both orders to SHIPPING_PREPARATION status.\r\n3. Confirmation: Reporter (Jaffar Ali) confirmed on Oct 21 that both orders (AE261014-15868813 and AE261007-06950515) have reached COMPLETED status. No further remediation is needed.\r\n4. Preventive Measure: To reduce recurrence of overselling issues, the stock synchronisation frequency between storefront inventory and warehouse stock should be reviewed. Consider enabling stricter stock reservation at checkout time or reducing the sync interval between the inventory management system and the Hybris storefront.\r\n\r\n## Remediation\r\n- Remediation status: COMPLETED\r\n- PC ticket used: PC-52605\r\n- Orders remediated: AE261014-15868813, AE261007-06950515\r\n- Remediation date: 2026-10-19\r\n- Confirmed completed: 2026-10-21 by reporter (Jaffar Ali)\r\n- No further action required",
-        "sections": {
-          "issue": "Two AE-region orders (AE261014-15868813, AE261007-06950515) were found stuck at WAITING_FOR_SEND_FINANCIAL status. Both orders were created on Oct 7 and Oct 14 respectively. The orders could not progress past the splitOrder stage because no warehouse assignment existed on the consignment model. The consignments could not be created due to missing stock/warehouse mapping for the product-site combination, which is characteristic of an overselling scenario where stock was depleted or never allocated at the time the order reached the fulfillment pipeline.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-21T08:57:52.835Z"
-      }
-    },
-    {
       "key": "TKME-2383",
       "summary": "Stuck order on Hybris",
       "status": "In Progress",
@@ -458,50 +453,6 @@
         "status": "investigating",
         "issueNumber": null,
         "lockedAt": "2026-10-21T08:54:14.568Z"
-      }
-    },
-    {
-      "key": "TKME-2381",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Turkey Maintenance & Enhancements",
-      "projectKey": "TKME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-20T21:05:48.000+0900",
-      "created": "2026-10-16T19:19:08.000+0900",
-      "statusChangedAt": "2026-10-16T19:19:13.359+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|TR261003-03360414|2026/10/15|ORDER_SPLIT|\n|TR261014-16036338|2026/10/15|ORDER_SPLIT|\n|TR261015-16842055|2026/10/15|WAITING_FOR_SEND_FINANCIAL|\n|TR261015-16770938|2026/10/",
-      "commentsCount": 4,
-      "recentComments": [
-        {
-          "author": "Rajeshbabu Yatirajula",
-          "date": "2026-10-20T21:05:41.887+0900",
-          "snippet": "Hi ~@email \n\nAll looks good, you may close the ticket if no further details needed.\n\nRegards,\nRajesh"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-19T19:35:21.400+0900",
-          "snippet": "Hi Rajesh,\n\nTR261003-03360414:\nThe consignment process was retriggered from sendConsignmentToWarehouse and is now RUNNING. The consignment is at WAITING_FOR_TRANSFER at warehouse WC17-S751 (D2C MX).\n\nRemediation executed on PROD under PC-52605.\n\nThe remaining orders in this ticket (TR261014-16036338"
-        }
-      ],
-      "lastCommentBy": "Rajeshbabu Yatirajula",
-      "lastCommentSnippet": "Hi ~@email \n\nAll looks good, you may close the ticket if no further details needed.\n\nRegards,\nRajesh",
-      "lastCommentDate": "2026-10-20T21:05:41.887+0900",
-      "url": "https://jira.secext.samsung.net/browse/TKME-2381",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Stuck order on Hybris — 13 TR-region orders across 6 error categories\r\nGenerated: 2026-10-16T00:00:00\r\n\r\nIssue:\r\nTKME-2381 reports 13 stuck TR-region orders across 6 distinct error categories. All orders were created on 2026/10/14-15 and are stuck at various stages of the order fulfillment process. The error breakdown is as follows:\r\n\r\n1. splitOrder ERROR — 5 orders (TR261015-16842055, TR261015-16805269, TR261008-08332438, TR261003-02929746, TR261002-01958606): All at WAITING_FOR_SEND_FINANCIAL status. The order process errors at the splitOrder action with \"missing values for [warehouse] in model ConsignmentModel () to create a new Consignment\" thrown by de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator. This means when the order process attempts to split the order into consignments, the warehouse attribute on the newly created ConsignmentModel is null. The MandatoryAttributesValidator intercepts the save and rejects it because warehouse is a mandatory attribute on ConsignmentModel. This is a known pattern — Jira cross-reference found PC-55386 (AEME-6614) and PC-54279, both closed, where the fix was a manual BackOffice retrigger of the order process from the splitOrder action node. The retrigger re-executes the split logic and, on second attempt, the warehouse assignment succeeds.\r\n\r\n2. sendConsignmentToWarehouse ERROR — 3 orders (TR261003-03360414, TR261014-16036338, TR261009-09297116): All at ORDER_SPLIT status. The consignment process errors at sendConsignmentToWarehouse with \"I/O error: Connection reset; nested exception is java.net.SocketException: Connection reset\". This is a NERP integration connectivity issue — Hybris sends consignment data to the warehouse via NERP, and the connection is reset mid-transfer. This is a well-documented known issue in the TR tenant. Jira cross-reference found TKME-2343 (closed, 12 TR orders with identical error), TKME-2308 (closed, 21 orders), and PM-658 (global NERP I/O tracking). PC-55336 deployed an autoheal cronjob (autoheal-tr-IOErroredOrdersRemediationCronJob) that runs every 4 hours in PROD, finds errored consignment processes with I/O error patterns, and restarts them from sendConsignmentToWarehouse. These 3 orders should be auto-remediated by the autoheal if it is running.\r\n\r\n3. isAdditionalInfoCollected ERROR — 2 orders (TR261015-16768317, TR261015-16672509): Both at SHIPPED status. The consignment process errors at isAdditionalInfoCollected with \"I/O error: Connection reset; nested exception is java.net.SocketException: Connection reset\". Same NERP connectivity root cause as Category 2 — the autoheal cronjob PC-55336 explicitly handles isAdditionalInfoCollected as well. These should also be auto-remediated.\r\n\r\n4. completeFinancialUpdate ERROR — 1 order (TR261011-11999937): At WAITING_FOR_FINANCIAL status. The order process errors at completeFinancialUpdate with \"I/O error: Read timed out; nested exception is java.net.SocketTimeoutException: Read timed out\". This is a NERP response timeout — NERP takes too long to respond during the financial update step and Hybris times out. PM-658 explicitly lists completeFinancialUpdate as one of 8 actions affected by NERP I/O errors. PC-30574 (closed) updated the failedAndErrorOrdersJob Groovy script with action mapping: completeFinancialUpdate maps to completeFinancialUpdate for retrigger. The order process needs to be restarted from the completeFinancialUpdate action.\r\n\r\n5. REFUND_FAILED — 1 order (TR261015-16770938): At REFUND_FAILED status. The payment entry status is REFUND_FOLLOW_ON:ERROR. This indicates the refund follow-on transaction was attempted but the payment gateway returned an ERROR status. No reusable PC ticket was found in the TR region for REFUND_FOLLOW_ON:ERROR — this is the first occurrence of this specific refund error type in TR. This requires payment team investigation to determine the gateway-side reason for the rejection before a retrigger can be attempted.\r\n\r\n6. commitStock ERROR — 1 order (TR261011-11725431): At SHIPPED status. The consignment process errors at commitStock with \"no stock level for product [TURKEY-B2C-SMP-Tier5-ADH-24M] found in warehouse name [D2C MX] warehouse code [WC17-S751]\". The product has no StockLevel entry in warehouse WC17-S751 (D2C MX). Without a stock level record, the commitStock action cannot reserve stock and the process errors. Jira cross-reference found TKME-2322 (closed, exact same warehouse + product pattern for a different Tier product) and GMT-21026 (parent GMT ticket). The established remediation is two-step: (1) ImpEx to create or update StockLevel for the product in warehouse WC17-S751 with forceInStock status (reusable from PC-52623), then (2) restart the consignment process from the commitStock action node (reusable from PC-52825 / PC-55096).\r\n\r\nKibana was unavailable during this investigation (browser extension relay inactive). HAC authenticated successfully but flexsearch queries timed out. The error information above was sourced from the ticket description and Aryan's remediation comment, which contain the exact error messages extracted from the system. Jira cross-reference was performed successfully with 18 highly relevant resolved tickets found.\r\n\r\nRCA:\r\nThe root causes fall into three distinct categories:\r\n\r\nNERP Integration I/O Errors (Categories 2, 3, 4 — 6 orders): The TR tenant experiences intermittent NERP connectivity issues where connections are reset (SocketException: Connection reset) or time out (SocketTimeoutException: Read timed out) during warehouse communication. NERP is the middleware that handles warehouse integration for the TR region. When Hybris sends data to NERP (consignment data at sendConsignmentToWarehouse, additional info at isAdditionalInfoCollected, financial data at completeFinancialUpdate), NERP occasionally drops the connection or fails to respond within the timeout window. This is a known systemic issue tracked under PM-658 and PM-711 (global), with autoheal cronjobs deployed (PC-55336 for TR). The root cause is on the NERP/network infrastructure side, not in Hybris code.\r\n\r\nMissing Warehouse on ConsignmentModel (Category 1 — 5 orders): The splitOrder action in the order process creates new ConsignmentModel instances. The MandatoryAttributesValidator rejects the save because the warehouse attribute is null. This occurs when the warehouse assignment logic during order split fails to resolve a warehouse for the consignment. The retrigger pattern (manual BO retrigger from splitOrder) works because the second attempt re-evaluates the warehouse assignment and succeeds — suggesting a transient data resolution issue rather than a configuration gap. Established pattern from PC-55386 and PC-54279.\r\n\r\nMissing Stock Level (Category 6 — 1 order): The product TURKEY-B2C-SMP-Tier5-ADH-24M has no StockLevel record in warehouse WC17-S751 (D2C MX). The commitStock action requires a stock level to reserve inventory. Without the record, the action fails. This is a master data issue — the stock level was never created for this product-warehouse combination. Same pattern as TKME-2322 (closed).\r\n\r\nPayment Gateway Rejection (Category 5 — 1 order): The refund follow-on payment transaction entry returned ERROR status from the payment gateway. This is a gateway-side rejection, not a Hybris code issue. The specific reason for the rejection needs to be determined from the payment gateway logs before a retrigger can be safely attempted.\r\n\r\nPossible remediation:\r\n\r\nCategories 2 and 3 (5 orders, sendConsignmentToWarehouse + isAdditionalInfoCollected I/O errors): Verify that the PC-55336 autoheal cronjob is running. If it is, these 5 orders should be auto-remediated within the next 4-hour cycle. If the autoheal is not running or these orders persist after the next cycle, a manual retrigger of the consignment processes from their respective error action nodes is needed. No new PC ticket required — reuse PC-55336.\r\n\r\nCategory 1 (5 orders, splitOrder missing warehouse): Manual BackOffice retrigger of the order process from the splitOrder action node for all 5 orders. This is the established pattern from PC-55386 and PC-54279. A new PC ticket is needed for this batch.\r\n\r\nCategory 4 (1 order, completeFinancialUpdate timeout): Restart the order process from completeFinancialUpdate action. The failedAndErrorOrdersJob script from PC-30574 has the action mapping for this. Can reuse PC-30574 or create a new PC ticket.\r\n\r\nCategory 5 (1 order, REFUND_FAILED): Requires payment team investigation to determine the gateway-side reason for REFUND_FOLLOW_ON:ERROR before retrigger. No Hybris-side fix can be applied blindly without understanding why the gateway rejected the refund.\r\n\r\nCategory 6 (1 order, commitStock no stock level): Two-step remediation — (1) ImpEx to create StockLevel for TURKEY-B2C-SMP-Tier5-ADH-24M in warehouse WC17-S751 with forceInStock status (reuse PC-52623 pattern), (2) restart consignment process from commitStock action (reuse PC-52825 / PC-55096 pattern). Business confirmation needed on whether this product should have stock in D2C MX warehouse.\r\n\r\n## Remediation\r\n\r\nReusable PC tickets:\r\n- PC-55336 (Closed, REUSABLE): Autoheal cronjob for TR I/O errored orders — handles sendConsignmentToWarehouse + isAdditionalInfoCollected\r\n- PC-55386 (Closed): splitOrder missing warehouse — manual BO retrigger pattern\r\n- PC-54279 (Closed): splitOrder missing warehouse — same pattern\r\n- PC-30574 (Closed): failedAndErrorOrdersJob — completeFinancialUpdate action mapping\r\n- PC-52623 (Closed): ImpEx StockLevel update for commitStock\r\n- PC-52825 (Closed): Groovy restart from commitStock after stock fix\r\n- PC-55096 (Closed): Batch commitStock process restart script\r\n- PC-46275 (Closed): Earlier autoheal for omnichannel I/O errors (superseded by PC-55336)\r\n\r\nNo reusable PC ticket found for REFUND_FAILED / REFUND_FOLLOW_ON:ERROR in TR region.",
-        "sections": {
-          "issue": "TKME-2381 reports 13 stuck TR-region orders across 6 distinct error categories. All orders were created on 2026/10/14-15 and are stuck at various stages of the order fulfillment process. The error breakdown is as follows:\r\n\r\n1. splitOrder ERROR — 5 orders (TR261015-16842055, TR261015-16805269, TR261008-08332438, TR261003-02929746, TR261002-01958606): All at WAITING_FOR_SEND_FINANCIAL status. The order process errors at the splitOrder action with \"missing values for [warehouse] in model ConsignmentModel () to create a new Consignment\" thrown by de.hybris.platform.servicelayer.interceptor.impl.MandatoryAttributesValidator. This means when the order process attempts to split the order into consignments, the warehouse attribute on the newly created ConsignmentModel is null. The MandatoryAttributesValidator intercepts the save and rejects it because warehouse is a mandatory attribute on ConsignmentModel. This is a known pattern — Jira cross-reference found PC-55386 (AEME-6614) and PC-54279, both closed, where the fix was a manual BackOffice retrigger of the order process from the splitOrder action node. The retrigger re-executes the split logic and, on second attempt, the warehouse assignment succeeds.\r\n\r\n2. sendConsignmentToWarehouse ERROR — 3 orders (TR261003-03360414, TR261014-16036338, TR261009-09297116): All at ORDER_SPLIT status. The consignment process errors at sendConsignmentToWarehouse with \"I/O error: Connection reset; nested exception is java.net.SocketException: Connection reset\". This is a NERP integration connectivity issue — Hybris sends consignment data to the warehouse via NERP, and the connection is reset mid-transfer. This is a well-documented known issue in the TR tenant. Jira cross-reference found TKME-2343 (closed, 12 TR orders with identical error), TKME-2308 (closed, 21 orders), and PM-658 (global NERP I/O tracking). PC-55336 deployed an autoheal cronjob (autoheal-tr-IOErroredOrdersRemediationCronJob) that runs every 4 hours in PROD, finds errored consignment processes with I/O error patterns, and restarts them from sendConsignmentToWarehouse. These 3 orders should be auto-remediated by the autoheal if it is running.\r\n\r\n3. isAdditionalInfoCollected ERROR — 2 orders (TR261015-16768317, TR261015-16672509): Both at SHIPPED status. The consignment process errors at isAdditionalInfoCollected with \"I/O error: Connection reset; nested exception is java.net.SocketException: Connection reset\". Same NERP connectivity root cause as Category 2 — the autoheal cronjob PC-55336 explicitly handles isAdditionalInfoCollected as well. These should also be auto-remediated.\r\n\r\n4. completeFinancialUpdate ERROR — 1 order (TR261011-11999937): At WAITING_FOR_FINANCIAL status. The order process errors at completeFinancialUpdate with \"I/O error: Read timed out; nested exception is java.net.SocketTimeoutException: Read timed out\". This is a NERP response timeout — NERP takes too long to respond during the financial update step and Hybris times out. PM-658 explicitly lists completeFinancialUpdate as one of 8 actions affected by NERP I/O errors. PC-30574 (closed) updated the failedAndErrorOrdersJob Groovy script with action mapping: completeFinancialUpdate maps to completeFinancialUpdate for retrigger. The order process needs to be restarted from the completeFinancialUpdate action.\r\n\r\n5. REFUND_FAILED — 1 order (TR261015-16770938): At REFUND_FAILED status. The payment entry status is REFUND_FOLLOW_ON:ERROR. This indicates the refund follow-on transaction was attempted but the payment gateway returned an ERROR status. No reusable PC ticket was found in the TR region for REFUND_FOLLOW_ON:ERROR — this is the first occurrence of this specific refund error type in TR. This requires payment team investigation to determine the gateway-side reason for the rejection before a retrigger can be attempted.\r\n\r\n6. commitStock ERROR — 1 order (TR261011-11725431): At SHIPPED status. The consignment process errors at commitStock with \"no stock level for product [TURKEY-B2C-SMP-Tier5-ADH-24M] found in warehouse name [D2C MX] warehouse code [WC17-S751]\". The product has no StockLevel entry in warehouse WC17-S751 (D2C MX). Without a stock level record, the commitStock action cannot reserve stock and the process errors. Jira cross-reference found TKME-2322 (closed, exact same warehouse + product pattern for a different Tier product) and GMT-21026 (parent GMT ticket). The established remediation is two-step: (1) ImpEx to create or update StockLevel for the product in warehouse WC17-S751 with forceInStock status (reusable from PC-52623), then (2) restart the consignment process from the commitStock action node (reusable from PC-52825 / PC-55096).\r\n\r\nKibana was unavailable during this investigation (browser extension relay inactive). HAC authenticated successfully but flexsearch queries timed out. The error information above was sourced from the ticket description and Aryan's remediation comment, which contain the exact error messages extracted from the system. Jira cross-reference was performed successfully with 18 highly relevant resolved tickets found.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-16T11:28:51.141Z"
       }
     },
     {
@@ -1219,7 +1170,7 @@
       }
     ],
     "pid": 41252,
-    "uptime": 4120,
+    "uptime": 4165,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -1228,7 +1179,7 @@
         "issueTitle": "Investigate ticket SAHME-3490",
         "snippet": "Auto-triggered investigation for new ticket SAHME-3490.\n\nTicket: SAHME-3490\nSummary: SC+ Policy Creation 20.10.2026\n\nUse",
         "pid": 24116,
-        "elapsed": 979
+        "elapsed": 1024
       }
     ],
     "startTime": "2026-10-21T09:11:36.552Z",
@@ -1239,7 +1190,7 @@
       {
         "pid": 1064,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 87958,
+        "ageSeconds": 88005,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -1249,7 +1200,7 @@
       {
         "pid": 708,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 87908,
+        "ageSeconds": 87954,
         "status": "running",
         "isChild": false,
         "taskSummary": "post comments for tkme-2381, aeme-6637 . log 15m on each and cose them. for tkme 2383, check the ...",
@@ -1259,7 +1210,7 @@
       {
         "pid": 900,
         "cwd": "c:\\windows",
-        "ageSeconds": 87899,
+        "ageSeconds": 87946,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1269,7 +1220,7 @@
       {
         "pid": 4508,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 87887,
+        "ageSeconds": 87934,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -5204,11 +5155,11 @@
         ]
       }
     },
-    "bridgeLogTail": "    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-10-21T10:20:26.236Z] aipro stderr for #831: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
+    "bridgeLogTail": "    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-10-21T10:21:11.931Z] aipro stderr for #831: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-21T09:11:36.149Z",
-      "ageMs": 4132237
+      "ageMs": 4177421
     },
     "watchdogLogTail": "[2026-10-21T09:10:56.679Z] Bridge started with PID 45536 (restart #66, 46 in last hour)\n[2026-10-21T09:11:04.344Z] RESTART NEEDED: Bridge process (PID 45536) not found\n[2026-10-21T09:11:07.755Z] Could not kill PID 45536: Command failed: taskkill /PID 45536 /F /T\n[2026-10-21T09:11:19.452Z] Starting bridge.js...\n[2026-10-21T09:11:19.646Z] Bridge started with PID 29668 (restart #67, 47 in last hour)\n[2026-10-21T09:11:23.264Z] DUPLICATE \\\\bridge.js detected: PID 29056 — killing\n[2026-10-21T09:11:26.233Z] RESTART NEEDED: Bridge process (PID 29668) not found\n[2026-10-21T09:11:29.200Z] Could not kill PID 29668: Command failed: taskkill /PID 29668 /F /T\n[2026-10-21T09:11:35.918Z] Starting bridge.js...\n[2026-10-21T09:11:36.148Z] Bridge started with PID 41252 (restart #68, 48 in last hour)",
     "jobOutputs": {}
@@ -5218,7 +5169,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-21T10:19:49.199Z",
+      "lastCheck": "2026-10-21T10:20:49.497Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5227,7 +5178,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-21T10:19:49.199Z",
+      "lastCheck": "2026-10-21T10:20:49.497Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5236,9 +5187,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-21T10:19:49.199Z",
+      "lastCheck": "2026-10-21T10:20:49.497Z",
       "downSince": "2026-10-21T00:16:44.031Z",
-      "downDuration": 36185168,
+      "downDuration": 36245466,
       "alert": true
     }
   ],
@@ -5470,18 +5421,6 @@
     ],
     "actionable": [
       {
-        "key": "TKME-2382",
-        "summary": "Stuck order on Hybris",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "actionable",
-        "reason": "",
-        "whatToDo": "Respond to Rajeshbabu Yatirajula",
-        "url": "https://jira.secext.samsung.net/browse/TKME-2382",
-        "updated": "2026-10-21T19:13:16.000+0900",
-        "statusChangedAt": "2026-10-16T20:35:43.027+0900"
-      },
-      {
         "key": "EHME-947",
         "summary": "Stuck order on Hybris",
         "priority": "None",
@@ -5528,7 +5467,7 @@
         "reason": "Waiting for PC-52605 approval (not assigned to you)",
         "whatToDo": "",
         "url": "https://jira.secext.samsung.net/browse/AEME-6637",
-        "updated": "2026-10-21T15:47:24.000+0900",
+        "updated": "2026-10-21T19:20:57.000+0900",
         "statusChangedAt": "2026-10-15T14:16:10.935+0900"
       },
       {
@@ -5600,7 +5539,7 @@
         "reason": "Waiting for PC-52605 approval (not assigned to you)",
         "whatToDo": "",
         "url": "https://jira.secext.samsung.net/browse/TKME-2381",
-        "updated": "2026-10-20T21:05:48.000+0900",
+        "updated": "2026-10-21T19:20:58.000+0900",
         "statusChangedAt": "2026-10-16T19:19:13.359+0900"
       },
       {
@@ -5644,7 +5583,7 @@
     ],
     "totals": {
       "zero": 7,
-      "actionable": 3,
+      "actionable": 2,
       "blocked": 9,
       "queued": 3
     }
@@ -5697,236 +5636,9 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": {
-    "byTicket": [
-      {
-        "key": "TKME-2382",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86399,
-        "targetDate": "2026-10-19T11:35:42.030000001Z"
-      },
-      {
-        "key": "TKME-2382",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2552799,
-        "targetDate": "2026-12-01T23:26:57.537000033Z"
-      },
-      {
-        "key": "AEME-6590",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86065,
-        "targetDate": "2026-09-29T06:53:13.927000001Z"
-      },
-      {
-        "key": "AEME-6590",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2442645,
-        "targetDate": "2026-11-30T16:51:04.355000045Z"
-      },
-      {
-        "key": "SAME-4019",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86398,
-        "targetDate": "2026-10-16T05:16:55.206000001Z"
-      },
-      {
-        "key": "SAME-4019",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2464039,
-        "targetDate": "2026-11-30T22:47:38.265000033Z"
-      },
-      {
-        "key": "AEME-6535",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85181,
-        "targetDate": "2026-09-04T05:51:44.040000001Z"
-      },
-      {
-        "key": "AEME-6535",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1277310,
-        "targetDate": "2026-11-11T05:08:48.602964612Z"
-      },
-      {
-        "key": "SAHME-3490",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86354,
-        "targetDate": "2026-10-21T07:20:19.604000001Z"
-      },
-      {
-        "key": "SAHME-3490",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1199725,
-        "targetDate": "2026-11-10T08:35:43.589000015Z"
-      },
-      {
-        "key": "TKME-2383",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86400,
-        "targetDate": "2026-10-19T21:00:00.000000001Z"
-      },
-      {
-        "key": "TKME-2383",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2556794,
-        "targetDate": "2026-12-02T00:33:32.989000032Z"
-      },
-      {
-        "key": "AEME-6644",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86400,
-        "targetDate": "2026-10-19T20:00:00.000000001Z"
-      },
-      {
-        "key": "AEME-6644",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2555650,
-        "targetDate": "2026-12-02T00:14:28.649000032Z"
-      },
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86254,
-        "targetDate": "2026-09-21T04:19:58.710000001Z"
-      },
-      {
-        "key": "MHME-1439",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "STILL",
-        "remainingDuration": 660859,
-        "targetDate": "2026-11-02T02:54:37.529000031Z"
-      },
-      {
-        "key": "TKME-2381",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86394,
-        "targetDate": "2026-10-19T10:19:08.243000001Z"
-      },
-      {
-        "key": "TKME-2381",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2495528,
-        "targetDate": "2026-12-01T07:32:27.075000032Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86179,
-        "targetDate": "2026-09-30T08:16:57.595000001Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1269633,
-        "targetDate": "2026-10-20T08:16:57.595000015Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86397,
-        "targetDate": "2026-09-29T16:09:08.750000001Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1914189,
-        "targetDate": "2026-11-20T14:03:27.584000039Z"
-      },
-      {
-        "key": "SAHME-3487",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86398,
-        "targetDate": "2026-10-20T10:48:50.138000001Z"
-      },
-      {
-        "key": "SAHME-3487",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2497118,
-        "targetDate": "2026-12-01T08:58:56.578000031Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85660,
-        "targetDate": "2026-09-15T08:21:25.088000001Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1211372,
-        "targetDate": "2026-10-13T12:51:05.986000021Z"
-      },
-      {
-        "key": "AEME-6637",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86397,
-        "targetDate": "2026-10-16T05:16:08.892000001Z"
-      },
-      {
-        "key": "AEME-6637",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2557917,
-        "targetDate": "2026-12-02T00:52:16.219000034Z"
-      },
-      {
-        "key": "EHME-947",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86398,
-        "targetDate": "2026-10-19T11:35:05.134000001Z"
-      },
-      {
-        "key": "EHME-947",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2579398,
-        "targetDate": "2026-12-02T07:50:17.431000033Z"
-      },
-      {
-        "key": "MHME-1466",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85724,
-        "targetDate": "2026-10-19T11:08:49.611000001Z"
-      },
-      {
-        "key": "MHME-1466",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1121931,
-        "targetDate": "2026-11-09T10:59:10.019516583Z"
-      }
-    ]
-  },
+  "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 1.5h on SAM-18531, 0.33h on TKME-2387, 0.33h on SAME-4035, 0.33h on SAHME-3491, 0.33h on MHME-1470, 0.42h on TKME-2350, 1.5h on PC-55693, 1.75h on TKME-2382, 0.75h on SAME-4024, 0.42h on AEME-6640, 0.42h on AEME-6643\nToday: PC-55747, TKME-2382, SAHME-3490, AEME-6644, SAME-4019\nBlockers: PC-55747, SAME-4019, PC-53923"
+    "standupText": "Yesterday: 1.5h on SAM-18531, 0.33h on TKME-2387, 0.33h on SAME-4035, 0.33h on SAHME-3491, 0.33h on MHME-1470, 0.42h on TKME-2350, 1.5h on PC-55693, 1.75h on TKME-2382, 0.75h on SAME-4024, 0.42h on AEME-6640, 0.42h on AEME-6643\nToday: TKME-2381, AEME-6637, PC-55747, SAHME-3490, AEME-6644\nBlockers: PC-55747, SAME-4019, PC-53923"
   }
 }
