@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-21T08:57:40.617Z",
+  "generatedAt": "2026-10-21T08:58:28.329Z",
   "totalTickets": 26,
   "tickets": [
     {
@@ -146,7 +146,7 @@
       "solution": {
         "status": "investigating",
         "issueNumber": null,
-        "lockedAt": "2026-10-21T08:54:10.888Z"
+        "lockedAt": "2026-10-21T08:58:04.334Z"
       }
     },
     {
@@ -201,7 +201,7 @@
       "solution": {
         "status": "investigating",
         "issueNumber": null,
-        "lockedAt": "2026-10-21T08:54:11.564Z"
+        "lockedAt": "2026-10-21T16:00:00Z"
       }
     },
     {
@@ -377,9 +377,15 @@
         }
       ],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-10-21T08:54:13.838Z"
+        "status": "found",
+        "excerpt": "Stuck order on Hybris | Overselling issue\r\nGenerated: 2026-10-21T09:00:00.000Z\r\n\r\nIssue:\r\nTwo AE-region orders (AE261014-15868813, AE261007-06950515) were found stuck at WAITING_FOR_SEND_FINANCIAL status. Both orders were created on Oct 7 and Oct 14 respectively. The orders could not progress past the splitOrder stage because no warehouse assignment existed on the consignment model. The consignments could not be created due to missing stock/warehouse mapping for the product-site combination, which is characteristic of an overselling scenario where stock was depleted or never allocated at the time the order reached the fulfillment pipeline.\r\n\r\nRCA:\r\nThe root cause is a stock allocation failure during the order fulfillment process. When these orders were placed, the products appeared available to the customer on the storefront, but by the time the order reached the consignment creation and warehouse assignment stage (splitOrder action within the order process), no warehouse had sufficient stock mapped for the product-site combination. This caused the orders to stall at WAITING_FOR_SEND_FINANCIAL — the process could not advance past the financial posting step because the preceding consignment creation step never completed successfully.\r\n\r\nThe overselling condition arises when storefront stock levels and backend warehouse stock are not synchronised in real-time. The order was accepted at checkout based on storefront inventory counts, but the actual warehouse stock was insufficient or zero when the Hybris platform attempted to create consignments and assign a fulfilment warehouse.\r\n\r\nReferenced as GMT-22353 in the initial investigation comment.\r\n\r\nPossible remediation:\r\n1. Stock Update: The operations team (Jaffar Ali) confirmed that stock was replenished and available for both orders on Oct 19.\r\n2. Order Retrigger: Both orders were retriggered via PC-52605, which reset the order process and re-attempted consignment creation with the now-available warehouse stock. The consignment processes progressed normally, moving both orders to SHIPPING_PREPARATION status.\r\n3. Confirmation: Reporter (Jaffar Ali) confirmed on Oct 21 that both orders (AE261014-15868813 and AE261007-06950515) have reached COMPLETED status. No further remediation is needed.\r\n4. Preventive Measure: To reduce recurrence of overselling issues, the stock synchronisation frequency between storefront inventory and warehouse stock should be reviewed. Consider enabling stricter stock reservation at checkout time or reducing the sync interval between the inventory management system and the Hybris storefront.\r\n\r\n## Remediation\r\n- Remediation status: COMPLETED\r\n- PC ticket used: PC-52605\r\n- Orders remediated: AE261014-15868813, AE261007-06950515\r\n- Remediation date: 2026-10-19\r\n- Confirmed completed: 2026-10-21 by reporter (Jaffar Ali)\r\n- No further action required",
+        "sections": {
+          "issue": "Two AE-region orders (AE261014-15868813, AE261007-06950515) were found stuck at WAITING_FOR_SEND_FINANCIAL status. Both orders were created on Oct 7 and Oct 14 respectively. The orders could not progress past the splitOrder stage because no warehouse assignment existed on the consignment model. The consignments could not be created due to missing stock/warehouse mapping for the product-site combination, which is characteristic of an overselling scenario where stock was depleted or never allocated at the time the order reached the fulfillment pipeline.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-21T08:57:52.835Z"
       }
     },
     {
@@ -1379,7 +1385,7 @@
       }
     ],
     "pid": 40364,
-    "uptime": 19101,
+    "uptime": 19148,
     "failures": 0,
     "activeJobCount": 7,
     "jobs": [
@@ -1388,49 +1394,49 @@
         "issueTitle": "Investigate ticket TKME-2387",
         "snippet": "Auto-triggered investigation for new ticket TKME-2387.\n\nTicket: TKME-2387\nSummary: Stuck order on Hybris\n\nUse the invest",
         "pid": 8876,
-        "elapsed": 185
+        "elapsed": 232
       },
       {
         "issueNum": 824,
         "issueTitle": "Investigate ticket AEME-6644",
         "snippet": "Auto-triggered investigation for new ticket AEME-6644.\n\nTicket: AEME-6644\nSummary: Stuck order on Hybris\n\nUse the invest",
         "pid": 46816,
-        "elapsed": 186
+        "elapsed": 233
       },
       {
         "issueNum": 825,
         "issueTitle": "Investigate ticket SAME-4019",
         "snippet": "Auto-triggered investigation for new ticket SAME-4019.\n\nTicket: SAME-4019\nSummary: Stuck order on Hybris\n\nUse the invest",
         "pid": 19908,
-        "elapsed": 187
+        "elapsed": 234
       },
       {
         "issueNum": 826,
         "issueTitle": "Investigate ticket EHME-947",
         "snippet": "Auto-triggered investigation for new ticket EHME-947.\n\nTicket: EHME-947\nSummary: Stuck order on Hybris\n\nUse the investig",
         "pid": 43432,
-        "elapsed": 188
+        "elapsed": 235
       },
       {
         "issueNum": 827,
         "issueTitle": "Investigate ticket AEME-6637",
         "snippet": "Auto-triggered investigation for new ticket AEME-6637.\n\nTicket: AEME-6637\nSummary: Stuck order on Hybris | Overselling i",
         "pid": 16916,
-        "elapsed": 190
+        "elapsed": 237
       },
       {
         "issueNum": 828,
         "issueTitle": "Investigate ticket TKME-2383",
         "snippet": "Auto-triggered investigation for new ticket TKME-2383.\n\nTicket: TKME-2383\nSummary: Stuck order on Hybris\n\nUse the invest",
         "pid": 43628,
-        "elapsed": 191
+        "elapsed": 238
       },
       {
         "issueNum": 829,
         "issueTitle": "Investigate ticket TKME-2385",
         "snippet": "Auto-triggered investigation for new ticket TKME-2385.\n\nTicket: TKME-2385\nSummary: Stuck order on Hybris\n\nUse the invest",
         "pid": 46872,
-        "elapsed": 192
+        "elapsed": 239
       }
     ],
     "startTime": "2026-10-21T03:39:18.650Z",
@@ -1441,7 +1447,7 @@
       {
         "pid": 1064,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 83000,
+        "ageSeconds": 83046,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -1451,7 +1457,7 @@
       {
         "pid": 708,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 82949,
+        "ageSeconds": 82995,
         "status": "running",
         "isChild": false,
         "taskSummary": "SAME-4031",
@@ -1461,7 +1467,7 @@
       {
         "pid": 900,
         "cwd": "c:\\windows",
-        "ageSeconds": 82940,
+        "ageSeconds": 82986,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1471,7 +1477,7 @@
       {
         "pid": 4508,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 82929,
+        "ageSeconds": 82974,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -5380,13 +5386,13 @@
         ]
       }
     },
-    "bridgeLogTail": "[2026-10-21T08:57:47.333Z] STDOUT data for #823: 119 bytes\n[2026-10-21T08:57:47.335Z] LIVE events write for #823: 85 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_823.txt\n[2026-10-21T08:57:47.349Z] STDOUT data for #823: 236 bytes\n[2026-10-21T08:57:47.357Z] LIVE events write for #823: 87 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_823.txt\n[2026-10-21T08:57:47.373Z] STDOUT data for #823: 114 bytes\n[2026-10-21T08:57:47.377Z] LIVE events write for #823: 88 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_823.txt\n[2026-10-21T08:57:47.386Z] STDOUT data for #823: 116 bytes\n[2026-10-21T08:57:47.398Z] LIVE events write for #823: 89 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_823.txt\n[2026-10-21T08:57:47.411Z] STDOUT data for #823: 115 bytes\n[2026-10-21T08:57:47.421Z] LIVE events write for #823: 90 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_823.txt\n[2026-10-21T08:57:47.431Z] STDOUT data for #823: 110 bytes\n[2026-10-21T08:57:47.440Z] LIVE events write for #823: 91 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_823.txt\n[2026-10-21T08:57:47.485Z] STDOUT data for #823: 227 bytes\n[2026-10-21T08:57:47.491Z] LIVE events write for #823: 93 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_823.txt\n[2026-10-21T08:57:47.499Z] STDOUT data for #823: 115 bytes\n[2026-10-21T08:57:47.513Z] LIVE events write for #823: 94 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_823.txt\n[2026-10-21T08:57:47.525Z] STDOUT data for #823: 116 bytes\n[2026-10-21T08:57:47.537Z] LIVE events write for #823: 95 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_823.txt\n[2026-10-21T08:57:47.979Z] STDOUT data for #826: 124 bytes\n[2026-10-21T08:57:47.981Z] LIVE events write for #826: 73 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_826.txt",
+    "bridgeLogTail": "      at async GeminiChat.streamWithRetries (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:297807:30)\n      at async _LocalAgentExecutor.callModel (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:313831:22)\n      at async _LocalAgentExecutor.executeTurn (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:313414:43),\n  repairError: JSONRepairError: Unexpected character \"{\" at position 5\n      at throwUnexpectedCharacter (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-AMPHR7K3.js:7552:11)\n      at jsonrepair (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-AMPHR7K3.js:7053:3)\n      at safeJsonParse (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-AMPHR7K3.js:7581:28)\n      at StreamingToolCallParser.getCompletedToolCalls (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-AMPHR7K3.js:7761:20)\n      at OpenAIContentConverter.convertOpenAIChunkToGemini (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-AMPHR7K3.js:8294:65)\n      at ContentGenerationPipeline.processStreamWithLogging (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/openaiContentGenerator-AMPHR7K3.js:8596:41)\n      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n      at async GeminiChat.processStreamResponse (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:298143:22)\n      at async GeminiChat.streamWithRetries (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:297807:30)\n      at async _LocalAgentExecutor.callModel (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:313831:22) {\n    position: 5\n  },\n  jsonString: '02154{\"command\": \"cd C:\\\\\\\\toko\\\\\\\\toko\", \"description\": \"Run flex6\\\\\\\\toko6i-order-full.c\\\\\\\\core-customize\\\\\\\\js for orderhybris\\\\\\\\bin && node jira SA260721-35202154-ops.cjs search \\\\\"project =\", \"dir_path\": \" PC AND reporterC:\\\\\\\\toko = aryan.v\\\\\\\\toko6\\\\\\\\t1 AND text ~oko6\\\\\\\\core-customize\\\\\\\\hybris \\\\\\\\\\\\\"ORDER_SPLIT\\\\\\\\\\\\\"\\\\\"\\\\\\\\bin\"}'\n}\n[2026-10-21T08:58:11.516Z] STDOUT data for #824: 335 bytes\n[2026-10-21T08:58:11.518Z] LIVE events write for #824: 68 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_824.txt",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-21T08:52:40.593Z",
-      "ageMs": 307934
+      "lastWrite": "2026-10-21T08:58:29.789Z",
+      "ageMs": 4835
     },
-    "watchdogLogTail": "[2026-10-21T08:34:04.725Z] Dashboard is degraded (failures: 303). Will not restart yet.\n[2026-10-21T08:44:08.766Z] Dashboard is degraded (failures: 313). Will not restart yet.\n[2026-10-21T08:45:07.988Z] Dashboard is degraded (failures: 314). Will not restart yet.\n[2026-10-21T08:46:07.903Z] Dashboard is degraded (failures: 315). Will not restart yet.\n[2026-10-21T08:47:08.215Z] Dashboard is degraded (failures: 316). Will not restart yet.\n[2026-10-21T08:48:11.103Z] Dashboard is degraded (failures: 317). Will not restart yet.\n[2026-10-21T08:49:09.155Z] Dashboard is degraded (failures: 318). Will not restart yet.\n[2026-10-21T08:50:09.152Z] Dashboard is degraded (failures: 319). Will not restart yet.\n[2026-10-21T08:51:08.028Z] Dashboard is degraded (failures: 320). Will not restart yet.\n[2026-10-21T08:52:40.592Z] DUPLICATE watchdog detected: PID 31040 — killing",
+    "watchdogLogTail": "[2026-10-21T08:45:07.988Z] Dashboard is degraded (failures: 314). Will not restart yet.\n[2026-10-21T08:46:07.903Z] Dashboard is degraded (failures: 315). Will not restart yet.\n[2026-10-21T08:47:08.215Z] Dashboard is degraded (failures: 316). Will not restart yet.\n[2026-10-21T08:48:11.103Z] Dashboard is degraded (failures: 317). Will not restart yet.\n[2026-10-21T08:49:09.155Z] Dashboard is degraded (failures: 318). Will not restart yet.\n[2026-10-21T08:50:09.152Z] Dashboard is degraded (failures: 319). Will not restart yet.\n[2026-10-21T08:51:08.028Z] Dashboard is degraded (failures: 320). Will not restart yet.\n[2026-10-21T08:52:40.592Z] DUPLICATE watchdog detected: PID 31040 — killing\n[2026-10-21T08:58:21.387Z] RESTART NEEDED: No heartbeat file found\n[2026-10-21T08:58:29.786Z] Could not kill PID 40364: Command failed: taskkill /PID 40364 /F /T",
     "jobOutputs": {}
   },
   "mcps": [
@@ -5394,7 +5400,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-21T08:57:11.997Z",
+      "lastCheck": "2026-10-21T08:58:12.036Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5403,7 +5409,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-21T08:57:11.997Z",
+      "lastCheck": "2026-10-21T08:58:12.036Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5412,9 +5418,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-21T08:57:11.997Z",
+      "lastCheck": "2026-10-21T08:58:12.036Z",
       "downSince": "2026-10-21T00:16:44.031Z",
-      "downDuration": 31227966,
+      "downDuration": 31288005,
       "alert": true
     }
   ],
