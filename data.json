@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-21T17:11:11.346Z",
+  "generatedAt": "2026-10-21T17:11:54.237Z",
   "totalTickets": 16,
   "tickets": [
     {
@@ -24,9 +24,15 @@
       "url": "https://jira.secext.samsung.net/browse/SAHME-3493",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-10-21T16:50:09.895Z"
+        "status": "found",
+        "excerpt": "Replacement order is stuck on Order split\r\nGenerated: 2026-10-21T17:30:00.000Z\r\n\r\nIssue:\r\nReplacement order ZA261012-13229614 was reported as stuck on \"Order split\" status. The reporter indicated stock is available for the SKU (SM-L715FZKAXFA). Original order is ZA261007-07512698.\r\n\r\nRCA:\r\nThe replacement order is not stuck. The return-replacement-order-process-v17 (process code 00000005856003) is in RUNNING state with no errors. The process was delayed by a 9-day wait at the waitForCSReview action — the CS review approval was pending from October 12 to October 21. The CS review was completed today at 14:31:43 UTC (23:31 KST), and the process immediately advanced through the remaining actions. The splitOrder action completed successfully at 14:31:46 UTC, creating a single consignment (ZA261012-13229614) assigned to warehouse WC11 with delivery mode za-standard-days-delivery-im-1-2. The consignment process (consignment-process-v11-36) is actively running and polling the warehouse for shipping confirmation. The consignment is in SHIPPING_PREPARATION status, which is the expected state before the warehouse confirms shipment. The order status is SHIPPING_PREPARATION. The ticket was created at 23:58 KST on October 21 — just 27 minutes after CS review was completed — so the reporter likely filed the ticket believing the order was still stuck, not aware that the CS review had just been approved and the order had already moved forward.\r\n\r\nNo BusinessProcess is in ERROR state. No exceptions were found in ProcessTaskLog. No BusinessProcessParameter error stack traces exist. The process is functioning as designed — it simply required CS review approval which took 9 days to complete.\r\n\r\nPossible remediation:\r\nNo remediation is required. The order has already moved past the \"Order split\" stage. The consignment is at warehouse WC11 awaiting shipping confirmation. The order will progress to the next status once the warehouse confirms the shipment. No Hybris-side fix or script is needed.\r\n\r\nThanks,\r\nAryan.",
+        "sections": {
+          "issue": "Replacement order ZA261012-13229614 was reported as stuck on \"Order split\" status. The reporter indicated stock is available for the SKU (SM-L715FZKAXFA). Original order is ZA261007-07512698.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-21T17:11:27.193Z"
       }
     },
     {
@@ -893,7 +899,7 @@
       }
     ],
     "pid": 11528,
-    "uptime": 13084,
+    "uptime": 13124,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -902,7 +908,7 @@
         "issueTitle": "Investigate ticket SAHME-3493",
         "snippet": "Auto-triggered investigation for new ticket SAHME-3493.\n\nTicket: SAHME-3493\nSummary: Replacement order is stuck on Order",
         "pid": 47416,
-        "elapsed": 1242
+        "elapsed": 1282
       }
     ],
     "startTime": "2026-10-21T13:33:05.810Z",
@@ -913,7 +919,7 @@
       {
         "pid": 1064,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 112608,
+        "ageSeconds": 112651,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -923,7 +929,7 @@
       {
         "pid": 708,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 112558,
+        "ageSeconds": 112600,
         "status": "running",
         "isChild": false,
         "taskSummary": "just keep the script with you, we will try agin tomorrow",
@@ -933,7 +939,7 @@
       {
         "pid": 900,
         "cwd": "c:\\windows",
-        "ageSeconds": 112549,
+        "ageSeconds": 112592,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -943,7 +949,7 @@
       {
         "pid": 4508,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 112537,
+        "ageSeconds": 112580,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -4893,11 +4899,11 @@
         ]
       }
     },
-    "bridgeLogTail": "[2026-10-21T17:10:49.500Z] STDOUT data for #832: 340 bytes\n[2026-10-21T17:10:49.515Z] LIVE events write for #832: 936 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_832.txt\n[2026-10-21T17:10:49.750Z] STDOUT data for #832: 341 bytes\n[2026-10-21T17:10:49.765Z] LIVE events write for #832: 937 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_832.txt\n[2026-10-21T17:11:07.643Z] STDOUT data for #832: 124 bytes\n[2026-10-21T17:11:07.657Z] LIVE events write for #832: 938 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_832.txt\n[2026-10-21T17:11:08.112Z] aipro stderr for #832: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
+    "bridgeLogTail": "[2026-10-21T17:11:59.019Z] STDOUT data for #832: 217 bytes\n[2026-10-21T17:11:59.037Z] LIVE events write for #832: 1123 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_832.txt\n[2026-10-21T17:11:59.044Z] STDOUT data for #832: 245 bytes\n[2026-10-21T17:11:59.065Z] LIVE events write for #832: 1125 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_832.txt\n[2026-10-21T17:11:59.071Z] STDOUT data for #832: 351 bytes\n[2026-10-21T17:11:59.089Z] LIVE events write for #832: 1128 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_832.txt\n[2026-10-21T17:11:59.095Z] STDOUT data for #832: 241 bytes\n[2026-10-21T17:11:59.114Z] LIVE events write for #832: 1130 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_832.txt\n[2026-10-21T17:11:59.121Z] STDOUT data for #832: 235 bytes\n[2026-10-21T17:11:59.139Z] LIVE events write for #832: 1132 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_832.txt\n[2026-10-21T17:11:59.146Z] STDOUT data for #832: 241 bytes\n[2026-10-21T17:11:59.166Z] LIVE events write for #832: 1134 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_832.txt\n[2026-10-21T17:11:59.172Z] STDOUT data for #832: 245 bytes\n[2026-10-21T17:11:59.190Z] LIVE events write for #832: 1136 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_832.txt\n[2026-10-21T17:11:59.196Z] STDOUT data for #832: 232 bytes\n[2026-10-21T17:11:59.214Z] LIVE events write for #832: 1138 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_832.txt\n[2026-10-21T17:11:59.221Z] STDOUT data for #832: 364 bytes\n[2026-10-21T17:11:59.253Z] LIVE events write for #832: 1141 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_832.txt\n[2026-10-21T17:11:59.261Z] STDOUT data for #832: 369 bytes\n[2026-10-21T17:11:59.280Z] LIVE events write for #832: 1144 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_832.txt",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-21T16:37:42.246Z",
-      "ageMs": 2013647
+      "ageMs": 2057239
     },
     "watchdogLogTail": "[2026-10-21T13:32:50.663Z] Bridge started with PID 38492 (restart #75, 7 in last hour)\n[2026-10-21T13:32:53.832Z] DUPLICATE \\\\bridge.js detected: PID 29904 — killing\n[2026-10-21T13:32:56.462Z] RESTART NEEDED: Bridge process (PID 38492) not found\n[2026-10-21T13:32:59.058Z] Could not kill PID 38492: Command failed: taskkill /PID 38492 /F /T\n[2026-10-21T13:33:05.295Z] Starting bridge.js...\n[2026-10-21T13:33:05.493Z] Bridge started with PID 11528 (restart #76, 8 in last hour)\n[2026-10-21T14:47:41.450Z] DUPLICATE watchdog detected: PID 27160 — killing\n[2026-10-21T14:52:41.697Z] DUPLICATE watchdog detected: PID 14452 — killing\n[2026-10-21T16:32:43.893Z] DUPLICATE watchdog detected: PID 35572 — killing\n[2026-10-21T16:37:42.246Z] DUPLICATE watchdog detected: PID 28108 — killing",
     "jobOutputs": {}
