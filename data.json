@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-22T13:38:39.044Z",
+  "generatedAt": "2026-10-22T13:39:21.342Z",
   "totalTickets": 14,
   "tickets": [
     {
@@ -819,7 +819,7 @@
       }
     ],
     "pid": 27024,
-    "uptime": 3805,
+    "uptime": 3845,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -828,7 +828,7 @@
         "issueTitle": "Investigate ticket TKME-2379",
         "snippet": "Auto-triggered investigation for new ticket TKME-2379.\n\nTicket: TKME-2379\nSummary: Orders delaying at waitForKnoxRespons",
         "pid": 25388,
-        "elapsed": 517
+        "elapsed": 557
       }
     ],
     "startTime": "2026-10-22T12:35:12.186Z",
@@ -839,7 +839,7 @@
       {
         "pid": 22196,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 10691,
+        "ageSeconds": 10733,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -849,7 +849,7 @@
       {
         "pid": 18704,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 10548,
+        "ageSeconds": 10591,
         "status": "running",
         "isChild": false,
         "taskSummary": "option 1 , keep the comment concise",
@@ -859,7 +859,7 @@
       {
         "pid": 732,
         "cwd": "c:\\windows",
-        "ageSeconds": 10544,
+        "ageSeconds": 10587,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -869,7 +869,7 @@
       {
         "pid": 7744,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 10166,
+        "ageSeconds": 10208,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -4834,11 +4834,11 @@
         ]
       }
     },
-    "bridgeLogTail": "    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-10-22T13:38:41.639Z] aipro stderr for #846: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
+    "bridgeLogTail": "      at async GeminiChat.streamWithRetries (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:297807:30)\n      at async _LocalAgentExecutor.callModel (file:///C:/Users/aryan.v1/AppData/Roaming/npm/node_modules/@aipro/aipro-cli/bundle/chunk-YYR75FG2.js:313831:22) {\n    position: 44\n  },\n  jsonString: '{\"command\": \"cd C:\\\\\\\\toko\\\\\\\\toko6\\\\\\\\toko6\\\\\\\\core{\"response\": \"## Sub-Agent C: Jira Cross-Reference Report for TKME-2379\\\\n\\\\n### Ticket Under Investigation\\\\n**TKME-2379** | Orders delaying at waitForKnoxResponseBeforeFinancialInitialUpdate | **In Progress** | Assignee: aryan.v1@samsung.com\\\\nLabels: a=aryan.v1, i=orderremediation, rca=done, sc=remediate\\\\nURL: https://jira.secext.samsung.net/browse/TKME-2379\\\\n\\\\n**Description:** Orders delayed 2-3 hours at `waitForKnoxResponseBeforeFinancialInitialUpdate` action before consignment creation. Two TR orders affected: TR261014-15734351 (1h43m delay) and TR261014-15700732 (2h09m delay).\\\\n\\\\n**Existing Comments:**\\\\n- Aryan already posted that delay is expected behaviour caused by batch size throttling in the Financial Initial Update cronjob.\\\\n- Reporter Rajesh asked follow-up: what was the waiting list size at that time, and whether the batch picks up irrelevant orders.\\\\n\\\\n---\\\\n\\\\n### Search Results Summary\\\\n\\\\n#### 1. `text ~ \\\\\"waitForKnoxResponse\\\\\"` → **0 results**\\\\nNo existing Jira tickets mention this exact process action name. This is a **novel issue** — no prior tickets have been raised about delays at this specific process step.\\\\n\\\\n#### 2. `text ~ \\\\\"knoxResponse AND delay\\\\\"` → **0 results**\\\\nNo tickets about Knox response delays in order processing.\\\\n\\\\n#### 3. `text ~ \\\\\"FinancialInitialUpdate\\\\\"` → **71 results** (mostly RT-* test tickets)\\\\nMostly regression test tickets for HGE-8975 (batch max limit control). A few relevant production tickets:\\\\n- **KSME-965** | Closed | [stg2] Kaspi orders stuck — related to financial batch processing\\\\n- **RT-236234** | Closed | [SMA] [STG] AU: Order stuck at WAITING_FOR_SEND_FINANCIAL\\\\n- **RT-274190** | Closed | [Hotfix - SMA- STG - AU] - Order stuck at WAITING_FOR_SEND_FINANCIAL\\\\n\\\\n#### 4. `text ~ \\\\\"knox AND batch\\\\\"` → 1,734,059 results (too broad)\\\\nAll about Knox approval configuration/management, not about order processing delays at Knox response wait. Not directly relevant.\\\\n\\\\n#### 5. `project = PC AND text ~ \\\\\"knox\\\\\"` → 38,423 results\\\\nAll about Knox approval path updates, Knox promotion approvals, Knox configuration toggles. **None related to order processing delays at waitForKnoxResponse.**\\\\n\\\\n#### 6. `text ~ \\\\\"WAITING_FOR_SEND_FINANCIAL\\\\\"` → 19,236 results\\\\nMassive number of regional tickets about orders stuck in WAITING_FOR_SEND_FINANCIAL. This is a **well-known recurring pattern** across all regions. Key examples:\\\\n- **SAME-2720** | Closed | Order are Stuck at WAIT_FOR_SEND_FINANCIAL\\\\n- **NFME-5396** | Closed | WAITING_FOR_SEND_FINANCIAL\\\\n- **PC-33428** | To do | Trigger refund when stuck in WAIT FOR SEND FINANCIAL (still open!)\\\\n\\\\n#### 7. `text ~ \\\\\"waitForKnox OR knoxResponse\\\\\"` → **2 results**\\\\n- **RT-438127** | Closed | Regression - SMS - STG2 - PH: Order with Ipay88 CC is skipping Waiting for send financial status\\\\n- **NGME-17031** | Closed | CLONE - CLONE - Two orders with Mobilezone errors\\\\nNeither directly relevant to the Knox response delay issue.\\\\n\\\\n#### 8. `project = TKME AND text ~ \\\\\"knox\\\\\"` → 2,342 results\\\\nTurkey-specific Knox tickets, all about Knox approval path/configuration. **None about order processing delays at waitForKnoxResponse.** Relevant TKME Knox tickets:\\\\n- **TKME-1767** | Closed | Knox Approval Page / Price Info Change\\\\n- **TKME-1685** | Closed | PriceInfoChange - Knox Approval Limit\\\\n- **TKME-1775** | Closed | knoxPriceApplyingJob - Partial_Success\\\\n- **TKME-698** | Invalid | SETK - Knox Related Cronjob Updates\\\\n\\\\n#### 9. `text ~ \\\\\"KnoxResponseBeforeFinancial\\\\\"` → **0 results**\\\\nNo tickets mention this exact term.\\\\n\\\\n#### 10. `text ~ \\\\\"beforeFinancialInitialUpdate OR beforeFinancial\\\\\"` → **0 results**\\\\n\\\\n---\\\\n\\\\n### Most Relevant PC Tickets (Turkey + Financial Stuck)\\\\n\\\\nThese are the closest matching PC tickets with remediation scripts for similar (but NOT identical) issues:\\\\n\\\\n| PC Ticket | Status | Summary | Remediation Approach | Reusable? |\\\\n|----------|--------|---------|---------------------|-----------|\\\\n| **PC-46706** | Closed | TKME-2132: Order Stuck - WAITING_FOR_SEND_FINANCIAL | Groovy: `AdvFiPosting_TKME-2132.groovy` — Adv FI posting for specific orders | ⚠️ Partial — same region, same stuck status, but different root cause (these were fully stuck, not delayed) |\\\\n| **PC-47454** | Closed | TKME-2154: Orders stuck at fraudCheckPostFi [WAITING_FOR_SEND_FINANCIAL] | Manual backoffice: set `fiPosted` and `fraudCheckPending` to false, repair process from `fraudCheckPostFi`. Caused by NPE. | ❌ No — different process action (fraudCheckPostFi vs waitForKnoxResponse) |\\\\n| **PC-37260** | Closed | TKME-1697: Orders stuck in WAITING_FOR_SEND_FINANCIAL | Groovy script attached, but **closed as superseded** by newer PC | ❌ No — closed/superseded |\\\\n| **PC-30177** | Closed | Cancel with refund orders stuck before Initial Financial Update | Groovy: `CancelWithRefundOrders.groovy` — cancels orders stuck before Initial Financial Update | ⚠️ Partial — mentions \\\\\"before Initial Financial Update\\\\\" but for cancel/refund scenario, not Knox delay |\\\\n| **PC-32125** | Closed | MXME-4724 Cancel with refund orders stuck before Initial Financial Update | Similar cancel-with-refund approach | ❌ No — different region, cancel scenario |\\\\n| **PC-47966** | Closed | TKME-2138: Order stuck in WAIT_FOR_CHECK_EXTERNAL_CANCELLING | Turkey-specific, but different stuck point | ❌ No — different process action |\\\\n| **PC-33428** | To do | Trigger refund when stuck in WAIT FOR SEND FINANCIAL | Still open, no script yet | ❌ No — not actioned |\\\\n\\\\n---\\\\n\\\\n### Key Findings\\\\n\\\\n1. **No prior tickets exist for `waitForKnoxResponseBeforeFinancialInitialUpdate` delays.** This is a novel issue — zero Jira hits for this exact process action name or any variant (KnoxResponseBeforeFinancial, beforeFinancialInitialUpdate, knoxResponse delay).\\\\n\\\\n2. **The broader WAITING_FOR_SEND_FINANCIAL stuck pattern is extremely common** (19,236+ tickets across all regions), but those are about orders that are permanently stuck, not temporarily delayed. TKME-2379 is about a **delay** (2-3 hours), not a permanent stuck state.\\\\n\\\\n3. **Three Turkey-specific PC tickets exist for WAITING_FOR_SEND_FINANCIAL remediation** (PC-46706, PC-47454, PC-37260), but all address different root causes (Adv FI posting, NPE at fraudCheckPostFi, generic stuck) — none address the Knox response wait delay.\\\\n\\\\n4. **PC-30177** is the closest conceptual match — it deals with orders stuck \\\\\"before Initial Financial Update\\\\\" and has a reusable Groovy script (`CancelWithRefundOrders.groovy`), but it\\'s for cancel-with-refund scenarios, not for advancing delayed orders.\\\\n\\\\n5. **No reusable PC ticket or remediation script exists** for the specific issue of orders delayed at `waitForKnoxResponseBeforeFinancialInitialUpdate`. If remediation is needed (e.g., to manually advance these orders or adjust batch processing), a **new PC ticket would need to be created**.\\\\n\\\\n6. **The ticket already has `rca=done` and `sc=remediate` labels**, indicating the RCA has been completed and remediation is the next step. Aryan\\'s comment confirms the conclusion: expected behaviour caused by batch size throttling in the Financial Initial Update cronjob.\\\\n\\\\n7. **Reporter\\'s follow-up question** (waiting list size, irrelevant orders in batch) has NOT been answered yet — this needs to be addressed in the RCA or remediation.\\\\n\\\\n---\\\\n\\\\n### Recommendation\\\\n- **No reusable PC ticket found** for this specific issue. If a remediation script is needed to advance orders stuck at `waitForKnoxResponseBeforeFinancialInitialUpdate`, a new PC ticket must be created.\\\\n- The closest reusable pattern is PC-46706\\'s `AdvFiPosting` approach, but that addresses fully-stuck orders, not delayed ones.\\\\n- The RCA conclusion (batch size throttling = expected behaviour) may mean no remediation script is needed — only a configuration change or batch size tuning.\"}}'\n}\n[2026-10-22T13:39:17.307Z] aipro stderr for #846: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-22T12:37:40.603Z",
-      "ageMs": 3661235
+      "ageMs": 3704018
     },
     "watchdogLogTail": "[2026-10-22T10:57:41.299Z] DUPLICATE watchdog detected: PID 24572 — killing\n[2026-10-22T12:12:18.763Z] DASHBOARD RESTART NEEDED: No dashboard heartbeat file found\n[2026-10-22T12:12:21.342Z] Killed dashboard PID 16920\n[2026-10-22T12:12:26.347Z] Starting jira-dashboard-server.js...\n[2026-10-22T12:12:26.538Z] Dashboard started with PID 18064 (restart #6, 1 in last hour)\n[2026-10-22T12:35:01.167Z] RESTART NEEDED: No heartbeat file found\n[2026-10-22T12:35:03.630Z] Killed bridge PID 19720\n[2026-10-22T12:35:11.530Z] Starting bridge.js...\n[2026-10-22T12:35:11.843Z] Bridge started with PID 27024 (restart #3, 1 in last hour)\n[2026-10-22T12:37:40.601Z] DUPLICATE watchdog detected: PID 28264 — killing",
     "jobOutputs": {}
