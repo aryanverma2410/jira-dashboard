@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-22T14:00:25.292Z",
+  "generatedAt": "2026-10-22T14:01:08.316Z",
   "totalTickets": 14,
   "tickets": [
     {
@@ -35,9 +35,15 @@
       "url": "https://jira.secext.samsung.net/browse/TKME-2379",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-10-22T13:29:43.547Z"
+        "status": "found",
+        "excerpt": "Orders delaying at waitForKnoxResponseBeforeFinancialInitialUpdate\r\nGenerated: 2026-10-22T13:30:00.000Z\r\n\r\nHi Rajesh ,\r\n\r\nWe investigated the two TR orders (TR261014-15734351 and TR261014-15700732) and found the delay is expected behaviour caused by batch size throttling in the Financial Initial Update cronjob. Here is the breakdown.\r\n\r\nThe order process for TR region uses a batch Financial Initial Update path. When IsFinancialUpdateSentAsBatchActionV1 evaluates to YES (configured for the TR store), the order status is set to WAITING_FOR_SEND_FINANCIAL and the process pauses at a wait node called waitForFinancialInitialUpdate. This wait node listens for an event named {processCode}_WaitForSendFinancialInitialUpdate. No code moves the order forward until a cronjob fires that event.\r\n\r\nThat cronjob is tr-tokoFinancialInitialUpdateJob, which is active with a batch size of 100. On each run, it queries all orders in WAITING_FOR_SEND_FINANCIAL status for the TR store and triggers the _WaitForSendFinancialInitialUpdate event for each order process, with a 5-second staggered delay between orders (tokofulfilmentprocess.processStartDelay=5). When the number of waiting orders exceeds the batch size limit, only the first 100 are processed; the rest wait for the next cronjob run.\r\n\r\nOn October 14, 256+ TR orders were created between 13:00 and 16:08 UTC. Both reported orders arrived at the wait node around 14:11-14:33 UTC. The Financial Initial Update cronjob next ran at approximately 16:08:19 UTC, waking 100 orders in the first batch. Both reported orders were in the first batch and received their event within seconds of each other (16:08:19 and 16:08:21 UTC). The delay between order creation and consignment creation was therefore 1 hour 35 minutes to 1 hour 57 minutes, which is the gap between the order arriving at the wait node and the next cronjob execution picking it up.\r\n\r\nRegarding your questions:\r\n\r\n1. Waiting list size at the time: Based on the DB query, 256+ TR261014 orders were in WAITING_FOR_SEND_FINANCIAL status when the cronjob ran at 16:08 UTC. The batch size is 100, so roughly 156 orders would have waited for the next cronjob run.\r\n\r\n2. Whether the batch picked up irrelevant orders: No. The cronjob queries specifically for orders in WAITING_FOR_SEND_FINANCIAL status for the TR store. All 256+ orders in the queue were legitimate orders that had passed through the order process and reached the Financial Initial Update stage. There is no evidence of irrelevant orders being picked up.\r\n\r\nThere were no errors, no Knox timeouts, and no process failures. The Knox dashboard callbacks were received successfully within seconds of order placement. The process is working as designed — the delay is the expected trade-off of batching Financial Initial Updates instead of sending them individually in real-time.\r\n\r\nThanks,\r\nAryan",
+        "sections": {
+          "issue": "",
+          "rca": "Orders delaying at waitForKnoxResponseBeforeFinancialInitialUpdate\r\nGenerated: 2026-10-22T13:30:00.000Z\r\n\r\nHi Rajesh ,\r\n\r\nWe investigated the two TR orders (TR261014-15734351 and TR261014-15700732) and found the delay is expected behaviour caused by batch size throttling in the Financial Initial Update cronjob. Here is the breakdown.\r\n\r\nThe order process for TR region uses a batch Financial Initial Update path. When IsFinancialUpdateSentAsBatchActionV1 evaluates to YES (configured for the TR store), the order status is set to WAITING_FOR_SEND_FINANCIAL and the process pauses at a wait node called waitForFinancialInitialUpdate. This wait node listens for an event named {processCode}_WaitForSendFinancialInitialUpdate. No code moves the order forward until a cronjob fires that event.\r\n\r\nThat cronjob is tr-tokoFinancialInitialUpdateJob, which is active with a batch size of 100. On each run, it queries all orders in WAITING_FOR_SEND_FINANCIAL status for the TR store and triggers the _WaitForSendFinancialInitialUpdate event for each order process, with a 5-second staggered delay between orders (tokofulfilmentprocess.processStartDelay=5). When the number of waiting orders exceeds the batch size limit, only the first 100 are processed; the rest wait for the next cronjob run.\r\n\r\nOn October 14, 256+ TR orders were created between 13:00 and 16:08 UTC. Both reported orders arrived at the wait node around 14:11-14:33 UTC. The Financial Initial Update cronjob next ran at approximately 16:08:19 UTC, waking 100 orders in the first batch. Both reported orders were in the first batch and received their event within seconds of each other (16:08:19 and 16:08:21 UTC). The delay between order creation and consignment creation was therefore 1 hour 35 minutes to 1 hour 57 minutes, which is the gap between the order arriving at the wait node and the next cronjob execution picking it up.\r\n\r\nRegarding your questions:\r\n\r\n1. Waiting list size at the time: Based on the DB query, 256+ TR261014 orders were in WAITING_FOR_SEND_FINANCIAL status when the cronjob ran at 16:08 UTC. The batch size is 100, so roughly 156 orders would have waited for the next cronjob run.\r\n\r\n2. Whether the batch picked up irrelevant orders: No. The cronjob queries specifically for orders in WAITING_FOR_SEND_FINANCIAL status for the TR store. All 256+ orders in the queue were legitimate orders that had passed through the order process and reached the Financial Initial Update stage. There is no evidence of irrelevant orders being picked up.\r\n\r\nThere were no errors, no Knox timeouts, and no process failures. The Knox dashboard callbacks were received successfully within seconds of order placement. The process is working as designed — the delay is the expected trade-off of batching Financial Initial Updates instead of sending them individually in real-time.\r\n\r\nThanks,\r\nAryan",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-22T14:00:53.322Z"
       }
     },
     {
@@ -819,7 +825,7 @@
       }
     ],
     "pid": 27024,
-    "uptime": 5110,
+    "uptime": 5155,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -828,7 +834,7 @@
         "issueTitle": "Investigate ticket TKME-2379",
         "snippet": "Auto-triggered investigation for new ticket TKME-2379.\n\nTicket: TKME-2379\nSummary: Orders delaying at waitForKnoxRespons",
         "pid": 25388,
-        "elapsed": 1822
+        "elapsed": 1867
       }
     ],
     "startTime": "2026-10-22T12:35:12.186Z",
@@ -839,7 +845,7 @@
       {
         "pid": 22196,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 11997,
+        "ageSeconds": 12040,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -849,7 +855,7 @@
       {
         "pid": 18704,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 11855,
+        "ageSeconds": 11897,
         "status": "running",
         "isChild": false,
         "taskSummary": "option 1 , keep the comment concise",
@@ -859,7 +865,7 @@
       {
         "pid": 732,
         "cwd": "c:\\windows",
-        "ageSeconds": 11851,
+        "ageSeconds": 11894,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -869,7 +875,7 @@
       {
         "pid": 7744,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 11472,
+        "ageSeconds": 11515,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -4834,11 +4840,11 @@
         ]
       }
     },
-    "bridgeLogTail": "    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-10-22T14:00:11.798Z] STDOUT data for #846: 106 bytes\n[2026-10-22T14:00:11.802Z] LIVE events write for #846: 330 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_846.txt\n[2026-10-22T14:00:11.815Z] STDOUT data for #846: 117 bytes\n[2026-10-22T14:00:11.819Z] LIVE events write for #846: 331 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_846.txt\n[2026-10-22T14:00:11.828Z] STDOUT data for #846: 129 bytes\n[2026-10-22T14:00:11.831Z] LIVE events write for #846: 332 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_846.txt\n[2026-10-22T14:00:11.843Z] STDOUT data for #846: 127 bytes\n[2026-10-22T14:00:11.847Z] LIVE events write for #846: 333 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_846.txt\n[2026-10-22T14:00:11.856Z] STDOUT data for #846: 114 bytes\n[2026-10-22T14:00:11.860Z] LIVE events write for #846: 334 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_846.txt\n[2026-10-22T14:00:11.871Z] STDOUT data for #846: 122 bytes\n[2026-10-22T14:00:11.875Z] LIVE events write for #846: 335 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_846.txt\n[2026-10-22T14:00:11.884Z] STDOUT data for #846: 124 bytes\n[2026-10-22T14:00:11.887Z] LIVE events write for #846: 336 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_846.txt\n[2026-10-22T14:00:12.700Z] STDOUT data for #846: 521 bytes\n[2026-10-22T14:00:12.704Z] LIVE events write for #846: 337 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_846.txt\n[2026-10-22T14:00:12.707Z] STDOUT data for #846: 585 bytes\n[2026-10-22T14:00:12.713Z] LIVE events write for #846: 338 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_846.txt",
+    "bridgeLogTail": "[2026-10-22T14:00:54.336Z] STDOUT data for #846: 115 bytes\n[2026-10-22T14:00:54.340Z] LIVE events write for #846: 431 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_846.txt\n[2026-10-22T14:00:54.607Z] STDOUT data for #846: 468 bytes\n[2026-10-22T14:00:54.611Z] LIVE events write for #846: 432 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_846.txt\n[2026-10-22T14:01:05.577Z] STDOUT data for #846: 124 bytes\n[2026-10-22T14:01:05.580Z] LIVE events write for #846: 433 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_846.txt\n[2026-10-22T14:01:05.943Z] aipro stderr for #846: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-22T12:37:40.603Z",
-      "ageMs": 4968518
+      "ageMs": 5011448
     },
     "watchdogLogTail": "[2026-10-22T10:57:41.299Z] DUPLICATE watchdog detected: PID 24572 — killing\n[2026-10-22T12:12:18.763Z] DASHBOARD RESTART NEEDED: No dashboard heartbeat file found\n[2026-10-22T12:12:21.342Z] Killed dashboard PID 16920\n[2026-10-22T12:12:26.347Z] Starting jira-dashboard-server.js...\n[2026-10-22T12:12:26.538Z] Dashboard started with PID 18064 (restart #6, 1 in last hour)\n[2026-10-22T12:35:01.167Z] RESTART NEEDED: No heartbeat file found\n[2026-10-22T12:35:03.630Z] Killed bridge PID 19720\n[2026-10-22T12:35:11.530Z] Starting bridge.js...\n[2026-10-22T12:35:11.843Z] Bridge started with PID 27024 (restart #3, 1 in last hour)\n[2026-10-22T12:37:40.601Z] DUPLICATE watchdog detected: PID 28264 — killing",
     "jobOutputs": {}
@@ -4848,7 +4854,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-22T13:59:47.997Z",
+      "lastCheck": "2026-10-22T14:00:47.839Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4857,7 +4863,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-22T13:59:47.997Z",
+      "lastCheck": "2026-10-22T14:00:47.839Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4866,9 +4872,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-22T13:59:47.997Z",
+      "lastCheck": "2026-10-22T14:00:47.839Z",
       "downSince": "2026-10-22T12:12:28.229Z",
-      "downDuration": 6439768,
+      "downDuration": 6499610,
       "alert": true
     }
   ],
