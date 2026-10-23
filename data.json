@@ -1,51 +1,7 @@
 {
-  "generatedAt": "2026-10-23T06:54:40.684Z",
-  "totalTickets": 12,
+  "generatedAt": "2026-10-23T06:55:24.034Z",
+  "totalTickets": 11,
   "tickets": [
-    {
-      "key": "AUTEU-41862",
-      "summary": "CSAgent access required for SMI P1 and STG",
-      "status": "To do",
-      "statusCategory": "To Do",
-      "priority": "Assign Priority",
-      "project": "Add A User To An Environment (USER)",
-      "projectKey": "AUTEU",
-      "issuetype": "User Task",
-      "updated": "2026-10-23T15:54:31.000+0900",
-      "created": "2026-10-09T16:25:20.000+0900",
-      "statusChangedAt": "",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nI already have admin access to SMI P1 and STG environments, but I need CSAgent access to be enabled as well.\n\nKindly give access to following IDs: \n|Name|Email ID|\n|Aryan|`@email`|\n|Pallavi|`@email`|\n|Prateek|`@email`|\n|Sudhanshu|`@email`|\n|Suresh|`@email`|\n|Chandan|`@email`|\n|Abhishek|`@e",
-      "commentsCount": 5,
-      "recentComments": [
-        {
-          "author": "Nitin Kumar",
-          "date": "2026-10-16T16:18:44.866+0900",
-          "snippet": "Hi ~@email \nPlease share BO id for the mentioned accounts.\n\nBest Regards\nNitin"
-        },
-        {
-          "author": "ESHOP.ITGC",
-          "date": "2026-10-13T19:59:38.832+0900",
-          "snippet": "~@email \n\nWould you check and proceed with the request?"
-        }
-      ],
-      "lastCommentBy": "Nitin Kumar",
-      "lastCommentSnippet": "Hi ~@email \nPlease share BO id for the mentioned accounts.\n\nBest Regards\nNitin",
-      "lastCommentDate": "2026-10-16T16:18:44.866+0900",
-      "url": "https://jira.secext.samsung.net/browse/AUTEU-41862",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Summary: CSAgent access required for SMI P1 and STG\r\nGenerated: 2026-10-16T12:53:00+09:00\r\n\r\nIssue:\r\nAUTEU-41862 is a service request for enabling CSAgent (Customer Service Agent) role access on SMI P1 and STG environments (STG1, STG2, STG3) for 8 team members. The requester (aryan.v1) and the listed individuals already have admin/Backoffice access but do not have the CSAgent role assigned, which is required to access the Customer Service Agent views and Assisted Service Module in the Hybris Backoffice. The ticket has been approved by ITGC (D2C) and is currently awaiting action — Nitin Kumar has asked for the Backoffice IDs for the listed accounts to proceed.\r\n\r\nRCA:\r\nThis is not a platform bug or code defect. The CSAgent role in the Samsung Toko Hybris platform is managed through Hybris user groups. The platform defines several CS-related user groups via ImpEx configuration in tokocore (user-groups.impex and cscockpit-users.impex):\r\n\r\n1. csagentgroup — \"Customer Service Agent Group\" — grants access to CS Backoffice CS Agent Group views and the Assisted Service Module. Inherits from customerservicegroup and cockpitgroup.\r\n2. customersupportagentgroup — \"CS Agent Group\" — grants CS Agent Group views and Assisted Service Module access. Inherits employeegroup and customersupportagentrole.\r\n3. customersupportmanagergroup — inherits customersupportagentgroup plus manager-level roles.\r\n4. customersupportadministratorgroup — inherits all of the above plus administrator roles.\r\n\r\nThe listed users have admin access but are not members of csagentgroup or customersupportagentgroup, so they cannot access the CSAgent views and Assisted Service Module functionality. No database or code-level issue exists — this is purely a user group membership provisioning task that must be executed via the Hybris Backoffice (or HAC ImpEx) on each target environment.\r\n\r\nPossible remediation:\r\n1. Provide the Backoffice user IDs for all 8 listed accounts as requested by Nitin Kumar in the ticket comments.\r\n2. Add each user to the csagentgroup (or customersupportagentgroup) user group on SMI P1 and all STG environments (STG1, STG2, STG3) via the Hybris Backoffice user management console, or via ImpEx:\r\n\r\n   INSERT_UPDATE Employee; UID[unique=true]; groups(uid)[mode=append]\r\n   ; <user-uid>; csagentgroup\r\n\r\n3. Verify access by logging into the Backoffice with one of the accounts and confirming the CS Agent Group views and Assisted Service Module are visible.\r\n4. No Hybris HAC script or PC ticket is required — this is a standard access provisioning action performed through the Backoffice administration UI or HAC ImpEx import.\r\n\r\nTicket URL: https://jira.secext.samsung.net/browse/AUTEU-41862",
-        "sections": {
-          "issue": "AUTEU-41862 is a service request for enabling CSAgent (Customer Service Agent) role access on SMI P1 and STG environments (STG1, STG2, STG3) for 8 team members. The requester (aryan.v1) and the listed individuals already have admin/Backoffice access but do not have the CSAgent role assigned, which is required to access the Customer Service Agent views and Assisted Service Module in the Hybris Backoffice. The ticket has been approved by ITGC (D2C) and is currently awaiting action — Nitin Kumar has asked for the Backoffice IDs for the listed accounts to proceed.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-16T07:38:10.391Z"
-      }
-    },
     {
       "key": "TKME-2379",
       "summary": "Orders delaying at waitForKnoxResponseBeforeFinancialInitialUpdate",
@@ -735,7 +691,7 @@
       {
         "pid": 22196,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 72853,
+        "ageSeconds": 72896,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -745,7 +701,7 @@
       {
         "pid": 18704,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 72710,
+        "ageSeconds": 72754,
         "status": "running",
         "isChild": false,
         "taskSummary": "MHME-1439",
@@ -755,7 +711,7 @@
       {
         "pid": 732,
         "cwd": "c:\\windows",
-        "ageSeconds": 72706,
+        "ageSeconds": 72750,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -765,7 +721,7 @@
       {
         "pid": 7744,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 72328,
+        "ageSeconds": 72371,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -4735,10 +4691,10 @@
     "bridgeLogTail": "[2026-10-22T22:07:08.960Z] ==========================================\n[2026-10-22T22:07:08.963Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-22T22:07:08.963Z] === with Aipro Auto-Launch ===\n[2026-10-22T22:07:08.964Z] ==========================================\n[2026-10-22T22:07:08.964Z] PID: 31824\n[2026-10-22T22:07:08.965Z] Repo: aryanverma2410/agent-bridge\n[2026-10-22T22:07:08.965Z] Poll interval: 10000ms\n[2026-10-22T22:07:08.966Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-22T22:07:08.967Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-22T22:07:08.968Z] Waiting for messages...\n[2026-10-22T22:07:58.682Z] ==========================================\n[2026-10-22T22:07:58.684Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-22T22:07:58.684Z] === with Aipro Auto-Launch ===\n[2026-10-22T22:07:58.685Z] ==========================================\n[2026-10-22T22:07:58.686Z] PID: 42772\n[2026-10-22T22:07:58.687Z] Repo: aryanverma2410/agent-bridge\n[2026-10-22T22:07:58.688Z] Poll interval: 10000ms\n[2026-10-22T22:07:58.688Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-22T22:07:58.689Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-22T22:07:58.690Z] Waiting for messages...",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-23T06:54:32.467Z",
-      "ageMs": 12729
+      "lastWrite": "2026-10-23T06:55:17.469Z",
+      "ageMs": 11474
     },
-    "watchdogLogTail": "[2026-10-23T06:51:47.065Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T06:52:04.983Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T06:52:25.413Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T06:52:47.104Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T06:53:09.427Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T06:53:30.248Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T06:53:46.648Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T06:54:01.657Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T06:54:16.672Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T06:54:32.460Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-23T06:52:47.104Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T06:53:09.427Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T06:53:30.248Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T06:53:46.648Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T06:54:01.657Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T06:54:16.672Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T06:54:32.460Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T06:54:47.472Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T06:55:02.467Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T06:55:17.468Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
@@ -4911,18 +4867,6 @@
   "actionItems": {
     "zero": [
       {
-        "key": "AUTEU-41862",
-        "summary": "CSAgent access required for SMI P1 and STG",
-        "priority": "Assign Priority",
-        "status": "To do",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/AUTEU-41862",
-        "updated": "2026-10-23T15:54:31.000+0900",
-        "statusChangedAt": ""
-      },
-      {
         "key": "TKME-2379",
         "summary": "Orders delaying at waitForKnoxResponseBeforeFinancialInitialUpdate",
         "priority": "None",
@@ -5050,7 +4994,7 @@
       }
     ],
     "totals": {
-      "zero": 6,
+      "zero": 5,
       "actionable": 1,
       "blocked": 2,
       "queued": 3
@@ -5104,9 +5048,110 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86397,
+        "targetDate": "2026-09-29T16:09:08.750000001Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1753684,
+        "targetDate": "2026-11-20T14:03:27.584000039Z"
+      },
+      {
+        "key": "TKME-2379",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85854,
+        "targetDate": "2026-10-16T13:23:55.356000001Z"
+      },
+      {
+        "key": "TKME-2379",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 901021,
+        "targetDate": "2026-11-06T17:12:24.705000016Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85660,
+        "targetDate": "2026-09-15T08:21:25.088000001Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1211372,
+        "targetDate": "2026-10-13T12:51:05.986000021Z"
+      },
+      {
+        "key": "TKME-2382",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86399,
+        "targetDate": "2026-10-19T11:35:42.030000001Z"
+      },
+      {
+        "key": "TKME-2382",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2401956,
+        "targetDate": "2026-12-02T02:08:00.009000033Z"
+      },
+      {
+        "key": "SAHME-3490",
+        "slaName": "Maintenance Response (GMT+2)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86354,
+        "targetDate": "2026-10-21T07:20:19.604000001Z"
+      },
+      {
+        "key": "SAHME-3490",
+        "slaName": "Maintenance Resolution (GMT+2)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1039220,
+        "targetDate": "2026-11-10T08:35:43.589000015Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86179,
+        "targetDate": "2026-09-30T08:16:57.595000001Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1269633,
+        "targetDate": "2026-10-20T08:16:57.595000015Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86254,
+        "targetDate": "2026-09-21T04:19:58.710000001Z"
+      },
+      {
+        "key": "MHME-1439",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 500353,
+        "targetDate": "2026-11-02T02:54:37.529000031Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 1h on AEME-6535, 1h on SAME-4019, 1h on PC-55757, 0.25h on TKME-2387, 0.25h on TKME-2385, 0.42h on MHME-1466, 0.75h on EHME-947, 1h on PC-55812\nToday: AUTEU-41862, TKME-2379, TKME-2348, TKME-2382, PC-55757\nBlockers: PC-55757"
+    "standupText": "Yesterday: 1h on AEME-6535, 1h on SAME-4019, 1h on PC-55757, 0.25h on TKME-2387, 0.25h on TKME-2385, 0.42h on MHME-1466, 0.75h on EHME-947, 1h on PC-55812\nToday: TKME-2379, TKME-2348, TKME-2382, PC-55757, SAHME-3490\nBlockers: PC-55757"
   }
 }
