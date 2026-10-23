@@ -1,7 +1,51 @@
 {
-  "generatedAt": "2026-10-23T12:09:53.373Z",
-  "totalTickets": 15,
+  "generatedAt": "2026-10-23T12:10:34.879Z",
+  "totalTickets": 16,
   "tickets": [
+    {
+      "key": "SAHME-3486",
+      "summary": "Order stuck in Temporary state",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "South Africa Maintenance & Enhancements",
+      "projectKey": "SAHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-23T21:09:56.000+0900",
+      "created": "2026-10-19T17:34:46.000+0900",
+      "statusChangedAt": "2026-10-23T21:09:56.677+0900",
+      "assignedToMeAt": "",
+      "description": "Good day,\n\nOrder is stuck in Temporary state and customer has confirmed that payment was made. Please process the order: ZA261012-13555684_261012195645107. Please convert the order into a normal order.\n\n!image-2026-10-19-10-33-04-149.png!\n\nKind regards,\n\nLerato",
+      "commentsCount": 3,
+      "recentComments": [
+        {
+          "author": "Lerato Mbambisa",
+          "date": "2026-10-23T18:31:39.517+0900",
+          "snippet": "Good day ~@email ,\n\nPlease provide an update on this ticket. customer is waiting on their order.\n\nKind regards,\n\nLerato"
+        },
+        {
+          "author": "Lerato Mbambisa",
+          "date": "2026-10-20T01:14:57.837+0900",
+          "snippet": "Good day ~@email ,\n\nThe order now stuck on EXTERNAL_FRAUD_RESULT_PROCESSED status. Please assist.\n\nKind regards,\n\nLerato"
+        }
+      ],
+      "lastCommentBy": "Lerato Mbambisa",
+      "lastCommentSnippet": "Good day ~@email ,\n\nPlease provide an update on this ticket. customer is waiting on their order.\n\nKind regards,\n\nLerato",
+      "lastCommentDate": "2026-10-23T18:31:39.517+0900",
+      "url": "https://jira.secext.samsung.net/browse/SAHME-3486",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "Order stuck in Temporary state — ZA261012-13555684_261012195645107\r\nGenerated: 2026-10-19T17:55:00Z\r\n\r\nHi [~l.mbambisa@samsung.com] ,\r\n\r\nOrder ZA261012-13555684_261012195645107 is stuck in TEMPORARY status because the temporary order to normal order conversion failed silently during the DPO PayGate payment notification callback processing.\r\n\r\nKibana logs confirm that DPO PayGate sent a successful payment notification at 19:57:51 on 12 October with TRANSACTION_STATUS=1 and PAY_REQUEST_ID=2C176F3F-E6A5-4B93-8D39-C2FF5820913E. A follow-up query request was sent to DPO PayGate and a response was received at 19:57:52. However, the temp order conversion never completed. No converted order (ZA261012-13555684) exists in the database. The PaymentTransaction has zero entries (no authorization PTE was created). No business process or consignment was started.\r\n\r\nThe code path is: TokoDpoPayGatePaymentNotificationServiceImpl.processNotification() receives the callback, checks TRANSACTION_STATUS equals \"1\" (success), then calls TokoDpoPayGatePaymentNotificaionEventStrategyImpl.triggerNotificationAction() which sends a follow-up query to DPO PayGate, verifies the response, and calls TemporaryOrderServiceImpl.checkTempOrderAndConvert() to convert the temp order to a real order. The handler strategy TokoDpoNotificationHandlerStrategyImpl catches all RuntimeExceptions and always returns HTTP 200 OK to the DPO PayGate gateway, so any exception during the conversion is silently swallowed and the gateway never retries.\r\n\r\nThere was also a first checkout attempt at 19:52:27 (ZA261012-13555684_261012195227557) which also remains TEMPORARY. This was likely an abandoned attempt where the customer did not complete the payment redirect and retried.\r\n\r\nThe database state is:\r\n- ZA261012-13555684_261012195645107: TEMPORARY, total 10149.10 ZAR, payment mode za-dpoPayGatePaymentMode, no PTEs, no process, no consignment\r\n- ZA261012-13555684_261012195227557: TEMPORARY (first abandoned attempt)\r\n- No converted order ZA261012-13555684 exists\r\n\r\nRemediation: We can convert the temp order to a normal order by calling temporaryOrderService.checkTempOrderAndConvert() with the PAY_REQUEST_ID from DPO PayGate. This is the same remediation approach used in PC-53917 (AEME-6548) and PC-47736 (SAHME-3230). The first abandoned temp order should be cleaned up.\r\n\r\nKindly confirm if we can proceed with the conversion.\r\n\r\nThanks,\r\n\r\nAryan\r\n\r\n## Remediation\r\n\r\n- Reusable PC ticket: PC-53917 (AEME-6548, Closed, REUSABLE) — script-AEME-6548-order2-temp-expired-remediation.groovy\r\n- Similar resolved: PC-47736 (SAHME-3230), PC-47373 (SAHME-3209), PC-48014 (SAHME-3230)\r\n- PAY_REQUEST_ID: 2C176F3F-E6A5-4B93-8D39-C2FF5820913E\r\n- Order is already TEMPORARY (not TEMPORARY_EXPIRED), so status reset step is not needed\r\n- Script adaptation: Update ITGC header, order code, PAY_REQUEST_ID, remove status reset step\r\n- First temp order (ZA261012-13555684_261012195227557) should be cancelled/cleaned up\r\n\r\n## Key Findings\r\n\r\n1. Order status: TEMPORARY (not TEMPORARY_EXPIRED — no status reset needed)\r\n2. Payment notification received: TRANSACTION_STATUS=1 (success) at 19:57:51\r\n3. Follow-up query sent and response received at 19:57:52\r\n4. No PTEs created (PaymentTransaction has 0 entries)\r\n5. No converted order exists (ZA261012-13555684 returns 0 results)\r\n6. No business process or consignment process exists\r\n7. Cart was deleted (0 results)\r\n8. Two temp orders exist for same base code (second attempt is the valid one)\r\n9. Second payment notification received at 19:59:00 (duplicate callback from different IP)\r\n10. Customer checked order on Oct 16 — NotFoundException (order not found because not converted)\r\n\r\n## Data Sources\r\n\r\n- Jira: SAHME-3486 ticket (description + 0 comments)\r\n- Kibana: 818 events in 7d timeline, 7 ERROR hits, 4 PayGate-specific hits, 0 conversion-result hits\r\n- HAC: 8 FlexibleSearch queries (order, PT, PTE, processes, cart, all versions, converted order check)\r\n- Codebase: Full DPO PayGate flow traced (notification handler, event strategy, temp order service, cleanup cronjob)\r\n- Jira cross-ref: PC-53917 (REUSABLE), PC-47736, PC-47373, PC-48014, SAHME-3230/3209/1599/1340",
+        "sections": {
+          "issue": "",
+          "rca": "Order stuck in Temporary state — ZA261012-13555684_261012195645107\r\nGenerated: 2026-10-19T17:55:00Z\r\n\r\nHi [~l.mbambisa@samsung.com] ,\r\n\r\nOrder ZA261012-13555684_261012195645107 is stuck in TEMPORARY status because the temporary order to normal order conversion failed silently during the DPO PayGate payment notification callback processing.\r\n\r\nKibana logs confirm that DPO PayGate sent a successful payment notification at 19:57:51 on 12 October with TRANSACTION_STATUS=1 and PAY_REQUEST_ID=2C176F3F-E6A5-4B93-8D39-C2FF5820913E. A follow-up query request was sent to DPO PayGate and a response was received at 19:57:52. However, the temp order conversion never completed. No converted order (ZA261012-13555684) exists in the database. The PaymentTransaction has zero entries (no authorization PTE was created). No business process or consignment was started.\r\n\r\nThe code path is: TokoDpoPayGatePaymentNotificationServiceImpl.processNotification() receives the callback, checks TRANSACTION_STATUS equals \"1\" (success), then calls TokoDpoPayGatePaymentNotificaionEventStrategyImpl.triggerNotificationAction() which sends a follow-up query to DPO PayGate, verifies the response, and calls TemporaryOrderServiceImpl.checkTempOrderAndConvert() to convert the temp order to a real order. The handler strategy TokoDpoNotificationHandlerStrategyImpl catches all RuntimeExceptions and always returns HTTP 200 OK to the DPO PayGate gateway, so any exception during the conversion is silently swallowed and the gateway never retries.\r\n\r\nThere was also a first checkout attempt at 19:52:27 (ZA261012-13555684_261012195227557) which also remains TEMPORARY. This was likely an abandoned attempt where the customer did not complete the payment redirect and retried.\r\n\r\nThe database state is:\r\n- ZA261012-13555684_261012195645107: TEMPORARY, total 10149.10 ZAR, payment mode za-dpoPayGatePaymentMode, no PTEs, no process, no consignment\r\n- ZA261012-13555684_261012195227557: TEMPORARY (first abandoned attempt)\r\n- No converted order ZA261012-13555684 exists\r\n\r\nRemediation: We can convert the temp order to a normal order by calling temporaryOrderService.checkTempOrderAndConvert() with the PAY_REQUEST_ID from DPO PayGate. This is the same remediation approach used in PC-53917 (AEME-6548) and PC-47736 (SAHME-3230). The first abandoned temp order should be cleaned up.\r\n\r\nKindly confirm if we can proceed with the conversion.\r\n\r\nThanks,\r\n\r\nAryan\r\n\r\n## Remediation\r\n\r\n- Reusable PC ticket: PC-53917 (AEME-6548, Closed, REUSABLE) — script-AEME-6548-order2-temp-expired-remediation.groovy\r\n- Similar resolved: PC-47736 (SAHME-3230), PC-47373 (SAHME-3209), PC-48014 (SAHME-3230)\r\n- PAY_REQUEST_ID: 2C176F3F-E6A5-4B93-8D39-C2FF5820913E\r\n- Order is already TEMPORARY (not TEMPORARY_EXPIRED), so status reset step is not needed\r\n- Script adaptation: Update ITGC header, order code, PAY_REQUEST_ID, remove status reset step\r\n- First temp order (ZA261012-13555684_261012195227557) should be cancelled/cleaned up\r\n\r\n## Key Findings\r\n\r\n1. Order status: TEMPORARY (not TEMPORARY_EXPIRED — no status reset needed)\r\n2. Payment notification received: TRANSACTION_STATUS=1 (success) at 19:57:51\r\n3. Follow-up query sent and response received at 19:57:52\r\n4. No PTEs created (PaymentTransaction has 0 entries)\r\n5. No converted order exists (ZA261012-13555684 returns 0 results)\r\n6. No business process or consignment process exists\r\n7. Cart was deleted (0 results)\r\n8. Two temp orders exist for same base code (second attempt is the valid one)\r\n9. Second payment notification received at 19:59:00 (duplicate callback from different IP)\r\n10. Customer checked order on Oct 16 — NotFoundException (order not found because not converted)\r\n\r\n## Data Sources\r\n\r\n- Jira: SAHME-3486 ticket (description + 0 comments)\r\n- Kibana: 818 events in 7d timeline, 7 ERROR hits, 4 PayGate-specific hits, 0 conversion-result hits\r\n- HAC: 8 FlexibleSearch queries (order, PT, PTE, processes, cart, all versions, converted order check)\r\n- Codebase: Full DPO PayGate flow traced (notification handler, event strategy, temp order service, cleanup cronjob)\r\n- Jira cross-ref: PC-53917 (REUSABLE), PC-47736, PC-47373, PC-48014, SAHME-3230/3209/1599/1340",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-19T13:30:11.518Z"
+      }
+    },
     {
       "key": "TKME-2383",
       "summary": "Stuck order on Hybris",
@@ -984,7 +1028,7 @@
       {
         "pid": 22196,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 91765,
+        "ageSeconds": 91807,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -994,7 +1038,7 @@
       {
         "pid": 18704,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 91623,
+        "ageSeconds": 91664,
         "status": "running",
         "isChild": false,
         "taskSummary": "keep this rca for next time",
@@ -1004,7 +1048,7 @@
       {
         "pid": 732,
         "cwd": "c:\\windows",
-        "ageSeconds": 91619,
+        "ageSeconds": 91660,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -1014,7 +1058,7 @@
       {
         "pid": 7744,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 91240,
+        "ageSeconds": 91282,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -4984,17 +5028,17 @@
     "bridgeLogTail": "[2026-10-22T22:07:08.960Z] ==========================================\n[2026-10-22T22:07:08.963Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-22T22:07:08.963Z] === with Aipro Auto-Launch ===\n[2026-10-22T22:07:08.964Z] ==========================================\n[2026-10-22T22:07:08.964Z] PID: 31824\n[2026-10-22T22:07:08.965Z] Repo: aryanverma2410/agent-bridge\n[2026-10-22T22:07:08.965Z] Poll interval: 10000ms\n[2026-10-22T22:07:08.966Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-22T22:07:08.967Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-22T22:07:08.968Z] Waiting for messages...\n[2026-10-22T22:07:58.682Z] ==========================================\n[2026-10-22T22:07:58.684Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-22T22:07:58.684Z] === with Aipro Auto-Launch ===\n[2026-10-22T22:07:58.685Z] ==========================================\n[2026-10-22T22:07:58.686Z] PID: 42772\n[2026-10-22T22:07:58.687Z] Repo: aryanverma2410/agent-bridge\n[2026-10-22T22:07:58.688Z] Poll interval: 10000ms\n[2026-10-22T22:07:58.688Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-22T22:07:58.689Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-22T22:07:58.690Z] Waiting for messages...",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-23T12:09:56.930Z",
-      "ageMs": 51
+      "lastWrite": "2026-10-23T12:10:26.935Z",
+      "ageMs": 11452
     },
-    "watchdogLogTail": "[2026-10-23T12:07:41.870Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T12:07:56.873Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T12:08:11.882Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T12:08:26.892Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T12:08:41.893Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T12:08:56.901Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T12:09:11.905Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T12:09:26.909Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T12:09:41.917Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T12:09:56.929Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-23T12:08:11.882Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T12:08:26.892Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T12:08:41.893Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T12:08:56.901Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T12:09:11.905Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T12:09:26.909Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T12:09:41.917Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T12:09:56.929Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T12:10:11.932Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T12:10:26.933Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-23T12:09:22.013Z",
+      "lastCheck": "2026-10-23T12:10:21.855Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5003,7 +5047,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-23T12:09:22.013Z",
+      "lastCheck": "2026-10-23T12:10:21.855Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5012,9 +5056,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-23T12:09:22.013Z",
+      "lastCheck": "2026-10-23T12:10:21.855Z",
       "downSince": "2026-10-23T07:49:12.210Z",
-      "downDuration": 15609803,
+      "downDuration": 15669645,
       "alert": true
     }
   ],
@@ -5143,6 +5187,18 @@
   ],
   "actionItems": {
     "zero": [
+      {
+        "key": "SAHME-3486",
+        "summary": "Order stuck in Temporary state",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/SAHME-3486",
+        "updated": "2026-10-23T21:09:56.000+0900",
+        "statusChangedAt": "2026-10-23T21:09:56.677+0900"
+      },
       {
         "key": "TKME-2383",
         "summary": "Stuck order on Hybris",
@@ -5323,7 +5379,7 @@
       }
     ],
     "totals": {
-      "zero": 8,
+      "zero": 9,
       "actionable": 3,
       "blocked": 2,
       "queued": 2
@@ -5377,152 +5433,9 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": {
-    "byTicket": [
-      {
-        "key": "TKME-2382",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86399,
-        "targetDate": "2026-10-19T11:35:42.030000001Z"
-      },
-      {
-        "key": "TKME-2382",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2397695,
-        "targetDate": "2026-12-02T06:11:28.355000033Z"
-      },
-      {
-        "key": "TKME-2383",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86400,
-        "targetDate": "2026-10-19T21:00:00.000000001Z"
-      },
-      {
-        "key": "TKME-2383",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2555538,
-        "targetDate": "2026-12-04T02:02:10.947000034Z"
-      },
-      {
-        "key": "GMT-22312",
-        "slaName": "GMT Issue Response SLA(GMT+5.5)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86326,
-        "targetDate": "2026-10-14T11:17:22.593000001Z"
-      },
-      {
-        "key": "GMT-22312",
-        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
-        "slaStatus": "STILL",
-        "remainingDuration": 394117,
-        "targetDate": "2026-10-30T01:38:30.081000013Z"
-      },
-      {
-        "key": "AEME-6590",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86065,
-        "targetDate": "2026-09-29T06:53:13.927000001Z"
-      },
-      {
-        "key": "AEME-6590",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2425234,
-        "targetDate": "2026-12-02T13:50:27.278000047Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86397,
-        "targetDate": "2026-09-29T16:09:08.750000001Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1734814,
-        "targetDate": "2026-11-20T14:03:27.584000039Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86179,
-        "targetDate": "2026-09-30T08:16:57.595000001Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1269633,
-        "targetDate": "2026-10-20T08:16:57.595000015Z"
-      },
-      {
-        "key": "MHME-1462",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85471,
-        "targetDate": "2026-10-14T05:24:28.367000001Z"
-      },
-      {
-        "key": "MHME-1462",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1186965,
-        "targetDate": "2026-11-10T04:51:55.706000020Z"
-      },
-      {
-        "key": "AEME-6644",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86400,
-        "targetDate": "2026-10-19T20:00:00.000000001Z"
-      },
-      {
-        "key": "AEME-6644",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2377993,
-        "targetDate": "2026-12-02T00:43:06.301000032Z"
-      },
-      {
-        "key": "SAHME-3492",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86353,
-        "targetDate": "2026-10-22T08:47:16.015000001Z"
-      },
-      {
-        "key": "SAHME-3492",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2576076,
-        "targetDate": "2026-12-04T08:44:29.590000032Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85660,
-        "targetDate": "2026-09-15T08:21:25.088000001Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1211372,
-        "targetDate": "2026-10-13T12:51:05.986000021Z"
-      }
-    ]
-  },
+  "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 1.58h on AEME-6535, 1h on SAME-4019, 1h on PC-55757, 1.5h on SAHME-3490, 0.25h on TKME-2387, 0.25h on TKME-2385, 0.42h on MHME-1466, 0.75h on EHME-947, 1h on PC-55812\nToday: TKME-2383, TKME-2382, SAHME-3492, GMT-22312, MHME-1462\nBlockers: PC-55757"
+    "standupText": "Yesterday: 1.58h on AEME-6535, 1h on SAME-4019, 1h on PC-55757, 1.5h on SAHME-3490, 0.25h on TKME-2387, 0.25h on TKME-2385, 0.42h on MHME-1466, 0.75h on EHME-947, 1h on PC-55812\nToday: SAHME-3486, TKME-2383, TKME-2382, SAHME-3492, GMT-22312\nBlockers: PC-55757"
   }
 }
