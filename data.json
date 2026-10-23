@@ -1,51 +1,7 @@
 {
-  "generatedAt": "2026-10-23T07:06:20.342Z",
-  "totalTickets": 10,
+  "generatedAt": "2026-10-23T07:07:03.036Z",
+  "totalTickets": 9,
   "tickets": [
-    {
-      "key": "TKME-2379",
-      "summary": "Orders delaying at waitForKnoxResponseBeforeFinancialInitialUpdate",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Turkey Maintenance & Enhancements",
-      "projectKey": "TKME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-22T22:29:27.000+0900",
-      "created": "2026-10-15T22:23:51.000+0900",
-      "statusChangedAt": "2026-10-15T22:33:00.478+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nRecently many orders are delayed in creating the consignment, upon checking the order process is waited around 2 to 3 hours at waitForKnoxResponseBeforeFinancialInitialUpdate action. \n\nCould you please check why the orders are waiting at this action ?\n\n\nTR261014-15734351\nOrder creation : O",
-      "commentsCount": 3,
-      "recentComments": [
-        {
-          "author": "Rajeshbabu Yatirajula",
-          "date": "2026-10-22T22:29:21.336+0900",
-          "snippet": "Hi ~@email \n\nCould you please check what was the waiting list size at that time for these two orders ? Also, see if the batch is picking up any irrelevant orders.\n\nRegards,\nRajesh"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-21T18:39:55.474+0900",
-          "snippet": "Hi Rajeshbabu,\n\nWe investigated the two TR orders (TR261014-15734351 and TR261014-15700732) and found the delay is expected behaviour caused by batch size throttling in the Financial Initial Update cronjob, not a system malfunction.\n\nTurkey uses batch FI posting — orders enter a WAITING_FOR_SEND_FIN"
-        }
-      ],
-      "lastCommentBy": "Rajeshbabu Yatirajula",
-      "lastCommentSnippet": "Hi ~@email \n\nCould you please check what was the waiting list size at that time for these two orders ? Also, see if the batch is picking up any irrelevant orders.\n\nRegards,\nRajesh",
-      "lastCommentDate": "2026-10-22T22:29:21.336+0900",
-      "url": "https://jira.secext.samsung.net/browse/TKME-2379",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Orders delaying at waitForKnoxResponseBeforeFinancialInitialUpdate\r\nGenerated: 2026-10-22T13:30:00.000Z\r\n\r\nHi Rajesh ,\r\n\r\nWe investigated the two TR orders (TR261014-15734351 and TR261014-15700732) and found the delay is expected behaviour caused by batch size throttling in the Financial Initial Update cronjob. Here is the breakdown.\r\n\r\nThe order process for TR region uses a batch Financial Initial Update path. When IsFinancialUpdateSentAsBatchActionV1 evaluates to YES (configured for the TR store), the order status is set to WAITING_FOR_SEND_FINANCIAL and the process pauses at a wait node called waitForFinancialInitialUpdate. This wait node listens for an event named {processCode}_WaitForSendFinancialInitialUpdate. No code moves the order forward until a cronjob fires that event.\r\n\r\nThat cronjob is tr-tokoFinancialInitialUpdateJob, which is active with a batch size of 100. On each run, it queries all orders in WAITING_FOR_SEND_FINANCIAL status for the TR store and triggers the _WaitForSendFinancialInitialUpdate event for each order process, with a 5-second staggered delay between orders (tokofulfilmentprocess.processStartDelay=5). When the number of waiting orders exceeds the batch size limit, only the first 100 are processed; the rest wait for the next cronjob run.\r\n\r\nOn October 14, 256+ TR orders were created between 13:00 and 16:08 UTC. Both reported orders arrived at the wait node around 14:11-14:33 UTC. The Financial Initial Update cronjob next ran at approximately 16:08:19 UTC, waking 100 orders in the first batch. Both reported orders were in the first batch and received their event within seconds of each other (16:08:19 and 16:08:21 UTC). The delay between order creation and consignment creation was therefore 1 hour 35 minutes to 1 hour 57 minutes, which is the gap between the order arriving at the wait node and the next cronjob execution picking it up.\r\n\r\nRegarding your questions:\r\n\r\n1. Waiting list size at the time: Based on the DB query, 256+ TR261014 orders were in WAITING_FOR_SEND_FINANCIAL status when the cronjob ran at 16:08 UTC. The batch size is 100, so roughly 156 orders would have waited for the next cronjob run.\r\n\r\n2. Whether the batch picked up irrelevant orders: No. The cronjob queries specifically for orders in WAITING_FOR_SEND_FINANCIAL status for the TR store. All 256+ orders in the queue were legitimate orders that had passed through the order process and reached the Financial Initial Update stage. There is no evidence of irrelevant orders being picked up.\r\n\r\nThere were no errors, no Knox timeouts, and no process failures. The Knox dashboard callbacks were received successfully within seconds of order placement. The process is working as designed — the delay is the expected trade-off of batching Financial Initial Updates instead of sending them individually in real-time.\r\n\r\nThanks,\r\nAryan",
-        "sections": {
-          "issue": "",
-          "rca": "Orders delaying at waitForKnoxResponseBeforeFinancialInitialUpdate\r\nGenerated: 2026-10-22T13:30:00.000Z\r\n\r\nHi Rajesh ,\r\n\r\nWe investigated the two TR orders (TR261014-15734351 and TR261014-15700732) and found the delay is expected behaviour caused by batch size throttling in the Financial Initial Update cronjob. Here is the breakdown.\r\n\r\nThe order process for TR region uses a batch Financial Initial Update path. When IsFinancialUpdateSentAsBatchActionV1 evaluates to YES (configured for the TR store), the order status is set to WAITING_FOR_SEND_FINANCIAL and the process pauses at a wait node called waitForFinancialInitialUpdate. This wait node listens for an event named {processCode}_WaitForSendFinancialInitialUpdate. No code moves the order forward until a cronjob fires that event.\r\n\r\nThat cronjob is tr-tokoFinancialInitialUpdateJob, which is active with a batch size of 100. On each run, it queries all orders in WAITING_FOR_SEND_FINANCIAL status for the TR store and triggers the _WaitForSendFinancialInitialUpdate event for each order process, with a 5-second staggered delay between orders (tokofulfilmentprocess.processStartDelay=5). When the number of waiting orders exceeds the batch size limit, only the first 100 are processed; the rest wait for the next cronjob run.\r\n\r\nOn October 14, 256+ TR orders were created between 13:00 and 16:08 UTC. Both reported orders arrived at the wait node around 14:11-14:33 UTC. The Financial Initial Update cronjob next ran at approximately 16:08:19 UTC, waking 100 orders in the first batch. Both reported orders were in the first batch and received their event within seconds of each other (16:08:19 and 16:08:21 UTC). The delay between order creation and consignment creation was therefore 1 hour 35 minutes to 1 hour 57 minutes, which is the gap between the order arriving at the wait node and the next cronjob execution picking it up.\r\n\r\nRegarding your questions:\r\n\r\n1. Waiting list size at the time: Based on the DB query, 256+ TR261014 orders were in WAITING_FOR_SEND_FINANCIAL status when the cronjob ran at 16:08 UTC. The batch size is 100, so roughly 156 orders would have waited for the next cronjob run.\r\n\r\n2. Whether the batch picked up irrelevant orders: No. The cronjob queries specifically for orders in WAITING_FOR_SEND_FINANCIAL status for the TR store. All 256+ orders in the queue were legitimate orders that had passed through the order process and reached the Financial Initial Update stage. There is no evidence of irrelevant orders being picked up.\r\n\r\nThere were no errors, no Knox timeouts, and no process failures. The Knox dashboard callbacks were received successfully within seconds of order placement. The process is working as designed — the delay is the expected trade-off of batching Financial Initial Updates instead of sending them individually in real-time.\r\n\r\nThanks,\r\nAryan",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-22T14:00:53.322Z"
-      }
-    },
     {
       "key": "TKME-2348",
       "summary": "Stuck order on Hybris",
@@ -647,7 +603,7 @@
       {
         "pid": 22196,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 73554,
+        "ageSeconds": 73595,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -657,7 +613,7 @@
       {
         "pid": 18704,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 73411,
+        "ageSeconds": 73452,
         "status": "running",
         "isChild": false,
         "taskSummary": "whats the issue in just retrying the sc+, just tell me what errors are being faced for each one a...",
@@ -667,7 +623,7 @@
       {
         "pid": 732,
         "cwd": "c:\\windows",
-        "ageSeconds": 73407,
+        "ageSeconds": 73448,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -677,7 +633,7 @@
       {
         "pid": 7744,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 73029,
+        "ageSeconds": 73070,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -4647,17 +4603,17 @@
     "bridgeLogTail": "[2026-10-22T22:07:08.960Z] ==========================================\n[2026-10-22T22:07:08.963Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-22T22:07:08.963Z] === with Aipro Auto-Launch ===\n[2026-10-22T22:07:08.964Z] ==========================================\n[2026-10-22T22:07:08.964Z] PID: 31824\n[2026-10-22T22:07:08.965Z] Repo: aryanverma2410/agent-bridge\n[2026-10-22T22:07:08.965Z] Poll interval: 10000ms\n[2026-10-22T22:07:08.966Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-22T22:07:08.967Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-22T22:07:08.968Z] Waiting for messages...\n[2026-10-22T22:07:58.682Z] ==========================================\n[2026-10-22T22:07:58.684Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-22T22:07:58.684Z] === with Aipro Auto-Launch ===\n[2026-10-22T22:07:58.685Z] ==========================================\n[2026-10-22T22:07:58.686Z] PID: 42772\n[2026-10-22T22:07:58.687Z] Repo: aryanverma2410/agent-bridge\n[2026-10-22T22:07:58.688Z] Poll interval: 10000ms\n[2026-10-22T22:07:58.688Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-22T22:07:58.689Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-22T22:07:58.690Z] Waiting for messages...",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-23T07:06:17.946Z",
-      "ageMs": 6949
+      "lastWrite": "2026-10-23T07:07:02.965Z",
+      "ageMs": 4091
     },
-    "watchdogLogTail": "[2026-10-23T07:04:02.857Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T07:04:17.863Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T07:04:32.865Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T07:04:47.874Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T07:05:02.884Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T07:05:17.887Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T07:05:32.893Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T07:05:47.928Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T07:06:02.932Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T07:06:17.945Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-23T07:04:47.874Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T07:05:02.884Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T07:05:17.887Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T07:05:32.893Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T07:05:47.928Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T07:06:02.932Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T07:06:17.945Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T07:06:32.952Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T07:06:47.964Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T07:07:02.965Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-23T07:05:49.045Z",
+      "lastCheck": "2026-10-23T07:06:49.505Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4666,7 +4622,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-23T07:05:49.045Z",
+      "lastCheck": "2026-10-23T07:06:49.505Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4675,9 +4631,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-23T07:05:49.045Z",
+      "lastCheck": "2026-10-23T07:06:49.505Z",
       "downSince": "2026-10-23T06:59:49.075Z",
-      "downDuration": 359970,
+      "downDuration": 420430,
       "alert": true
     }
   ],
@@ -4807,18 +4763,6 @@
   "actionItems": {
     "zero": [
       {
-        "key": "TKME-2379",
-        "summary": "Orders delaying at waitForKnoxResponseBeforeFinancialInitialUpdate",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/TKME-2379",
-        "updated": "2026-10-22T22:29:27.000+0900",
-        "statusChangedAt": "2026-10-15T22:33:00.478+0900"
-      },
-      {
         "key": "TKME-2348",
         "summary": "Stuck order on Hybris",
         "priority": "None",
@@ -4926,21 +4870,21 @@
       }
     ],
     "totals": {
-      "zero": 5,
+      "zero": 4,
       "actionable": 1,
       "blocked": 2,
       "queued": 2
     }
   },
   "worklogTotals": {
-    "todayHours": 5.5,
-    "weekHours": 41.25,
+    "todayHours": 6.83,
+    "weekHours": 42.58,
     "dailyHours": [
       11.17,
       8.08,
       10.83,
       5.67,
-      5.5,
+      6.83,
       0,
       0
     ],
@@ -4958,9 +4902,9 @@
   },
   "tempoApproval": {
     "status": "open",
-    "workedHours": 161.31,
+    "workedHours": 162.64,
     "requiredHours": 176,
-    "deficitHours": 14.69,
+    "deficitHours": 13.36,
     "periodStart": "2026-10-01",
     "periodEnd": "2026-10-31"
   },
@@ -4980,96 +4924,9 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": {
-    "byTicket": [
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86397,
-        "targetDate": "2026-09-29T16:09:08.750000001Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1753027,
-        "targetDate": "2026-11-20T14:03:27.584000039Z"
-      },
-      {
-        "key": "TKME-2379",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85854,
-        "targetDate": "2026-10-16T13:23:55.356000001Z"
-      },
-      {
-        "key": "TKME-2379",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 900364,
-        "targetDate": "2026-11-06T17:12:24.705000016Z"
-      },
-      {
-        "key": "SAHME-3490",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86354,
-        "targetDate": "2026-10-21T07:20:19.604000001Z"
-      },
-      {
-        "key": "SAHME-3490",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1038563,
-        "targetDate": "2026-11-10T08:35:43.589000015Z"
-      },
-      {
-        "key": "TKME-2382",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86399,
-        "targetDate": "2026-10-19T11:35:42.030000001Z"
-      },
-      {
-        "key": "TKME-2382",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2401300,
-        "targetDate": "2026-12-02T02:08:00.009000033Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86179,
-        "targetDate": "2026-09-30T08:16:57.595000001Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1269633,
-        "targetDate": "2026-10-20T08:16:57.595000015Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85660,
-        "targetDate": "2026-09-15T08:21:25.088000001Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1211372,
-        "targetDate": "2026-10-13T12:51:05.986000021Z"
-      }
-    ]
-  },
+  "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 1h on AEME-6535, 1h on SAME-4019, 1h on PC-55757, 0.25h on TKME-2387, 0.25h on TKME-2385, 0.42h on MHME-1466, 0.75h on EHME-947, 1h on PC-55812\nToday: TKME-2379, TKME-2348, TKME-2382, PC-55757, SAHME-3490\nBlockers: PC-55757"
+    "standupText": "Yesterday: 1h on AEME-6535, 1h on SAME-4019, 1h on PC-55757, 0.25h on TKME-2387, 0.25h on TKME-2385, 0.42h on MHME-1466, 0.75h on EHME-947, 1h on PC-55812\nToday: TKME-2348, TKME-2382, PC-55757, SAHME-3490, RT-657502\nBlockers: PC-55757"
   }
 }
