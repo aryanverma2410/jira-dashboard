@@ -1,7 +1,60 @@
 {
-  "generatedAt": "2026-10-23T10:04:04.408Z",
-  "totalTickets": 11,
+  "generatedAt": "2026-10-23T10:04:45.327Z",
+  "totalTickets": 12,
   "tickets": [
+    {
+      "key": "MHME-1462",
+      "summary": "Update invoice for the Order MA261008-0769928",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Morocco Maintenance & Enhancements",
+      "projectKey": "MHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-23T19:04:22.000+0900",
+      "created": "2026-10-13T14:24:28.000+0900",
+      "statusChangedAt": "2026-10-23T19:04:22.248+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team, \ncan you please help to update the invoice of the Order \nMA261008-0769928\n\nas below ? \n\nCustomer: Primelift SARL\n\nICE:  003595504000059\n\nThanks\n\nAshwani Verma\n\n \n\nCC: ~@email",
+      "commentsCount": 7,
+      "recentComments": [
+        {
+          "author": "Ashwani Verma",
+          "date": "2026-10-23T19:04:03.486+0900",
+          "snippet": "Hi ~@email \n\nI've checked with the market regarding the invoice regeneration, it seems like not updated yet.\n\nPlease check\n\n!image-2026-10-23-09-51-14-870.png|width=916,height=207!\n\nThanks\n\n~@email"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-21T18:58:24.363+0900",
+          "snippet": "Hi ~@email ,\n\nTax invoice regenerated as per requirement. \n\nKindly heck and validate at your end as well.\n\nThanks and Regards\n\nAryan"
+        }
+      ],
+      "lastCommentBy": "Ashwani Verma",
+      "lastCommentSnippet": "Hi ~@email \n\nI've checked with the market regarding the invoice regeneration, it seems like not updated yet.\n\nPlease check\n\n!image-2026-10-23-09-51-14-870.png|width=916,height=207!\n\nThanks\n\n~@email",
+      "lastCommentDate": "2026-10-23T19:04:03.486+0900",
+      "url": "https://jira.secext.samsung.net/browse/MHME-1462",
+      "linkedTickets": [
+        {
+          "key": "PC-55602",
+          "summary": "MHME-1462 | To Update Delivery Address & payment addess",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "relates to",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "# RCA: MHME-1462\nSummary: Update invoice for the Order MA261008-0769928\nGenerated: 2026-10-16T09:30:00Z\n\nIssue:\nThe reporter (Ashwani Verma) requested updating the invoice customer and address details on order MA261008-07699289 (referred to as MA261008-0769928 in the ticket, missing the trailing 9). The order is COMPLETED with the consignment also in COMPLETED status, shipped on 2026-10-08, and a GERP billing number (3249268252) has already been generated. The current invoice bears the original customer name (Abderrahman lahroussi) and address (Ain Chock, Casablanca-Settat, Morocco), but the reporter needs it updated to the new entity: Primelift SARL, ICE 003595504000059, address Bloc D Rue 04 N17, Ain Chock, Casablanca, Morocco. Both the delivery address (PK 10306956263447) and payment address (PK 10306956296215) on the order need to be updated with the new customer name, company, and ICE number.\n\nRCA:\nThe order MA261008-07699289 was placed on 2026-10-08 via CMI credit card payment (ma-cmiCreditCardPaymentMode) with total 10,324.79 MAD. The order completed normally through the full fulfillment lifecycle (order placed, consignment shipped, GERP billing generated, order status COMPLETED). There is no platform bug or code defect involved. The request is a post-fulfillment invoice data correction, which is a standard operational request for the Morocco (MHME) region.\n\nThe address fields on both delivery and payment addresses are Hybris-encrypted (attribute encryption enabled for the MA region), meaning they cannot be directly updated via SQL or ImpEx. A Groovy script through HAC is required to load the AddressModel items via getModelService, update the firstname, lastname, company, and any ICE-related fields, then save via modelService.saveAll(). This is the same remediation pattern confirmed and successfully applied in MHME-1328 (Invoice Update ICE, May 2026), MHME-773 (ICE Number Update, Jan 2024), MHME-719 (Order invoice update, Oct 2023), MHME-709 (Order details update, Sep 2023), and MHME-734 (Order invoice modification, Oct 2023). All precedent tickets were resolved as HAC remediation scripts.\n\nThe consignment has a GERP billing number (3249268252) already assigned, so the invoice has been generated in the downstream GERP system. Updating the Hybris-side address data will need to be accompanied by a GERP-side invoice correction or re-generation request to the Morocco finance/accounting team, as the GERP billing document is a separate downstream artifact.\n\nPossible remediation:\n1. Create a HAC Groovy script to update both Address items (delivery: PK 10306956263447, payment: PK 10306956296215) with the new customer details:\n   - firstname: Primelift\n   - lastname: SARL\n   - company: Primelift SARL\n   - streetname: Bloc D Rue 04 N17\n   - town: Ain Chock\n   - district: Casablanca\n   - postalcode: (as provided)\n   - Ensure ICE number 003595504000059 is set in the appropriate field (likely company or a custom attribute)\n2. Use modelService to load, modify, and save the Address items (not direct SQL, due to attribute encryption)\n3. After the Hybris update, coordinate with the Morocco GERP/finance team to regenerate or correct the downstream GERP billing document (billing number 3249268252) with the new customer and ICE details\n4. The script should follow the pattern established in MHME-1328 and MHME-773 for invoice/address updates on completed orders in the MA region\n5. No PC ticket type exists in the standard reusable library for invoice/address updates specifically, but this falls under the general data-fix remediation category — refer to MHME-1328 for the approved script template",
+        "sections": {
+          "issue": "The reporter (Ashwani Verma) requested updating the invoice customer and address details on order MA261008-07699289 (referred to as MA261008-0769928 in the ticket, missing the trailing 9). The order is COMPLETED with the consignment also in COMPLETED status, shipped on 2026-10-08, and a GERP billing number (3249268252) has already been generated. The current invoice bears the original customer name (Abderrahman lahroussi) and address (Ain Chock, Casablanca-Settat, Morocco), but the reporter needs it updated to the new entity: Primelift SARL, ICE 003595504000059, address Bloc D Rue 04 N17, Ain Chock, Casablanca, Morocco. Both the delivery address (PK 10306956263447) and payment address (PK 10306956296215) on the order need to be updated with the new customer name, company, and ICE number.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-16T09:35:29.905Z"
+      }
+    },
     {
       "key": "RT-703005",
       "summary": "Regression - SMI STG2 - SA/QA/KW/OM: Recurring/Dunning process is NOT working for SC+ subscription orders",
@@ -793,7 +846,7 @@
       {
         "pid": 22196,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 84216,
+        "ageSeconds": 84257,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -803,7 +856,7 @@
       {
         "pid": 18704,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 84073,
+        "ageSeconds": 84114,
         "status": "running",
         "isChild": false,
         "taskSummary": "reverify all the requirements on the ticket from start. verify each requirement each one by one c...",
@@ -813,7 +866,7 @@
       {
         "pid": 732,
         "cwd": "c:\\windows",
-        "ageSeconds": 84070,
+        "ageSeconds": 84111,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -823,7 +876,7 @@
       {
         "pid": 7744,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 83691,
+        "ageSeconds": 83732,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -4793,10 +4846,10 @@
     "bridgeLogTail": "[2026-10-22T22:07:08.960Z] ==========================================\n[2026-10-22T22:07:08.963Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-22T22:07:08.963Z] === with Aipro Auto-Launch ===\n[2026-10-22T22:07:08.964Z] ==========================================\n[2026-10-22T22:07:08.964Z] PID: 31824\n[2026-10-22T22:07:08.965Z] Repo: aryanverma2410/agent-bridge\n[2026-10-22T22:07:08.965Z] Poll interval: 10000ms\n[2026-10-22T22:07:08.966Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-22T22:07:08.967Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-22T22:07:08.968Z] Waiting for messages...\n[2026-10-22T22:07:58.682Z] ==========================================\n[2026-10-22T22:07:58.684Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-22T22:07:58.684Z] === with Aipro Auto-Launch ===\n[2026-10-22T22:07:58.685Z] ==========================================\n[2026-10-22T22:07:58.686Z] PID: 42772\n[2026-10-22T22:07:58.687Z] Repo: aryanverma2410/agent-bridge\n[2026-10-22T22:07:58.688Z] Poll interval: 10000ms\n[2026-10-22T22:07:58.688Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-22T22:07:58.689Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-22T22:07:58.690Z] Waiting for messages...",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-23T10:03:59.253Z",
-      "ageMs": 8183
+      "lastWrite": "2026-10-23T10:04:44.261Z",
+      "ageMs": 4138
     },
-    "watchdogLogTail": "[2026-10-23T10:01:44.187Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T10:01:59.188Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T10:02:14.200Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T10:02:29.204Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T10:02:44.209Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T10:02:59.222Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T10:03:14.236Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T10:03:29.247Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T10:03:44.250Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T10:03:59.253Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-23T10:02:29.204Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T10:02:44.209Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T10:02:59.222Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T10:03:14.236Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T10:03:29.247Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T10:03:44.250Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T10:03:59.253Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T10:04:14.256Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T10:04:29.259Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-23T10:04:44.260Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
@@ -4953,6 +5006,18 @@
   "actionItems": {
     "zero": [
       {
+        "key": "MHME-1462",
+        "summary": "Update invoice for the Order MA261008-0769928",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/MHME-1462",
+        "updated": "2026-10-23T19:04:22.000+0900",
+        "statusChangedAt": "2026-10-23T19:04:22.248+0900"
+      },
+      {
         "key": "RT-703005",
         "summary": "Regression - SMI STG2 - SA/QA/KW/OM: Recurring/Dunning process is NOT working for SC+ subscription orders",
         "priority": "Critical",
@@ -5084,7 +5149,7 @@
       }
     ],
     "totals": {
-      "zero": 5,
+      "zero": 6,
       "actionable": 2,
       "blocked": 2,
       "queued": 2
@@ -5138,9 +5203,110 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "PKHME-951",
+        "slaName": "Maintenance Response (GMT+5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86400,
+        "targetDate": "2026-10-22T09:07:21.654000001Z"
+      },
+      {
+        "key": "PKHME-951",
+        "slaName": "Maintenance Resolution (GMT+5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2589033,
+        "targetDate": "2026-12-04T09:15:17.902000032Z"
+      },
+      {
+        "key": "AEME-6590",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86065,
+        "targetDate": "2026-09-29T06:53:13.927000001Z"
+      },
+      {
+        "key": "AEME-6590",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2432742,
+        "targetDate": "2026-12-02T13:50:27.278000047Z"
+      },
+      {
+        "key": "AEME-6644",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86400,
+        "targetDate": "2026-10-19T20:00:00.000000001Z"
+      },
+      {
+        "key": "AEME-6644",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2385501,
+        "targetDate": "2026-12-02T00:43:06.301000032Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86179,
+        "targetDate": "2026-09-30T08:16:57.595000001Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1269633,
+        "targetDate": "2026-10-20T08:16:57.595000015Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86397,
+        "targetDate": "2026-09-29T16:09:08.750000001Z"
+      },
+      {
+        "key": "TKME-2348",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1742323,
+        "targetDate": "2026-11-20T14:03:27.584000039Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85660,
+        "targetDate": "2026-09-15T08:21:25.088000001Z"
+      },
+      {
+        "key": "TKME-2324",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1211372,
+        "targetDate": "2026-10-13T12:51:05.986000021Z"
+      },
+      {
+        "key": "MHME-1462",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85471,
+        "targetDate": "2026-10-14T05:24:28.367000001Z"
+      },
+      {
+        "key": "MHME-1462",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1186965,
+        "targetDate": "2026-11-10T04:51:55.706000020Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 1.58h on AEME-6535, 1h on SAME-4019, 1h on PC-55757, 1.5h on SAHME-3490, 0.25h on TKME-2387, 0.25h on TKME-2385, 0.42h on MHME-1466, 0.75h on EHME-947, 1h on PC-55812\nToday: RT-703005, PKHME-951, AEME-6644, AEME-6590, TKME-2348\nBlockers: PC-55757"
+    "standupText": "Yesterday: 1.58h on AEME-6535, 1h on SAME-4019, 1h on PC-55757, 1.5h on SAHME-3490, 0.25h on TKME-2387, 0.25h on TKME-2385, 0.42h on MHME-1466, 0.75h on EHME-947, 1h on PC-55812\nToday: MHME-1462, RT-703005, PKHME-951, AEME-6644, AEME-6590\nBlockers: PC-55757"
   }
 }
