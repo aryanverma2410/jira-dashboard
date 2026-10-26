@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-26T13:37:35.132Z",
+  "generatedAt": "2026-10-26T13:38:41.707Z",
   "totalTickets": 11,
   "tickets": [
     {
@@ -30,9 +30,15 @@
       "url": "https://jira.secext.samsung.net/browse/TKME-2408",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": "auto-trigger",
-        "lockedAt": "2026-10-26T13:25:00.000Z"
+        "status": "found",
+        "excerpt": "Ticket: TKME-2408 — Stuck order on Hybris (17 TR-region orders)\r\nGenerated: 2026-10-26T13:30:00.000Z\r\n\r\nIssue:\r\n17 TR-region orders (all created between Oct 21-26, 2026) are stuck with consignment process in ERROR state at the isInitialFISuccess action node, with endMessage \"All went wrong.\" All orders are in SHIPPED status with consignments in COMPLETED status, but the consignment process (consignment-process-v11-36) has failed. The orders all use tr-cleaning-delivery delivery mode and have Expert Cleaning Service external services (provider: GCIC_EXPERT_CLEANING_STANDALONE) in ERROR status.\r\n\r\nRCA:\r\nAll 17 orders follow the identical failure pattern confirmed across 7 sampled orders (TR261026-29176858, TR261017-18858616, TR261019-21410483, TR261016-17817628, TR261014-15697739, TR261007-06824046, TR261006-05976320). Each order has two business processes: the order process (order-process-v25-69) is in RUNNING state, and the consignment process (consignment-process-v11-36) is in ERROR state. The ProcessTaskLog shows an exception at the isInitialFISuccess action with an empty returnCode (indicating an unhandled exception). No BusinessProcessParameter stack traces are stored for any of these orders.\r\n\r\nKibana logs for TR261026-29176858 reveal the root cause. After the consignment was moved to COMPLETED by GERP (at 11:02:46 UTC), the consignment process wakes up and reaches the processExternalServices action, which invokes the GCIC (SAP Gateway) Expert Cleaning Service client to create a Sales Order via the ZGW_CREATE_SO_SRV SAP service. TokoExpertCleaningServiceClient sends the customer's address as part of the SO creation request. The SAP Gateway rejects the request with HTTP 400 Bad Request because the customer's street address field (CustAddrStreet1) exceeds the maxlength=60 facet constraint enforced by the SAP OData service. The full address \"ESENEVLER MAH 2.AKDOĞAN SOK ERDOĞAN CAD ONUR SİT C BLOK KAT 5 D 25\" is 73 characters, exceeding the 60-character limit.\r\n\r\nTokoExpertCleaningExternalServicesImpl catches the HttpClientErrorException$BadRequest and sets the external service status to ERROR with the message \"No response from GCIC, setting external service status to ERROR.\" The consignment process then routes to the error end node defined in consignment-process-v11-36.xml (line 545): `<end id=\"error\" state=\"ERROR\">All went wrong.</end>`, which is the generic catch-all error end state for all consignment process versions.\r\n\r\nThe isInitialFISuccess exception in the ProcessTaskLog is a downstream effect: the consignment process ERROR state propagates to the order process, which detects the consignment process failure at the isInitialFISuccess decision node and records an exception there. The order itself remains in SHIPPED status because the consignment physical fulfilment (GERP) completed successfully — only the external service integration (GCIC Expert Cleaning) failed.\r\n\r\nThis is a data validation issue: the SAP Gateway enforces a 60-character limit on the CustAddrStreet1 field, but the Hybris address model does not enforce this constraint at the application layer. Turkish addresses frequently exceed this length due to the descriptive address format commonly used in Turkey (mahalle, sokak, cadde, site, blok, kat, daire combinations).\r\n\r\nPossible remediation:\r\nThe consignment process cannot be retried as-is because the root cause is invalid data sent to the SAP Gateway. Two approaches are possible:\r\n\r\n1. Address truncation/reset approach (Hybris-side HAC script):\r\n   - For each order, reset the external service status from ERROR to NEW\r\n   - Restart the consignment process from the processExternalServices action\r\n   - The GCIC client will retry the SO creation, but will fail again unless the address is truncated to 60 characters before the request\r\n   - This requires a code-level fix in TokoExpertCleaningServiceClient to truncate CustAddrStreet1 to 60 chars, OR a data fix to shorten the stored address\r\n\r\n2. Proper fix (requires code change):\r\n   - Modify TokoExpertCleaningServiceClient to truncate or split the street address to fit within the 60-character SAP Gateway constraint before sending the request\r\n   - Then reset all 17 external services from ERROR to NEW and restart the consignment processes\r\n\r\nSince all 17 orders are TR-region tr-cleaning-delivery orders with the same GCIC Expert Cleaning integration, they will all hit the same address length validation failure. The remediation requires coordination with the GCIC/SAP Gateway team to confirm whether address truncation is acceptable, or whether the SAP Gateway field constraint should be increased.\r\n\r\nNo reusable PC ticket was found for GCIC Expert Cleaning external service remediation. A new PC ticket would need to be created if a HAC script approach is approved.",
+        "sections": {
+          "issue": "17 TR-region orders (all created between Oct 21-26, 2026) are stuck with consignment process in ERROR state at the isInitialFISuccess action node, with endMessage \"All went wrong.\" All orders are in SHIPPED status with consignments in COMPLETED status, but the consignment process (consignment-process-v11-36) has failed. The orders all use tr-cleaning-delivery delivery mode and have Expert Cleaning Service external services (provider: GCIC_EXPERT_CLEANING_STANDALONE) in ERROR status.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-26T13:38:09.366Z"
       }
     },
     {
@@ -618,7 +624,7 @@
       }
     ],
     "pid": 16584,
-    "uptime": 17030,
+    "uptime": 17093,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -627,7 +633,7 @@
         "issueTitle": "Investigate ticket TKME-2408",
         "snippet": "Auto-triggered investigation for new ticket TKME-2408.\n\nTicket: TKME-2408\nSummary: Stuck order on Hybris\n\nUse the invest",
         "pid": 26228,
-        "elapsed": 1005
+        "elapsed": 1069
       }
     ],
     "startTime": "2026-10-26T03:23:43.543Z",
@@ -638,7 +644,7 @@
       {
         "pid": 19076,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 34603,
+        "ageSeconds": 34669,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -648,7 +654,7 @@
       {
         "pid": 6552,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 34526,
+        "ageSeconds": 34592,
         "status": "running",
         "isChild": false,
         "taskSummary": "make a retrigger script adn rettrigger these orders\"",
@@ -658,7 +664,7 @@
       {
         "pid": 22172,
         "cwd": "c:\\windows",
-        "ageSeconds": 34522,
+        "ageSeconds": 34588,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -668,7 +674,7 @@
       {
         "pid": 20664,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 34510,
+        "ageSeconds": 34576,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -678,7 +684,7 @@
       {
         "pid": 7420,
         "cwd": "unknown",
-        "ageSeconds": 33304,
+        "ageSeconds": 33370,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -4749,13 +4755,13 @@
         ]
       }
     },
-    "bridgeLogTail": "[2026-10-26T13:37:29.047Z] STDOUT data for #888: 392 bytes\n[2026-10-26T13:37:29.052Z] LIVE events write for #888: 209 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_888.txt\n[2026-10-26T13:37:44.545Z] STDOUT data for #888: 124 bytes\n[2026-10-26T13:37:44.684Z] LIVE events write for #888: 210 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_888.txt\n[2026-10-26T13:37:45.041Z] aipro stderr for #888: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-10-26T13:37:46.900Z] STDOUT data for #888: 386 bytes\n[2026-10-26T13:37:47.076Z] LIVE events write for #888: 211 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_888.txt",
+    "bridgeLogTail": "[2026-10-26T13:38:46.086Z] STDOUT data for #888: 126 bytes\n[2026-10-26T13:38:46.089Z] LIVE events write for #888: 308 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_888.txt\n[2026-10-26T13:38:46.101Z] STDOUT data for #888: 120 bytes\n[2026-10-26T13:38:46.104Z] LIVE events write for #888: 309 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_888.txt\n[2026-10-26T13:38:46.106Z] STDOUT data for #888: 104 bytes\n[2026-10-26T13:38:46.109Z] LIVE events write for #888: 310 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_888.txt\n[2026-10-26T13:38:46.116Z] STDOUT data for #888: 122 bytes\n[2026-10-26T13:38:46.119Z] LIVE events write for #888: 311 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_888.txt\n[2026-10-26T13:38:46.127Z] STDOUT data for #888: 130 bytes\n[2026-10-26T13:38:46.133Z] LIVE events write for #888: 312 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_888.txt\n[2026-10-26T13:38:46.135Z] STDOUT data for #888: 125 bytes\n[2026-10-26T13:38:46.140Z] LIVE events write for #888: 313 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_888.txt\n[2026-10-26T13:38:46.146Z] STDOUT data for #888: 127 bytes\n[2026-10-26T13:38:46.149Z] LIVE events write for #888: 314 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_888.txt\n[2026-10-26T13:38:46.154Z] STDOUT data for #888: 110 bytes\n[2026-10-26T13:38:46.157Z] LIVE events write for #888: 315 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_888.txt\n[2026-10-26T13:38:46.163Z] STDOUT data for #888: 127 bytes\n[2026-10-26T13:38:46.166Z] LIVE events write for #888: 316 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_888.txt\n[2026-10-26T13:38:46.182Z] STDOUT data for #888: 122 bytes\n[2026-10-26T13:38:46.186Z] LIVE events write for #888: 317 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_888.txt",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-26T13:37:50.381Z",
-      "ageMs": 6883
+      "lastWrite": "2026-10-26T13:38:35.400Z",
+      "ageMs": 10938
     },
-    "watchdogLogTail": "[2026-10-26T13:35:35.321Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T13:35:50.330Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T13:36:05.329Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T13:36:20.353Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T13:36:35.350Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T13:36:50.361Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T13:37:05.367Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T13:37:20.368Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T13:37:35.362Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T13:37:50.380Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.",
+    "watchdogLogTail": "[2026-10-26T13:36:20.353Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T13:36:35.350Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T13:36:50.361Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T13:37:05.367Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T13:37:20.368Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T13:37:35.362Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T13:37:50.380Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T13:38:05.389Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T13:38:20.391Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T13:38:35.398Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.",
     "jobOutputs": {}
   },
   "mcps": [
@@ -4763,7 +4769,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-26T13:36:59.267Z",
+      "lastCheck": "2026-10-26T13:38:05.722Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4772,7 +4778,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-26T13:36:59.267Z",
+      "lastCheck": "2026-10-26T13:38:05.722Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4781,9 +4787,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-26T13:36:59.267Z",
+      "lastCheck": "2026-10-26T13:38:05.722Z",
       "downSince": "2026-10-26T08:31:29.834Z",
-      "downDuration": 18329433,
+      "downDuration": 18395888,
       "alert": true
     }
   ],
