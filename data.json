@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-26T12:34:17.353Z",
-  "totalTickets": 15,
+  "generatedAt": "2026-10-26T12:34:59.749Z",
+  "totalTickets": 14,
   "tickets": [
     {
       "key": "GMT-22264",
@@ -134,8 +134,8 @@
         {
           "key": "TKME-2348",
           "summary": "Stuck order on Hybris",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
+          "status": "Launch Verification",
+          "statusCategory": "Done",
           "relation": "is blocked by",
           "assignee": null
         }
@@ -372,67 +372,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-10-23T12:06:52.749Z"
-      }
-    },
-    {
-      "key": "TKME-2348",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Turkey Maintenance & Enhancements",
-      "projectKey": "TKME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-22T20:30:54.000+0900",
-      "created": "2026-09-29T01:09:08.000+0900",
-      "statusChangedAt": "2026-09-29T01:09:10.990+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n||Order Number||Order Date||Order Status||Issue||\n|TR260924-93500425|2026/09/28|REFUND_FAILED|Payment entry status: REFUND_FOLLOW_ON:ERROR|\n|TR260915-84759375|2026/09/27|ORDER_SPLIT|Consignment process",
-      "commentsCount": 7,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-14T20:29:19.531+0900",
-          "snippet": "Hi Rajesh,\n\nWe are working on updating the existing TR autoheal cronjob to include splitOrder and completeFinancialUpdate statuses as confirmed. The sendConsignmentToWarehouse consignment process will be covered under the new cronjob tracked in TKME-2362.\n\nWe will share the updated cronjob configura"
-        },
-        {
-          "author": "Rajeshbabu Yatirajula",
-          "date": "2026-10-12T23:27:59.925+0900",
-          "snippet": "Hi ~@email \n\nPlease proceed to include the splitOrder and completeFinancialUpdate statuses into the existing cronjob for TR.\n\nRegards,\nRajesh"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Rajesh,\n\nWe are working on updating the existing TR autoheal cronjob to include splitOrder and completeFinancialUpdate statuses as confirmed. The sendConsignmentToWarehouse consignment process will be covered under the new cronjob tracked in TKME-2362.\n\nWe will share the updated cronjob configura",
-      "lastCommentDate": "2026-10-14T20:29:19.531+0900",
-      "url": "https://jira.secext.samsung.net/browse/TKME-2348",
-      "linkedTickets": [
-        {
-          "key": "PC-55812",
-          "summary": "Update autoheal-smi cronjob to include splitOrder and completeFinancialUpdate I/O error retrigger",
-          "status": "Approved-ES",
-          "statusCategory": "To Do",
-          "relation": "blocks",
-          "assignee": null
-        },
-        {
-          "key": "TKME-2350",
-          "summary": "Stuck order on Hybris- ORDER_SPLIT",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "is cloned by",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "Stuck order on Hybris - 16 TR-region orders\r\nGenerated: 2026-09-28T00:00:00Z\r\n\r\nIssue:\r\n\r\nTKME-2348 reports 16 stuck orders from the Turkey (TR) region across 5 distinct error patterns. All orders have payments captured (AUTH + CAPTURE accepted) but are stalled at various stages of the fulfilment, financial, or refund pipelines. The orders span dates from 2026-09-17 to 2026-09-28 and are stagnating for up to 98 hours.\r\n\r\nThe 5 patterns are:\r\n\r\n1. Connection reset at sendConsignmentToWarehouse (6 orders): TR260915-84759375, TR260927-96594178, TR260927-96494681, TR260926-95689021, TR260926-95561694, TR260925-94199293\r\n2. Cancel DO blocked by WMS with refund failure (6 orders): TR260924-93308617, TR260924-93147668, TR260923-92226009, TR260917-86921245, TR260919-88229034, TR260925-94514044\r\n3. Financial process I/O error (2 orders): TR260925-94391432, TR260922-91038821\r\n4. Refund FOLLOW_ON payment gateway error (1 order): TR260924-93500425\r\n5. Completed but missing shipping date (1 order): TR260926-95654349\r\n\r\nRCA:\r\n\r\nPattern 1: Connection reset at sendConsignmentToWarehouse (6 orders)\r\n\r\nThe consignment process (consignment-process-v11-36) reached the sendConsignmentToWarehouse action node, which calls SendConsignmentToWarehouseAction.executeAction() (com.samsung.toko.fulfilmentprocess.actions.consignment.SendConsignmentToWarehouseAction, line 38). This delegates to TokoBifrostWarehouseAdapterImpl.sendConsignmentToWarehouse() (line 217), which converts the consignment to a Bifrost sales order request via tokoBifrostSalesOrderRequestConverter and sends it to the WMS through TokoBifrostWebClient.\r\n\r\nThe WMS endpoint dropped the TCP connection mid-request (java.net.SocketException: Connection reset), causing the process engine to catch the RuntimeException at ActionNode.handleActionExecutionRuntimeException (line 163) and set the consignment process to ERROR state.\r\n\r\nDB verification confirms all 6 orders have:\r\n- Order process: RUNNING (waiting for warehouse subprocess to end)\r\n- Consignment process: ERROR (consignment-process-v11-36)\r\n- Consignment status: WAITING_FOR_TRANSFER (no tracking, no shipping date, no GERP bill)\r\n- Payment: AUTH and CAPTURE both ACCEPTED\r\n\r\nOrders TR260926-95689021 and TR260925-94199293 are partial - one consignment completed successfully and one is stuck. The stuck consignments in these orders also have ERROR state on their consignment processes.\r\n\r\n4 of 6 stuck consignments route to warehouse WC17-S751 (cross-dock), 2 route to DIVA warehouses (ce-xdock). The Connection reset is a transient network-level failure between Hybris and the WMS/Bifrost integration layer, not a code defect.\r\n\r\nThis is a recurring platform issue confirmed by Jira cross-reference: PC-54225 (Closed) documents the same error pattern for AE region order AE260908-78324187, remediated by re-triggering the consignment process. TKME-2055 and TKME-2089 are similar TR-region tickets.\r\n\r\nPattern 2: Cancel DO blocked by WMS with refund failure (6 orders)\r\n\r\n5 of 6 orders (TR260924-93308617, TR260924-93147668, TR260923-92226009, TR260917-86921245, TR260919-88229034) have the same lifecycle: consignment was CANCELLED at the warehouse (WC12-S751 or WC17-S751), consignment process SUCCEEDED, but the refund FOLLOW_ON call to the Masterpass payment gateway returned ERROR. All order totals are zeroed out (0E-8 TRY). The order process is stuck at RUNNING state, cycling through isWaitForFinancialCompletionRequired, isSecondFIRequired, and isFinancialUpdateRequired task actions.\r\n\r\nThe refund failure is in the PaymentTransactionEntry with type REFUND_FOLLOW_ON and status ERROR. The Masterpass payment gateway rejected the follow-on refund request. Orders TR260923-92226009, TR260917-86921245, and TR260919-88229034 share the same refund error timestamp (2026-09-25 07:30:26) and the same product (UE32H5000FUXTK x3), indicating a batch refund processing failure.\r\n\r\nThe 6th order (TR260925-94514044) has a different profile: first consignment CANCELLED at WC12-S751, second consignment stuck at READY status with consignment process RUNNING. The WMS did not process the cancel delivery order for the second consignment. Order total dropped to 1.00 TRY. Payment captured at 450,000 TRY but no refund has been initiated. The cancel email process SUCCEEDED but the second consignment remains blocked.\r\n\r\nJira cross-reference found PC-48853 (Closed) documenting REFUND_FOLLOW_ON PTE update remediation and PC-35580 (Closed) for refund follow-on entry to success. These PC tickets confirm that the standard remediation is to update the PTE status and re-trigger the refund flow.\r\n\r\nPattern 3: Financial process I/O error (2 orders)\r\n\r\nTR260925-94391432 (WAITING_FOR_SEND_FINANCIAL): The order process (order-process-v25-69) failed at the splitOrder action with an I/O error: sec.divaportal.com:443 failed to respond. The DIVA portal is the financial integration endpoint for TR region. No consignments were ever created. Payment was captured (69,999 TRY) but the initial FI posting to SAP/GERP through the DIVA portal failed. The order process is in ERROR state.\r\n\r\nTR260922-91038821 (WAITING_FOR_FINANCIAL): The consignment was fully completed and delivered (shipped 2026-09-25, GERP bill 3247490146, completed 2026-09-26), but the order process failed at the completeFinancialUpdate action with Connection reset. The order process is in ERROR state. Payment was captured (83,579.99 TRY across 2 transactions) but the second FI (completion FI) failed.\r\n\r\nCode trace: SendOrderCompleteFinancialUpdateAction (extends SendInitialFinancialUpdateAction) calls tokoConsignmentFinancialsService.sendInitialFinancialUpdate() at line 22. For TR region, this connects to sec.divaportal.com:443 (DIVA portal). The I/O error occurs when the DIVA portal is unreachable or drops the connection during the FI posting.\r\n\r\nJira cross-reference found TKME-1979 (DIVA portal failure) and TKME-1610 (DIVA services HTTPS update), confirming DIVA portal instability is a known TR-region issue. Monitoring alerts HTCK-4443, HTCK-4048, HTCK-4564 track high failure rates for divaportal.com.\r\n\r\nPattern 4: Refund FOLLOW_ON payment gateway error (1 order)\r\n\r\nTR260924-93500425 (REFUND_FAILED): No consignments were ever created. The order process is in FAILED state (not RUNNING). The payment transaction has AUTH=ACCEPTED, CAPTURE=ACCEPTED, and REFUND_FOLLOW_ON=ERROR for 27,139.65 TRY. The order was cancelled before fulfilment and the refund to the Masterpass payment gateway failed immediately. Task logs show the refund path was entered: refundCancelOrder, isChargeBackRefundProcessed, releaseVirtualStock, cancelNonActivatedExternalService, isInstantRefundEnabledCheckBeforeFinancialUpdate.\r\n\r\nThe REFUND_FOLLOW_ON failure is a payment gateway rejection, not a Hybris code defect. The Masterpass gateway may have rejected the refund due to a processing window restriction, duplicate refund attempt, or gateway-side issue.\r\n\r\nPattern 5: Completed but missing shipping date (1 order)\r\n\r\nTR260926-95654349 (COMPLETED): The order is fully COMPLETED. All 5 consignments are COMPLETED, all processes (order, consignment, omnichannel, store email, dispatch email) are SUCCEEDED. GERP bills exist for all consignments. Payment AUTH and CAPTURE accepted (85,119 TRY). However, the first consignment (entry 0, product WW90DG6U25LEAH, a washing machine) has no shipping date despite having a completion date and GERP bill. No tracking IDs exist on any of the 5 consignments.\r\n\r\nThis is a data integrity issue, not a process error. The consignment was physically delivered and GERP billed, but the shipping date field was never populated by the warehouse subsystem. The order itself is COMPLETED and the process is SUCCEEDED, so no process remediation is needed.\r\n\r\nNote: Kibana log analysis was not performed (Kibana MCP was unavailable during this investigation). The error messages cited in the ticket description and the DB state verification provide sufficient evidence for the root cause analysis above. If Kibana becomes available, log analysis could confirm the exact exception stack traces and timestamps.\r\n\r\nPossible remediation:\r\n\r\nPattern 1 (Connection reset at sendConsignmentToWarehouse) - 6 orders:\r\nRe-trigger the consignment process from the sendConsignmentToWarehouse action. The consignment data is intact and the WMS connection reset was transient. Reusable PC ticket: PC-52605 (process-restart, REUSABLE, parent TKME-2279, script: script-TKME-2279-retrigger-business-process.groovy). Adapt the script to target these 6 orders' consignment processes, resetting the ERROR state and re-triggering from the sendConsignmentToWarehouse action node. For the 2 partial orders (TR260926-95689021, TR260925-94199293), only retrigger the stuck consignment process (the one in ERROR state), not the completed one.\r\n\r\nPattern 2 (Cancel DO blocked by WMS with refund failure) - 6 orders:\r\nFor the 5 REFUND_FAILED orders (TR260924-93308617, TR260924-93147668, TR260923-92226009, TR260917-86921245, TR260919-88229034): The consignments are already CANCELLED and the consignment process SUCCEEDED. The issue is the REFUND_FOLLOW_ON PTE in ERROR state. Remediation: update the PTE status from ERROR to SUCCESS (if the refund was actually processed by the gateway) or re-trigger the refund (if the refund was not processed). Reference: PC-48853 (Closed) and PC-35580 (Closed) document the PTE update approach. Reusable PC ticket: PC-52765 (refund-retrigger, REUSABLE, parent SAME-3941, script: script-SAME-3941-sa260722-return-refund-retrigger.groovy) may be adaptable for the refund retrigger.\r\n\r\nFor TR260925-94514044 (Cancel DO blocked by WMS without refund): The second consignment is stuck at READY with the consignment process RUNNING. This requires WMS team intervention to either cancel the delivery order or confirm fulfilment. The WMS has blocked the cancel DO and Hybris cannot force this. Once WMS resolves the DO, the consignment process should advance. If WMS confirms the cancel, the refund flow will need to be triggered. This order may need escalation to the WMS/warehouse operations team.\r\n\r\nPattern 3 (Financial process I/O error) - 2 orders:\r\nTR260925-94391432: Re-trigger the order process from the splitOrder action. The DIVA portal timeout was transient. Reusable PC ticket: PC-52605 (process-restart, REUSABLE). The script should target the order process and reset from the splitOrder action node.\r\n\r\nTR260922-91038821: Re-trigger the order process from the completeFinancialUpdate action. The consignment is already COMPLETED and delivered. Reusable PC ticket: PC-52605 (process-restart, REUSABLE). The script should target the order process and reset from the completeFinancialUpdate action node.\r\n\r\nPattern 4 (Refund FOLLOW_ON payment gateway error) - 1 order:\r\nTR260924-93500425: The order process is in FAILED state (not ERROR), so process retrigger alone may not work. The refund FOLLOW_ON PTE needs to be investigated. Check with the payment team whether the Masterpass gateway actually processed the refund despite returning ERROR. If the refund was processed, update the PTE to SUCCESS. If not, re-trigger the refund. Reference: PC-48853 (Closed) for PTE update approach.\r\n\r\nPattern 5 (Completed but missing shipping date) - 1 order:\r\nTR260926-95654349: The order is fully COMPLETED and all processes SUCCEEDED. This is a data integrity issue only. If the missing shipping date causes downstream reporting or tracking issues, update the consignment shipping date field to match the completion date. This is a minor data fix and does not require process remediation.\r\n\r\n## Remediation\r\n\r\nReusable PC tickets identified:\r\n1. PC-52605 (REUSABLE) - Process restart for Connection reset and Financial I/O errors (Patterns 1 and 3). Script: script-TKME-2279-retrigger-business-process.groovy. Parent: TKME-2279.\r\n2. PC-52765 (REUSABLE) - Refund retrigger for REFUND_FOLLOW_ON errors (Pattern 2). Script: script-SAME-3941-sa260722-return-refund-retrigger.groovy. Parent: SAME-3941.\r\n3. PC-48853 (Closed) - PTE REFUND_FOLLOW_ON update (Pattern 4). Manual approach documented in ticket.\r\n4. PC-54225 (Closed) - Connection reset remediation precedent (AE region).\r\n\r\nOrders requiring WMS team escalation:\r\n- TR260925-94514044 (second consignment DO blocked by WMS at READY status)\r\n\r\nOrders requiring no remediation:\r\n- TR260926-95654349 (COMPLETED, data integrity issue only)\r\n\r\nInvestigation gaps:\r\n- Kibana log analysis was not performed (Kibana MCP unavailable). Log confirmation of exact exception stack traces and timestamps is recommended if Kibana becomes available.\r\n- DIVA portal (sec.divaportal.com) connectivity should be verified - TKME-1979 and TKME-1610 document known instability.",
-        "sections": {
-          "issue": "TKME-2348 reports 16 stuck orders from the Turkey (TR) region across 5 distinct error patterns. All orders have payments captured (AUTH + CAPTURE accepted) but are stalled at various stages of the fulfilment, financial, or refund pipelines. The orders span dates from 2026-09-17 to 2026-09-28 and are stagnating for up to 98 hours.\r\n\r\nThe 5 patterns are:\r\n\r\n1. Connection reset at sendConsignmentToWarehouse (6 orders): TR260915-84759375, TR260927-96594178, TR260927-96494681, TR260926-95689021, TR260926-95561694, TR260925-94199293\r\n2. Cancel DO blocked by WMS with refund failure (6 orders): TR260924-93308617, TR260924-93147668, TR260923-92226009, TR260917-86921245, TR260919-88229034, TR260925-94514044\r\n3. Financial process I/O error (2 orders): TR260925-94391432, TR260922-91038821\r\n4. Refund FOLLOW_ON payment gateway error (1 order): TR260924-93500425\r\n5. Completed but missing shipping date (1 order): TR260926-95654349",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-28T16:38:55.087Z"
       }
     },
     {
@@ -861,7 +800,7 @@
       }
     ],
     "pid": 16584,
-    "uptime": 13232,
+    "uptime": 13272,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -873,7 +812,7 @@
       {
         "pid": 19076,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 30805,
+        "ageSeconds": 30848,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -883,7 +822,7 @@
       {
         "pid": 6552,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 30728,
+        "ageSeconds": 30770,
         "status": "running",
         "isChild": false,
         "taskSummary": "post comment with 20m logs, asign back and put to LV",
@@ -893,7 +832,7 @@
       {
         "pid": 22172,
         "cwd": "c:\\windows",
-        "ageSeconds": 30724,
+        "ageSeconds": 30766,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -903,7 +842,7 @@
       {
         "pid": 20664,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 30712,
+        "ageSeconds": 30755,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -913,7 +852,7 @@
       {
         "pid": 7420,
         "cwd": "unknown",
-        "ageSeconds": 29506,
+        "ageSeconds": 29548,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -4974,17 +4913,17 @@
     "bridgeLogTail": "[2026-10-26T08:31:28.187Z] ==========================================\n[2026-10-26T08:31:28.189Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-26T08:31:28.190Z] === with Aipro Auto-Launch ===\n[2026-10-26T08:31:28.191Z] ==========================================\n[2026-10-26T08:31:28.192Z] PID: 27148\n[2026-10-26T08:31:28.192Z] Repo: aryanverma2410/agent-bridge\n[2026-10-26T08:31:28.193Z] Poll interval: 10000ms\n[2026-10-26T08:31:28.193Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-26T08:31:28.194Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-26T08:31:28.195Z] Waiting for messages...\n[2026-10-26T03:23:43.528Z] ==========================================\n[2026-10-26T03:23:43.531Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-26T03:23:43.533Z] === with Aipro Auto-Launch ===\n[2026-10-26T03:23:43.534Z] ==========================================\n[2026-10-26T03:23:43.535Z] PID: 16584\n[2026-10-26T03:23:43.536Z] Repo: aryanverma2410/agent-bridge\n[2026-10-26T03:23:43.537Z] Poll interval: 10000ms\n[2026-10-26T03:23:43.538Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-26T03:23:43.539Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-26T03:23:43.541Z] Waiting for messages...",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-26T12:34:21.777Z",
-      "ageMs": 855
+      "lastWrite": "2026-10-26T12:34:51.779Z",
+      "ageMs": 12210
     },
-    "watchdogLogTail": "[2026-10-26T12:32:06.715Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T12:32:21.729Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T12:32:36.733Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T12:32:51.729Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T12:33:06.741Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T12:33:21.749Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T12:33:36.747Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T12:33:51.756Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T12:34:06.788Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T12:34:21.771Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-26T12:32:36.733Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T12:32:51.729Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T12:33:06.741Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T12:33:21.749Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T12:33:36.747Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T12:33:51.756Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T12:34:06.788Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T12:34:21.771Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T12:34:36.773Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-26T12:34:51.778Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-26T12:33:17.154Z",
+      "lastCheck": "2026-10-26T12:34:23.140Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4993,18 +4932,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-26T12:33:17.154Z",
+      "lastCheck": "2026-10-26T12:34:23.140Z",
       "downSince": "2026-10-26T04:30:54.387Z",
-      "downDuration": 28942767,
+      "downDuration": 29008753,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-26T12:33:17.154Z",
+      "lastCheck": "2026-10-26T12:34:23.140Z",
       "downSince": "2026-10-26T08:31:29.834Z",
-      "downDuration": 14507320,
+      "downDuration": 14573306,
       "alert": true
     }
   ],
@@ -5182,18 +5121,6 @@
         "statusChangedAt": "2026-09-28T15:58:48.414+0900"
       },
       {
-        "key": "TKME-2348",
-        "summary": "Stuck order on Hybris",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/TKME-2348",
-        "updated": "2026-10-22T20:30:54.000+0900",
-        "statusChangedAt": "2026-09-29T01:09:10.990+0900"
-      },
-      {
         "key": "RT-664743",
         "summary": "Mena - Israel | STG1| Order Status is stuck at order split status",
         "priority": "Critical",
@@ -5207,6 +5134,18 @@
       }
     ],
     "actionable": [
+      {
+        "key": "PC-55812",
+        "summary": "Update autoheal-smi cronjob to include splitOrder and completeFinancialUpdate I/O error retrigger",
+        "priority": "Medium",
+        "status": "Approved-ES",
+        "category": "actionable",
+        "reason": "",
+        "whatToDo": "Execute on PROD or validate",
+        "url": "https://jira.secext.samsung.net/browse/PC-55812",
+        "updated": "2026-10-23T23:01:01.000+0900",
+        "statusChangedAt": "2026-10-23T23:01:01.939+0900"
+      },
       {
         "key": "AUTEU-41862",
         "summary": "CSAgent access required for SMI P1 and STG",
@@ -5270,18 +5209,6 @@
         "statusChangedAt": ""
       },
       {
-        "key": "PC-55812",
-        "summary": "Update autoheal-smi cronjob to include splitOrder and completeFinancialUpdate I/O error retrigger",
-        "priority": "Medium",
-        "status": "Approved-ES",
-        "category": "blocked",
-        "reason": "Blocked by TKME-2348 (In Progress)",
-        "whatToDo": "Execute on PROD or validate",
-        "url": "https://jira.secext.samsung.net/browse/PC-55812",
-        "updated": "2026-10-23T23:01:01.000+0900",
-        "statusChangedAt": "2026-10-23T23:01:01.939+0900"
-      },
-      {
         "key": "TKME-2324",
         "summary": "O2O Dealers PII Data Request for SETK Hybris Enhancement",
         "priority": "None",
@@ -5313,17 +5240,17 @@
       }
     ],
     "totals": {
-      "zero": 6,
-      "actionable": 3,
-      "blocked": 4,
+      "zero": 5,
+      "actionable": 4,
+      "blocked": 3,
       "queued": 2
     }
   },
   "worklogTotals": {
-    "todayHours": 1.75,
-    "weekHours": 1.75,
+    "todayHours": 2.08,
+    "weekHours": 2.08,
     "dailyHours": [
-      1.75,
+      2.08,
       0,
       0,
       0,
@@ -5345,9 +5272,9 @@
   },
   "tempoApproval": {
     "status": "open",
-    "workedHours": 170.14,
+    "workedHours": 170.48,
     "requiredHours": 176,
-    "deficitHours": 5.86,
+    "deficitHours": 5.52,
     "periodStart": "2026-10-01",
     "periodEnd": "2026-10-31"
   },
@@ -5367,136 +5294,7 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": {
-    "byTicket": [
-      {
-        "key": "GMT-22264",
-        "slaName": "GMT Issue Response SLA(GMT+5.5)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86336,
-        "targetDate": "2026-10-13T17:53:07.713000001Z"
-      },
-      {
-        "key": "GMT-22264",
-        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
-        "slaStatus": "EXCEED",
-        "remainingDuration": "",
-        "targetDate": "2026-10-20T11:02:29.640000006Z"
-      },
-      {
-        "key": "TKME-2383",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86400,
-        "targetDate": "2026-10-19T21:00:00.000000001Z"
-      },
-      {
-        "key": "TKME-2383",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2467674,
-        "targetDate": "2026-12-04T02:02:10.947000034Z"
-      },
-      {
-        "key": "GMT-22312",
-        "slaName": "GMT Issue Response SLA(GMT+5.5)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86326,
-        "targetDate": "2026-10-14T11:17:22.593000001Z"
-      },
-      {
-        "key": "GMT-22312",
-        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
-        "slaStatus": "STILL",
-        "remainingDuration": 306253,
-        "targetDate": "2026-10-30T01:38:30.081000013Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86179,
-        "targetDate": "2026-09-30T08:16:57.595000001Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1269633,
-        "targetDate": "2026-10-20T08:16:57.595000015Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85660,
-        "targetDate": "2026-09-15T08:21:25.088000001Z"
-      },
-      {
-        "key": "TKME-2324",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1211372,
-        "targetDate": "2026-10-13T12:51:05.986000021Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86397,
-        "targetDate": "2026-09-29T16:09:08.750000001Z"
-      },
-      {
-        "key": "TKME-2348",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1646950,
-        "targetDate": "2026-11-20T14:03:27.584000039Z"
-      },
-      {
-        "key": "TKME-2382",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86399,
-        "targetDate": "2026-10-19T11:35:42.030000001Z"
-      },
-      {
-        "key": "TKME-2382",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2309831,
-        "targetDate": "2026-12-02T06:11:28.355000033Z"
-      },
-      {
-        "key": "MHME-1462",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85471,
-        "targetDate": "2026-10-14T05:24:28.367000001Z"
-      },
-      {
-        "key": "MHME-1462",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1186965,
-        "targetDate": "2026-11-10T04:51:55.706000020Z"
-      },
-      {
-        "key": "AEME-6590",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86065,
-        "targetDate": "2026-09-29T06:53:13.927000001Z"
-      },
-      {
-        "key": "AEME-6590",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2337370,
-        "targetDate": "2026-12-02T13:50:27.278000047Z"
-      }
-    ]
-  },
+  "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
     "standupText": "Yesterday: no worklogs\nToday: GMT-22264, AUTEU-41862, TKME-2383, TKME-2382, GMT-22312\nBlockers: PC-55812, PC-55757"
