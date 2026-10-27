@@ -1,51 +1,7 @@
 {
-  "generatedAt": "2026-10-27T09:03:56.669Z",
-  "totalTickets": 11,
+  "generatedAt": "2026-10-27T09:04:48.829Z",
+  "totalTickets": 10,
   "tickets": [
-    {
-      "key": "AUTEU-41862",
-      "summary": "CSAgent access required for SMI P1 and STG",
-      "status": "To do",
-      "statusCategory": "To Do",
-      "priority": "Assign Priority",
-      "project": "Add A User To An Environment (USER)",
-      "projectKey": "AUTEU",
-      "issuetype": "User Task",
-      "updated": "2026-10-27T18:03:47.000+0900",
-      "created": "2026-10-09T16:25:20.000+0900",
-      "statusChangedAt": "",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nI already have admin access to SMI P1 and STG environments, but I need CSAgent access to be enabled as well.\n\nKindly give access to following IDs: \n|Name|Email ID|\n|Aryan|`@email`|\n|Pallavi|`@email`|\n|Prateek|`@email`|\n|Sudhanshu|`@email`|\n|Suresh|`@email`|\n|Chandan|`@email`|\n|Abhishek|`@e",
-      "commentsCount": 9,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-27T18:03:47.660+0900",
-          "snippet": "Hi ~@email ,\n\nThanks for the prompt response.\n\nVerified, we can now use the CS Agent role on BO.\n\nThanks for your support\n\nRegards\n\nAryan"
-        },
-        {
-          "author": "Nitin Kumar",
-          "date": "2026-10-27T12:36:54.696+0900",
-          "snippet": "Hi ~@email \n\"customersupportagentgroup\" added to all mentioned account for SMI p1,s1,s2,s3 env.\n\nBest Regards\nNitin"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi ~@email ,\n\nThanks for the prompt response.\n\nVerified, we can now use the CS Agent role on BO.\n\nThanks for your support\n\nRegards\n\nAryan",
-      "lastCommentDate": "2026-10-27T18:03:47.660+0900",
-      "url": "https://jira.secext.samsung.net/browse/AUTEU-41862",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Summary: CSAgent access required for SMI P1 and STG\r\nGenerated: 2026-10-16T12:53:00+09:00\r\n\r\nIssue:\r\nAUTEU-41862 is a service request for enabling CSAgent (Customer Service Agent) role access on SMI P1 and STG environments (STG1, STG2, STG3) for 8 team members. The requester (aryan.v1) and the listed individuals already have admin/Backoffice access but do not have the CSAgent role assigned, which is required to access the Customer Service Agent views and Assisted Service Module in the Hybris Backoffice. The ticket has been approved by ITGC (D2C) and is currently awaiting action — Nitin Kumar has asked for the Backoffice IDs for the listed accounts to proceed.\r\n\r\nRCA:\r\nThis is not a platform bug or code defect. The CSAgent role in the Samsung Toko Hybris platform is managed through Hybris user groups. The platform defines several CS-related user groups via ImpEx configuration in tokocore (user-groups.impex and cscockpit-users.impex):\r\n\r\n1. csagentgroup — \"Customer Service Agent Group\" — grants access to CS Backoffice CS Agent Group views and the Assisted Service Module. Inherits from customerservicegroup and cockpitgroup.\r\n2. customersupportagentgroup — \"CS Agent Group\" — grants CS Agent Group views and Assisted Service Module access. Inherits employeegroup and customersupportagentrole.\r\n3. customersupportmanagergroup — inherits customersupportagentgroup plus manager-level roles.\r\n4. customersupportadministratorgroup — inherits all of the above plus administrator roles.\r\n\r\nThe listed users have admin access but are not members of csagentgroup or customersupportagentgroup, so they cannot access the CSAgent views and Assisted Service Module functionality. No database or code-level issue exists — this is purely a user group membership provisioning task that must be executed via the Hybris Backoffice (or HAC ImpEx) on each target environment.\r\n\r\nPossible remediation:\r\n1. Provide the Backoffice user IDs for all 8 listed accounts as requested by Nitin Kumar in the ticket comments.\r\n2. Add each user to the csagentgroup (or customersupportagentgroup) user group on SMI P1 and all STG environments (STG1, STG2, STG3) via the Hybris Backoffice user management console, or via ImpEx:\r\n\r\n   INSERT_UPDATE Employee; UID[unique=true]; groups(uid)[mode=append]\r\n   ; <user-uid>; csagentgroup\r\n\r\n3. Verify access by logging into the Backoffice with one of the accounts and confirming the CS Agent Group views and Assisted Service Module are visible.\r\n4. No Hybris HAC script or PC ticket is required — this is a standard access provisioning action performed through the Backoffice administration UI or HAC ImpEx import.\r\n\r\nTicket URL: https://jira.secext.samsung.net/browse/AUTEU-41862",
-        "sections": {
-          "issue": "AUTEU-41862 is a service request for enabling CSAgent (Customer Service Agent) role access on SMI P1 and STG environments (STG1, STG2, STG3) for 8 team members. The requester (aryan.v1) and the listed individuals already have admin/Backoffice access but do not have the CSAgent role assigned, which is required to access the Customer Service Agent views and Assisted Service Module in the Hybris Backoffice. The ticket has been approved by ITGC (D2C) and is currently awaiting action — Nitin Kumar has asked for the Backoffice IDs for the listed accounts to proceed.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-16T07:38:10.391Z"
-      }
-    },
     {
       "key": "AEME-6590",
       "summary": "[Stuck Orders] 2 order(s) requiring maintenance fix",
@@ -624,7 +580,7 @@
       }
     ],
     "pid": 12460,
-    "uptime": 2158,
+    "uptime": 2208,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -636,7 +592,7 @@
       {
         "pid": 16500,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 5919,
+        "ageSeconds": 5967,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -646,7 +602,7 @@
       {
         "pid": 21420,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 5542,
+        "ageSeconds": 5590,
         "status": "running",
         "isChild": false,
         "taskSummary": "GMT-22312",
@@ -656,7 +612,7 @@
       {
         "pid": 12208,
         "cwd": "c:\\windows",
-        "ageSeconds": 5542,
+        "ageSeconds": 5590,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -666,7 +622,7 @@
       {
         "pid": 25216,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 4385,
+        "ageSeconds": 4433,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -676,7 +632,7 @@
       {
         "pid": 24464,
         "cwd": "unknown",
-        "ageSeconds": 4383,
+        "ageSeconds": 4431,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -4766,7 +4722,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-10-27T08:48:41.578Z",
-      "ageMs": 927206
+      "ageMs": 976962
     },
     "watchdogLogTail": "[2026-10-27T08:27:56.398Z] Bridge started with PID 12460 (restart #3, 1 in last hour)\n[2026-10-27T08:47:47.980Z] DASHBOARD RESTART NEEDED: Dashboard heartbeat is stale (32s old)\n[2026-10-27T08:47:51.916Z] Killed dashboard PID 24560\n[2026-10-27T08:48:00.093Z] DASHBOARD RESTART NEEDED: Dashboard heartbeat is stale (44s old)\n[2026-10-27T08:48:12.554Z] Could not kill dashboard PID 24560: Command failed: taskkill /PID 24560 /F /T\n[2026-10-27T08:48:12.574Z] Starting jira-dashboard-server.js...\n[2026-10-27T08:48:12.972Z] Dashboard started with PID 26864 (restart #5, 1 in last hour)\n[2026-10-27T08:48:34.157Z] Starting jira-dashboard-server.js...\n[2026-10-27T08:48:34.357Z] Dashboard started with PID 24672 (restart #6, 2 in last hour)\n[2026-10-27T08:48:41.544Z] DUPLICATE jira-dashboard-server detected: PID 26864 — killing"
   },
@@ -4775,7 +4731,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-27T09:03:36.407Z",
+      "lastCheck": "2026-10-27T09:04:36.794Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4784,7 +4740,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-27T09:03:36.407Z",
+      "lastCheck": "2026-10-27T09:04:36.794Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4793,9 +4749,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-27T09:03:36.407Z",
+      "lastCheck": "2026-10-27T09:04:36.794Z",
       "downSince": "2026-10-27T08:48:36.466Z",
-      "downDuration": 899941,
+      "downDuration": 960328,
       "alert": true
     }
   ],
@@ -4925,18 +4881,6 @@
   "actionItems": {
     "zero": [
       {
-        "key": "AUTEU-41862",
-        "summary": "CSAgent access required for SMI P1 and STG",
-        "priority": "Assign Priority",
-        "status": "To do",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/AUTEU-41862",
-        "updated": "2026-10-27T18:03:47.000+0900",
-        "statusChangedAt": ""
-      },
-      {
         "key": "AEME-6590",
         "summary": "[Stuck Orders] 2 order(s) requiring maintenance fix",
         "priority": "None",
@@ -5056,7 +5000,7 @@
       }
     ],
     "totals": {
-      "zero": 5,
+      "zero": 4,
       "actionable": 3,
       "blocked": 1,
       "queued": 2
@@ -5110,9 +5054,82 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "AEME-6590",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86065,
+        "targetDate": "2026-09-29T06:53:13.927000001Z"
+      },
+      {
+        "key": "AEME-6590",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2263539,
+        "targetDate": "2026-12-02T13:50:27.278000047Z"
+      },
+      {
+        "key": "TKME-2408",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86395,
+        "targetDate": "2026-10-27T13:14:09.649000001Z"
+      },
+      {
+        "key": "TKME-2408",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2520561,
+        "targetDate": "2026-12-07T13:14:09.649000030Z"
+      },
+      {
+        "key": "GMT-22312",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86326,
+        "targetDate": "2026-10-14T11:17:22.593000001Z"
+      },
+      {
+        "key": "GMT-22312",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 232421,
+        "targetDate": "2026-10-30T01:38:30.081000013Z"
+      },
+      {
+        "key": "TKME-2382",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86399,
+        "targetDate": "2026-10-19T11:35:42.030000001Z"
+      },
+      {
+        "key": "TKME-2382",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2236000,
+        "targetDate": "2026-12-02T06:11:28.355000033Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86179,
+        "targetDate": "2026-09-30T08:16:57.595000001Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1269633,
+        "targetDate": "2026-10-20T08:16:57.595000015Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 0.25h on SAHME-3483, 1.5h on PC-55917, 0.33h on TKME-2348, 0.58h on MHME-1462, 1.5h on TKME-2324, 0.33h on TKME-2408\nToday: AUTEU-41862, AEME-6590, TKME-2408, TKME-2382, GMT-22312\nBlockers: PC-55917, PC-55757"
+    "standupText": "Yesterday: 0.25h on SAHME-3483, 1.5h on PC-55917, 0.33h on TKME-2348, 0.58h on MHME-1462, 1.5h on TKME-2324, 0.33h on TKME-2408\nToday: AEME-6590, TKME-2408, TKME-2382, GMT-22312, PC-55757\nBlockers: PC-55917, PC-55757"
   }
 }
