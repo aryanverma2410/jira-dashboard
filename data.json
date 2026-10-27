@@ -1,7 +1,100 @@
 {
-  "generatedAt": "2026-10-27T03:29:42.529Z",
-  "totalTickets": 11,
+  "generatedAt": "2026-10-27T05:23:39.887Z",
+  "totalTickets": 12,
   "tickets": [
+    {
+      "key": "PC-55917",
+      "summary": "Add null-safety guards to SMI monitoring scripts (MENA-StuckOrdersInLast24Hours, hc-smi-failedAndErrorOrdersScript)",
+      "status": "Approved-ES",
+      "statusCategory": "To Do",
+      "priority": "Low",
+      "project": "PROD Change",
+      "projectKey": "PC",
+      "issuetype": "Hybris Platform",
+      "updated": "2026-10-27T13:37:13.000+0900",
+      "created": "2026-10-26T19:34:28.000+0900",
+      "statusChangedAt": "2026-10-27T13:37:08.549+0900",
+      "assignedToMeAt": "",
+      "description": "Fix for GMT-22264: Two SMI monitoring cronjobs abort with NPE due to missing null-safety guards in Groovy scripts stored as Script models in Hybris DB.\n\n1. MENA-StuckOrdersInLast24Hours: GPath expression order.entries.product.code crashes when entry.product is null. Fix: safe-navigation collect/join",
+      "commentsCount": 3,
+      "recentComments": [
+        {
+          "author": "Vamseedhara Reddy Dhonadula",
+          "date": "2026-10-27T13:37:00.989+0900",
+          "snippet": "Approved by D2C\n\nPlease validate in production, then update the comments and also monitor the performance impact as well."
+        },
+        {
+          "author": "Brajesh Kumar Singh",
+          "date": "2026-10-26T20:09:28.827+0900",
+          "snippet": "Reviewed."
+        }
+      ],
+      "lastCommentBy": "Vamseedhara Reddy Dhonadula",
+      "lastCommentSnippet": "Approved by D2C\n\nPlease validate in production, then update the comments and also monitor the performance impact as well.",
+      "lastCommentDate": "2026-10-27T13:37:00.989+0900",
+      "url": "https://jira.secext.samsung.net/browse/PC-55917",
+      "linkedTickets": [
+        {
+          "key": "GMT-22264",
+          "summary": "SMI | Cronjobs in Aborted status",
+          "status": "On-Hold",
+          "statusCategory": "Done",
+          "relation": "is blocked by",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "none",
+        "excerpt": "",
+        "source": "",
+        "foundAt": "",
+        "issueNumber": null
+      }
+    },
+    {
+      "key": "AUTEU-41862",
+      "summary": "CSAgent access required for SMI P1 and STG",
+      "status": "To do",
+      "statusCategory": "To Do",
+      "priority": "Assign Priority",
+      "project": "Add A User To An Environment (USER)",
+      "projectKey": "AUTEU",
+      "issuetype": "User Task",
+      "updated": "2026-10-27T12:37:29.000+0900",
+      "created": "2026-10-09T16:25:20.000+0900",
+      "statusChangedAt": "",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nI already have admin access to SMI P1 and STG environments, but I need CSAgent access to be enabled as well.\n\nKindly give access to following IDs: \n|Name|Email ID|\n|Aryan|`@email`|\n|Pallavi|`@email`|\n|Prateek|`@email`|\n|Sudhanshu|`@email`|\n|Suresh|`@email`|\n|Chandan|`@email`|\n|Abhishek|`@e",
+      "commentsCount": 8,
+      "recentComments": [
+        {
+          "author": "Nitin Kumar",
+          "date": "2026-10-27T12:36:54.696+0900",
+          "snippet": "Hi ~@email \n\"customersupportagentgroup\" added to all mentioned account for SMI p1,s1,s2,s3 env.\n\nBest Regards\nNitin"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-26T21:55:31.002+0900",
+          "snippet": "Hi ~@email ,\n\nYes, kindly proceed.\n\nRegards\n\nAryan"
+        }
+      ],
+      "lastCommentBy": "Nitin Kumar",
+      "lastCommentSnippet": "Hi ~@email \n\"customersupportagentgroup\" added to all mentioned account for SMI p1,s1,s2,s3 env.\n\nBest Regards\nNitin",
+      "lastCommentDate": "2026-10-27T12:36:54.696+0900",
+      "url": "https://jira.secext.samsung.net/browse/AUTEU-41862",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "Summary: CSAgent access required for SMI P1 and STG\r\nGenerated: 2026-10-16T12:53:00+09:00\r\n\r\nIssue:\r\nAUTEU-41862 is a service request for enabling CSAgent (Customer Service Agent) role access on SMI P1 and STG environments (STG1, STG2, STG3) for 8 team members. The requester (aryan.v1) and the listed individuals already have admin/Backoffice access but do not have the CSAgent role assigned, which is required to access the Customer Service Agent views and Assisted Service Module in the Hybris Backoffice. The ticket has been approved by ITGC (D2C) and is currently awaiting action — Nitin Kumar has asked for the Backoffice IDs for the listed accounts to proceed.\r\n\r\nRCA:\r\nThis is not a platform bug or code defect. The CSAgent role in the Samsung Toko Hybris platform is managed through Hybris user groups. The platform defines several CS-related user groups via ImpEx configuration in tokocore (user-groups.impex and cscockpit-users.impex):\r\n\r\n1. csagentgroup — \"Customer Service Agent Group\" — grants access to CS Backoffice CS Agent Group views and the Assisted Service Module. Inherits from customerservicegroup and cockpitgroup.\r\n2. customersupportagentgroup — \"CS Agent Group\" — grants CS Agent Group views and Assisted Service Module access. Inherits employeegroup and customersupportagentrole.\r\n3. customersupportmanagergroup — inherits customersupportagentgroup plus manager-level roles.\r\n4. customersupportadministratorgroup — inherits all of the above plus administrator roles.\r\n\r\nThe listed users have admin access but are not members of csagentgroup or customersupportagentgroup, so they cannot access the CSAgent views and Assisted Service Module functionality. No database or code-level issue exists — this is purely a user group membership provisioning task that must be executed via the Hybris Backoffice (or HAC ImpEx) on each target environment.\r\n\r\nPossible remediation:\r\n1. Provide the Backoffice user IDs for all 8 listed accounts as requested by Nitin Kumar in the ticket comments.\r\n2. Add each user to the csagentgroup (or customersupportagentgroup) user group on SMI P1 and all STG environments (STG1, STG2, STG3) via the Hybris Backoffice user management console, or via ImpEx:\r\n\r\n   INSERT_UPDATE Employee; UID[unique=true]; groups(uid)[mode=append]\r\n   ; <user-uid>; csagentgroup\r\n\r\n3. Verify access by logging into the Backoffice with one of the accounts and confirming the CS Agent Group views and Assisted Service Module are visible.\r\n4. No Hybris HAC script or PC ticket is required — this is a standard access provisioning action performed through the Backoffice administration UI or HAC ImpEx import.\r\n\r\nTicket URL: https://jira.secext.samsung.net/browse/AUTEU-41862",
+        "sections": {
+          "issue": "AUTEU-41862 is a service request for enabling CSAgent (Customer Service Agent) role access on SMI P1 and STG environments (STG1, STG2, STG3) for 8 team members. The requester (aryan.v1) and the listed individuals already have admin/Backoffice access but do not have the CSAgent role assigned, which is required to access the Customer Service Agent views and Assisted Service Module in the Hybris Backoffice. The ticket has been approved by ITGC (D2C) and is currently awaiting action — Nitin Kumar has asked for the Backoffice IDs for the listed accounts to proceed.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-16T07:38:10.391Z"
+      }
+    },
     {
       "key": "TKME-2408",
       "summary": "Stuck order on Hybris",
@@ -39,59 +132,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-10-26T13:38:09.366Z"
-      }
-    },
-    {
-      "key": "GMT-22264",
-      "summary": "SMI | Cronjobs in Aborted status",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Global Monitoring",
-      "projectKey": "GMT",
-      "issuetype": "Issue - Global Hybris",
-      "updated": "2026-10-26T19:50:24.000+0900",
-      "created": "2026-10-13T02:53:07.000+0900",
-      "statusChangedAt": "2026-10-26T09:05:56.549+0900",
-      "assignedToMeAt": "",
-      "description": "HI Team,\n\nWe could see below mentioned cronjobs in aborted status, kindly check and provide an update.\n * MENA-StuckOrdersInLast24HoursJob - ^8799805506037.log\n\n \n\nERROR Caught throwable Script execution has failed reason: java.lang.NullPointerException: Cannot get property 'code' on null object de.",
-      "commentsCount": 4,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-26T19:50:24.583+0900",
-          "snippet": "Hi Yogeshwaran,\n\nYes, we have added the null-safety guards to both SMI monitoring scripts. A PC ticket has been raised for the database script update:\n\nPC-55917: [Jira Link]\n\nChanges Made:\n\n1. MENA-StuckOrdersInLast24Hours\nThe GPath expression order.entries.product.code is replaced with safe-navigat"
-        },
-        {
-          "author": "Yogeshwaran Muralidharan",
-          "date": "2026-10-26T09:05:42.437+0900",
-          "snippet": "Hi ~@email ,\n\nAs mentioned in the ticket, can we add null-safety guards in both scripts (safe navigation operator for product.code, null check before getExternalServiceEntries), so that this issue won't happen again in future?"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Yogeshwaran,\n\nYes, we have added the null-safety guards to both SMI monitoring scripts. A PC ticket has been raised for the database script update:\n\nPC-55917: [Jira Link]\n\nChanges Made:\n\n1. MENA-StuckOrdersInLast24Hours\nThe GPath expression order.entries.product.code is replaced with safe-navigat",
-      "lastCommentDate": "2026-10-26T19:50:24.583+0900",
-      "url": "https://jira.secext.samsung.net/browse/GMT-22264",
-      "linkedTickets": [
-        {
-          "key": "PC-55917",
-          "summary": "Add null-safety guards to SMI monitoring scripts (MENA-StuckOrdersInLast24Hours, hc-smi-failedAndErrorOrdersScript)",
-          "status": "Reviewed",
-          "statusCategory": "In Progress",
-          "relation": "blocks",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "{\"type\":\"init\",\"timestamp\":\"2026-10-13T04:04:58.183Z\",\"session_id\":\"77224613-e099-404d-b514-350321493d91\",\"model\":\"glm-5.2\"}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:04:58.185Z\",\"role\":\"user\",\"content\":\"You are responding to a message from your user (Aryan) sent via GitHub Issues.\\nThe user created a GitHub issue with the following title and body.\\nProcess this request and provide a helpful response.\\nIf the user asks a question, answer it.\\nIf the user asks you to do something, do it and report what happened.\\nKeep your response concise and direct.\\n\\nISSUE TITLE: Investigate ticket GMT-22264\\n\\nISSUE BODY:\\nAuto-triggered investigation for new ticket GMT-22264.\\n\\nTicket: GMT-22264\\nSummary: SMI | Cronjobs in Aborted status\\n\\nUse the investigate workflow:\\n1. Fetch the ticket details using the workflow MCP (workflow_fetch_ticket)\\n2. Analyze the issue, check Kibana logs, trace the codebase\\n3. Produce a complete RCA with the following 3 sections:\\n   Issue:\\n   <brief description of the problem>\\n   RCA:\\n   <root cause analysis>\\n   Possible remediation:\\n   <recommended remediation steps>\\n4. Save the RCA using workflow_save_rca (writes to ticket-rca/GMT-22264.md)\\n5. Do NOT ask the user if they need a script or PC ticket — just save the RCA directly\\n\\nSent from dashboard auto-trigger\\n\\nRespond with your answer below. Do not use markdown headers.\"}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:05:00.997Z\",\"tool_name\":\"update_topic\",\"tool_id\":\"chatcmpl-tool-b0ca8b0e26dc0b65\",\"parameters\":{\"title\":\"Investigating GMT-22264\",\"summary\":\"Starting investigation of GMT-22264 (SMI | Cronjobs in Aborted status). Will fetch ticket details, analyze the issue, check Kibana logs, trace codebase, produce RCA, and save it.\",\"strategic_intent\":\"Investigate Jira ticket GMT-22264 for cronjobs in aborted status, produce RCA, and save it using the investigate workflow.\"}}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:05:00.997Z\",\"tool_name\":\"activate_skill\",\"tool_id\":\"chatcmpl-tool-926aafa9b8174426\",\"parameters\":{\"name\":\"investigate\"}}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-13T04:05:01.092Z\",\"tool_id\":\"chatcmpl-tool-b0ca8b0e26dc0b65\",\"status\":\"success\",\"output\":\"## 📂 Topic: **Investigating GMT-22264**\\n\\n**Summary:**\\nStarting investigation of GMT-22264 (SMI | Cronjobs in Aborted status). Will fetch ticket details, analyze the issue, check Kibana logs, trace codebase, produce RCA, and save it.\\n\\n> [!STRATEGY]\\n> **Intent:** Investigate Jira ticket GMT-22264 for cronjobs in aborted status, produce RCA, and save it using the investigate workflow.\"}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-13T04:05:01.092Z\",\"tool_id\":\"chatcmpl-tool-926aafa9b8174426\",\"status\":\"success\",\"output\":\"Skill **investigate** activated. Resources loaded from `C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\investigate`:\\n\\nShowing up to 200 items (files + folders).\\n\\nC:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\investigate\\\\\\n├───SKILL.md\\n└───references\\\\\\n    └───learnings.md\"}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:05:11.742Z\",\"tool_name\":\"read_file\",\"tool_id\":\"chatcmpl-tool-9b978a379d0da7cb\",\"parameters\":{\"file_path\":\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\investigate\\\\references\\\\learnings.md\"}}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:05:11.742Z\",\"tool_name\":\"glob\",\"tool_id\":\"chatcmpl-tool-99eb4ca61570ec3d\",\"parameters\":{\"path\":\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1\",\"pattern\":\"ticket-rca/GMT-22264*\"}}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:05:11.742Z\",\"tool_name\":\"glob\",\"tool_id\":\"chatcmpl-tool-97f68b111176b100\",\"parameters\":{\"path\":\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1\",\"pattern\":\"ticket-cache/GMT-22264*\"}}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:05:11.742Z\",\"tool_name\":\"run_shell_command\",\"tool_id\":\"chatcmpl-tool-b32f24e226a5d725\",\"parameters\":{\"command\":\"if (Test-Path \\\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\bin\\\\memory\\\\Aryantone.md\\\") { Get-Content \\\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\bin\\\\memory\\\\Aryantone.md\\\" -Raw } else { Write-Output \\\"FILE_NOT_FOUND\\\" }\",\"description\":\"Read Aryantone style guide for RCA writing\"}}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-13T04:05:23.993Z\",\"tool_id\":\"chatcmpl-tool-9b978a379d0da7cb\",\"status\":\"success\",\"output\":\"\"}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-13T04:05:23.993Z\",\"tool_id\":\"chatcmpl-tool-99eb4ca61570ec3d\",\"status\":\"success\",\"output\":\"Found 1 matching file(s)\"}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-13T04:05:23.993Z\",\"tool_id\":\"chatcmpl-tool-97f68b111176b100\",\"status\":\"success\",\"output\":\"No files found\"}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-13T04:05:23.993Z\",\"tool_id\":\"chatcmpl-tool-b32f24e226a5d725\",\"status\":\"success\"}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:05:27.304Z\",\"tool_name\":\"read_file\",\"tool_id\":\"chatcmpl-tool-8eec5558193b6093\",\"parameters\":{\"file_path\":\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1\\\\ticket-rca\\\\GMT-22264.lock\"}}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-13T04:05:27.325Z\",\"tool_id\":\"chatcmpl-tool-8eec5558193b6093\",\"status\":\"success\",\"output\":\"\"}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:27.887Z\",\"role\":\"assistant\",\"content\":\"Lock\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:27.900Z\",\"role\":\"assistant\",\"content\":\" already\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:27.949Z\",\"role\":\"assistant\",\"content\":\" exists from a prior\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:27.991Z\",\"role\":\"assistant\",\"content\":\" auto-trigger. Since\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:27.992Z\",\"role\":\"assistant\",\"content\":\" no\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:27.993Z\",\"role\":\"assistant\",\"content\":\" RCA\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:27.993Z\",\"role\":\"assistant\",\"content\":\" file\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:28.004Z\",\"role\":\"assistant\",\"content\":\" exists\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:28.016Z\",\"role\":\"assistant\",\"content\":\" yet, I'll\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:28.049Z\",\"role\":\"assistant\",\"content\":\" proceed with the investigation\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:28.049Z\",\"role\":\"assistant\",\"content\":\". Let me fetch\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:28.067Z\",\"role\":\"assistant\",\"content\":\" the ticket\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:28.083Z\",\"role\":\"assistant\",\"content\":\" details.\",\"delta\":true}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:05:28.442Z\",\"tool_name\":\"run_shell_command\",\"tool_id\":\"chatcmpl-tool-956442e4806dc85e\",\"parameters\":{\"command\":\"node \\\"C:\\\\toko\\\\toko6\\\\toko6\\\\core-customize\\\\hybris\\\\bin\\\\jira-ops.cjs\\\" ticket GMT-22264\",\"description\":\"Fetch GMT-22264 ticket details via jira-ops.cjs\"}}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-13T04:05:34.988Z\",\"tool_id\":\"chatcmpl-tool-956442e4806dc85e\",\"status\":\"success\"}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:05:38.817Z\",\"tool_name\":\"run_shell_command\",\"tool_id\":\"chatcmpl-tool-949cd5a17f0a4c51\",\"parameters\":{\"command\":\"node \\\"C:\\\\toko\\\\toko6\\\\toko6\\\\core-customize\\\\hybris\\\\bin\\\\jira-ops.cjs\\\" fetch GMT-22264\",\"description\":\"Fetch GMT-22264 ticket details via jira-ops.cjs\"}}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-13T04:05:47.156Z\",\"tool_id\":\"chatcmpl-tool-949cd5a17f0a4c51\",\"status\":\"success\"}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:05:50.471Z\",\"tool_name\":\"run_shell_command\",\"tool_id\":\"chatcmpl-tool-b2af2680bba0fdfc\",\"parameters\":{\"command\":\"node \\\"C:\\\\toko\\\\toko6\\\\toko6\\\\core-customize\\\\hybris\\\\bin\\\\jira-ops.cjs\\\" download GMT-22264 8799805506037.log\",\"description\":\"Download first cronjob log file attached to GMT-22264\"}}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:05:50.471Z\",\"tool_name\":\"run_shell_command\",\"tool_id\":\"chatcmpl-tool-bc5cf90ea4213f12\",\"parameters\":{\"command\":\"node \\\"C:\\\\toko\\\\toko6\\\\toko6\\\\core-customize\\\\hybris\\\\bin\\\\jira-ops.cjs\\\" download GMT-22264 8851966362101.log\",\"description\":\"Download second cronjob log file attached to GMT-22264\"}}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-13T04:06:01.391Z\",\"tool_id\":\"chatcmpl-tool-b2af2680bba0fdfc\",\"status\":\"success\"}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-13T04:06:01.391Z\",\"tool_id\":\"chatcmpl-tool-bc5cf90ea4213f12\",\"status\":\"success\"}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.805Z\",\"role\":\"assistant\",\"content\":\"Got\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.819Z\",\"role\":\"assistant\",\"content\":\" the ticket details.\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.840Z\",\"role\":\"assistant\",\"content\":\" Two cronjobs aborted\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.851Z\",\"role\":\"assistant\",\"content\":\" due\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.865Z\",\"role\":\"assistant\",\"content\":\" to Gro\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.880Z\",\"role\":\"assistant\",\"content\":\"ovy script NPE\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.897Z\",\"role\":\"assistant\",\"content\":\"s:\\n1.\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.909Z\",\"role\":\"assistant\",\"content\":\" MEN\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.925Z\",\"role\":\"assistant\",\"content\":\"A-StuckOrders\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.941Z\",\"role\":\"assistant\",\"content\":\"InLast24Hours\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.954Z\",\"role\":\"assistant\",\"content\":\"Job —\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.971Z\",\"role\":\"assistant\",\"content\":\" `\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.985Z\",\"role\":\"assistant\",\"content\":\"Cannot get property '\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.002Z\",\"role\":\"assistant\",\"content\":\"code' on null\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.017Z\",\"role\":\"assistant\",\"content\":\" object`\\n2.\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.034Z\",\"role\":\"assistant\",\"content\":\" hc-smi-f\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.046Z\",\"role\":\"assistant\",\"content\":\"ailedAndErrorOrders\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.061Z\",\"role\":\"assistant\",\"content\":\"Job — `Cannot\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.080Z\",\"role\":\"assistant\",\"content\":\" invoke method\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.098Z\",\"role\":\"assistant\",\"content\":\" getExternalServiceEntries\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.110Z\",\"role\":\"assistant\",\"content\":\"() on null object\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.122Z\",\"role\":\"assistant\",\"content\":\"`\\n\\nNow\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.145Z\",\"role\":\"assistant\",\"content\":\" searching\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.156Z\",\"role\":\"assistant\",\"content\":\" the\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.170Z\",\"role\":\"assistant\",\"content\":\" codebase for these\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.184Z\",\"role\":\"assistant\",\"content\":\" cronjob scripts and\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.200Z\",\"role\":\"assistant\",\"content\":\" tracing\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.214Z\",\"role\":\"assistant\",\"content\":\" the N\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.236Z\",\"role\":\"assistant\",\"content\":\"PE root\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.244Z\",\"role\":\"assistant\",\"content\":\" causes.\",\"delta\":true}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:06:27.142Z\",\"tool_name\":\"invoke_agent\",\"tool_id\":\"chatcmpl-tool-ac3550c31e847d24\",\"parameters\":{\"agent_name\":\"generalist\",\"prompt\":\"Search the codebase at C:\\\\toko\\\\toko6\\\\toko6\\\\core-customize\\\\hybris\\\\bin\\\\ for cronjob scripts and configuration related to two cronjobs that are failing with NullPointerExceptions:\\n\\n1. **MENA-StuckOrdersInLast24HoursJob** - Error: `java.lang.NullPointerException: Cannot get property 'code' on null object`\\n2. **hc-smi-failedAndErrorOrdersJob** - Error: `java.lang.NullPointerException: Cannot invoke method getExternalServiceEntries() on null object`\\n\\nFor each cronjob, I need you to find:\\n- The Groovy script file that powers this cronjob (search for the cronjob name or parts of it in file names and content)\\n- Any ImpEx or Spring XML that defines/configures this cronjob\\n- The specific code line or logic that would cause the NPE described\\n\\nSearch strategies:\\n- grep_search for \\\"MENA-StuckOrdersInLast24Hours\\\" across all files\\n- grep_search for \\\"hc-smi-failedAndErrorOrders\\\" across all files  \\n- grep_search for \\\"StuckOrdersInLast24Hours\\\" (shortened name)\\n- grep_search for \\\"failedAndErrorOrders\\\" (shortened name)\\n- grep_search for \\\"getExternalServiceEntries\\\" across all .groovy files\\n- grep_search for \\\"Cannot get property 'code'\\\" or similar NPE patterns\\n- Look in directories like: bin/custom/toko/, bin/custom/tokocore/, bin/custom/tokostore/\\n- Check for .groovy files, .impex files, and -spring.xml files\\n\\nAlso search for healthcheck-related cronjob scripts since \\\"hc-smi\\\" suggests \\\"healthcheck SMI\\\":\\n- grep_search for \\\"hc-smi\\\" \\n- grep_search for \\\"healthcheck\\\" in .groovy and .impex files\\n- grep_search for \\\"StuckOrders\\\" in .groovy files\\n- grep_search for \\\"aborted\\\" near cronjob definitions\\n\\nReport ALL file paths found, the relevant code snippets, and your analysis of what causes each NPE.\",\"wait_for_previous\":false}}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:06:27.143Z\",\"tool_name\":\"invoke_agent\",\"tool_id\":\"chatcmpl-tool-996f8b167a76902b\",\"parameters\":{\"agent_name\":\"generalist\",\"prompt\":\"Search Jira for tickets related to cronjob aborts similar to GMT-22264. These cronjobs are failing with NullPointerExceptions:\\n1. MENA-StuckOrdersInLast24HoursJob - NPE: Cannot get property 'code' on null object\\n2. hc-smi-failedAndErrorOrdersJob - NPE: Cannot invoke method getExternalServiceEntries() on null object\\n\\nUse the jira-ops.cjs script at C:\\\\toko\\\\toko6\\\\toko6\\\\core-customize\\\\hybris\\\\bin\\\\jira-ops.cjs to search Jira.\\n\\nRun: node \\\"C:\\\\toko\\\\toko6\\\\toko6\\\\core-customize\\\\hybris\\\\bin\\\\jira-ops.cjs\\\" search \\\"text ~ \\\\\\\"StuckOrdersInLast24Hours\\\\\\\" OR text ~ \\\\\\\"failedAndErrorOrders\\\\\\\" OR text ~ \\\\\\\"hc-smi\\\\\\\"\\\"\\nAlso run: node \\\"C:\\\\toko\\\\toko6\\\\toko6\\\\core-customize\\\\hybris\\\\bin\\\\jira-ops.cjs\\\" search \\\"text ~ \\\\\\\"Cannot get property 'code' on null object\\\\\\\" AND text ~ \\\\\\\"cronjob\\\\\\\"\\\"\\nAlso run: node \\\"C:\\\\toko\\\\toko6\\\\toko6\\\\core-customize\\\\hybris\\\\bin\\\\jira-ops.cjs\\\" search \\\"text ~ \\\\\\\"getExternalServiceEntries\\\\\\\" \\\"\\n\\nAlso check for reusable PC tickets:\\nRun: node \\\"C:\\\\toko\\\\toko6\\\\toko6\\\\core-customize\\\\hybris\\\\bin\\\\jira-ops.cjs\\\" search \\\"project = PC AND reporter = aryan.v1 AND labels = REUSABLE\\\"\\n\\nAlso check if there's a pc-script-library.json file at C:\\\\toko\\\\toko6\\\\toko6\\\\core-customize\\\\hybris\\\\bin\\\\pc-script-library.json and read it if it exists.\\n\\nSummarize: list of similar/resolved tickets, any reusable PC tickets, and any prior resolutions for cronjob NPE issues.\",\"wait_for_previous\":false}}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:06:27.143Z\",\"tool_name\":\"invoke_agent\",\"tool_id\":\"chatcmpl-tool-b0ed6c97604cf3ac\",\"parameters\":{\"agent_name\":\"generalist\",\"prompt\":\"Search Kibana logs for errors related to two cronjobs that are aborting:\\n\\n1. **MENA-StuckOrdersInLast24HoursJob** - Error: `java.lang.NullPointerException: Cannot get property 'code' on null object`\\n2. **hc-smi-failedAndErrorOrdersJob** - Error: `java.lang.NullPointerException: Cannot invoke method getExternalServiceEntries() on null object`\\n\\nUse the Kibana MCP tools to search for logs. If Kibana MCP is available:\\n- Run mcp_kibana-mcp_raw_search with query: \\\"MENA-StuckOrdersInLast24HoursJob\\\"\\n- Run mcp_kibana-mcp_raw_search with query: \\\"hc-smi-failedAndErrorOrdersJob\\\"  \\n- Run mcp_kibana-mcp_raw_search with query: \\\"getExternalServiceEntries AND NullPointerException\\\"\\n- Run mcp_kibana-mcp_raw_search with query: \\\"StuckOrdersInLast24Hours AND aborted\\\"\\n- Run mcp_kibana-mcp_raw_search with query: \\\"failedAndErrorOrders AND aborted\\\"\\n- Run mcp_kibana-mcp_raw_search with query: \\\"Cannot get property 'code' on null object\\\"\\n- Run mcp_kibana-mcp_raw_search with query: \\\"Cannot invoke method getExternalServiceEntries\\\"\\n\\nFor each search, capture:\\n- Exact error messages and stack traces\\n- Timestamps of when the errors occurred\\n- Any additional context around the errors (what was being processed, which orders if any)\\n- Whether these are recurring errors or one-time events\\n- The frequency of occurrence\\n\\nIf Kibana MCP is not available (cookie bridge down), note that and report what we can determine from the ticket description alone.\\n\\nSummarize all findings chronologically with exact log excerpts.\",\"wait_for_previous\":false}}",
-        "sections": {
-          "issue": "",
-          "rca": "{\"type\":\"init\",\"timestamp\":\"2026-10-13T04:04:58.183Z\",\"session_id\":\"77224613-e099-404d-b514-350321493d91\",\"model\":\"glm-5.2\"}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:04:58.185Z\",\"role\":\"user\",\"content\":\"You are responding to a message from your user (Aryan) sent via GitHub Issues.\\nThe user created a GitHub issue with the following title and body.\\nProcess this request and provide a helpful response.\\nIf the user asks a question, answer it.\\nIf the user asks you to do something, do it and report what happened.\\nKeep your response concise and direct.\\n\\nISSUE TITLE: Investigate ticket GMT-22264\\n\\nISSUE BODY:\\nAuto-triggered investigation for new ticket GMT-22264.\\n\\nTicket: GMT-22264\\nSummary: SMI | Cronjobs in Aborted status\\n\\nUse the investigate workflow:\\n1. Fetch the ticket details using the workflow MCP (workflow_fetch_ticket)\\n2. Analyze the issue, check Kibana logs, trace the codebase\\n3. Produce a complete RCA with the following 3 sections:\\n   Issue:\\n   <brief description of the problem>\\n   RCA:\\n   <root cause analysis>\\n   Possible remediation:\\n   <recommended remediation steps>\\n4. Save the RCA using workflow_save_rca (writes to ticket-rca/GMT-22264.md)\\n5. Do NOT ask the user if they need a script or PC ticket — just save the RCA directly\\n\\nSent from dashboard auto-trigger\\n\\nRespond with your answer below. Do not use markdown headers.\"}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:05:00.997Z\",\"tool_name\":\"update_topic\",\"tool_id\":\"chatcmpl-tool-b0ca8b0e26dc0b65\",\"parameters\":{\"title\":\"Investigating GMT-22264\",\"summary\":\"Starting investigation of GMT-22264 (SMI | Cronjobs in Aborted status). Will fetch ticket details, analyze the issue, check Kibana logs, trace codebase, produce RCA, and save it.\",\"strategic_intent\":\"Investigate Jira ticket GMT-22264 for cronjobs in aborted status, produce RCA, and save it using the investigate workflow.\"}}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:05:00.997Z\",\"tool_name\":\"activate_skill\",\"tool_id\":\"chatcmpl-tool-926aafa9b8174426\",\"parameters\":{\"name\":\"investigate\"}}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-13T04:05:01.092Z\",\"tool_id\":\"chatcmpl-tool-b0ca8b0e26dc0b65\",\"status\":\"success\",\"output\":\"## 📂 Topic: **Investigating GMT-22264**\\n\\n**Summary:**\\nStarting investigation of GMT-22264 (SMI | Cronjobs in Aborted status). Will fetch ticket details, analyze the issue, check Kibana logs, trace codebase, produce RCA, and save it.\\n\\n> [!STRATEGY]\\n> **Intent:** Investigate Jira ticket GMT-22264 for cronjobs in aborted status, produce RCA, and save it using the investigate workflow.\"}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-13T04:05:01.092Z\",\"tool_id\":\"chatcmpl-tool-926aafa9b8174426\",\"status\":\"success\",\"output\":\"Skill **investigate** activated. Resources loaded from `C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\investigate`:\\n\\nShowing up to 200 items (files + folders).\\n\\nC:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\investigate\\\\\\n├───SKILL.md\\n└───references\\\\\\n    └───learnings.md\"}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:05:11.742Z\",\"tool_name\":\"read_file\",\"tool_id\":\"chatcmpl-tool-9b978a379d0da7cb\",\"parameters\":{\"file_path\":\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\skills\\\\investigate\\\\references\\\\learnings.md\"}}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:05:11.742Z\",\"tool_name\":\"glob\",\"tool_id\":\"chatcmpl-tool-99eb4ca61570ec3d\",\"parameters\":{\"path\":\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1\",\"pattern\":\"ticket-rca/GMT-22264*\"}}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:05:11.742Z\",\"tool_name\":\"glob\",\"tool_id\":\"chatcmpl-tool-97f68b111176b100\",\"parameters\":{\"path\":\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1\",\"pattern\":\"ticket-cache/GMT-22264*\"}}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:05:11.742Z\",\"tool_name\":\"run_shell_command\",\"tool_id\":\"chatcmpl-tool-b32f24e226a5d725\",\"parameters\":{\"command\":\"if (Test-Path \\\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\bin\\\\memory\\\\Aryantone.md\\\") { Get-Content \\\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\bin\\\\memory\\\\Aryantone.md\\\" -Raw } else { Write-Output \\\"FILE_NOT_FOUND\\\" }\",\"description\":\"Read Aryantone style guide for RCA writing\"}}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-13T04:05:23.993Z\",\"tool_id\":\"chatcmpl-tool-9b978a379d0da7cb\",\"status\":\"success\",\"output\":\"\"}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-13T04:05:23.993Z\",\"tool_id\":\"chatcmpl-tool-99eb4ca61570ec3d\",\"status\":\"success\",\"output\":\"Found 1 matching file(s)\"}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-13T04:05:23.993Z\",\"tool_id\":\"chatcmpl-tool-97f68b111176b100\",\"status\":\"success\",\"output\":\"No files found\"}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-13T04:05:23.993Z\",\"tool_id\":\"chatcmpl-tool-b32f24e226a5d725\",\"status\":\"success\"}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:05:27.304Z\",\"tool_name\":\"read_file\",\"tool_id\":\"chatcmpl-tool-8eec5558193b6093\",\"parameters\":{\"file_path\":\"C:\\\\Users\\\\aryan.v1\\\\.gemini\\\\tmp\\\\aryan-v1\\\\ticket-rca\\\\GMT-22264.lock\"}}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-13T04:05:27.325Z\",\"tool_id\":\"chatcmpl-tool-8eec5558193b6093\",\"status\":\"success\",\"output\":\"\"}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:27.887Z\",\"role\":\"assistant\",\"content\":\"Lock\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:27.900Z\",\"role\":\"assistant\",\"content\":\" already\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:27.949Z\",\"role\":\"assistant\",\"content\":\" exists from a prior\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:27.991Z\",\"role\":\"assistant\",\"content\":\" auto-trigger. Since\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:27.992Z\",\"role\":\"assistant\",\"content\":\" no\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:27.993Z\",\"role\":\"assistant\",\"content\":\" RCA\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:27.993Z\",\"role\":\"assistant\",\"content\":\" file\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:28.004Z\",\"role\":\"assistant\",\"content\":\" exists\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:28.016Z\",\"role\":\"assistant\",\"content\":\" yet, I'll\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:28.049Z\",\"role\":\"assistant\",\"content\":\" proceed with the investigation\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:28.049Z\",\"role\":\"assistant\",\"content\":\". Let me fetch\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:28.067Z\",\"role\":\"assistant\",\"content\":\" the ticket\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:05:28.083Z\",\"role\":\"assistant\",\"content\":\" details.\",\"delta\":true}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:05:28.442Z\",\"tool_name\":\"run_shell_command\",\"tool_id\":\"chatcmpl-tool-956442e4806dc85e\",\"parameters\":{\"command\":\"node \\\"C:\\\\toko\\\\toko6\\\\toko6\\\\core-customize\\\\hybris\\\\bin\\\\jira-ops.cjs\\\" ticket GMT-22264\",\"description\":\"Fetch GMT-22264 ticket details via jira-ops.cjs\"}}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-13T04:05:34.988Z\",\"tool_id\":\"chatcmpl-tool-956442e4806dc85e\",\"status\":\"success\"}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:05:38.817Z\",\"tool_name\":\"run_shell_command\",\"tool_id\":\"chatcmpl-tool-949cd5a17f0a4c51\",\"parameters\":{\"command\":\"node \\\"C:\\\\toko\\\\toko6\\\\toko6\\\\core-customize\\\\hybris\\\\bin\\\\jira-ops.cjs\\\" fetch GMT-22264\",\"description\":\"Fetch GMT-22264 ticket details via jira-ops.cjs\"}}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-13T04:05:47.156Z\",\"tool_id\":\"chatcmpl-tool-949cd5a17f0a4c51\",\"status\":\"success\"}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:05:50.471Z\",\"tool_name\":\"run_shell_command\",\"tool_id\":\"chatcmpl-tool-b2af2680bba0fdfc\",\"parameters\":{\"command\":\"node \\\"C:\\\\toko\\\\toko6\\\\toko6\\\\core-customize\\\\hybris\\\\bin\\\\jira-ops.cjs\\\" download GMT-22264 8799805506037.log\",\"description\":\"Download first cronjob log file attached to GMT-22264\"}}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:05:50.471Z\",\"tool_name\":\"run_shell_command\",\"tool_id\":\"chatcmpl-tool-bc5cf90ea4213f12\",\"parameters\":{\"command\":\"node \\\"C:\\\\toko\\\\toko6\\\\toko6\\\\core-customize\\\\hybris\\\\bin\\\\jira-ops.cjs\\\" download GMT-22264 8851966362101.log\",\"description\":\"Download second cronjob log file attached to GMT-22264\"}}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-13T04:06:01.391Z\",\"tool_id\":\"chatcmpl-tool-b2af2680bba0fdfc\",\"status\":\"success\"}\n{\"type\":\"tool_result\",\"timestamp\":\"2026-10-13T04:06:01.391Z\",\"tool_id\":\"chatcmpl-tool-bc5cf90ea4213f12\",\"status\":\"success\"}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.805Z\",\"role\":\"assistant\",\"content\":\"Got\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.819Z\",\"role\":\"assistant\",\"content\":\" the ticket details.\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.840Z\",\"role\":\"assistant\",\"content\":\" Two cronjobs aborted\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.851Z\",\"role\":\"assistant\",\"content\":\" due\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.865Z\",\"role\":\"assistant\",\"content\":\" to Gro\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.880Z\",\"role\":\"assistant\",\"content\":\"ovy script NPE\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.897Z\",\"role\":\"assistant\",\"content\":\"s:\\n1.\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.909Z\",\"role\":\"assistant\",\"content\":\" MEN\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.925Z\",\"role\":\"assistant\",\"content\":\"A-StuckOrders\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.941Z\",\"role\":\"assistant\",\"content\":\"InLast24Hours\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.954Z\",\"role\":\"assistant\",\"content\":\"Job —\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.971Z\",\"role\":\"assistant\",\"content\":\" `\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:19.985Z\",\"role\":\"assistant\",\"content\":\"Cannot get property '\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.002Z\",\"role\":\"assistant\",\"content\":\"code' on null\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.017Z\",\"role\":\"assistant\",\"content\":\" object`\\n2.\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.034Z\",\"role\":\"assistant\",\"content\":\" hc-smi-f\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.046Z\",\"role\":\"assistant\",\"content\":\"ailedAndErrorOrders\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.061Z\",\"role\":\"assistant\",\"content\":\"Job — `Cannot\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.080Z\",\"role\":\"assistant\",\"content\":\" invoke method\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.098Z\",\"role\":\"assistant\",\"content\":\" getExternalServiceEntries\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.110Z\",\"role\":\"assistant\",\"content\":\"() on null object\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.122Z\",\"role\":\"assistant\",\"content\":\"`\\n\\nNow\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.145Z\",\"role\":\"assistant\",\"content\":\" searching\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.156Z\",\"role\":\"assistant\",\"content\":\" the\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.170Z\",\"role\":\"assistant\",\"content\":\" codebase for these\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.184Z\",\"role\":\"assistant\",\"content\":\" cronjob scripts and\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.200Z\",\"role\":\"assistant\",\"content\":\" tracing\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.214Z\",\"role\":\"assistant\",\"content\":\" the N\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.236Z\",\"role\":\"assistant\",\"content\":\"PE root\",\"delta\":true}\n{\"type\":\"message\",\"timestamp\":\"2026-10-13T04:06:20.244Z\",\"role\":\"assistant\",\"content\":\" causes.\",\"delta\":true}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:06:27.142Z\",\"tool_name\":\"invoke_agent\",\"tool_id\":\"chatcmpl-tool-ac3550c31e847d24\",\"parameters\":{\"agent_name\":\"generalist\",\"prompt\":\"Search the codebase at C:\\\\toko\\\\toko6\\\\toko6\\\\core-customize\\\\hybris\\\\bin\\\\ for cronjob scripts and configuration related to two cronjobs that are failing with NullPointerExceptions:\\n\\n1. **MENA-StuckOrdersInLast24HoursJob** - Error: `java.lang.NullPointerException: Cannot get property 'code' on null object`\\n2. **hc-smi-failedAndErrorOrdersJob** - Error: `java.lang.NullPointerException: Cannot invoke method getExternalServiceEntries() on null object`\\n\\nFor each cronjob, I need you to find:\\n- The Groovy script file that powers this cronjob (search for the cronjob name or parts of it in file names and content)\\n- Any ImpEx or Spring XML that defines/configures this cronjob\\n- The specific code line or logic that would cause the NPE described\\n\\nSearch strategies:\\n- grep_search for \\\"MENA-StuckOrdersInLast24Hours\\\" across all files\\n- grep_search for \\\"hc-smi-failedAndErrorOrders\\\" across all files  \\n- grep_search for \\\"StuckOrdersInLast24Hours\\\" (shortened name)\\n- grep_search for \\\"failedAndErrorOrders\\\" (shortened name)\\n- grep_search for \\\"getExternalServiceEntries\\\" across all .groovy files\\n- grep_search for \\\"Cannot get property 'code'\\\" or similar NPE patterns\\n- Look in directories like: bin/custom/toko/, bin/custom/tokocore/, bin/custom/tokostore/\\n- Check for .groovy files, .impex files, and -spring.xml files\\n\\nAlso search for healthcheck-related cronjob scripts since \\\"hc-smi\\\" suggests \\\"healthcheck SMI\\\":\\n- grep_search for \\\"hc-smi\\\" \\n- grep_search for \\\"healthcheck\\\" in .groovy and .impex files\\n- grep_search for \\\"StuckOrders\\\" in .groovy files\\n- grep_search for \\\"aborted\\\" near cronjob definitions\\n\\nReport ALL file paths found, the relevant code snippets, and your analysis of what causes each NPE.\",\"wait_for_previous\":false}}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:06:27.143Z\",\"tool_name\":\"invoke_agent\",\"tool_id\":\"chatcmpl-tool-996f8b167a76902b\",\"parameters\":{\"agent_name\":\"generalist\",\"prompt\":\"Search Jira for tickets related to cronjob aborts similar to GMT-22264. These cronjobs are failing with NullPointerExceptions:\\n1. MENA-StuckOrdersInLast24HoursJob - NPE: Cannot get property 'code' on null object\\n2. hc-smi-failedAndErrorOrdersJob - NPE: Cannot invoke method getExternalServiceEntries() on null object\\n\\nUse the jira-ops.cjs script at C:\\\\toko\\\\toko6\\\\toko6\\\\core-customize\\\\hybris\\\\bin\\\\jira-ops.cjs to search Jira.\\n\\nRun: node \\\"C:\\\\toko\\\\toko6\\\\toko6\\\\core-customize\\\\hybris\\\\bin\\\\jira-ops.cjs\\\" search \\\"text ~ \\\\\\\"StuckOrdersInLast24Hours\\\\\\\" OR text ~ \\\\\\\"failedAndErrorOrders\\\\\\\" OR text ~ \\\\\\\"hc-smi\\\\\\\"\\\"\\nAlso run: node \\\"C:\\\\toko\\\\toko6\\\\toko6\\\\core-customize\\\\hybris\\\\bin\\\\jira-ops.cjs\\\" search \\\"text ~ \\\\\\\"Cannot get property 'code' on null object\\\\\\\" AND text ~ \\\\\\\"cronjob\\\\\\\"\\\"\\nAlso run: node \\\"C:\\\\toko\\\\toko6\\\\toko6\\\\core-customize\\\\hybris\\\\bin\\\\jira-ops.cjs\\\" search \\\"text ~ \\\\\\\"getExternalServiceEntries\\\\\\\" \\\"\\n\\nAlso check for reusable PC tickets:\\nRun: node \\\"C:\\\\toko\\\\toko6\\\\toko6\\\\core-customize\\\\hybris\\\\bin\\\\jira-ops.cjs\\\" search \\\"project = PC AND reporter = aryan.v1 AND labels = REUSABLE\\\"\\n\\nAlso check if there's a pc-script-library.json file at C:\\\\toko\\\\toko6\\\\toko6\\\\core-customize\\\\hybris\\\\bin\\\\pc-script-library.json and read it if it exists.\\n\\nSummarize: list of similar/resolved tickets, any reusable PC tickets, and any prior resolutions for cronjob NPE issues.\",\"wait_for_previous\":false}}\n{\"type\":\"tool_use\",\"timestamp\":\"2026-10-13T04:06:27.143Z\",\"tool_name\":\"invoke_agent\",\"tool_id\":\"chatcmpl-tool-b0ed6c97604cf3ac\",\"parameters\":{\"agent_name\":\"generalist\",\"prompt\":\"Search Kibana logs for errors related to two cronjobs that are aborting:\\n\\n1. **MENA-StuckOrdersInLast24HoursJob** - Error: `java.lang.NullPointerException: Cannot get property 'code' on null object`\\n2. **hc-smi-failedAndErrorOrdersJob** - Error: `java.lang.NullPointerException: Cannot invoke method getExternalServiceEntries() on null object`\\n\\nUse the Kibana MCP tools to search for logs. If Kibana MCP is available:\\n- Run mcp_kibana-mcp_raw_search with query: \\\"MENA-StuckOrdersInLast24HoursJob\\\"\\n- Run mcp_kibana-mcp_raw_search with query: \\\"hc-smi-failedAndErrorOrdersJob\\\"  \\n- Run mcp_kibana-mcp_raw_search with query: \\\"getExternalServiceEntries AND NullPointerException\\\"\\n- Run mcp_kibana-mcp_raw_search with query: \\\"StuckOrdersInLast24Hours AND aborted\\\"\\n- Run mcp_kibana-mcp_raw_search with query: \\\"failedAndErrorOrders AND aborted\\\"\\n- Run mcp_kibana-mcp_raw_search with query: \\\"Cannot get property 'code' on null object\\\"\\n- Run mcp_kibana-mcp_raw_search with query: \\\"Cannot invoke method getExternalServiceEntries\\\"\\n\\nFor each search, capture:\\n- Exact error messages and stack traces\\n- Timestamps of when the errors occurred\\n- Any additional context around the errors (what was being processed, which orders if any)\\n- Whether these are recurring errors or one-time events\\n- The frequency of occurrence\\n\\nIf Kibana MCP is not available (cookie bridge down), note that and report what we can determine from the ticket description alone.\\n\\nSummarize all findings chronologically with exact log excerpts.\",\"wait_for_previous\":false}}",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-12T22:54:07.919Z"
       }
     },
     {
@@ -404,7 +444,7 @@
         {
           "author": "Talib Raza Zaidi",
           "date": "2026-10-09T14:33:39.504+0900",
-          "snippet": "Hi ~@email,\n\n \n\nCan you please let us know how what was the RCA and fix done for this?\n\n \n\nRegards\n\nTalib\n\nCC: ~@email"
+          "snippet": "Hi ~@email,\n\n��\n\nCan you please let us know how what was the RCA and fix done for this?\n\n \n\nRegards\n\nTalib\n\nCC: ~@email"
         },
         {
           "author": "Aryan Verma",
@@ -413,7 +453,7 @@
         }
       ],
       "lastCommentBy": "Talib Raza Zaidi",
-      "lastCommentSnippet": "Hi ~@email,\n\n \n\nCan you please let us know how what was the RCA and fix done for this?\n\n \n\nRegards\n\nTalib\n\nCC: ~@email",
+      "lastCommentSnippet": "Hi ~@email,\n\n��\n\nCan you please let us know how what was the RCA and fix done for this?\n\n \n\nRegards\n\nTalib\n\nCC: ~@email",
       "lastCommentDate": "2026-10-09T14:33:39.504+0900",
       "url": "https://jira.secext.samsung.net/browse/AEME-6597",
       "linkedTickets": [],
@@ -636,7 +676,7 @@
       {
         "pid": 19076,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 84529,
+        "ageSeconds": 91367,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -646,7 +686,7 @@
       {
         "pid": 6552,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 84452,
+        "ageSeconds": 91290,
         "status": "running",
         "isChild": false,
         "taskSummary": "make a retrigger script adn rettrigger these orders\"",
@@ -656,7 +696,7 @@
       {
         "pid": 22172,
         "cwd": "c:\\windows",
-        "ageSeconds": 84448,
+        "ageSeconds": 91286,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -666,7 +706,7 @@
       {
         "pid": 20664,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 84437,
+        "ageSeconds": 91274,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -676,7 +716,7 @@
       {
         "pid": 7420,
         "cwd": "unknown",
-        "ageSeconds": 83230,
+        "ageSeconds": 90067,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -4752,44 +4792,44 @@
     "bridgeLogTail": "[2026-10-26T13:38:46.993Z] STDOUT data for #888: 337 bytes\n[2026-10-26T13:38:47.006Z] LIVE events write for #888: 400 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_888.txt\n[2026-10-26T13:38:47.008Z] STDOUT data for #888: 110 bytes\n[2026-10-26T13:38:47.011Z] LIVE events write for #888: 401 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_888.txt\n[2026-10-26T13:38:47.012Z] STDOUT data for #888: 119 bytes\n[2026-10-26T13:38:47.014Z] LIVE events write for #888: 402 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_888.txt\n[2026-10-26T13:38:47.021Z] STDOUT data for #888: 114 bytes\n[2026-10-26T13:38:47.024Z] LIVE events write for #888: 403 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_888.txt\n[2026-10-26T13:38:47.031Z] STDOUT data for #888: 115 bytes\n[2026-10-26T13:38:47.034Z] LIVE events write for #888: 404 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_888.txt\n[2026-10-26T13:38:47.041Z] STDOUT data for #888: 121 bytes\n[2026-10-26T13:38:47.044Z] LIVE events write for #888: 405 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_888.txt\n[2026-10-26T13:38:47.053Z] STDOUT data for #888: 111 bytes\n[2026-10-26T13:38:47.056Z] LIVE events write for #888: 406 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_888.txt\n[2026-10-26T13:38:47.064Z] STDOUT data for #888: 104 bytes\n[2026-10-26T13:38:47.068Z] LIVE events write for #888: 407 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_888.txt\n[2026-10-26T13:38:47.434Z] STDOUT data for #888: 347 bytes\n[2026-10-26T13:38:47.437Z] LIVE events write for #888: 408 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_888.txt\n[2026-10-26T13:38:54.311Z] aipro completed for #888 (4608 chars)\n[2026-10-26T13:38:55.544Z] Comment posted on #888",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-27T03:29:32.140Z",
-      "ageMs": 13301
+      "lastWrite": "2026-10-27T05:23:35.277Z",
+      "ageMs": 10831
     },
-    "watchdogLogTail": "[2026-10-27T03:27:17.075Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-27T03:27:32.080Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-27T03:27:47.083Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-27T03:28:02.097Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-27T03:28:17.104Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-27T03:28:32.105Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-27T03:28:47.109Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-27T03:29:02.121Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-27T03:29:17.127Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-27T03:29:32.138Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-27T05:21:20.211Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-27T05:21:35.225Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-27T05:21:50.225Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-27T05:22:05.226Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-27T05:22:20.241Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-27T05:22:35.253Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-27T05:22:50.257Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-27T05:23:05.264Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-27T05:23:20.274Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-27T05:23:35.276Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
+      "status": "down",
+      "httpStatus": 401,
+      "lastCheck": "2026-10-27T05:23:06.447Z",
+      "downSince": "2026-10-27T03:31:05.919Z",
+      "downDuration": 6720528,
+      "alert": true
+    },
+    {
+      "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-27T03:29:05.630Z",
+      "lastCheck": "2026-10-27T05:23:06.447Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
     },
     {
-      "name": "Kibana",
-      "status": "down",
-      "httpStatus": 401,
-      "lastCheck": "2026-10-27T03:29:05.630Z",
-      "downSince": "2026-10-27T02:16:55.682Z",
-      "downDuration": 4329948,
-      "alert": true
-    },
-    {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-27T03:29:05.630Z",
+      "lastCheck": "2026-10-27T05:23:06.447Z",
       "downSince": "2026-10-27T02:56:03.719Z",
-      "downDuration": 1981911,
+      "downDuration": 8822728,
       "alert": true
     }
   ],
   "hacReport": {
-    "generatedAt": "2026-10-26T03:30:04.829Z",
-    "generatedAtLocal": "Oct 26, 2026, 09:00:04 AM",
-    "queryDate": "2026-10-25",
+    "generatedAt": "2026-10-27T03:30:08.184Z",
+    "generatedAtLocal": "Oct 27, 2026, 09:00:08 AM",
+    "queryDate": "2026-10-26",
     "modified": {
       "headers": [
         "CLUSTER",
@@ -4804,8 +4844,8 @@
           "CLUSTER": "SMI",
           "YEAR": "2026",
           "MONTH": "Oct",
-          "DAY": "25",
-          "COUNT": "474",
+          "DAY": "26",
+          "COUNT": "1176",
           "TYPE": "MODIFIED"
         }
       ],
@@ -4825,14 +4865,14 @@
           "CLUSTER": "SMI",
           "YEAR": "2026",
           "MONTH": "Oct",
-          "DAY": "25",
-          "COUNT": "259",
+          "DAY": "26",
+          "COUNT": "319",
           "TYPE": "CREATED"
         }
       ],
       "error": null
     },
-    "textReport": "Hi Reglo, Tin,\nPFA the results for SMI\n\nCLUSTER\tYEAR\tMONTH\tDAY\tCOUNT\tTYPE\nSMI\t2026\tOct\t25\t474\tMODIFIED\n\nCLUSTER\tYEAR\tMONTH\tDAY\tCOUNT\tTYPE\nSMI\t2026\tOct\t25\t259\tCREATED"
+    "textReport": "Hi Reglo, Tin,\nPFA the results for SMI\n\nCLUSTER\tYEAR\tMONTH\tDAY\tCOUNT\tTYPE\nSMI\t2026\tOct\t26\t1176\tMODIFIED\n\nCLUSTER\tYEAR\tMONTH\tDAY\tCOUNT\tTYPE\nSMI\t2026\tOct\t26\t319\tCREATED"
   },
   "scheduledJobs": {
     "jobs": [
@@ -4912,6 +4952,18 @@
   "actionItems": {
     "zero": [
       {
+        "key": "AUTEU-41862",
+        "summary": "CSAgent access required for SMI P1 and STG",
+        "priority": "Assign Priority",
+        "status": "To do",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/AUTEU-41862",
+        "updated": "2026-10-27T12:37:29.000+0900",
+        "statusChangedAt": ""
+      },
+      {
         "key": "TKME-2408",
         "summary": "Stuck order on Hybris",
         "priority": "None",
@@ -4974,6 +5026,18 @@
     ],
     "actionable": [
       {
+        "key": "PC-55917",
+        "summary": "Add null-safety guards to SMI monitoring scripts (MENA-StuckOrdersInLast24Hours, hc-smi-failedAndErrorOrdersScript)",
+        "priority": "Low",
+        "status": "Approved-ES",
+        "category": "actionable",
+        "reason": "",
+        "whatToDo": "Execute on PROD or validate",
+        "url": "https://jira.secext.samsung.net/browse/PC-55917",
+        "updated": "2026-10-27T13:37:13.000+0900",
+        "statusChangedAt": "2026-10-27T13:37:08.549+0900"
+      },
+      {
         "key": "TKME-2382",
         "summary": "Stuck order on Hybris",
         "priority": "None",
@@ -4999,18 +5063,6 @@
       }
     ],
     "blocked": [
-      {
-        "key": "GMT-22264",
-        "summary": "SMI | Cronjobs in Aborted status",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "blocked",
-        "reason": "Waiting for PC-55917 approval (not assigned to you)",
-        "whatToDo": "",
-        "url": "https://jira.secext.samsung.net/browse/GMT-22264",
-        "updated": "2026-10-26T19:50:24.000+0900",
-        "statusChangedAt": "2026-10-26T09:05:56.549+0900"
-      },
       {
         "key": "PC-55757",
         "summary": "Deploy Updated SC+ Report Cronjob Script to PROD (AEME-6535)",
@@ -5043,9 +5095,9 @@
       }
     ],
     "totals": {
-      "zero": 5,
-      "actionable": 2,
-      "blocked": 2,
+      "zero": 6,
+      "actionable": 3,
+      "blocked": 1,
       "queued": 2
     }
   },
@@ -5100,32 +5152,18 @@
   "slaCards": {
     "byTicket": [
       {
-        "key": "GMT-22264",
-        "slaName": "GMT Issue Response SLA(GMT+5.5)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86336,
-        "targetDate": "2026-10-13T17:53:07.713000001Z"
-      },
-      {
-        "key": "GMT-22264",
-        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
-        "slaStatus": "EXCEED",
-        "remainingDuration": "",
-        "targetDate": "2026-10-20T11:02:29.640000006Z"
-      },
-      {
-        "key": "TKME-2382",
+        "key": "TKME-2408",
         "slaName": "Maintenance Response (GMT+3)",
         "slaStatus": "SUCCESS",
-        "remainingDuration": 86399,
-        "targetDate": "2026-10-19T11:35:42.030000001Z"
+        "remainingDuration": 86395,
+        "targetDate": "2026-10-27T13:14:09.649000001Z"
       },
       {
-        "key": "TKME-2382",
+        "key": "TKME-2408",
         "slaName": "Maintenance Resolution (GMT+3)",
         "slaStatus": "STILL",
-        "remainingDuration": 2256106,
-        "targetDate": "2026-12-02T06:11:28.355000033Z"
+        "remainingDuration": 2533835,
+        "targetDate": "2026-12-07T13:14:09.649000030Z"
       },
       {
         "key": "TKME-2383",
@@ -5138,22 +5176,36 @@
         "key": "TKME-2383",
         "slaName": "Maintenance Resolution (GMT+3)",
         "slaStatus": "STILL",
-        "remainingDuration": 2413949,
+        "remainingDuration": 2407117,
         "targetDate": "2026-12-04T02:02:10.947000034Z"
       },
       {
-        "key": "TKME-2408",
+        "key": "TKME-2382",
         "slaName": "Maintenance Response (GMT+3)",
         "slaStatus": "SUCCESS",
-        "remainingDuration": 86395,
-        "targetDate": "2026-10-27T13:14:09.649000001Z"
+        "remainingDuration": 86399,
+        "targetDate": "2026-10-19T11:35:42.030000001Z"
       },
       {
-        "key": "TKME-2408",
+        "key": "TKME-2382",
         "slaName": "Maintenance Resolution (GMT+3)",
         "slaStatus": "STILL",
-        "remainingDuration": 2540668,
-        "targetDate": "2026-12-07T13:14:09.649000030Z"
+        "remainingDuration": 2249274,
+        "targetDate": "2026-12-02T06:11:28.355000033Z"
+      },
+      {
+        "key": "AEME-6590",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86065,
+        "targetDate": "2026-09-29T06:53:13.927000001Z"
+      },
+      {
+        "key": "AEME-6590",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2276813,
+        "targetDate": "2026-12-02T13:50:27.278000047Z"
       },
       {
         "key": "AEME-6597",
@@ -5170,20 +5222,6 @@
         "targetDate": "2026-10-20T08:16:57.595000015Z"
       },
       {
-        "key": "AEME-6590",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86065,
-        "targetDate": "2026-09-29T06:53:13.927000001Z"
-      },
-      {
-        "key": "AEME-6590",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2283645,
-        "targetDate": "2026-12-02T13:50:27.278000047Z"
-      },
-      {
         "key": "GMT-22312",
         "slaName": "GMT Issue Response SLA(GMT+5.5)",
         "slaStatus": "SUCCESS",
@@ -5194,13 +5232,13 @@
         "key": "GMT-22312",
         "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
         "slaStatus": "STILL",
-        "remainingDuration": 252528,
+        "remainingDuration": 245696,
         "targetDate": "2026-10-30T01:38:30.081000013Z"
       }
     ]
   },
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 0.25h on SAHME-3483, 1.5h on PC-55917, 0.33h on TKME-2348, 0.58h on MHME-1462, 1.5h on TKME-2324, 0.33h on TKME-2408\nToday: TKME-2408, GMT-22264, TKME-2383, TKME-2382, GMT-22312\nBlockers: PC-55757"
+    "standupText": "Yesterday: 0.25h on SAHME-3483, 1.5h on PC-55917, 0.33h on TKME-2348, 0.58h on MHME-1462, 1.5h on TKME-2324, 0.33h on TKME-2408\nToday: AUTEU-41862, TKME-2408, TKME-2383, TKME-2382, GMT-22312\nBlockers: PC-55917, PC-55757"
   }
 }
