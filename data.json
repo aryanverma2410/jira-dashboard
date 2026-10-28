@@ -1,124 +1,7 @@
 {
-  "generatedAt": "2026-10-28T15:08:36.339Z",
-  "totalTickets": 15,
+  "generatedAt": "2026-10-28T15:09:18.689Z",
+  "totalTickets": 12,
   "tickets": [
-    {
-      "key": "TKME-2417",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Turkey Maintenance & Enhancements",
-      "projectKey": "TKME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-28T22:56:10.000+0900",
-      "created": "2026-10-28T22:35:06.000+0900",
-      "statusChangedAt": "2026-10-28T22:35:09.915+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|TR261027-31416321|2026/10/28|REFUND_FAILED|\n|TR261027-30694853|2026/10/27|SHIPPED|\n|TR261027-30693525|2026/10/27|SHIPPED|\n|TR261027-30688809|2026/10/27|SHIPPED|\n|TR261027",
-      "commentsCount": 1,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-28T22:35:08.616+0900",
-          "snippet": "Hi Team,\n\nREFUND_FAILED (3 order(s)):\nTR261027-31416321\nPayment entry status: REFUND_FOLLOW_ON:ERROR\nTR261027-30407887\nPayment entry status: REFUND_FOLLOW_ON:ERROR; No activity >24h\nTR261025-28104424\nPayment entry status: REFUND_FOLLOW_ON:ERROR; No activity >24h\nprocessExternalServices (20 order(s))"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Team,\n\nREFUND_FAILED (3 order(s)):\nTR261027-31416321\nPayment entry status: REFUND_FOLLOW_ON:ERROR\nTR261027-30407887\nPayment entry status: REFUND_FOLLOW_ON:ERROR; No activity >24h\nTR261025-28104424\nPayment entry status: REFUND_FOLLOW_ON:ERROR; No activity >24h\nprocessExternalServices (20 order(s))",
-      "lastCommentDate": "2026-10-28T22:35:08.616+0900",
-      "url": "https://jira.secext.samsung.net/browse/TKME-2417",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Stuck order on Hybris — 23 TR-region orders (20 SHIPPED + 3 REFUND_FAILED)\r\nGenerated: 2026-10-28T14:00:00Z\r\n\r\n## Issue\r\n\r\nTKME-2417 reports 23 orders stuck in the TR region. The ticket lists 20 orders in SHIPPED status and 3 orders in REFUND_FAILED status. All 23 orders have stuck or errored business processes preventing them from reaching a terminal state despite physical fulfilment having completed for the SHIPPED orders.\r\n\r\n## RCA\r\n\r\nTwo distinct populations of orders exist in this ticket, each with a different root cause.\r\n\r\nPopulation 1 — 20 SHIPPED orders (TR261027-30694853, TR261027-30693525, TR261027-30688809, TR261027-30693160, TR261027-30666453, TR261027-30655432, TR261027-30651232, TR261027-30642237, TR261027-30637167, TR261027-30591719, TR261027-30597740, TR261027-30572578, TR261023-25319011, TR261026-29480996, TR261026-29365012, TR261021-23163107, TR261026-29359505, TR261025-28363237, TR261023-25735963, TR261023-25618605):\r\n\r\nAll 20 orders share an identical error pattern verified via DB queries (order-error-check.cjs + flexi-order-full.cjs) against PROD HAC.\r\n\r\nEach order has two business processes:\r\n1. The main order-process-v25-69 is in RUNNING state, stuck at the waitForFinancialInitialUpdate action. The process is waiting for the Financial Integration (FI) initial update to complete.\r\n2. The consignment child process (consignment-process-v11-36, suffix _1) is in ERROR state with endMessage \"All went wrong.\"\r\n\r\nThe isInitialFISuccess action threw an exception (empty returnCode in ProcessTaskLog) in 19 of 20 orders. The exception timestamps cluster tightly — for example, 8 orders on 2026-10-27 show exceptions within the same second (10:38:10.7xx), suggesting a systemic FI integration failure event rather than individual order issues.\r\n\r\nNo BusinessProcessParameter entries were found for any order (no errorStackTrace stored), confirming the error was handled gracefully by the process engine, not a crash.\r\n\r\nThe consignments themselves are physically COMPLETED with GERP billing done (GERP bill numbers present, shipped dates set, warehouse WC17-S751 assigned). The payment side is clean — AUTHORIZATION and CAPTURE both ACCEPTED with no refund entries. The SMC external service is in ERROR state on sampled orders.\r\n\r\nRoot cause: The consignment child process errored during the Financial Integration initial update check (isInitialFISuccess), which set the consignment process to ERROR with the generic endMessage \"All went wrong.\" This blocked the main order process from receiving the FI completion signal, leaving it stuck at waitForFinancialInitialUpdate indefinitely. The physical fulfilment pipeline (warehouse, GERP, shipping) completed independently and successfully, but the process engine layer is stuck because the FI integration handshake failed.\r\n\r\nThis is the same pattern seen in TKME-2387 and TKME-2385 (prior TR healthcheck tickets by aryan.v1), where I/O errors during financial update caused business processes to enter ERROR state. Those tickets were remediated under PC-52605 by retriggering the errored processes.\r\n\r\nPopulation 2 — 3 REFUND_FAILED orders (TR261027-31416321, TR261027-30407887, TR261025-28104424):\r\n\r\nAll 3 orders share an identical payment failure pattern verified via DB queries.\r\n\r\nEach order has:\r\n- Order status: REFUND_FAILED\r\n- Order total: zeroed out (0E-8) — the refund consumed the full captured amount\r\n- Payment mode: tr-masterpassPaymentMode (MasterPass)\r\n- No consignments — orders were cancelled before fulfilment\r\n- Payment transactions show: AUTHORIZATION (ACCEPTED), CAPTURE (ACCEPTED), REFUND_FOLLOW_ON (ERROR)\r\n\r\nThe order-process-v25-69 is in FAILED state with endMessage \"Order failed.\" The last task log action is refundCancelOrder, confirming the process reached the refund step after order cancellation and failed there. No BusinessProcessParameter error stack traces were stored. No ProcessTaskLog exceptions were found.\r\n\r\nRoot cause: The MasterPass payment gateway rejected the follow-on refund request. The AUTHORIZATION and CAPTURE both succeeded (funds were held and captured), but when the system attempted to refund the captured amount after order cancellation, the REFUND_FOLLOW_ON payment transaction entry was set to ERROR status. The process engine handled this gracefully (no crash, no stack trace) and transitioned the order process to FAILED state. The refund needs to be re-attempted through the MasterPass gateway.\r\n\r\n## Possible remediation\r\n\r\nPopulation 1 — 20 SHIPPED orders:\r\n\r\nRemediation: Retrigger the errored consignment processes and stuck order processes using the approach from PC-52605 (Reusable, Closed, reporter: aryan.v1). PC-52605 contains script-TKME-2279-retrigger-business-process.groovy which sets errored processes to ERROR state and restarts them from their last failed action via businessProcessService.restartProcess(). This script was successfully used for the same TR-region I/O error pattern in TKME-2387 and TKME-2385.\r\n\r\nThe script needs to be copied and adapted:\r\n- Update the order list to the 20 SHIPPED orders from TKME-2417\r\n- Update the ITGC header to reference the new PC ticket and TKME-2417\r\n- The script logic (set process to ERROR, remove currentTasks, restartProcess from last actionId) remains unchanged\r\n\r\nThe retrigger will allow the isInitialFISuccess action to re-execute. Since the FI integration failure was transient (clustered timestamps suggest a brief outage), the retry should succeed and the consignment process will complete, unblocking the main order process at waitForFinancialInitialUpdate.\r\n\r\nPopulation 2 — 3 REFUND_FAILED orders:\r\n\r\nRemediation: Update the REFUND_FOLLOW_ON payment transaction entry from ERROR to ACCEPTED, then restart the order process from the refundCancelOrder action. This follows the precedent of PC-35580 (Closed, [SAME-3208] - Update refund follow on entry to success) and PC-48853 (Closed, NUKME-13377 - Update PTE(REFUND_FOLLOW_ON)).\r\n\r\nHowever, before updating the PTE status, the actual refund must be confirmed as completed through the MasterPass gateway externally. The Hybris-side PTE update only records the result — it does not initiate the refund. If the refund has not been processed by MasterPass, a new refund request must be sent first.\r\n\r\nSteps:\r\n1. Verify with the payment team whether the MasterPass refund was successfully processed for each of the 3 orders\r\n2. If refund confirmed: update PaymentTransactionEntry status from ERROR to ACCEPTED and restart the order process from refundCancelOrder\r\n3. If refund not confirmed: initiate the refund through MasterPass first, then update the PTE and restart the process\r\n\r\nBoth remediations can be executed under a single new PC ticket, or PC-52605 can be reused for the SHIPPED orders while a separate PC ticket handles the REFUND_FAILED orders (different remediation type).",
-        "sections": {
-          "issue": "TKME-2417 reports 23 orders stuck in the TR region. The ticket lists 20 orders in SHIPPED status and 3 orders in REFUND_FAILED status. All 23 orders have stuck or errored business processes preventing them from reaching a terminal state despite physical fulfilment having completed for the SHIPPED orders.",
-          "rca": "Two distinct populations of orders exist in this ticket, each with a different root cause.\r\n\r\nPopulation 1 — 20 SHIPPED orders (TR261027-30694853, TR261027-30693525, TR261027-30688809, TR261027-30693160, TR261027-30666453, TR261027-30655432, TR261027-30651232, TR261027-30642237, TR261027-30637167, TR261027-30591719, TR261027-30597740, TR261027-30572578, TR261023-25319011, TR261026-29480996, TR261026-29365012, TR261021-23163107, TR261026-29359505, TR261025-28363237, TR261023-25735963, TR261023-25618605):\r\n\r\nAll 20 orders share an identical error pattern verified via DB queries (order-error-check.cjs + flexi-order-full.cjs) against PROD HAC.\r\n\r\nEach order has two business processes:\r\n1. The main order-process-v25-69 is in RUNNING state, stuck at the waitForFinancialInitialUpdate action. The process is waiting for the Financial Integration (FI) initial update to complete.\r\n2. The consignment child process (consignment-process-v11-36, suffix _1) is in ERROR state with endMessage \"All went wrong.\"\r\n\r\nThe isInitialFISuccess action threw an exception (empty returnCode in ProcessTaskLog) in 19 of 20 orders. The exception timestamps cluster tightly — for example, 8 orders on 2026-10-27 show exceptions within the same second (10:38:10.7xx), suggesting a systemic FI integration failure event rather than individual order issues.\r\n\r\nNo BusinessProcessParameter entries were found for any order (no errorStackTrace stored), confirming the error was handled gracefully by the process engine, not a crash.\r\n\r\nThe consignments themselves are physically COMPLETED with GERP billing done (GERP bill numbers present, shipped dates set, warehouse WC17-S751 assigned). The payment side is clean — AUTHORIZATION and CAPTURE both ACCEPTED with no refund entries. The SMC external service is in ERROR state on sampled orders.\r\n\r\nRoot cause: The consignment child process errored during the Financial Integration initial update check (isInitialFISuccess), which set the consignment process to ERROR with the generic endMessage \"All went wrong.\" This blocked the main order process from receiving the FI completion signal, leaving it stuck at waitForFinancialInitialUpdate indefinitely. The physical fulfilment pipeline (warehouse, GERP, shipping) completed independently and successfully, but the process engine layer is stuck because the FI integration handshake failed.\r\n\r\nThis is the same pattern seen in TKME-2387 and TKME-2385 (prior TR healthcheck tickets by aryan.v1), where I/O errors during financial update caused business processes to enter ERROR state. Those tickets were remediated under PC-52605 by retriggering the errored processes.\r\n\r\nPopulation 2 — 3 REFUND_FAILED orders (TR261027-31416321, TR261027-30407887, TR261025-28104424):\r\n\r\nAll 3 orders share an identical payment failure pattern verified via DB queries.\r\n\r\nEach order has:\r\n- Order status: REFUND_FAILED\r\n- Order total: zeroed out (0E-8) — the refund consumed the full captured amount\r\n- Payment mode: tr-masterpassPaymentMode (MasterPass)\r\n- No consignments — orders were cancelled before fulfilment\r\n- Payment transactions show: AUTHORIZATION (ACCEPTED), CAPTURE (ACCEPTED), REFUND_FOLLOW_ON (ERROR)\r\n\r\nThe order-process-v25-69 is in FAILED state with endMessage \"Order failed.\" The last task log action is refundCancelOrder, confirming the process reached the refund step after order cancellation and failed there. No BusinessProcessParameter error stack traces were stored. No ProcessTaskLog exceptions were found.\r\n\r\nRoot cause: The MasterPass payment gateway rejected the follow-on refund request. The AUTHORIZATION and CAPTURE both succeeded (funds were held and captured), but when the system attempted to refund the captured amount after order cancellation, the REFUND_FOLLOW_ON payment transaction entry was set to ERROR status. The process engine handled this gracefully (no crash, no stack trace) and transitioned the order process to FAILED state. The refund needs to be re-attempted through the MasterPass gateway.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-28T14:20:44.466Z"
-      }
-    },
-    {
-      "key": "SAHME-3509",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "South Africa Maintenance & Enhancements",
-      "projectKey": "SAHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-28T22:56:10.000+0900",
-      "created": "2026-10-28T22:35:15.000+0900",
-      "statusChangedAt": "2026-10-28T22:35:17.936+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|ZA260427-59905783|2026/10/28|SHIPPED|\n|ZA261025-28440465|2026/10/25|SHIPPED|\n\n\nThanks",
-      "commentsCount": 1,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-28T22:35:16.844+0900",
-          "snippet": "Hi Team,\n\nisAdditionalInfoCollected (1 order(s)):\nZA260427-59905783\nConsignment process ERROR at isAdditionalInfoCollected: I/O error: Connection reset; nested exception is java.net.SocketException: Connection reset\nprocessExternalServices (1 order(s)):\nZA261025-28440465\nConsignment process ERROR at"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Team,\n\nisAdditionalInfoCollected (1 order(s)):\nZA260427-59905783\nConsignment process ERROR at isAdditionalInfoCollected: I/O error: Connection reset; nested exception is java.net.SocketException: Connection reset\nprocessExternalServices (1 order(s)):\nZA261025-28440465\nConsignment process ERROR at",
-      "lastCommentDate": "2026-10-28T22:35:16.844+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAHME-3509",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: SAHME-3509\nStuck order on Hybris\nGenerated: 2026-10-28T23:05:00+09:00\n\nIssue:\nTwo ZA-region orders (ZA260427-59905783 and ZA261025-28440465) have consignment processes stuck in ERROR state, preventing them from completing the consignment lifecycle. Both orders are in SHIPPED status but the underlying consignment-process-v11-36 instances are in ERROR, which blocks the order-process-v25-69 from progressing past RUNNING.\n\nRCA:\n\nZA260427-59905783:\nThe consignment process _2 (consignment-process-v11-36) hit a transient I/O error at the isAdditionalInfoCollected action. The IsAdditionalInfoCollectedAction.executeAction() method in com.samsung.toko.fulfilmentprocess.actions.consignment queries the database via tokoConfigPropertyService.getPropertyBooleanValueFromDB() and tokoConsignmentService.isConsignmentMissingAdditionalInfo() to determine if additional information is required for the consignment. A java.net.SocketException: Connection reset occurred during one of these database calls, causing the action to throw an unhandled exception. The process engine caught the exception and moved the process to ERROR state with endMessage \"An error occurred while executing the process.\"\n\nThe consignment process errorStackTrace was stored in BusinessProcessParameter but as a binary byte array (unreadable). The ProcessTaskLog also recorded an exception at isInitialFISuccess on the order-process-v25-69, but the order process is still RUNNING (not ERROR), so this is a separate transient issue that was retried successfully.\n\nBoth consignments (main and _1) are in SHIPPED status with no completed date and no GERP billing, meaning the process never reached the consignment FI posting or delivery update steps that come after isAdditionalInfoCollected in the process flow. The process flow is: isAdditionalInfoCollected -> isConsignmentFIRequired -> sendConsignmentFI -> ... -> processExternalServices -> isShippedComplete -> sendDeliveryUpdateToERP. The error at isAdditionalInfoCollected blocked all downstream steps.\n\nThis is a transient infrastructure error (socket connection reset), not a code bug or data issue. The error should not recur on retry.\n\nZA261025-28440465:\nThe consignment process _1 (consignment-process-v11-36) reached the processExternalServices action. The ProcessExternalServicesOnConsignmentAction.executeAction() method in com.samsung.toko.fulfilmentprocess.actions.consignment iterates through the order's external service entries and invokes each service provider. The SMC external service (provider=SMC, serviceProduct=11526717931521) failed during registration -- the processService() call returned false, the service entry was set to ERROR status via setStatus(), and successProcessingServices became false.\n\nThe config property \"toko.consignment.process.skip.service.error\" is not enabled for the za store, so the action did not suppress the NOK return. The action returned Transition.NOK, which transitioned to the error end node in the process XML (<end id=\"error\" state=\"ERROR\">All went wrong.</end>), matching the endMessage \"All went wrong.\" in the database.\n\nThe consignment itself is COMPLETED with GERP billing number 3251011687 (dated 2026-10-27) and tracking S20261026278456, meaning all physical fulfilment steps completed successfully. The process reached processExternalServices after going through isAdditionalInfoCollected, consignment FI posting, shipped complete, and delivery update to ERP. Only the SMC/SC+ external service registration failed at the final step.\n\nThe order process (order-process-v25-69) is still RUNNING, waiting for the consignment process to complete. A ProcessTaskLog exception at isInitialFISuccess was also recorded on the order process, but this is a separate transient issue.\n\nPossible remediation:\n\nFor ZA260427-59905783:\nRestart the consignment process _2 from the isAdditionalInfoCollected action. The I/O Connection reset was a transient infrastructure error and should not recur on retry. This follows the process-restart remediation pattern (reusable PC-52605, script-TKME-2279-retrigger-business-process.groovy). The consignment process needs to be restarted so it can re-execute isAdditionalInfoCollected and proceed through the remaining steps (consignment FI posting, external services, shipped complete, GERP billing).\n\nFor ZA261025-28440465:\n1. Reset the SMC external service from ERROR to NEW status\n2. Restart the consignment process _1 from the processExternalServices action so it re-attempts the SMC service registration\nThis follows the SC+ reset remediation pattern (reusable PC-52678, script-AEME-6495-scplus-remediation.groovy). The consignment is already COMPLETED with GERP billing done, so only the external service registration needs to be retried.\n\nBoth remediations can be combined into a single HAC Groovy script that:\n- Resets the SMC external service for ZA261025-28440465 from ERROR to NEW\n- Restarts both consignment processes from their respective failure points\n- Uses commit=false first for S2 validation, then commit=true for PROD",
-        "sections": {
-          "issue": "Two ZA-region orders (ZA260427-59905783 and ZA261025-28440465) have consignment processes stuck in ERROR state, preventing them from completing the consignment lifecycle. Both orders are in SHIPPED status but the underlying consignment-process-v11-36 instances are in ERROR, which blocks the order-process-v25-69 from progressing past RUNNING.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-28T14:07:48.643Z"
-      }
-    },
-    {
-      "key": "AEME-6686",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-28T22:37:37.000+0900",
-      "created": "2026-10-28T22:34:57.000+0900",
-      "statusChangedAt": "2026-10-28T22:35:01.266+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing order was found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|AE261027-30566287|2026/10/28|SHIPPED|\n\n\nThanks",
-      "commentsCount": 1,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-28T22:35:00.085+0900",
-          "snippet": "Hi Team,\n\nprocessExternalServices (1 order(s)):\nAE261027-30566287\nConsignment process ERROR at processExternalServices rc=NOK\nWe are checking further on the same.\n\nRegards\n\nAryan"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Team,\n\nprocessExternalServices (1 order(s)):\nAE261027-30566287\nConsignment process ERROR at processExternalServices rc=NOK\nWe are checking further on the same.\n\nRegards\n\nAryan",
-      "lastCommentDate": "2026-10-28T22:35:00.085+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6686",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Ticket Summary: Stuck order on Hybris\r\nGenerated: 2026-10-28T13:50:00Z\r\n\r\nIssue\r\n\r\nOrder AE261027-30566287 is stuck at SHIPPED status. The consignment is physically COMPLETED and GERP-billed, but the consignment process (consignment-process-v11-36) is in ERROR state with endMessage \"All went wrong.\" The ExternalService entry for GCIC_EXPERT_CARE_STANDALONE is in ERROR status with no service ID, indicating the GCIC (Galaxy Care Integration Center) service registration call failed and never returned a service ID. The order process is still RUNNING, stuck at the isInitialFISuccess action which threw an exception at 2026-10-28 06:45:21.802. Payment was successful (CAPTURE ACCEPTED, 924 AED).\r\n\r\nRCA\r\n\r\nThe order AE261027-30566287 was placed on 2026-10-28 at 06:33:08 in the UAE store with product P-GT-LCXOS2PW (Galaxy Expert Care Carry-In service). Payment was captured successfully at 06:44:25. The consignment was processed and reached COMPLETED status at 07:01:58 with GERP billing number 3251099074 from warehouse WC21-S701.\r\n\r\nThe consignment process (consignment-process-v11-36) reached the processExternalServices action, which invokes the processExternalServicesOnConsignment bean. This bean calls the GCIC Expert Care external service to register the Galaxy Expert Care standalone service with the GCIC system. The GCIC API call failed -- no service ID was returned, and the ExternalService entry was set to ERROR status. The processExternalServices action returned NOK, which per the process definition at consignment-process-v11-36.xml line 543 transitions to the error end state (line 545) with message \"All went wrong.\"\r\n\r\nThis is the same pattern observed in AEME-6596 (resolved October 2026) where 6 UAE Expert Care orders were stuck at SHIPPED because the GCIC API call failed and ExternalService was set to ERROR. The root cause is a transient GCIC API failure -- either the GCIC service was temporarily unavailable, returned an error response, or the API token/credentials were invalid at the time of the call. The \"No response from GCIC, setting external service status to ERROR\" log pattern was confirmed in RT-753607 where TokoGalaxyExpertCareExternalServicesImpl handles the GCIC failure by setting the ExternalService to ERROR.\r\n\r\nNo BusinessProcessParameter error stack trace was stored, which is consistent with the process reaching a named error end state rather than throwing an uncaught exception.\r\n\r\nPossible remediation\r\n\r\nReset the ExternalService entry from ERROR to NEW and restart the consignment process from the processExternalServices action. This will re-attempt the GCIC service registration call.\r\n\r\nReusable PC ticket: PC-54773 (Closed, REUSABLE) from AEME-6596 -- script-AEME-6596-expert-care-remediation.groovy. This script performs exactly this remediation: it iterates over the order's ExternalService entries, resets any with ERROR status to NEW, finds the order process in ERROR/WAITING state, removes current tasks, and restarts the process from the processExternalServicesAction node.\r\n\r\nTo apply: copy script-AEME-6596-expert-care-remediation.groovy, update the order list to [\"AE261027-30566287\"], update the ITGC header to reference PC-54773(AEME-6686), and run via HAC under PC-54773 approval.\r\n\r\n## Remediation\r\n\r\n- Reusable PC ticket: PC-54773 (REUSABLE, Closed)\r\n- Script: script-AEME-6596-expert-care-remediation.groovy\r\n- Action: Reset ExternalService GCIC_EXPERT_CARE_STANDALONE from ERROR to NEW, restart process from processExternalServicesAction\r\n- No new PC ticket needed -- reuse PC-54773",
-        "sections": {
-          "issue": "",
-          "rca": "Ticket Summary: Stuck order on Hybris\r\nGenerated: 2026-10-28T13:50:00Z\r\n\r\nIssue\r\n\r\nOrder AE261027-30566287 is stuck at SHIPPED status. The consignment is physically COMPLETED and GERP-billed, but the consignment process (consignment-process-v11-36) is in ERROR state with endMessage \"All went wrong.\" The ExternalService entry for GCIC_EXPERT_CARE_STANDALONE is in ERROR status with no service ID, indicating the GCIC (Galaxy Care Integration Center) service registration call failed and never returned a service ID. The order process is still RUNNING, stuck at the isInitialFISuccess action which threw an exception at 2026-10-28 06:45:21.802. Payment was successful (CAPTURE ACCEPTED, 924 AED).\r\n\r\nRCA\r\n\r\nThe order AE261027-30566287 was placed on 2026-10-28 at 06:33:08 in the UAE store with product P-GT-LCXOS2PW (Galaxy Expert Care Carry-In service). Payment was captured successfully at 06:44:25. The consignment was processed and reached COMPLETED status at 07:01:58 with GERP billing number 3251099074 from warehouse WC21-S701.\r\n\r\nThe consignment process (consignment-process-v11-36) reached the processExternalServices action, which invokes the processExternalServicesOnConsignment bean. This bean calls the GCIC Expert Care external service to register the Galaxy Expert Care standalone service with the GCIC system. The GCIC API call failed -- no service ID was returned, and the ExternalService entry was set to ERROR status. The processExternalServices action returned NOK, which per the process definition at consignment-process-v11-36.xml line 543 transitions to the error end state (line 545) with message \"All went wrong.\"\r\n\r\nThis is the same pattern observed in AEME-6596 (resolved October 2026) where 6 UAE Expert Care orders were stuck at SHIPPED because the GCIC API call failed and ExternalService was set to ERROR. The root cause is a transient GCIC API failure -- either the GCIC service was temporarily unavailable, returned an error response, or the API token/credentials were invalid at the time of the call. The \"No response from GCIC, setting external service status to ERROR\" log pattern was confirmed in RT-753607 where TokoGalaxyExpertCareExternalServicesImpl handles the GCIC failure by setting the ExternalService to ERROR.\r\n\r\nNo BusinessProcessParameter error stack trace was stored, which is consistent with the process reaching a named error end state rather than throwing an uncaught exception.\r\n\r\nPossible remediation\r\n\r\nReset the ExternalService entry from ERROR to NEW and restart the consignment process from the processExternalServices action. This will re-attempt the GCIC service registration call.\r\n\r\nReusable PC ticket: PC-54773 (Closed, REUSABLE) from AEME-6596 -- script-AEME-6596-expert-care-remediation.groovy. This script performs exactly this remediation: it iterates over the order's ExternalService entries, resets any with ERROR status to NEW, finds the order process in ERROR/WAITING state, removes current tasks, and restarts the process from the processExternalServicesAction node.\r\n\r\nTo apply: copy script-AEME-6596-expert-care-remediation.groovy, update the order list to [\"AE261027-30566287\"], update the ITGC header to reference PC-54773(AEME-6686), and run via HAC under PC-54773 approval.\r\n\r\n## Remediation\r\n\r\n- Reusable PC ticket: PC-54773 (REUSABLE, Closed)\r\n- Script: script-AEME-6596-expert-care-remediation.groovy\r\n- Action: Reset ExternalService GCIC_EXPERT_CARE_STANDALONE from ERROR to NEW, restart process from processExternalServicesAction\r\n- No new PC ticket needed -- reuse PC-54773",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-28T14:10:12.235Z"
-      }
-    },
     {
       "key": "TKME-2383",
       "summary": "Stuck order on Hybris",
@@ -552,7 +435,7 @@
         {
           "author": "Talib Raza Zaidi",
           "date": "2026-10-14T20:27:01.906+0900",
-          "snippet": "Hi ~@email,\n\n \n\nWe placed a new order in STG2 for this AE261001-09477295. Refund is triggered including both Product + Delivery Fee : AE261001-09477295 \n\n!image-2026-10-14-15-18-20-414.png|width=408,height=266!\n\n!image-2026-10-14-15-18-38-700.png|width=405,height=370!\n\n \n\nRegards\n\nTalib\n\nCC: ~@email"
+          "snippet": "Hi ~@email,\n\n \n\nWe placed a new order in STG2 for this AE261001-09477295. Refund is triggered including both Product + Delivery Fee : AE261001-09477295��\n\n!image-2026-10-14-15-18-20-414.png|width=408,height=266!\n\n!image-2026-10-14-15-18-38-700.png|width=405,height=370!\n\n \n\nRegards\n\nTalib\n\nCC: ~@emai"
         },
         {
           "author": "Talib Raza Zaidi",
@@ -561,7 +444,7 @@
         }
       ],
       "lastCommentBy": "Talib Raza Zaidi",
-      "lastCommentSnippet": "Hi ~@email,\n\n \n\nWe placed a new order in STG2 for this AE261001-09477295. Refund is triggered including both Product + Delivery Fee : AE261001-09477295 \n\n!image-2026-10-14-15-18-20-414.png|width=408,height=266!\n\n!image-2026-10-14-15-18-38-700.png|width=405,height=370!\n\n \n\nRegards\n\nTalib\n\nCC: ~@email",
+      "lastCommentSnippet": "Hi ~@email,\n\n \n\nWe placed a new order in STG2 for this AE261001-09477295. Refund is triggered including both Product + Delivery Fee : AE261001-09477295��\n\n!image-2026-10-14-15-18-20-414.png|width=408,height=266!\n\n!image-2026-10-14-15-18-38-700.png|width=405,height=370!\n\n \n\nRegards\n\nTalib\n\nCC: ~@emai",
       "lastCommentDate": "2026-10-14T20:27:01.906+0900",
       "url": "https://jira.secext.samsung.net/browse/RT-657502",
       "linkedTickets": [],
@@ -852,7 +735,7 @@
       }
     ],
     "pid": 38388,
-    "uptime": 79217,
+    "uptime": 79257,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -864,7 +747,7 @@
       {
         "pid": 16500,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 114191,
+        "ageSeconds": 114233,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -874,7 +757,7 @@
       {
         "pid": 21420,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 113814,
+        "ageSeconds": 113856,
         "status": "running",
         "isChild": false,
         "taskSummary": "post comments with 45m each and assign back and update labels. put to LV the tickets where all or...",
@@ -884,7 +767,7 @@
       {
         "pid": 12208,
         "cwd": "c:\\windows",
-        "ageSeconds": 113814,
+        "ageSeconds": 113856,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -894,7 +777,7 @@
       {
         "pid": 34736,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 896,
+        "ageSeconds": 938,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -5043,17 +4926,17 @@
     "bridgeLogTail": "[2026-10-28T14:21:10.385Z] STDOUT data for #917: 111 bytes\n[2026-10-28T14:21:10.388Z] LIVE events write for #917: 496 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:21:10.397Z] STDOUT data for #917: 108 bytes\n[2026-10-28T14:21:10.400Z] LIVE events write for #917: 497 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:21:10.407Z] STDOUT data for #917: 115 bytes\n[2026-10-28T14:21:10.411Z] LIVE events write for #917: 498 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:21:10.419Z] STDOUT data for #917: 117 bytes\n[2026-10-28T14:21:10.422Z] LIVE events write for #917: 499 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:21:10.431Z] STDOUT data for #917: 114 bytes\n[2026-10-28T14:21:10.434Z] LIVE events write for #917: 500 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:21:10.441Z] STDOUT data for #917: 122 bytes\n[2026-10-28T14:21:10.445Z] LIVE events write for #917: 501 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:21:10.453Z] STDOUT data for #917: 109 bytes\n[2026-10-28T14:21:10.456Z] LIVE events write for #917: 502 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:21:10.466Z] STDOUT data for #917: 107 bytes\n[2026-10-28T14:21:10.471Z] LIVE events write for #917: 503 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:21:10.481Z] STDOUT data for #917: 348 bytes\n[2026-10-28T14:21:10.485Z] LIVE events write for #917: 504 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:21:13.918Z] aipro completed for #917 (4040 chars)\n[2026-10-28T14:21:15.511Z] Comment posted on #917",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-28T15:08:34.053Z",
-      "ageMs": 6325
+      "lastWrite": "2026-10-28T15:09:19.069Z",
+      "ageMs": 3175
     },
-    "watchdogLogTail": "[2026-10-28T15:06:18.981Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T15:06:33.988Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T15:06:49.002Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T15:07:04.008Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T15:07:19.014Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T15:07:34.016Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T15:07:49.030Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T15:08:04.038Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T15:08:19.044Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T15:08:34.052Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-28T15:07:04.008Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T15:07:19.014Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T15:07:34.016Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T15:07:49.030Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T15:08:04.038Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T15:08:19.044Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T15:08:34.052Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T15:08:49.058Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T15:09:04.064Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T15:09:19.066Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-28T15:07:49.492Z",
+      "lastCheck": "2026-10-28T15:08:49.503Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5062,7 +4945,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-28T15:07:49.492Z",
+      "lastCheck": "2026-10-28T15:08:49.503Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5071,9 +4954,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-28T15:07:49.492Z",
+      "lastCheck": "2026-10-28T15:08:49.503Z",
       "downSince": "2026-10-28T13:52:37.759Z",
-      "downDuration": 4511733,
+      "downDuration": 4571744,
       "alert": true
     }
   ],
@@ -5202,42 +5085,6 @@
   ],
   "actionItems": {
     "zero": [
-      {
-        "key": "TKME-2417",
-        "summary": "Stuck order on Hybris",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/TKME-2417",
-        "updated": "2026-10-28T22:56:10.000+0900",
-        "statusChangedAt": "2026-10-28T22:35:09.915+0900"
-      },
-      {
-        "key": "SAHME-3509",
-        "summary": "Stuck order on Hybris",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/SAHME-3509",
-        "updated": "2026-10-28T22:56:10.000+0900",
-        "statusChangedAt": "2026-10-28T22:35:17.936+0900"
-      },
-      {
-        "key": "AEME-6686",
-        "summary": "Stuck order on Hybris",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/AEME-6686",
-        "updated": "2026-10-28T22:37:37.000+0900",
-        "statusChangedAt": "2026-10-28T22:35:01.266+0900"
-      },
       {
         "key": "TKME-2383",
         "summary": "Stuck order on Hybris",
@@ -5382,7 +5229,7 @@
       }
     ],
     "totals": {
-      "zero": 8,
+      "zero": 5,
       "actionable": 4,
       "blocked": 1,
       "queued": 2
@@ -5390,12 +5237,12 @@
   },
   "worklogTotals": {
     "todayHours": 8,
-    "weekHours": 14.5,
+    "weekHours": 16.75,
     "dailyHours": [
       4.5,
       2,
       8,
-      0,
+      2.25,
       0,
       0,
       0
@@ -5414,9 +5261,9 @@
   },
   "tempoApproval": {
     "status": "ready_to_submit",
-    "workedHours": 182.89,
+    "workedHours": 185.14,
     "requiredHours": 176,
-    "deficitHours": -6.89,
+    "deficitHours": -9.14,
     "periodStart": "2026-10-01",
     "periodEnd": "2026-10-31"
   },
@@ -5436,9 +5283,96 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "TKME-2383",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86400,
+        "targetDate": "2026-10-19T21:00:00.000000001Z"
+      },
+      {
+        "key": "TKME-2383",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2385416,
+        "targetDate": "2026-12-07T05:46:14.106000035Z"
+      },
+      {
+        "key": "AEME-6527",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86020,
+        "targetDate": "2026-09-01T07:46:25.907000001Z"
+      },
+      {
+        "key": "AEME-6527",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 990365,
+        "targetDate": "2026-10-18T21:25:13.757000035Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86179,
+        "targetDate": "2026-09-30T08:16:57.595000001Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1269633,
+        "targetDate": "2026-10-20T08:16:57.595000015Z"
+      },
+      {
+        "key": "GMT-22312",
+        "slaName": "GMT Issue Response SLA(GMT+5.5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86326,
+        "targetDate": "2026-10-14T11:17:22.593000001Z"
+      },
+      {
+        "key": "GMT-22312",
+        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 191638,
+        "targetDate": "2026-11-01T20:23:16.062000014Z"
+      },
+      {
+        "key": "TKME-2382",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86399,
+        "targetDate": "2026-10-19T11:35:42.030000001Z"
+      },
+      {
+        "key": "TKME-2382",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2127730,
+        "targetDate": "2026-12-02T06:11:28.355000033Z"
+      },
+      {
+        "key": "AEME-6590",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86065,
+        "targetDate": "2026-09-29T06:53:13.927000001Z"
+      },
+      {
+        "key": "AEME-6590",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2155269,
+        "targetDate": "2026-12-02T13:50:27.278000047Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 0.25h on TKME-2383, 0.75h on TKME-2348, 1h on GMT-22312\nToday: TKME-2417, SAHME-3509, AEME-6686, TKME-2383, AEME-6527\nBlockers: AEME-6527, PC-55917, PC-55757"
+    "standupText": "Yesterday: 0.25h on TKME-2383, 0.75h on TKME-2348, 1h on GMT-22312\nToday: TKME-2383, AEME-6527, GMT-22312, AEME-6590, TKME-2382\nBlockers: AEME-6527, PC-55917, PC-55757"
   }
 }
