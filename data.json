@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-28T14:20:12.621Z",
+  "generatedAt": "2026-10-28T14:20:53.816Z",
   "totalTickets": 15,
   "tickets": [
     {
@@ -30,9 +30,15 @@
       "url": "https://jira.secext.samsung.net/browse/TKME-2417",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-10-28T13:37:46.441Z"
+        "status": "found",
+        "excerpt": "Stuck order on Hybris — 23 TR-region orders (20 SHIPPED + 3 REFUND_FAILED)\r\nGenerated: 2026-10-28T14:00:00Z\r\n\r\n## Issue\r\n\r\nTKME-2417 reports 23 orders stuck in the TR region. The ticket lists 20 orders in SHIPPED status and 3 orders in REFUND_FAILED status. All 23 orders have stuck or errored business processes preventing them from reaching a terminal state despite physical fulfilment having completed for the SHIPPED orders.\r\n\r\n## RCA\r\n\r\nTwo distinct populations of orders exist in this ticket, each with a different root cause.\r\n\r\nPopulation 1 — 20 SHIPPED orders (TR261027-30694853, TR261027-30693525, TR261027-30688809, TR261027-30693160, TR261027-30666453, TR261027-30655432, TR261027-30651232, TR261027-30642237, TR261027-30637167, TR261027-30591719, TR261027-30597740, TR261027-30572578, TR261023-25319011, TR261026-29480996, TR261026-29365012, TR261021-23163107, TR261026-29359505, TR261025-28363237, TR261023-25735963, TR261023-25618605):\r\n\r\nAll 20 orders share an identical error pattern verified via DB queries (order-error-check.cjs + flexi-order-full.cjs) against PROD HAC.\r\n\r\nEach order has two business processes:\r\n1. The main order-process-v25-69 is in RUNNING state, stuck at the waitForFinancialInitialUpdate action. The process is waiting for the Financial Integration (FI) initial update to complete.\r\n2. The consignment child process (consignment-process-v11-36, suffix _1) is in ERROR state with endMessage \"All went wrong.\"\r\n\r\nThe isInitialFISuccess action threw an exception (empty returnCode in ProcessTaskLog) in 19 of 20 orders. The exception timestamps cluster tightly — for example, 8 orders on 2026-10-27 show exceptions within the same second (10:38:10.7xx), suggesting a systemic FI integration failure event rather than individual order issues.\r\n\r\nNo BusinessProcessParameter entries were found for any order (no errorStackTrace stored), confirming the error was handled gracefully by the process engine, not a crash.\r\n\r\nThe consignments themselves are physically COMPLETED with GERP billing done (GERP bill numbers present, shipped dates set, warehouse WC17-S751 assigned). The payment side is clean — AUTHORIZATION and CAPTURE both ACCEPTED with no refund entries. The SMC external service is in ERROR state on sampled orders.\r\n\r\nRoot cause: The consignment child process errored during the Financial Integration initial update check (isInitialFISuccess), which set the consignment process to ERROR with the generic endMessage \"All went wrong.\" This blocked the main order process from receiving the FI completion signal, leaving it stuck at waitForFinancialInitialUpdate indefinitely. The physical fulfilment pipeline (warehouse, GERP, shipping) completed independently and successfully, but the process engine layer is stuck because the FI integration handshake failed.\r\n\r\nThis is the same pattern seen in TKME-2387 and TKME-2385 (prior TR healthcheck tickets by aryan.v1), where I/O errors during financial update caused business processes to enter ERROR state. Those tickets were remediated under PC-52605 by retriggering the errored processes.\r\n\r\nPopulation 2 — 3 REFUND_FAILED orders (TR261027-31416321, TR261027-30407887, TR261025-28104424):\r\n\r\nAll 3 orders share an identical payment failure pattern verified via DB queries.\r\n\r\nEach order has:\r\n- Order status: REFUND_FAILED\r\n- Order total: zeroed out (0E-8) — the refund consumed the full captured amount\r\n- Payment mode: tr-masterpassPaymentMode (MasterPass)\r\n- No consignments — orders were cancelled before fulfilment\r\n- Payment transactions show: AUTHORIZATION (ACCEPTED), CAPTURE (ACCEPTED), REFUND_FOLLOW_ON (ERROR)\r\n\r\nThe order-process-v25-69 is in FAILED state with endMessage \"Order failed.\" The last task log action is refundCancelOrder, confirming the process reached the refund step after order cancellation and failed there. No BusinessProcessParameter error stack traces were stored. No ProcessTaskLog exceptions were found.\r\n\r\nRoot cause: The MasterPass payment gateway rejected the follow-on refund request. The AUTHORIZATION and CAPTURE both succeeded (funds were held and captured), but when the system attempted to refund the captured amount after order cancellation, the REFUND_FOLLOW_ON payment transaction entry was set to ERROR status. The process engine handled this gracefully (no crash, no stack trace) and transitioned the order process to FAILED state. The refund needs to be re-attempted through the MasterPass gateway.\r\n\r\n## Possible remediation\r\n\r\nPopulation 1 — 20 SHIPPED orders:\r\n\r\nRemediation: Retrigger the errored consignment processes and stuck order processes using the approach from PC-52605 (Reusable, Closed, reporter: aryan.v1). PC-52605 contains script-TKME-2279-retrigger-business-process.groovy which sets errored processes to ERROR state and restarts them from their last failed action via businessProcessService.restartProcess(). This script was successfully used for the same TR-region I/O error pattern in TKME-2387 and TKME-2385.\r\n\r\nThe script needs to be copied and adapted:\r\n- Update the order list to the 20 SHIPPED orders from TKME-2417\r\n- Update the ITGC header to reference the new PC ticket and TKME-2417\r\n- The script logic (set process to ERROR, remove currentTasks, restartProcess from last actionId) remains unchanged\r\n\r\nThe retrigger will allow the isInitialFISuccess action to re-execute. Since the FI integration failure was transient (clustered timestamps suggest a brief outage), the retry should succeed and the consignment process will complete, unblocking the main order process at waitForFinancialInitialUpdate.\r\n\r\nPopulation 2 — 3 REFUND_FAILED orders:\r\n\r\nRemediation: Update the REFUND_FOLLOW_ON payment transaction entry from ERROR to ACCEPTED, then restart the order process from the refundCancelOrder action. This follows the precedent of PC-35580 (Closed, [SAME-3208] - Update refund follow on entry to success) and PC-48853 (Closed, NUKME-13377 - Update PTE(REFUND_FOLLOW_ON)).\r\n\r\nHowever, before updating the PTE status, the actual refund must be confirmed as completed through the MasterPass gateway externally. The Hybris-side PTE update only records the result — it does not initiate the refund. If the refund has not been processed by MasterPass, a new refund request must be sent first.\r\n\r\nSteps:\r\n1. Verify with the payment team whether the MasterPass refund was successfully processed for each of the 3 orders\r\n2. If refund confirmed: update PaymentTransactionEntry status from ERROR to ACCEPTED and restart the order process from refundCancelOrder\r\n3. If refund not confirmed: initiate the refund through MasterPass first, then update the PTE and restart the process\r\n\r\nBoth remediations can be executed under a single new PC ticket, or PC-52605 can be reused for the SHIPPED orders while a separate PC ticket handles the REFUND_FAILED orders (different remediation type).",
+        "sections": {
+          "issue": "TKME-2417 reports 23 orders stuck in the TR region. The ticket lists 20 orders in SHIPPED status and 3 orders in REFUND_FAILED status. All 23 orders have stuck or errored business processes preventing them from reaching a terminal state despite physical fulfilment having completed for the SHIPPED orders.",
+          "rca": "Two distinct populations of orders exist in this ticket, each with a different root cause.\r\n\r\nPopulation 1 — 20 SHIPPED orders (TR261027-30694853, TR261027-30693525, TR261027-30688809, TR261027-30693160, TR261027-30666453, TR261027-30655432, TR261027-30651232, TR261027-30642237, TR261027-30637167, TR261027-30591719, TR261027-30597740, TR261027-30572578, TR261023-25319011, TR261026-29480996, TR261026-29365012, TR261021-23163107, TR261026-29359505, TR261025-28363237, TR261023-25735963, TR261023-25618605):\r\n\r\nAll 20 orders share an identical error pattern verified via DB queries (order-error-check.cjs + flexi-order-full.cjs) against PROD HAC.\r\n\r\nEach order has two business processes:\r\n1. The main order-process-v25-69 is in RUNNING state, stuck at the waitForFinancialInitialUpdate action. The process is waiting for the Financial Integration (FI) initial update to complete.\r\n2. The consignment child process (consignment-process-v11-36, suffix _1) is in ERROR state with endMessage \"All went wrong.\"\r\n\r\nThe isInitialFISuccess action threw an exception (empty returnCode in ProcessTaskLog) in 19 of 20 orders. The exception timestamps cluster tightly — for example, 8 orders on 2026-10-27 show exceptions within the same second (10:38:10.7xx), suggesting a systemic FI integration failure event rather than individual order issues.\r\n\r\nNo BusinessProcessParameter entries were found for any order (no errorStackTrace stored), confirming the error was handled gracefully by the process engine, not a crash.\r\n\r\nThe consignments themselves are physically COMPLETED with GERP billing done (GERP bill numbers present, shipped dates set, warehouse WC17-S751 assigned). The payment side is clean — AUTHORIZATION and CAPTURE both ACCEPTED with no refund entries. The SMC external service is in ERROR state on sampled orders.\r\n\r\nRoot cause: The consignment child process errored during the Financial Integration initial update check (isInitialFISuccess), which set the consignment process to ERROR with the generic endMessage \"All went wrong.\" This blocked the main order process from receiving the FI completion signal, leaving it stuck at waitForFinancialInitialUpdate indefinitely. The physical fulfilment pipeline (warehouse, GERP, shipping) completed independently and successfully, but the process engine layer is stuck because the FI integration handshake failed.\r\n\r\nThis is the same pattern seen in TKME-2387 and TKME-2385 (prior TR healthcheck tickets by aryan.v1), where I/O errors during financial update caused business processes to enter ERROR state. Those tickets were remediated under PC-52605 by retriggering the errored processes.\r\n\r\nPopulation 2 — 3 REFUND_FAILED orders (TR261027-31416321, TR261027-30407887, TR261025-28104424):\r\n\r\nAll 3 orders share an identical payment failure pattern verified via DB queries.\r\n\r\nEach order has:\r\n- Order status: REFUND_FAILED\r\n- Order total: zeroed out (0E-8) — the refund consumed the full captured amount\r\n- Payment mode: tr-masterpassPaymentMode (MasterPass)\r\n- No consignments — orders were cancelled before fulfilment\r\n- Payment transactions show: AUTHORIZATION (ACCEPTED), CAPTURE (ACCEPTED), REFUND_FOLLOW_ON (ERROR)\r\n\r\nThe order-process-v25-69 is in FAILED state with endMessage \"Order failed.\" The last task log action is refundCancelOrder, confirming the process reached the refund step after order cancellation and failed there. No BusinessProcessParameter error stack traces were stored. No ProcessTaskLog exceptions were found.\r\n\r\nRoot cause: The MasterPass payment gateway rejected the follow-on refund request. The AUTHORIZATION and CAPTURE both succeeded (funds were held and captured), but when the system attempted to refund the captured amount after order cancellation, the REFUND_FOLLOW_ON payment transaction entry was set to ERROR status. The process engine handled this gracefully (no crash, no stack trace) and transitioned the order process to FAILED state. The refund needs to be re-attempted through the MasterPass gateway.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-28T14:20:44.466Z"
       }
     },
     {
@@ -846,7 +852,7 @@
       }
     ],
     "pid": 38388,
-    "uptime": 76312,
+    "uptime": 76356,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -855,7 +861,7 @@
         "issueTitle": "Investigate ticket TKME-2417",
         "snippet": "Auto-triggered investigation for new ticket TKME-2417.\n\nTicket: TKME-2417\nSummary: Stuck order on Hybris\n\nUse the invest",
         "pid": 45544,
-        "elapsed": 2524
+        "elapsed": 2567
       }
     ],
     "startTime": "2026-10-27T17:08:18.408Z",
@@ -866,7 +872,7 @@
       {
         "pid": 16500,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 111287,
+        "ageSeconds": 111328,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -876,7 +882,7 @@
       {
         "pid": 21420,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 110910,
+        "ageSeconds": 110951,
         "status": "running",
         "isChild": false,
         "taskSummary": "now write a skill with if ese statements for all I/O and retriggering issues, only the ones we ha...",
@@ -886,7 +892,7 @@
       {
         "pid": 12208,
         "cwd": "c:\\windows",
-        "ageSeconds": 110910,
+        "ageSeconds": 110951,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -896,7 +902,7 @@
       {
         "pid": 25216,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 109753,
+        "ageSeconds": 109795,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -5040,13 +5046,13 @@
         "lastOutput": "Starting Phase 0 pre-flight checks. Reading learnings, checking for existing cache/RCA, and fetching the Jira ticket in parallel.No existing cache — fresh investigation. Lock already exists from the auto-trigger. Now fetching the Jira ticket details.That was AEME-6650, not AEME-6686. Let me fetch the actual AEME-6686 ticket.Good, I can use the jira-pat-fetcher.js to fetch the ticket via the cookie bridge. Let me fetch AEME-6686.Now launching parallel sub-agents for Phase 1 investigation. The ord"
       }
     },
-    "bridgeLogTail": "    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-10-28T14:20:06.364Z] STDOUT data for #917: 106 bytes\n[2026-10-28T14:20:06.367Z] LIVE events write for #917: 355 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:20:06.381Z] STDOUT data for #917: 115 bytes\n[2026-10-28T14:20:06.384Z] LIVE events write for #917: 356 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:20:06.386Z] STDOUT data for #917: 117 bytes\n[2026-10-28T14:20:06.389Z] LIVE events write for #917: 357 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:20:06.399Z] STDOUT data for #917: 115 bytes\n[2026-10-28T14:20:06.401Z] LIVE events write for #917: 358 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:20:06.414Z] STDOUT data for #917: 112 bytes\n[2026-10-28T14:20:06.417Z] LIVE events write for #917: 359 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:20:06.423Z] STDOUT data for #917: 125 bytes\n[2026-10-28T14:20:06.426Z] LIVE events write for #917: 360 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:20:06.435Z] STDOUT data for #917: 108 bytes\n[2026-10-28T14:20:06.438Z] LIVE events write for #917: 361 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:20:06.446Z] STDOUT data for #917: 112 bytes\n[2026-10-28T14:20:06.450Z] LIVE events write for #917: 362 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:20:06.623Z] STDOUT data for #917: 306 bytes\n[2026-10-28T14:20:06.626Z] LIVE events write for #917: 363 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt",
+    "bridgeLogTail": "[2026-10-28T14:20:38.236Z] STDOUT data for #917: 120 bytes\n[2026-10-28T14:20:38.239Z] LIVE events write for #917: 374 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:20:38.245Z] STDOUT data for #917: 115 bytes\n[2026-10-28T14:20:38.247Z] LIVE events write for #917: 375 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:20:38.256Z] STDOUT data for #917: 107 bytes\n[2026-10-28T14:20:38.259Z] LIVE events write for #917: 376 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:20:38.266Z] STDOUT data for #917: 117 bytes\n[2026-10-28T14:20:38.271Z] LIVE events write for #917: 377 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:20:38.327Z] STDOUT data for #917: 107 bytes\n[2026-10-28T14:20:38.330Z] LIVE events write for #917: 378 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:20:38.331Z] STDOUT data for #917: 333 bytes\n[2026-10-28T14:20:38.335Z] LIVE events write for #917: 381 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:20:44.439Z] STDOUT data for #917: 7121 bytes\n[2026-10-28T14:20:44.442Z] LIVE events write for #917: 382 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:20:44.487Z] STDOUT data for #917: 124 bytes\n[2026-10-28T14:20:44.490Z] LIVE events write for #917: 383 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:20:45.501Z] STDOUT data for #917: 160 bytes\n[2026-10-28T14:20:45.504Z] LIVE events write for #917: 384 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:20:45.787Z] STDOUT data for #917: 432 bytes\n[2026-10-28T14:20:45.791Z] LIVE events write for #917: 385 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-28T14:20:05.444Z",
-      "ageMs": 9978
+      "lastWrite": "2026-10-28T14:20:50.472Z",
+      "ageMs": 6131
     },
-    "watchdogLogTail": "[2026-10-28T14:17:50.381Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:18:05.390Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:18:20.397Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:18:35.408Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:18:50.409Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:19:05.422Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:19:20.422Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:19:35.433Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:19:50.432Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:20:05.441Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.",
+    "watchdogLogTail": "[2026-10-28T14:18:35.408Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:18:50.409Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:19:05.422Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:19:20.422Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:19:35.433Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:19:50.432Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:20:05.441Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:20:20.452Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:20:35.464Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:20:50.471Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.",
     "jobOutputs": {}
   },
   "mcps": [
@@ -5054,7 +5060,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-28T14:19:13.609Z",
+      "lastCheck": "2026-10-28T14:20:15.557Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5063,7 +5069,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-28T14:19:13.609Z",
+      "lastCheck": "2026-10-28T14:20:15.557Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5072,9 +5078,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-28T14:19:13.609Z",
+      "lastCheck": "2026-10-28T14:20:15.557Z",
       "downSince": "2026-10-28T13:52:37.759Z",
-      "downDuration": 1595850,
+      "downDuration": 1657798,
       "alert": true
     }
   ],
@@ -5437,136 +5443,7 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": {
-    "byTicket": [
-      {
-        "key": "TKME-2417",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86396,
-        "targetDate": "2026-10-29T13:35:06.859000001Z"
-      },
-      {
-        "key": "TKME-2417",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2589295,
-        "targetDate": "2026-12-09T13:35:06.859000030Z"
-      },
-      {
-        "key": "SAHME-3509",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86397,
-        "targetDate": "2026-10-29T13:35:15.019000001Z"
-      },
-      {
-        "key": "SAHME-3509",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2589303,
-        "targetDate": "2026-12-09T13:35:15.019000030Z"
-      },
-      {
-        "key": "AEME-6590",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86065,
-        "targetDate": "2026-09-29T06:53:13.927000001Z"
-      },
-      {
-        "key": "AEME-6590",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2158215,
-        "targetDate": "2026-12-02T13:50:27.278000047Z"
-      },
-      {
-        "key": "AEME-6686",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86396,
-        "targetDate": "2026-10-29T13:34:57.876000001Z"
-      },
-      {
-        "key": "AEME-6686",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2589286,
-        "targetDate": "2026-12-09T13:34:57.876000030Z"
-      },
-      {
-        "key": "AEME-6527",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86020,
-        "targetDate": "2026-09-01T07:46:25.907000001Z"
-      },
-      {
-        "key": "AEME-6527",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 990365,
-        "targetDate": "2026-10-18T21:25:13.757000035Z"
-      },
-      {
-        "key": "TKME-2383",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86400,
-        "targetDate": "2026-10-19T21:00:00.000000001Z"
-      },
-      {
-        "key": "TKME-2383",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2388362,
-        "targetDate": "2026-12-07T05:46:14.106000035Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86179,
-        "targetDate": "2026-09-30T08:16:57.595000001Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1269633,
-        "targetDate": "2026-10-20T08:16:57.595000015Z"
-      },
-      {
-        "key": "GMT-22312",
-        "slaName": "GMT Issue Response SLA(GMT+5.5)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86326,
-        "targetDate": "2026-10-14T11:17:22.593000001Z"
-      },
-      {
-        "key": "GMT-22312",
-        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
-        "slaStatus": "STILL",
-        "remainingDuration": 194584,
-        "targetDate": "2026-11-01T20:23:16.062000014Z"
-      },
-      {
-        "key": "TKME-2382",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86399,
-        "targetDate": "2026-10-19T11:35:42.030000001Z"
-      },
-      {
-        "key": "TKME-2382",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2130676,
-        "targetDate": "2026-12-02T06:11:28.355000033Z"
-      }
-    ]
-  },
+  "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
     "standupText": "Yesterday: 0.25h on TKME-2383, 0.75h on TKME-2348, 1h on GMT-22312\nToday: TKME-2417, SAHME-3509, AEME-6686, TKME-2383, AEME-6527\nBlockers: AEME-6527, PC-55917, PC-55757"
