@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-28T14:09:49.040Z",
+  "generatedAt": "2026-10-28T14:10:32.697Z",
   "totalTickets": 15,
   "tickets": [
     {
@@ -102,9 +102,15 @@
       "url": "https://jira.secext.samsung.net/browse/AEME-6686",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-10-28T13:37:47.204Z"
+        "status": "found",
+        "excerpt": "Ticket Summary: Stuck order on Hybris\r\nGenerated: 2026-10-28T13:50:00Z\r\n\r\nIssue\r\n\r\nOrder AE261027-30566287 is stuck at SHIPPED status. The consignment is physically COMPLETED and GERP-billed, but the consignment process (consignment-process-v11-36) is in ERROR state with endMessage \"All went wrong.\" The ExternalService entry for GCIC_EXPERT_CARE_STANDALONE is in ERROR status with no service ID, indicating the GCIC (Galaxy Care Integration Center) service registration call failed and never returned a service ID. The order process is still RUNNING, stuck at the isInitialFISuccess action which threw an exception at 2026-10-28 06:45:21.802. Payment was successful (CAPTURE ACCEPTED, 924 AED).\r\n\r\nRCA\r\n\r\nThe order AE261027-30566287 was placed on 2026-10-28 at 06:33:08 in the UAE store with product P-GT-LCXOS2PW (Galaxy Expert Care Carry-In service). Payment was captured successfully at 06:44:25. The consignment was processed and reached COMPLETED status at 07:01:58 with GERP billing number 3251099074 from warehouse WC21-S701.\r\n\r\nThe consignment process (consignment-process-v11-36) reached the processExternalServices action, which invokes the processExternalServicesOnConsignment bean. This bean calls the GCIC Expert Care external service to register the Galaxy Expert Care standalone service with the GCIC system. The GCIC API call failed -- no service ID was returned, and the ExternalService entry was set to ERROR status. The processExternalServices action returned NOK, which per the process definition at consignment-process-v11-36.xml line 543 transitions to the error end state (line 545) with message \"All went wrong.\"\r\n\r\nThis is the same pattern observed in AEME-6596 (resolved October 2026) where 6 UAE Expert Care orders were stuck at SHIPPED because the GCIC API call failed and ExternalService was set to ERROR. The root cause is a transient GCIC API failure -- either the GCIC service was temporarily unavailable, returned an error response, or the API token/credentials were invalid at the time of the call. The \"No response from GCIC, setting external service status to ERROR\" log pattern was confirmed in RT-753607 where TokoGalaxyExpertCareExternalServicesImpl handles the GCIC failure by setting the ExternalService to ERROR.\r\n\r\nNo BusinessProcessParameter error stack trace was stored, which is consistent with the process reaching a named error end state rather than throwing an uncaught exception.\r\n\r\nPossible remediation\r\n\r\nReset the ExternalService entry from ERROR to NEW and restart the consignment process from the processExternalServices action. This will re-attempt the GCIC service registration call.\r\n\r\nReusable PC ticket: PC-54773 (Closed, REUSABLE) from AEME-6596 -- script-AEME-6596-expert-care-remediation.groovy. This script performs exactly this remediation: it iterates over the order's ExternalService entries, resets any with ERROR status to NEW, finds the order process in ERROR/WAITING state, removes current tasks, and restarts the process from the processExternalServicesAction node.\r\n\r\nTo apply: copy script-AEME-6596-expert-care-remediation.groovy, update the order list to [\"AE261027-30566287\"], update the ITGC header to reference PC-54773(AEME-6686), and run via HAC under PC-54773 approval.\r\n\r\n## Remediation\r\n\r\n- Reusable PC ticket: PC-54773 (REUSABLE, Closed)\r\n- Script: script-AEME-6596-expert-care-remediation.groovy\r\n- Action: Reset ExternalService GCIC_EXPERT_CARE_STANDALONE from ERROR to NEW, restart process from processExternalServicesAction\r\n- No new PC ticket needed -- reuse PC-54773",
+        "sections": {
+          "issue": "",
+          "rca": "Ticket Summary: Stuck order on Hybris\r\nGenerated: 2026-10-28T13:50:00Z\r\n\r\nIssue\r\n\r\nOrder AE261027-30566287 is stuck at SHIPPED status. The consignment is physically COMPLETED and GERP-billed, but the consignment process (consignment-process-v11-36) is in ERROR state with endMessage \"All went wrong.\" The ExternalService entry for GCIC_EXPERT_CARE_STANDALONE is in ERROR status with no service ID, indicating the GCIC (Galaxy Care Integration Center) service registration call failed and never returned a service ID. The order process is still RUNNING, stuck at the isInitialFISuccess action which threw an exception at 2026-10-28 06:45:21.802. Payment was successful (CAPTURE ACCEPTED, 924 AED).\r\n\r\nRCA\r\n\r\nThe order AE261027-30566287 was placed on 2026-10-28 at 06:33:08 in the UAE store with product P-GT-LCXOS2PW (Galaxy Expert Care Carry-In service). Payment was captured successfully at 06:44:25. The consignment was processed and reached COMPLETED status at 07:01:58 with GERP billing number 3251099074 from warehouse WC21-S701.\r\n\r\nThe consignment process (consignment-process-v11-36) reached the processExternalServices action, which invokes the processExternalServicesOnConsignment bean. This bean calls the GCIC Expert Care external service to register the Galaxy Expert Care standalone service with the GCIC system. The GCIC API call failed -- no service ID was returned, and the ExternalService entry was set to ERROR status. The processExternalServices action returned NOK, which per the process definition at consignment-process-v11-36.xml line 543 transitions to the error end state (line 545) with message \"All went wrong.\"\r\n\r\nThis is the same pattern observed in AEME-6596 (resolved October 2026) where 6 UAE Expert Care orders were stuck at SHIPPED because the GCIC API call failed and ExternalService was set to ERROR. The root cause is a transient GCIC API failure -- either the GCIC service was temporarily unavailable, returned an error response, or the API token/credentials were invalid at the time of the call. The \"No response from GCIC, setting external service status to ERROR\" log pattern was confirmed in RT-753607 where TokoGalaxyExpertCareExternalServicesImpl handles the GCIC failure by setting the ExternalService to ERROR.\r\n\r\nNo BusinessProcessParameter error stack trace was stored, which is consistent with the process reaching a named error end state rather than throwing an uncaught exception.\r\n\r\nPossible remediation\r\n\r\nReset the ExternalService entry from ERROR to NEW and restart the consignment process from the processExternalServices action. This will re-attempt the GCIC service registration call.\r\n\r\nReusable PC ticket: PC-54773 (Closed, REUSABLE) from AEME-6596 -- script-AEME-6596-expert-care-remediation.groovy. This script performs exactly this remediation: it iterates over the order's ExternalService entries, resets any with ERROR status to NEW, finds the order process in ERROR/WAITING state, removes current tasks, and restarts the process from the processExternalServicesAction node.\r\n\r\nTo apply: copy script-AEME-6596-expert-care-remediation.groovy, update the order list to [\"AE261027-30566287\"], update the ITGC header to reference PC-54773(AEME-6686), and run via HAC under PC-54773 approval.\r\n\r\n## Remediation\r\n\r\n- Reusable PC ticket: PC-54773 (REUSABLE, Closed)\r\n- Script: script-AEME-6596-expert-care-remediation.groovy\r\n- Action: Reset ExternalService GCIC_EXPERT_CARE_STANDALONE from ERROR to NEW, restart process from processExternalServicesAction\r\n- No new PC ticket needed -- reuse PC-54773",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-28T14:10:12.235Z"
       }
     },
     {
@@ -840,7 +846,7 @@
       }
     ],
     "pid": 38388,
-    "uptime": 75691,
+    "uptime": 75731,
     "failures": 0,
     "activeJobCount": 2,
     "jobs": [
@@ -849,14 +855,14 @@
         "issueTitle": "Investigate ticket TKME-2417",
         "snippet": "Auto-triggered investigation for new ticket TKME-2417.\n\nTicket: TKME-2417\nSummary: Stuck order on Hybris\n\nUse the invest",
         "pid": 45544,
-        "elapsed": 1903
+        "elapsed": 1943
       },
       {
         "issueNum": 918,
         "issueTitle": "Investigate ticket AEME-6686",
         "snippet": "Auto-triggered investigation for new ticket AEME-6686.\n\nTicket: AEME-6686\nSummary: Stuck order on Hybris\n\nUse the invest",
         "pid": 44728,
-        "elapsed": 1904
+        "elapsed": 1944
       }
     ],
     "startTime": "2026-10-27T17:08:18.408Z",
@@ -867,7 +873,7 @@
       {
         "pid": 16500,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 110664,
+        "ageSeconds": 110708,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -877,7 +883,7 @@
       {
         "pid": 21420,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 110287,
+        "ageSeconds": 110331,
         "status": "running",
         "isChild": false,
         "taskSummary": "now write a skill with if ese statements for all I/O and retriggering issues, only the ones we ha...",
@@ -887,7 +893,7 @@
       {
         "pid": 12208,
         "cwd": "c:\\windows",
-        "ageSeconds": 110287,
+        "ageSeconds": 110331,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -897,7 +903,7 @@
       {
         "pid": 25216,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 109130,
+        "ageSeconds": 109174,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -5039,13 +5045,13 @@
         ]
       }
     },
-    "bridgeLogTail": "[2026-10-28T14:09:43.100Z] LIVE events write for #918: 331 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_918.txt\n[2026-10-28T14:09:46.505Z] STDOUT data for #918: 505 bytes\n[2026-10-28T14:09:46.516Z] LIVE events write for #918: 332 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_918.txt\n[2026-10-28T14:09:46.702Z] STDOUT data for #917: 124 bytes\n[2026-10-28T14:09:46.714Z] LIVE events write for #917: 214 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt\n[2026-10-28T14:09:47.069Z] aipro stderr for #917: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\n[2026-10-28T14:09:48.903Z] STDOUT data for #917: 455 bytes\n[2026-10-28T14:09:48.913Z] LIVE events write for #917: 215 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt",
+    "bridgeLogTail": "[2026-10-28T14:10:34.663Z] aipro stderr for #917: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-10-28T14:10:35.813Z] STDOUT data for #918: 689 bytes\n[2026-10-28T14:10:35.828Z] LIVE events write for #918: 340 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_918.txt\n[2026-10-28T14:10:35.837Z] STDOUT data for #918: 703 bytes\n[2026-10-28T14:10:35.853Z] LIVE events write for #918: 341 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_918.txt\n[2026-10-28T14:10:36.271Z] STDOUT data for #917: 458 bytes\n[2026-10-28T14:10:36.282Z] LIVE events write for #917: 219 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_917.txt",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-28T14:09:48.762Z",
-      "ageMs": 5615
+      "lastWrite": "2026-10-28T14:10:33.782Z",
+      "ageMs": 4435
     },
-    "watchdogLogTail": "[2026-10-28T14:07:33.694Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:07:48.706Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:08:03.714Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:08:18.727Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:08:33.737Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:08:48.738Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:09:03.742Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:09:18.746Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:09:33.755Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:09:48.759Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.",
+    "watchdogLogTail": "[2026-10-28T14:08:18.727Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:08:33.737Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:08:48.738Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:09:03.742Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:09:18.746Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:09:33.755Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:09:48.759Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:10:03.772Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:10:18.783Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-28T14:10:33.781Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.",
     "jobOutputs": {}
   },
   "mcps": [
@@ -5053,7 +5059,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-28T14:09:13.541Z",
+      "lastCheck": "2026-10-28T14:10:12.963Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5062,7 +5068,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-28T14:09:13.541Z",
+      "lastCheck": "2026-10-28T14:10:12.963Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5071,9 +5077,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-28T14:09:13.541Z",
+      "lastCheck": "2026-10-28T14:10:12.963Z",
       "downSince": "2026-10-28T13:52:37.759Z",
-      "downDuration": 995782,
+      "downDuration": 1055204,
       "alert": true
     }
   ],
