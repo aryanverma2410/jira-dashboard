@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-29T13:51:11.934Z",
+  "generatedAt": "2026-10-29T13:51:55.628Z",
   "totalTickets": 10,
   "tickets": [
     {
@@ -35,9 +35,15 @@
       "url": "https://jira.secext.samsung.net/browse/EHME-950",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-10-29T13:24:59.766Z"
+        "status": "found",
+        "excerpt": "**Summary:** Bank Installment Payment Mode isn't working\r\n**Generated:** 2026-10-29T13:45:00Z\r\n\r\nIssue:\r\n\r\nThe Paymob Bank Installment payment mode (code: eg-paymob-bankinstallments) for the Egypt (EG) store is failing with \"Error Processing Payment\" when customers attempt to place orders. Multiple recent orders using this payment mode are stuck at TEMPORARY status (e.g., EG261029-33912536_1, EG261029-33922410_1, EG261029-33876437_1, EG261029-33932009_2), confirming the issue is ongoing and affects all customers selecting this payment method. The payment mode itself is active in the database (active=1, verified via HAC FlexibleSearch against PaymentMode table).\r\n\r\nRCA:\r\n\r\nThe root cause is an outdated Paymob integration ID stored in the `paymentProviderParameters` map of the `eg-paymob-bankinstallments` PaymentMode. The current integration ID `5083915` is no longer valid on the Paymob side and must be updated to `5392297`.\r\n\r\nVERIFIED via code trace: The integration ID flows from the PaymentMode's `paymentProviderParameters` map through three populator classes to the Paymob API:\r\n\r\n1. `TokoPaymobIntentionRequestDataPopulator.populate()` (line 38) reads `paymentProviderParameters.get(\"integrations\")` from `orderModel.getPaymentMode().getPaymentProviderParameters()`, splits it by comma, parses each value as an integer, and sets it as `paymentMethods` on the Paymob IntentionRequest. This value is sent to Paymob's Intention API to specify which payment integration channels are available for the order.\r\n\r\n2. `TokoPaymobPaymentTokenRequestDataPopulator.populate()` (line 35) reads the same `paymentProviderParameters.get(\"integrations\")` and sets it as `integrationID` on the PaymentTokenRequest sent to Paymob's payment token endpoint.\r\n\r\n3. `TokoPaymobRegisterOrderRequestDataPopulator.populate()` (line 46) reads `paymentProviderParameters.get(\"integrations\")` and sets it as the `integrations` list on the RegisterOrderRequest sent to Paymob's order registration API.\r\n\r\nThe constant `INTEGRATIONS` is defined in `TokopaymobpaymentservicestemplateConstants.java` (line 18) as `\"integrations\"`, which is the key used to look up the integration ID from the payment mode's parameter map.\r\n\r\nVERIFIED via DB query: The payment mode `eg-paymob-bankinstallments` exists in the database with PK 8798911103017, name \"Bank Installments\", and active=1. The `paymentProviderParameters` is stored as a serialized byte array (Map type), which was originally configured via ImpEx in the file `custom/toko/tokoinitialdata/resources/tokoinitialdata/import/coredata/stores/eg/paymob-bankinstallments.impex` and also in the release ImpEx at `custom/toko/tokodeployment/resources/tokodeployment/import/release/ENH-82-RC-1/eg/EHME-653.impex`. Both ImpEx files define the `paymentProviderParameters` map with the key `integrations` mapped to the Paymob integration ID value (the actual numeric value is redacted in the committed ImpEx with `?` placeholder and injected at deployment time).\r\n\r\nVERIFIED via Jira cross-reference: The original bank installments feature was implemented under ticket EHME-653 (SEEG - Paymob - Bank Installments, now Closed). Related Paymob payment mode issues were resolved in EHME-712 (Aman Payment Mode is Not Working, Closed) and EHME-848 (Users are unable to do the payment with Paymob e wallet, Closed), establishing a precedent that Paymob payment mode failures are resolved by updating payment provider parameters via ImpEx or Groovy script through a PC ticket.\r\n\r\nWhen Paymob receives the outdated integration ID `5083915`, it rejects the payment intention/token request because that integration channel has been deactivated or replaced on their side. This causes the \"Error Processing Payment\" message displayed to the customer in the storefront, and the order remains in TEMPORARY status because the payment was never authorized.\r\n\r\nSPECULATION (cannot verify from Kibana — Kibana MCP was not available during this investigation): The exact Paymob API error response containing the rejection reason for integration ID 5083915 was not retrieved from Kibana logs. However, the ticket reporter Ashwani Verma confirmed the fix direction in the ticket comments: update the integration ID from 5083915 to 5392297. The new ID 5392297 is presumably the replacement integration channel provisioned by Paymob for the Egypt bank installments payment method.\r\n\r\nPossible remediation:\r\n\r\nUpdate the `integrations` value in the `paymentProviderParameters` map of the `eg-paymob-bankinstallments` PaymentMode from `5083915` to `5392297`. This can be done via either:\r\n\r\nOption A — ImpEx (recommended for PC ticket):\r\n```\r\nINSERT_UPDATE PaymentMode; code[unique = true]; paymentProviderParameters[map-delimiter = ?][key2value-delimiter = ->][mode = append]\r\n; eg-paymob-bankinstallments; \"integrations->5392297\"\r\n```\r\nThis ImpEx updates only the `integrations` key in the paymentProviderParameters map, leaving all other parameters (intentionURL, unifiedCheckoutURL, publicKey, secretKey, multiplyAmountValue, etc.) unchanged. The `mode = append` ensures the existing map entries are preserved and only the `integrations` key is overwritten with the new value.\r\n\r\nOption B — Groovy script via HAC:\r\nA Groovy script that fetches the PaymentMode by code, accesses the paymentProviderParameters map, and updates the `integrations` entry to `5392297`, then saves the model. This is the approach used in prior Paymob payment mode remediation tickets.\r\n\r\nAfter the update, a test order should be placed using the bank installments payment mode to confirm the payment intention is successfully created on the Paymob side and the order progresses beyond TEMPORARY status.\r\n\r\n## Remediation\r\n- Remediation type: Payment provider parameter update (integration ID change)\r\n- Approach: ImpEx update to PaymentMode paymentProviderParameters\r\n- No reusable PC ticket found in pc-script-library.json for this specific remediation type\r\n- A new PC ticket should be created for this change as requested by Pallavi Mishra in the ticket comments",
+        "sections": {
+          "issue": "The Paymob Bank Installment payment mode (code: eg-paymob-bankinstallments) for the Egypt (EG) store is failing with \"Error Processing Payment\" when customers attempt to place orders. Multiple recent orders using this payment mode are stuck at TEMPORARY status (e.g., EG261029-33912536_1, EG261029-33922410_1, EG261029-33876437_1, EG261029-33932009_2), confirming the issue is ongoing and affects all customers selecting this payment method. The payment mode itself is active in the database (active=1, verified via HAC FlexibleSearch against PaymentMode table).",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-29T13:51:24.903Z"
       }
     },
     {
@@ -645,7 +651,7 @@
       }
     ],
     "pid": 38388,
-    "uptime": 160973,
+    "uptime": 161018,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -654,7 +660,7 @@
         "issueTitle": "Investigate ticket EHME-950",
         "snippet": "Auto-triggered investigation for new ticket EHME-950.\n\nTicket: EHME-950\nSummary: Bank Installment Payment Mode isn't wor",
         "pid": 13368,
-        "elapsed": 1547
+        "elapsed": 1592
       }
     ],
     "startTime": "2026-10-27T17:08:18.408Z",
@@ -665,7 +671,7 @@
       {
         "pid": 16500,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 195947,
+        "ageSeconds": 195990,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -675,7 +681,7 @@
       {
         "pid": 21420,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 195570,
+        "ageSeconds": 195613,
         "status": "running",
         "isChild": false,
         "taskSummary": "see in execution times, was that actually missed? see in execution times, was that actually missed?",
@@ -685,7 +691,7 @@
       {
         "pid": 12208,
         "cwd": "c:\\windows",
-        "ageSeconds": 195570,
+        "ageSeconds": 195613,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -695,7 +701,7 @@
       {
         "pid": 34736,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 82652,
+        "ageSeconds": 82695,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -705,7 +711,7 @@
       {
         "pid": 37896,
         "cwd": "unknown",
-        "ageSeconds": 12756,
+        "ageSeconds": 12800,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -4924,13 +4930,13 @@
         ]
       }
     },
-    "bridgeLogTail": "    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-10-29T13:51:11.421Z] STDOUT data for #944: 113 bytes\n[2026-10-29T13:51:11.424Z] LIVE events write for #944: 201 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt\n[2026-10-29T13:51:11.459Z] STDOUT data for #944: 127 bytes\n[2026-10-29T13:51:11.462Z] LIVE events write for #944: 202 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt\n[2026-10-29T13:51:11.463Z] STDOUT data for #944: 117 bytes\n[2026-10-29T13:51:11.467Z] LIVE events write for #944: 203 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt\n[2026-10-29T13:51:11.590Z] STDOUT data for #944: 120 bytes\n[2026-10-29T13:51:11.593Z] LIVE events write for #944: 204 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt\n[2026-10-29T13:51:11.595Z] STDOUT data for #944: 107 bytes\n[2026-10-29T13:51:11.597Z] LIVE events write for #944: 205 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt\n[2026-10-29T13:51:12.892Z] STDOUT data for #944: 889 bytes\n[2026-10-29T13:51:12.895Z] LIVE events write for #944: 206 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt\n[2026-10-29T13:51:12.921Z] STDOUT data for #944: 903 bytes\n[2026-10-29T13:51:12.924Z] LIVE events write for #944: 207 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt",
+    "bridgeLogTail": "[2026-10-29T13:51:57.573Z] STDOUT data for #944: 126 bytes\n[2026-10-29T13:51:57.578Z] LIVE events write for #944: 297 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt\n[2026-10-29T13:51:57.584Z] STDOUT data for #944: 118 bytes\n[2026-10-29T13:51:57.588Z] LIVE events write for #944: 298 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt\n[2026-10-29T13:51:57.592Z] STDOUT data for #944: 126 bytes\n[2026-10-29T13:51:57.595Z] LIVE events write for #944: 299 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt\n[2026-10-29T13:51:57.602Z] STDOUT data for #944: 114 bytes\n[2026-10-29T13:51:57.606Z] LIVE events write for #944: 300 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt\n[2026-10-29T13:51:57.612Z] STDOUT data for #944: 117 bytes\n[2026-10-29T13:51:57.615Z] LIVE events write for #944: 301 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt\n[2026-10-29T13:51:57.623Z] STDOUT data for #944: 114 bytes\n[2026-10-29T13:51:57.627Z] LIVE events write for #944: 302 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt\n[2026-10-29T13:51:57.635Z] STDOUT data for #944: 122 bytes\n[2026-10-29T13:51:57.638Z] LIVE events write for #944: 303 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt\n[2026-10-29T13:51:57.641Z] STDOUT data for #944: 109 bytes\n[2026-10-29T13:51:57.644Z] LIVE events write for #944: 304 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt\n[2026-10-29T13:51:57.652Z] STDOUT data for #944: 106 bytes\n[2026-10-29T13:51:57.666Z] LIVE events write for #944: 305 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt\n[2026-10-29T13:51:57.719Z] STDOUT data for #944: 347 bytes\n[2026-10-29T13:51:57.722Z] LIVE events write for #944: 306 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-29T13:51:00.752Z",
-      "ageMs": 14844
+      "lastWrite": "2026-10-29T13:51:45.772Z",
+      "ageMs": 13869
     },
-    "watchdogLogTail": "[2026-10-29T13:48:45.692Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T13:49:00.694Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T13:49:15.694Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T13:49:30.697Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T13:49:45.703Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T13:50:00.711Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T13:50:15.718Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T13:50:30.727Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T13:50:45.735Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T13:51:00.751Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.",
+    "watchdogLogTail": "[2026-10-29T13:49:30.697Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T13:49:45.703Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T13:50:00.711Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T13:50:15.718Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T13:50:30.727Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T13:50:45.735Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T13:51:00.751Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T13:51:15.763Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T13:51:30.762Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T13:51:45.770Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.",
     "jobOutputs": {}
   },
   "mcps": [
@@ -4938,7 +4944,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-29T13:50:09.145Z",
+      "lastCheck": "2026-10-29T13:51:09.583Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4947,18 +4953,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-29T13:50:09.145Z",
+      "lastCheck": "2026-10-29T13:51:09.583Z",
       "downSince": "2026-10-29T13:27:01.461Z",
-      "downDuration": 1387684,
+      "downDuration": 1448122,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-29T13:50:09.145Z",
+      "lastCheck": "2026-10-29T13:51:09.583Z",
       "downSince": "2026-10-29T13:27:01.461Z",
-      "downDuration": 1387684,
+      "downDuration": 1448122,
       "alert": true
     }
   ],
@@ -5261,94 +5267,7 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": {
-    "byTicket": [
-      {
-        "key": "EHME-950",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 82383,
-        "targetDate": "2026-10-21T13:24:48.423000001Z"
-      },
-      {
-        "key": "EHME-950",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 341289,
-        "targetDate": "2026-11-04T12:39:21.138000011Z"
-      },
-      {
-        "key": "SAME-4025",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86125,
-        "targetDate": "2026-10-19T06:51:46.624000001Z"
-      },
-      {
-        "key": "SAME-4025",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 311765,
-        "targetDate": "2026-11-04T04:27:16.782000013Z"
-      },
-      {
-        "key": "AEME-6660",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86388,
-        "targetDate": "2026-10-26T04:26:28.748000001Z"
-      },
-      {
-        "key": "AEME-6660",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1292094,
-        "targetDate": "2026-11-19T12:46:05.520000019Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86179,
-        "targetDate": "2026-09-30T08:16:57.595000001Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1269633,
-        "targetDate": "2026-10-20T08:16:57.595000015Z"
-      },
-      {
-        "key": "AEME-6527",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86020,
-        "targetDate": "2026-09-01T07:46:25.907000001Z"
-      },
-      {
-        "key": "AEME-6527",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 990365,
-        "targetDate": "2026-10-18T21:25:13.757000035Z"
-      },
-      {
-        "key": "TKME-2382",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86399,
-        "targetDate": "2026-10-19T11:35:42.030000001Z"
-      },
-      {
-        "key": "TKME-2382",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2046016,
-        "targetDate": "2026-12-02T06:11:28.355000033Z"
-      }
-    ]
-  },
+  "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
     "standupText": "Yesterday: 0.42h on AEME-6527, 0.33h on AEME-6686, 0.33h on TKME-2417, 0.33h on SAHME-3509, 7h on SAM-18531\nToday: EHME-950, SAME-4025, AEME-6660, AEME-6527, PC-56066\nBlockers: AEME-6527, PC-56066, PC-55757"
