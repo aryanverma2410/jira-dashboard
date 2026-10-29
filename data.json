@@ -1,46 +1,7 @@
 {
-  "generatedAt": "2026-10-29T09:37:15.462Z",
-  "totalTickets": 9,
+  "generatedAt": "2026-10-29T09:37:57.709Z",
+  "totalTickets": 8,
   "tickets": [
-    {
-      "key": "SAHME-3508",
-      "summary": "Update order to Completed status",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "South Africa Maintenance & Enhancements",
-      "projectKey": "SAHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-29T18:37:06.000+0900",
-      "created": "2026-10-28T21:56:15.000+0900",
-      "statusChangedAt": "2026-10-28T22:59:35.427+0900",
-      "assignedToMeAt": "",
-      "description": "Good day,\n\nPlease can you update order ZA260225-05057672 to completed status. See Serial number and IMEI for the SKUs.\n|Document No.|Document Item|Serial No.|Material Number|\n|7334428492|000010|352089361833905|SM-S948BZKOAFA|\n|7336976778|000010|RFGL12PDYXB|SM-R640NZKAXFA|\n\nKind regards,\n\nLerato",
-      "commentsCount": 1,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-29T18:36:06.670+0900",
-          "snippet": "Hi Lerato,\n\nOrder ZA260225-05057672 has been updated to COMPLETED status.\n\nThe order was stuck in SHIPPED since 2026-02-25. Both consignments are now COMPLETED.\n\nThanks,\nAryan."
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Lerato,\n\nOrder ZA260225-05057672 has been updated to COMPLETED status.\n\nThe order was stuck in SHIPPED since 2026-02-25. Both consignments are now COMPLETED.\n\nThanks,\nAryan.",
-      "lastCommentDate": "2026-10-29T18:36:06.670+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAHME-3508",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Summary: Update order ZA260225-05057672 to Completed status\r\nGenerated: 2026-10-29T00:00:00Z\r\n\r\nHi [~l.mbambisa@samsung.com] ,\r\n\r\nOrder ZA260225-05057672 is currently stuck at SHIPPED status and cannot progress to COMPLETED because the consignment process for the base consignment silently failed.\r\n\r\nThe order was placed on 2026-02-25 with a total of 32,836.05 ZAR and payment was fully captured the same day. The order was split into two consignments — the split consignment ZA260225-05057672_1 (SM-S948BZKOAFA) shipped on 2026-03-03 and reached COMPLETED on 2026-03-04 with GERP billing reference 3219735730. However, the base consignment ZA260225-05057672 (SM-R640NZKAXFA + accessory) shipped on 2026-03-13 but never completed — it has no GERP billing number and no completion date.\r\n\r\nDatabase verification shows the consignment process for the base consignment (consignment-process-v11-35) is in ERROR state, but with no endMessage, no errorStackTrace in BusinessProcessParameter, and no ProcessTaskLog exceptions. This is a silent process failure — the process engine set the state to ERROR without recording any diagnostic information. The order process (order-process-v25-68) remains in RUNNING state, blocked because the isProcessCompleted action cannot return OK while a consignment process is in ERROR. There is also one SMC external service entry still in NEW status (unprocessed) for the base consignment.\r\n\r\nThis is the same pattern as SAHME-3477, SAHME-3434, SAHME-3425, and SAHME-3423 — ZA-region orders where the consignment process silently errored after shipping, preventing the order from reaching COMPLETED. The remediation approach is to set the base consignment to COMPLETED status, restart the consignment process at the isShippedComplete event, and let the process engine naturally transition the order to COMPLETED. The existing reusable script from PC-52596 (script-SAME-3931-push-from-shipped.groovy) handles this by setting all consignments to COMPLETED, suppressing customer email notifications, and restarting the consignment process from the isShippedComplete action.\r\n\r\nWe can proceed with the remediation once confirmed.\r\n\r\nThanks,\r\n\r\nAryan\r\n\r\n## Remediation\r\n\r\nReusable PC Ticket: PC-52596 (SAME-3931) — push-to-completed script\r\nScript: script-SAME-3931-push-from-shipped.groovy\r\nApproach: Set consignments to COMPLETED, restart consignment process at isShippedComplete, suppress email notifications\r\nSimilar Resolved Tickets: SAHME-3477 (PC-55804), SAHME-3434, SAHME-3425, SAHME-3423",
-        "sections": {
-          "issue": "",
-          "rca": "Summary: Update order ZA260225-05057672 to Completed status\r\nGenerated: 2026-10-29T00:00:00Z\r\n\r\nHi [~l.mbambisa@samsung.com] ,\r\n\r\nOrder ZA260225-05057672 is currently stuck at SHIPPED status and cannot progress to COMPLETED because the consignment process for the base consignment silently failed.\r\n\r\nThe order was placed on 2026-02-25 with a total of 32,836.05 ZAR and payment was fully captured the same day. The order was split into two consignments — the split consignment ZA260225-05057672_1 (SM-S948BZKOAFA) shipped on 2026-03-03 and reached COMPLETED on 2026-03-04 with GERP billing reference 3219735730. However, the base consignment ZA260225-05057672 (SM-R640NZKAXFA + accessory) shipped on 2026-03-13 but never completed — it has no GERP billing number and no completion date.\r\n\r\nDatabase verification shows the consignment process for the base consignment (consignment-process-v11-35) is in ERROR state, but with no endMessage, no errorStackTrace in BusinessProcessParameter, and no ProcessTaskLog exceptions. This is a silent process failure — the process engine set the state to ERROR without recording any diagnostic information. The order process (order-process-v25-68) remains in RUNNING state, blocked because the isProcessCompleted action cannot return OK while a consignment process is in ERROR. There is also one SMC external service entry still in NEW status (unprocessed) for the base consignment.\r\n\r\nThis is the same pattern as SAHME-3477, SAHME-3434, SAHME-3425, and SAHME-3423 — ZA-region orders where the consignment process silently errored after shipping, preventing the order from reaching COMPLETED. The remediation approach is to set the base consignment to COMPLETED status, restart the consignment process at the isShippedComplete event, and let the process engine naturally transition the order to COMPLETED. The existing reusable script from PC-52596 (script-SAME-3931-push-from-shipped.groovy) handles this by setting all consignments to COMPLETED, suppressing customer email notifications, and restarting the consignment process from the isShippedComplete action.\r\n\r\nWe can proceed with the remediation once confirmed.\r\n\r\nThanks,\r\n\r\nAryan\r\n\r\n## Remediation\r\n\r\nReusable PC Ticket: PC-52596 (SAME-3931) — push-to-completed script\r\nScript: script-SAME-3931-push-from-shipped.groovy\r\nApproach: Set consignments to COMPLETED, restart consignment process at isShippedComplete, suppress email notifications\r\nSimilar Resolved Tickets: SAHME-3477 (PC-55804), SAHME-3434, SAHME-3425, SAHME-3423",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-28T18:52:23.272Z"
-      }
-    },
     {
       "key": "AEME-6686",
       "summary": "Stuck order on Hybris",
@@ -531,7 +492,7 @@
       }
     ],
     "pid": 38388,
-    "uptime": 145734,
+    "uptime": 145780,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -543,7 +504,7 @@
       {
         "pid": 16500,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 180710,
+        "ageSeconds": 180753,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -553,7 +514,7 @@
       {
         "pid": 21420,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 180333,
+        "ageSeconds": 180376,
         "status": "running",
         "isChild": false,
         "taskSummary": "run in commit mode on s2 to confirm it works",
@@ -563,7 +524,7 @@
       {
         "pid": 12208,
         "cwd": "c:\\windows",
-        "ageSeconds": 180333,
+        "ageSeconds": 180376,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -573,7 +534,7 @@
       {
         "pid": 34736,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 67415,
+        "ageSeconds": 67458,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -4752,17 +4713,17 @@
     "bridgeLogTail": "[2026-10-28T19:12:28.633Z] STDOUT data for #923: 133 bytes\n[2026-10-28T19:12:28.635Z] LIVE events write for #923: 151 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_923.txt\n[2026-10-28T19:12:28.642Z] STDOUT data for #923: 117 bytes\n[2026-10-28T19:12:28.645Z] LIVE events write for #923: 152 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_923.txt\n[2026-10-28T19:12:28.654Z] STDOUT data for #923: 112 bytes\n[2026-10-28T19:12:28.656Z] LIVE events write for #923: 153 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_923.txt\n[2026-10-28T19:12:28.662Z] STDOUT data for #923: 120 bytes\n[2026-10-28T19:12:28.664Z] LIVE events write for #923: 154 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_923.txt\n[2026-10-28T19:12:28.678Z] STDOUT data for #923: 125 bytes\n[2026-10-28T19:12:28.680Z] LIVE events write for #923: 155 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_923.txt\n[2026-10-28T19:12:28.681Z] STDOUT data for #923: 114 bytes\n[2026-10-28T19:12:28.683Z] LIVE events write for #923: 156 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_923.txt\n[2026-10-28T19:12:28.691Z] STDOUT data for #923: 125 bytes\n[2026-10-28T19:12:28.693Z] LIVE events write for #923: 157 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_923.txt\n[2026-10-28T19:12:28.701Z] STDOUT data for #923: 110 bytes\n[2026-10-28T19:12:28.703Z] LIVE events write for #923: 158 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_923.txt\n[2026-10-28T19:12:28.712Z] STDOUT data for #923: 336 bytes\n[2026-10-28T19:12:28.713Z] LIVE events write for #923: 159 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_923.txt\n[2026-10-28T19:12:31.133Z] aipro completed for #923 (1209 chars)\n[2026-10-28T19:12:32.294Z] Comment posted on #923",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-29T09:37:17.598Z",
-      "ageMs": 2803
+      "lastWrite": "2026-10-29T09:38:02.623Z",
+      "ageMs": 1923
     },
-    "watchdogLogTail": "[2026-10-29T09:35:02.510Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T09:35:17.534Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T09:35:32.533Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T09:35:47.540Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T09:36:02.551Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T09:36:17.559Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T09:36:32.564Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T09:36:47.579Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T09:37:02.582Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T09:37:17.597Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-29T09:35:47.540Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T09:36:02.551Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T09:36:17.559Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T09:36:32.564Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T09:36:47.579Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T09:37:02.582Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T09:37:17.597Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T09:37:32.602Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T09:37:47.613Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-29T09:38:02.622Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-29T09:36:24.467Z",
+      "lastCheck": "2026-10-29T09:37:24.321Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4771,7 +4732,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-29T09:36:24.467Z",
+      "lastCheck": "2026-10-29T09:37:24.321Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4780,9 +4741,9 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-29T09:36:24.467Z",
+      "lastCheck": "2026-10-29T09:37:24.321Z",
       "downSince": "2026-10-29T08:52:40.421Z",
-      "downDuration": 2624046,
+      "downDuration": 2683900,
       "alert": true
     }
   ],
@@ -4912,18 +4873,6 @@
   "actionItems": {
     "zero": [
       {
-        "key": "SAHME-3508",
-        "summary": "Update order to Completed status",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/SAHME-3508",
-        "updated": "2026-10-29T18:37:06.000+0900",
-        "statusChangedAt": "2026-10-28T22:59:35.427+0900"
-      },
-      {
         "key": "GMT-22312",
         "summary": "SMI - \"tokoPurchaseDateRecurrenceJob\" Cronjobs - Status \"Unknown\" Result \"Unknown\"",
         "priority": "None",
@@ -5019,7 +4968,7 @@
       }
     ],
     "totals": {
-      "zero": 3,
+      "zero": 2,
       "actionable": 2,
       "blocked": 2,
       "queued": 2
@@ -5073,82 +5022,9 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": {
-    "byTicket": [
-      {
-        "key": "SAHME-3508",
-        "slaName": "Maintenance Response (GMT+2)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 82602,
-        "targetDate": "2026-10-29T12:56:18.029000001Z"
-      },
-      {
-        "key": "SAHME-3508",
-        "slaName": "Maintenance Resolution (GMT+2)",
-        "slaStatus": "STILL",
-        "remainingDuration": 357543,
-        "targetDate": "2026-11-04T12:56:18.029000005Z"
-      },
-      {
-        "key": "AEME-6686",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86396,
-        "targetDate": "2026-10-29T13:34:57.876000001Z"
-      },
-      {
-        "key": "AEME-6686",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 2586380,
-        "targetDate": "2026-12-09T13:35:37.231000030Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86179,
-        "targetDate": "2026-09-30T08:16:57.595000001Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1269633,
-        "targetDate": "2026-10-20T08:16:57.595000015Z"
-      },
-      {
-        "key": "TKME-2382",
-        "slaName": "Maintenance Response (GMT+3)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86399,
-        "targetDate": "2026-10-19T11:35:42.030000001Z"
-      },
-      {
-        "key": "TKME-2382",
-        "slaName": "Maintenance Resolution (GMT+3)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2061253,
-        "targetDate": "2026-12-02T06:11:28.355000033Z"
-      },
-      {
-        "key": "GMT-22312",
-        "slaName": "GMT Issue Response SLA(GMT+5.5)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86326,
-        "targetDate": "2026-10-14T11:17:22.593000001Z"
-      },
-      {
-        "key": "GMT-22312",
-        "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
-        "slaStatus": "STILL",
-        "remainingDuration": 125161,
-        "targetDate": "2026-11-01T20:23:16.062000014Z"
-      }
-    ]
-  },
+  "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 0.42h on AEME-6527, 0.33h on AEME-6686, 0.33h on TKME-2417, 0.33h on SAHME-3509, 7h on SAM-18531\nToday: SAHME-3508, AEME-6686, GMT-22312, TKME-2382, PC-55757\nBlockers: PC-55757"
+    "standupText": "Yesterday: 0.42h on AEME-6527, 0.33h on AEME-6686, 0.33h on TKME-2417, 0.33h on SAHME-3509, 7h on SAM-18531\nToday: AEME-6686, GMT-22312, TKME-2382, PC-55757, RT-657502\nBlockers: PC-55757"
   }
 }
