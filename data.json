@@ -1,7 +1,144 @@
 {
-  "generatedAt": "2026-10-30T03:30:33.936Z",
-  "totalTickets": 12,
+  "generatedAt": "2026-10-30T03:26:17.304Z",
+  "totalTickets": 11,
   "tickets": [
+    {
+      "key": "TKME-2417",
+      "summary": "Stuck order on Hybris",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Turkey Maintenance & Enhancements",
+      "projectKey": "TKME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-30T15:44:16.000+0900",
+      "created": "2026-10-28T22:35:06.000+0900",
+      "statusChangedAt": "2026-10-29T00:11:07.525+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|TR261027-31416321|2026/10/28|REFUND_FAILED|\n|TR261027-30694853|2026/10/27|SHIPPED|\n|TR261027-30693525|2026/10/27|SHIPPED|\n|TR261027-30688809|2026/10/27|SHIPPED|\n|TR261027",
+      "commentsCount": 3,
+      "recentComments": [
+        {
+          "author": "Rajeshbabu Yatirajula",
+          "date": "2026-10-30T15:44:08.875+0900",
+          "snippet": "Hi ~@email \n\nMay i know what has been done as part of the remediation for TR order ? I verified the first order in the list and the external services status is  in ERROR but the order is moved to COMPLETED. \n\n!image-2026-10-30-10-35-21-004.png!\n\n!image-2026-10-30-10-36-52-439.png!\n\nAs per the logs, "
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-29T00:08:34.417+0900",
+          "snippet": "Hi Team,\n\nprocessExternalServices (20 orders) — All 20 SUCCEEDED:\nWe ran the auto-retrigger script under PC-52678 to restart all 20 consignment processes from the processExternalServices action. All 20 orders have confirmed SUCCEEDED with endMessage \"Order placed.\"\n\n\nTR261027-30694853  | SUCCEEDED |"
+        }
+      ],
+      "lastCommentBy": "Rajeshbabu Yatirajula",
+      "lastCommentSnippet": "Hi ~@email \n\nMay i know what has been done as part of the remediation for TR order ? I verified the first order in the list and the external services status is  in ERROR but the order is moved to COMPLETED. \n\n!image-2026-10-30-10-35-21-004.png!\n\n!image-2026-10-30-10-36-52-439.png!\n\nAs per the logs, ",
+      "lastCommentDate": "2026-10-30T15:44:08.875+0900",
+      "url": "https://jira.secext.samsung.net/browse/TKME-2417",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "Stuck order on Hybris — 23 TR-region orders (20 SHIPPED + 3 REFUND_FAILED)\r\nGenerated: 2026-10-28T14:00:00Z\r\n\r\n## Issue\r\n\r\nTKME-2417 reports 23 orders stuck in the TR region. The ticket lists 20 orders in SHIPPED status and 3 orders in REFUND_FAILED status. All 23 orders have stuck or errored business processes preventing them from reaching a terminal state despite physical fulfilment having completed for the SHIPPED orders.\r\n\r\n## RCA\r\n\r\nTwo distinct populations of orders exist in this ticket, each with a different root cause.\r\n\r\nPopulation 1 — 20 SHIPPED orders (TR261027-30694853, TR261027-30693525, TR261027-30688809, TR261027-30693160, TR261027-30666453, TR261027-30655432, TR261027-30651232, TR261027-30642237, TR261027-30637167, TR261027-30591719, TR261027-30597740, TR261027-30572578, TR261023-25319011, TR261026-29480996, TR261026-29365012, TR261021-23163107, TR261026-29359505, TR261025-28363237, TR261023-25735963, TR261023-25618605):\r\n\r\nAll 20 orders share an identical error pattern verified via DB queries (order-error-check.cjs + flexi-order-full.cjs) against PROD HAC.\r\n\r\nEach order has two business processes:\r\n1. The main order-process-v25-69 is in RUNNING state, stuck at the waitForFinancialInitialUpdate action. The process is waiting for the Financial Integration (FI) initial update to complete.\r\n2. The consignment child process (consignment-process-v11-36, suffix _1) is in ERROR state with endMessage \"All went wrong.\"\r\n\r\nThe isInitialFISuccess action threw an exception (empty returnCode in ProcessTaskLog) in 19 of 20 orders. The exception timestamps cluster tightly — for example, 8 orders on 2026-10-27 show exceptions within the same second (10:38:10.7xx), suggesting a systemic FI integration failure event rather than individual order issues.\r\n\r\nNo BusinessProcessParameter entries were found for any order (no errorStackTrace stored), confirming the error was handled gracefully by the process engine, not a crash.\r\n\r\nThe consignments themselves are physically COMPLETED with GERP billing done (GERP bill numbers present, shipped dates set, warehouse WC17-S751 assigned). The payment side is clean — AUTHORIZATION and CAPTURE both ACCEPTED with no refund entries. The SMC external service is in ERROR state on sampled orders.\r\n\r\nRoot cause: The consignment child process errored during the Financial Integration initial update check (isInitialFISuccess), which set the consignment process to ERROR with the generic endMessage \"All went wrong.\" This blocked the main order process from receiving the FI completion signal, leaving it stuck at waitForFinancialInitialUpdate indefinitely. The physical fulfilment pipeline (warehouse, GERP, shipping) completed independently and successfully, but the process engine layer is stuck because the FI integration handshake failed.\r\n\r\nThis is the same pattern seen in TKME-2387 and TKME-2385 (prior TR healthcheck tickets by aryan.v1), where I/O errors during financial update caused business processes to enter ERROR state. Those tickets were remediated under PC-52605 by retriggering the errored processes.\r\n\r\nPopulation 2 — 3 REFUND_FAILED orders (TR261027-31416321, TR261027-30407887, TR261025-28104424):\r\n\r\nAll 3 orders share an identical payment failure pattern verified via DB queries.\r\n\r\nEach order has:\r\n- Order status: REFUND_FAILED\r\n- Order total: zeroed out (0E-8) — the refund consumed the full captured amount\r\n- Payment mode: tr-masterpassPaymentMode (MasterPass)\r\n- No consignments — orders were cancelled before fulfilment\r\n- Payment transactions show: AUTHORIZATION (ACCEPTED), CAPTURE (ACCEPTED), REFUND_FOLLOW_ON (ERROR)\r\n\r\nThe order-process-v25-69 is in FAILED state with endMessage \"Order failed.\" The last task log action is refundCancelOrder, confirming the process reached the refund step after order cancellation and failed there. No BusinessProcessParameter error stack traces were stored. No ProcessTaskLog exceptions were found.\r\n\r\nRoot cause: The MasterPass payment gateway rejected the follow-on refund request. The AUTHORIZATION and CAPTURE both succeeded (funds were held and captured), but when the system attempted to refund the captured amount after order cancellation, the REFUND_FOLLOW_ON payment transaction entry was set to ERROR status. The process engine handled this gracefully (no crash, no stack trace) and transitioned the order process to FAILED state. The refund needs to be re-attempted through the MasterPass gateway.\r\n\r\n## Possible remediation\r\n\r\nPopulation 1 — 20 SHIPPED orders:\r\n\r\nRemediation: Retrigger the errored consignment processes and stuck order processes using the approach from PC-52605 (Reusable, Closed, reporter: aryan.v1). PC-52605 contains script-TKME-2279-retrigger-business-process.groovy which sets errored processes to ERROR state and restarts them from their last failed action via businessProcessService.restartProcess(). This script was successfully used for the same TR-region I/O error pattern in TKME-2387 and TKME-2385.\r\n\r\nThe script needs to be copied and adapted:\r\n- Update the order list to the 20 SHIPPED orders from TKME-2417\r\n- Update the ITGC header to reference the new PC ticket and TKME-2417\r\n- The script logic (set process to ERROR, remove currentTasks, restartProcess from last actionId) remains unchanged\r\n\r\nThe retrigger will allow the isInitialFISuccess action to re-execute. Since the FI integration failure was transient (clustered timestamps suggest a brief outage), the retry should succeed and the consignment process will complete, unblocking the main order process at waitForFinancialInitialUpdate.\r\n\r\nPopulation 2 — 3 REFUND_FAILED orders:\r\n\r\nRemediation: Update the REFUND_FOLLOW_ON payment transaction entry from ERROR to ACCEPTED, then restart the order process from the refundCancelOrder action. This follows the precedent of PC-35580 (Closed, [SAME-3208] - Update refund follow on entry to success) and PC-48853 (Closed, NUKME-13377 - Update PTE(REFUND_FOLLOW_ON)).\r\n\r\nHowever, before updating the PTE status, the actual refund must be confirmed as completed through the MasterPass gateway externally. The Hybris-side PTE update only records the result — it does not initiate the refund. If the refund has not been processed by MasterPass, a new refund request must be sent first.\r\n\r\nSteps:\r\n1. Verify with the payment team whether the MasterPass refund was successfully processed for each of the 3 orders\r\n2. If refund confirmed: update PaymentTransactionEntry status from ERROR to ACCEPTED and restart the order process from refundCancelOrder\r\n3. If refund not confirmed: initiate the refund through MasterPass first, then update the PTE and restart the process\r\n\r\nBoth remediations can be executed under a single new PC ticket, or PC-52605 can be reused for the SHIPPED orders while a separate PC ticket handles the REFUND_FAILED orders (different remediation type).",
+        "sections": {
+          "issue": "TKME-2417 reports 23 orders stuck in the TR region. The ticket lists 20 orders in SHIPPED status and 3 orders in REFUND_FAILED status. All 23 orders have stuck or errored business processes preventing them from reaching a terminal state despite physical fulfilment having completed for the SHIPPED orders.",
+          "rca": "Two distinct populations of orders exist in this ticket, each with a different root cause.\r\n\r\nPopulation 1 — 20 SHIPPED orders (TR261027-30694853, TR261027-30693525, TR261027-30688809, TR261027-30693160, TR261027-30666453, TR261027-30655432, TR261027-30651232, TR261027-30642237, TR261027-30637167, TR261027-30591719, TR261027-30597740, TR261027-30572578, TR261023-25319011, TR261026-29480996, TR261026-29365012, TR261021-23163107, TR261026-29359505, TR261025-28363237, TR261023-25735963, TR261023-25618605):\r\n\r\nAll 20 orders share an identical error pattern verified via DB queries (order-error-check.cjs + flexi-order-full.cjs) against PROD HAC.\r\n\r\nEach order has two business processes:\r\n1. The main order-process-v25-69 is in RUNNING state, stuck at the waitForFinancialInitialUpdate action. The process is waiting for the Financial Integration (FI) initial update to complete.\r\n2. The consignment child process (consignment-process-v11-36, suffix _1) is in ERROR state with endMessage \"All went wrong.\"\r\n\r\nThe isInitialFISuccess action threw an exception (empty returnCode in ProcessTaskLog) in 19 of 20 orders. The exception timestamps cluster tightly — for example, 8 orders on 2026-10-27 show exceptions within the same second (10:38:10.7xx), suggesting a systemic FI integration failure event rather than individual order issues.\r\n\r\nNo BusinessProcessParameter entries were found for any order (no errorStackTrace stored), confirming the error was handled gracefully by the process engine, not a crash.\r\n\r\nThe consignments themselves are physically COMPLETED with GERP billing done (GERP bill numbers present, shipped dates set, warehouse WC17-S751 assigned). The payment side is clean — AUTHORIZATION and CAPTURE both ACCEPTED with no refund entries. The SMC external service is in ERROR state on sampled orders.\r\n\r\nRoot cause: The consignment child process errored during the Financial Integration initial update check (isInitialFISuccess), which set the consignment process to ERROR with the generic endMessage \"All went wrong.\" This blocked the main order process from receiving the FI completion signal, leaving it stuck at waitForFinancialInitialUpdate indefinitely. The physical fulfilment pipeline (warehouse, GERP, shipping) completed independently and successfully, but the process engine layer is stuck because the FI integration handshake failed.\r\n\r\nThis is the same pattern seen in TKME-2387 and TKME-2385 (prior TR healthcheck tickets by aryan.v1), where I/O errors during financial update caused business processes to enter ERROR state. Those tickets were remediated under PC-52605 by retriggering the errored processes.\r\n\r\nPopulation 2 — 3 REFUND_FAILED orders (TR261027-31416321, TR261027-30407887, TR261025-28104424):\r\n\r\nAll 3 orders share an identical payment failure pattern verified via DB queries.\r\n\r\nEach order has:\r\n- Order status: REFUND_FAILED\r\n- Order total: zeroed out (0E-8) — the refund consumed the full captured amount\r\n- Payment mode: tr-masterpassPaymentMode (MasterPass)\r\n- No consignments — orders were cancelled before fulfilment\r\n- Payment transactions show: AUTHORIZATION (ACCEPTED), CAPTURE (ACCEPTED), REFUND_FOLLOW_ON (ERROR)\r\n\r\nThe order-process-v25-69 is in FAILED state with endMessage \"Order failed.\" The last task log action is refundCancelOrder, confirming the process reached the refund step after order cancellation and failed there. No BusinessProcessParameter error stack traces were stored. No ProcessTaskLog exceptions were found.\r\n\r\nRoot cause: The MasterPass payment gateway rejected the follow-on refund request. The AUTHORIZATION and CAPTURE both succeeded (funds were held and captured), but when the system attempted to refund the captured amount after order cancellation, the REFUND_FOLLOW_ON payment transaction entry was set to ERROR status. The process engine handled this gracefully (no crash, no stack trace) and transitioned the order process to FAILED state. The refund needs to be re-attempted through the MasterPass gateway.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-28T14:20:44.466Z"
+      }
+    },
+    {
+      "key": "SAME-4025",
+      "summary": "[EPP] MENA Reports - Domain & Aggregator Based Sales Report",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Kingdom of Saudi Arabia Maintenance & Enhancements",
+      "projectKey": "SAME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-30T13:32:25.000+0900",
+      "created": "2026-10-16T15:51:44.000+0900",
+      "statusChangedAt": "2026-10-22T11:12:39.247+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nWe would like to receive the following reports to analyze the aggregator sales in MENA region and to increase aggregator percentage under overall EPP business.\n\nThe fields mentioned below are already available on the weekly EPP sales report we are receiving so we can use the same template ",
+      "commentsCount": 12,
+      "recentComments": [
+        {
+          "author": "Georgina Semblante",
+          "date": "2026-10-30T13:32:25.588+0900",
+          "snippet": "Hi ~@email ,\n\nKindly share to the respective recipients the data for the Missing IDs\n\nThank you.\n\nGeorj\n\n~@email I ~@email"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-29T21:51:13.044+0900",
+          "snippet": "Hi Georj,\n\nPlease find the order IDs with their actual baseSite values attached: ^Missing Order IDs - with Sites.csv and ^Missing Order IDs - with Sites compact.xlsx.\n\nThanks,\nAryan."
+        }
+      ],
+      "lastCommentBy": "Georgina Semblante",
+      "lastCommentSnippet": "Hi ~@email ,\n\nKindly share to the respective recipients the data for the Missing IDs\n\nThank you.\n\nGeorj\n\n~@email I ~@email",
+      "lastCommentDate": "2026-10-30T13:32:25.588+0900",
+      "url": "https://jira.secext.samsung.net/browse/SAME-4025",
+      "linkedTickets": [
+        {
+          "key": "PC-55639",
+          "summary": "SAME-4025 | MENA Reports - Domain & Aggregator Based Sales Report",
+          "status": "Approved-ES",
+          "statusCategory": "To Do",
+          "relation": "is parent task of",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "# RCA: SAME-4025\n[EPP] MENA Reports - Domain & Aggregator Based Sales Report\nGenerated: 2026-10-29T00:00:00Z\n\nIssue:\nThe MENA RHQ team requested a new Domain & Aggregator Based Sales Report for EPP sales across the MENA region. The report should include 16 non-PII columns (Country, Site, Sales_Application, Product_Code, Order_Code, Order_Status, Order_Creation_Date, Order_Entry_Total_Price, Total_RRP, Promotion_Name, Order_Entry_Quantity, Voucher_Code, Coupon_Code, Payment_Mode, Domain, Affiliate_Name) and be delivered in two parts: a one-time historical report (Jan 2026 to date) and a recurring weekly report (last 30 days, delivered every Monday 9am Dubai time). The one-time report was generated and sent by Chandan on Oct 22, but Georgina reported on Oct 29 that the MENA RHQ team found some orders missing when comparing the report data against the global dashboard. The weekly recurring report has not yet been enabled.\n\nRCA:\nThis is a reporting/feature request ticket, not a stuck order or platform bug. The existing MENA EPP weekly sales report is generated by the cronjob mena-report-nonpii-email-salesReportJob, which uses the TokoGroovyBasedReportJob type (a Hybris cronjob model in the sapreporting extension that executes a Groovy script to generate and email XLSX reports). The report template is based on the existing weekly EPP sales report (menaEppWeeklySalesReportNonPII) with modifications to add Domain and Affiliate_Name columns and remove unneeded fields.\n\nThe orders missing from the report are most likely caused by one or more of the following factors in the report query:\n\n1. Order Status Filter: The existing sales report cronjob's salesQuery likely filters to specific order statuses (e.g., COMPLETED, SHIPPED) and excludes others (CANCELLED, PENDING, CHECKED_INVALID). Orders in non-terminal or intermediate statuses would not appear in the report but would be counted in the global dashboard which may aggregate all orders regardless of status.\n\n2. Date Range Configuration: The TokoGroovyBasedReportJob uses a 'days' parameter to control the lookback window. For the one-time historical report, the days parameter was set to cover Jan 2026 to Oct 2026, but if the days calculation uses creationtime and the report was run before midnight on a particular day, orders placed late that day could be excluded. As noted in SAME-3635, the days parameter controls the date range and must be adjusted for custom date ranges.\n\n3. Store/BaseSite Coverage: The mena-report-nonpii-email-salesReportJob cronjob may not cover all MENA EPP stores. The related ticket SAME-3763 lists 9 separate per-country cronjobs (report-ae-tokoSalesReportJob-nonPII, report-tr-tokoSalesReportJob-nonPII, etc.) for the standard sales report. If the consolidated mena-report-nonpii cronjob does not include all MENA EPP base stores (ae, iq, jo, ma, pk, il, eg, tr, sa, bh, kw, qa, om, kz), orders from missing stores would not appear.\n\n4. The global dashboard may source data from GERP/SAP or NERP downstream systems, which would include orders that Hybris considers failed or cancelled but GERP processed. The Hybris report only includes orders that exist in the Hybris database with specific status conditions.\n\nThe weekly recurring report has not been enabled yet because Georgina's comment about missing orders was posted on Oct 29 and Chandan confirmed the one-time report on Oct 22. The team is waiting for confirmation before enabling the weekly trigger.\n\nPossible remediation:\n1. Identify the exact orders that are missing from the report by comparing the report output against the global dashboard. The MENA RHQ team needs to provide specific order codes that appear in the global dashboard but are missing from the Hybris report.\n\n2. Once the missing order codes are identified, query the Hybris database for those orders to check their status, creation date, and base store. This will determine which filter is excluding them.\n\n3. If the issue is an order status filter, update the report Groovy script's salesQuery to include all relevant order statuses (or remove the status filter entirely, depending on business requirements).\n\n4. If the issue is store coverage, update the cronjob's store configuration or the Groovy script's query to include all MENA EPP base stores.\n\n5. If the issue is date range, verify the days parameter covers the full requested period.\n\n6. After fixing the query, re-run the one-time report to include the missing orders, then enable the weekly recurring cronjob schedule.\n\n7. The new Domain and Affiliate_Name columns require data from the order's associated domain filter configuration and affiliate/aggregator tracking. If these fields are not already populated on orders in the Hybris database, they may need to be sourced from a different table or configured via ImpEx before the report can include meaningful data.\n\nNote: The SESAR counterpart (SAME-4026) has already had its one-time report confirmed and weekly cronjob enabled by Chandan on Oct 26. The EPP report (SAME-4025) is still pending the missing orders resolution before the weekly trigger can be enabled.",
+        "sections": {
+          "issue": "The MENA RHQ team requested a new Domain & Aggregator Based Sales Report for EPP sales across the MENA region. The report should include 16 non-PII columns (Country, Site, Sales_Application, Product_Code, Order_Code, Order_Status, Order_Creation_Date, Order_Entry_Total_Price, Total_RRP, Promotion_Name, Order_Entry_Quantity, Voucher_Code, Coupon_Code, Payment_Mode, Domain, Affiliate_Name) and be delivered in two parts: a one-time historical report (Jan 2026 to date) and a recurring weekly report (last 30 days, delivered every Monday 9am Dubai time). The one-time report was generated and sent by Chandan on Oct 22, but Georgina reported on Oct 29 that the MENA RHQ team found some orders missing when comparing the report data against the global dashboard. The weekly recurring report has not yet been enabled.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-29T11:03:09.274Z"
+      }
+    },
+    {
+      "key": "NPSM-91057",
+      "summary": "[110049599][AE] [Online Purchasing]Medallia Alert ",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "NPS",
+      "projectKey": "NPSM",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-30T12:49:15.000+0900",
+      "created": "2026-10-27T22:20:13.000+0900",
+      "statusChangedAt": "2026-10-28T00:24:41.443+0900",
+      "assignedToMeAt": "",
+      "description": "Please check Reason for Score field for detail. Note The initial response time is tracked, so once you receive a ticket, please move it to “In Progress” or “Closed” within 48 hours. Issue URL: [Internal Link]",
+      "commentsCount": 3,
+      "recentComments": [
+        {
+          "author": "indra pras",
+          "date": "2026-10-30T01:01:03.508+0900",
+          "snippet": "Hi ~@email ,\n\nUpon checking the Promotion Engine Results at the cart level, I found that no promotions were applied.\n\n!image-2026-10-29-23-00-14-849.png|width=226,height=141!\n\nCould you please help investigate this issue?\n\nRegards,\nIndra Pras"
+        },
+        {
+          "author": "Vaibhav Jain",
+          "date": "2026-10-29T18:33:35.829+0900",
+          "snippet": "Hi ~@email : Please check if the user cart for valid for any existing Samsung Pay discount"
+        }
+      ],
+      "lastCommentBy": "indra pras",
+      "lastCommentSnippet": "Hi ~@email ,\n\nUpon checking the Promotion Engine Results at the cart level, I found that no promotions were applied.\n\n!image-2026-10-29-23-00-14-849.png|width=226,height=141!\n\nCould you please help investigate this issue?\n\nRegards,\nIndra Pras",
+      "lastCommentDate": "2026-10-30T01:01:03.508+0900",
+      "url": "https://jira.secext.samsung.net/browse/NPSM-91057",
+      "linkedTickets": [],
+      "solution": {
+        "status": "none",
+        "excerpt": "",
+        "source": "",
+        "foundAt": "",
+        "issueNumber": null
+      }
+    },
     {
       "key": "NPSM-91163",
       "summary": "[110165491][TR] [Flagship][Online Purchasing]Medallia Alert ",
@@ -74,249 +211,6 @@
       }
     },
     {
-      "key": "AEME-6686",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-29T23:04:21.000+0900",
-      "created": "2026-10-28T22:34:57.000+0900",
-      "statusChangedAt": "2026-10-29T00:11:07.453+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing order was found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|AE261027-30566287|2026/10/28|SHIPPED|\n\n\nThanks",
-      "commentsCount": 5,
-      "recentComments": [
-        {
-          "author": "Talib Raza Zaidi",
-          "date": "2026-10-29T23:04:14.539+0900",
-          "snippet": "Hi ~@email,\n\n \n\nPlease check why it is failing and fix the order.\n\n \n\nRegards\n\nTalib\n\nCC: ~@email"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-29T22:49:21.127+0900",
-          "snippet": "Hi Team,\n\nAE261027-30566287 (processExternalServices):\nWe ran the auto-retrigger script under PC-52678 to restart the consignment process from the processExternalServices action. The process was retrigered successfully, however it has landed back in ERROR state with endMessage \"All went wrong.\"\n\nord"
-        }
-      ],
-      "lastCommentBy": "Talib Raza Zaidi",
-      "lastCommentSnippet": "Hi ~@email,\n\n \n\nPlease check why it is failing and fix the order.\n\n \n\nRegards\n\nTalib\n\nCC: ~@email",
-      "lastCommentDate": "2026-10-29T23:04:14.539+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6686",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Ticket Summary: Stuck order on Hybris\r\nGenerated: 2026-10-28T13:50:00Z\r\n\r\nIssue\r\n\r\nOrder AE261027-30566287 is stuck at SHIPPED status. The consignment is physically COMPLETED and GERP-billed, but the consignment process (consignment-process-v11-36) is in ERROR state with endMessage \"All went wrong.\" The ExternalService entry for GCIC_EXPERT_CARE_STANDALONE is in ERROR status with no service ID, indicating the GCIC (Galaxy Care Integration Center) service registration call failed and never returned a service ID. The order process is still RUNNING, stuck at the isInitialFISuccess action which threw an exception at 2026-10-28 06:45:21.802. Payment was successful (CAPTURE ACCEPTED, 924 AED).\r\n\r\nRCA\r\n\r\nThe order AE261027-30566287 was placed on 2026-10-28 at 06:33:08 in the UAE store with product P-GT-LCXOS2PW (Galaxy Expert Care Carry-In service). Payment was captured successfully at 06:44:25. The consignment was processed and reached COMPLETED status at 07:01:58 with GERP billing number 3251099074 from warehouse WC21-S701.\r\n\r\nThe consignment process (consignment-process-v11-36) reached the processExternalServices action, which invokes the processExternalServicesOnConsignment bean. This bean calls the GCIC Expert Care external service to register the Galaxy Expert Care standalone service with the GCIC system. The GCIC API call failed -- no service ID was returned, and the ExternalService entry was set to ERROR status. The processExternalServices action returned NOK, which per the process definition at consignment-process-v11-36.xml line 543 transitions to the error end state (line 545) with message \"All went wrong.\"\r\n\r\nThis is the same pattern observed in AEME-6596 (resolved October 2026) where 6 UAE Expert Care orders were stuck at SHIPPED because the GCIC API call failed and ExternalService was set to ERROR. The root cause is a transient GCIC API failure -- either the GCIC service was temporarily unavailable, returned an error response, or the API token/credentials were invalid at the time of the call. The \"No response from GCIC, setting external service status to ERROR\" log pattern was confirmed in RT-753607 where TokoGalaxyExpertCareExternalServicesImpl handles the GCIC failure by setting the ExternalService to ERROR.\r\n\r\nNo BusinessProcessParameter error stack trace was stored, which is consistent with the process reaching a named error end state rather than throwing an uncaught exception.\r\n\r\nPossible remediation\r\n\r\nReset the ExternalService entry from ERROR to NEW and restart the consignment process from the processExternalServices action. This will re-attempt the GCIC service registration call.\r\n\r\nReusable PC ticket: PC-54773 (Closed, REUSABLE) from AEME-6596 -- script-AEME-6596-expert-care-remediation.groovy. This script performs exactly this remediation: it iterates over the order's ExternalService entries, resets any with ERROR status to NEW, finds the order process in ERROR/WAITING state, removes current tasks, and restarts the process from the processExternalServicesAction node.\r\n\r\nTo apply: copy script-AEME-6596-expert-care-remediation.groovy, update the order list to [\"AE261027-30566287\"], update the ITGC header to reference PC-54773(AEME-6686), and run via HAC under PC-54773 approval.\r\n\r\n## Remediation\r\n\r\n- Reusable PC ticket: PC-54773 (REUSABLE, Closed)\r\n- Script: script-AEME-6596-expert-care-remediation.groovy\r\n- Action: Reset ExternalService GCIC_EXPERT_CARE_STANDALONE from ERROR to NEW, restart process from processExternalServicesAction\r\n- No new PC ticket needed -- reuse PC-54773",
-        "sections": {
-          "issue": "",
-          "rca": "Ticket Summary: Stuck order on Hybris\r\nGenerated: 2026-10-28T13:50:00Z\r\n\r\nIssue\r\n\r\nOrder AE261027-30566287 is stuck at SHIPPED status. The consignment is physically COMPLETED and GERP-billed, but the consignment process (consignment-process-v11-36) is in ERROR state with endMessage \"All went wrong.\" The ExternalService entry for GCIC_EXPERT_CARE_STANDALONE is in ERROR status with no service ID, indicating the GCIC (Galaxy Care Integration Center) service registration call failed and never returned a service ID. The order process is still RUNNING, stuck at the isInitialFISuccess action which threw an exception at 2026-10-28 06:45:21.802. Payment was successful (CAPTURE ACCEPTED, 924 AED).\r\n\r\nRCA\r\n\r\nThe order AE261027-30566287 was placed on 2026-10-28 at 06:33:08 in the UAE store with product P-GT-LCXOS2PW (Galaxy Expert Care Carry-In service). Payment was captured successfully at 06:44:25. The consignment was processed and reached COMPLETED status at 07:01:58 with GERP billing number 3251099074 from warehouse WC21-S701.\r\n\r\nThe consignment process (consignment-process-v11-36) reached the processExternalServices action, which invokes the processExternalServicesOnConsignment bean. This bean calls the GCIC Expert Care external service to register the Galaxy Expert Care standalone service with the GCIC system. The GCIC API call failed -- no service ID was returned, and the ExternalService entry was set to ERROR status. The processExternalServices action returned NOK, which per the process definition at consignment-process-v11-36.xml line 543 transitions to the error end state (line 545) with message \"All went wrong.\"\r\n\r\nThis is the same pattern observed in AEME-6596 (resolved October 2026) where 6 UAE Expert Care orders were stuck at SHIPPED because the GCIC API call failed and ExternalService was set to ERROR. The root cause is a transient GCIC API failure -- either the GCIC service was temporarily unavailable, returned an error response, or the API token/credentials were invalid at the time of the call. The \"No response from GCIC, setting external service status to ERROR\" log pattern was confirmed in RT-753607 where TokoGalaxyExpertCareExternalServicesImpl handles the GCIC failure by setting the ExternalService to ERROR.\r\n\r\nNo BusinessProcessParameter error stack trace was stored, which is consistent with the process reaching a named error end state rather than throwing an uncaught exception.\r\n\r\nPossible remediation\r\n\r\nReset the ExternalService entry from ERROR to NEW and restart the consignment process from the processExternalServices action. This will re-attempt the GCIC service registration call.\r\n\r\nReusable PC ticket: PC-54773 (Closed, REUSABLE) from AEME-6596 -- script-AEME-6596-expert-care-remediation.groovy. This script performs exactly this remediation: it iterates over the order's ExternalService entries, resets any with ERROR status to NEW, finds the order process in ERROR/WAITING state, removes current tasks, and restarts the process from the processExternalServicesAction node.\r\n\r\nTo apply: copy script-AEME-6596-expert-care-remediation.groovy, update the order list to [\"AE261027-30566287\"], update the ITGC header to reference PC-54773(AEME-6686), and run via HAC under PC-54773 approval.\r\n\r\n## Remediation\r\n\r\n- Reusable PC ticket: PC-54773 (REUSABLE, Closed)\r\n- Script: script-AEME-6596-expert-care-remediation.groovy\r\n- Action: Reset ExternalService GCIC_EXPERT_CARE_STANDALONE from ERROR to NEW, restart process from processExternalServicesAction\r\n- No new PC ticket needed -- reuse PC-54773",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-28T14:10:12.235Z"
-      }
-    },
-    {
-      "key": "SAME-4025",
-      "summary": "[EPP] MENA Reports - Domain & Aggregator Based Sales Report",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Kingdom of Saudi Arabia Maintenance & Enhancements",
-      "projectKey": "SAME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-29T21:51:55.000+0900",
-      "created": "2026-10-16T15:51:44.000+0900",
-      "statusChangedAt": "2026-10-22T11:12:39.247+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nWe would like to receive the following reports to analyze the aggregator sales in MENA region and to increase aggregator percentage under overall EPP business.\n\nThe fields mentioned below are already available on the weekly EPP sales report we are receiving so we can use the same template ",
-      "commentsCount": 11,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-29T21:51:13.044+0900",
-          "snippet": "Hi Georj,\n\nPlease find the order IDs with their actual baseSite values attached: ^Missing Order IDs - with Sites.csv and ^Missing Order IDs - with Sites compact.xlsx.\n\nThanks,\nAryan."
-        },
-        {
-          "author": "Georgina Semblante",
-          "date": "2026-10-29T16:28:11.218+0900",
-          "snippet": "Hi ~@email \n\nMENA RHQ team received the report, however when they consolidated the data and compare it with global dashboard, there are some orders that are missing from the hybris report.\n\nAlso they have compared the hybris report with Grafana, the orders are present in Grafana but nor on hybris re"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Georj,\n\nPlease find the order IDs with their actual baseSite values attached: ^Missing Order IDs - with Sites.csv and ^Missing Order IDs - with Sites compact.xlsx.\n\nThanks,\nAryan.",
-      "lastCommentDate": "2026-10-29T21:51:13.044+0900",
-      "url": "https://jira.secext.samsung.net/browse/SAME-4025",
-      "linkedTickets": [
-        {
-          "key": "PC-55639",
-          "summary": "SAME-4025 | MENA Reports - Domain & Aggregator Based Sales Report",
-          "status": "Approved-ES",
-          "statusCategory": "To Do",
-          "relation": "is parent task of",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: SAME-4025\n[EPP] MENA Reports - Domain & Aggregator Based Sales Report\nGenerated: 2026-10-29T00:00:00Z\n\nIssue:\nThe MENA RHQ team requested a new Domain & Aggregator Based Sales Report for EPP sales across the MENA region. The report should include 16 non-PII columns (Country, Site, Sales_Application, Product_Code, Order_Code, Order_Status, Order_Creation_Date, Order_Entry_Total_Price, Total_RRP, Promotion_Name, Order_Entry_Quantity, Voucher_Code, Coupon_Code, Payment_Mode, Domain, Affiliate_Name) and be delivered in two parts: a one-time historical report (Jan 2026 to date) and a recurring weekly report (last 30 days, delivered every Monday 9am Dubai time). The one-time report was generated and sent by Chandan on Oct 22, but Georgina reported on Oct 29 that the MENA RHQ team found some orders missing when comparing the report data against the global dashboard. The weekly recurring report has not yet been enabled.\n\nRCA:\nThis is a reporting/feature request ticket, not a stuck order or platform bug. The existing MENA EPP weekly sales report is generated by the cronjob mena-report-nonpii-email-salesReportJob, which uses the TokoGroovyBasedReportJob type (a Hybris cronjob model in the sapreporting extension that executes a Groovy script to generate and email XLSX reports). The report template is based on the existing weekly EPP sales report (menaEppWeeklySalesReportNonPII) with modifications to add Domain and Affiliate_Name columns and remove unneeded fields.\n\nThe orders missing from the report are most likely caused by one or more of the following factors in the report query:\n\n1. Order Status Filter: The existing sales report cronjob's salesQuery likely filters to specific order statuses (e.g., COMPLETED, SHIPPED) and excludes others (CANCELLED, PENDING, CHECKED_INVALID). Orders in non-terminal or intermediate statuses would not appear in the report but would be counted in the global dashboard which may aggregate all orders regardless of status.\n\n2. Date Range Configuration: The TokoGroovyBasedReportJob uses a 'days' parameter to control the lookback window. For the one-time historical report, the days parameter was set to cover Jan 2026 to Oct 2026, but if the days calculation uses creationtime and the report was run before midnight on a particular day, orders placed late that day could be excluded. As noted in SAME-3635, the days parameter controls the date range and must be adjusted for custom date ranges.\n\n3. Store/BaseSite Coverage: The mena-report-nonpii-email-salesReportJob cronjob may not cover all MENA EPP stores. The related ticket SAME-3763 lists 9 separate per-country cronjobs (report-ae-tokoSalesReportJob-nonPII, report-tr-tokoSalesReportJob-nonPII, etc.) for the standard sales report. If the consolidated mena-report-nonpii cronjob does not include all MENA EPP base stores (ae, iq, jo, ma, pk, il, eg, tr, sa, bh, kw, qa, om, kz), orders from missing stores would not appear.\n\n4. The global dashboard may source data from GERP/SAP or NERP downstream systems, which would include orders that Hybris considers failed or cancelled but GERP processed. The Hybris report only includes orders that exist in the Hybris database with specific status conditions.\n\nThe weekly recurring report has not been enabled yet because Georgina's comment about missing orders was posted on Oct 29 and Chandan confirmed the one-time report on Oct 22. The team is waiting for confirmation before enabling the weekly trigger.\n\nPossible remediation:\n1. Identify the exact orders that are missing from the report by comparing the report output against the global dashboard. The MENA RHQ team needs to provide specific order codes that appear in the global dashboard but are missing from the Hybris report.\n\n2. Once the missing order codes are identified, query the Hybris database for those orders to check their status, creation date, and base store. This will determine which filter is excluding them.\n\n3. If the issue is an order status filter, update the report Groovy script's salesQuery to include all relevant order statuses (or remove the status filter entirely, depending on business requirements).\n\n4. If the issue is store coverage, update the cronjob's store configuration or the Groovy script's query to include all MENA EPP base stores.\n\n5. If the issue is date range, verify the days parameter covers the full requested period.\n\n6. After fixing the query, re-run the one-time report to include the missing orders, then enable the weekly recurring cronjob schedule.\n\n7. The new Domain and Affiliate_Name columns require data from the order's associated domain filter configuration and affiliate/aggregator tracking. If these fields are not already populated on orders in the Hybris database, they may need to be sourced from a different table or configured via ImpEx before the report can include meaningful data.\n\nNote: The SESAR counterpart (SAME-4026) has already had its one-time report confirmed and weekly cronjob enabled by Chandan on Oct 26. The EPP report (SAME-4025) is still pending the missing orders resolution before the weekly trigger can be enabled.",
-        "sections": {
-          "issue": "The MENA RHQ team requested a new Domain & Aggregator Based Sales Report for EPP sales across the MENA region. The report should include 16 non-PII columns (Country, Site, Sales_Application, Product_Code, Order_Code, Order_Status, Order_Creation_Date, Order_Entry_Total_Price, Total_RRP, Promotion_Name, Order_Entry_Quantity, Voucher_Code, Coupon_Code, Payment_Mode, Domain, Affiliate_Name) and be delivered in two parts: a one-time historical report (Jan 2026 to date) and a recurring weekly report (last 30 days, delivered every Monday 9am Dubai time). The one-time report was generated and sent by Chandan on Oct 22, but Georgina reported on Oct 29 that the MENA RHQ team found some orders missing when comparing the report data against the global dashboard. The weekly recurring report has not yet been enabled.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-29T11:03:09.274Z"
-      }
-    },
-    {
-      "key": "AEME-6660",
-      "summary": "Stuck Order || 23-Oct",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-29T21:46:17.000+0900",
-      "created": "2026-10-23T13:24:43.000+0900",
-      "statusChangedAt": "2026-10-23T13:26:40.379+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\n \n\nPlease fix the stuck order below\n|Store|Order|Creation Date|Order Status|\n|ae|AE261020-22121635|2026/10/22|SHIPPED|\n\n \n\nRegards\n\nShivam",
-      "commentsCount": 6,
-      "recentComments": [
-        {
-          "author": "Jaffar Ali",
-          "date": "2026-10-28T16:48:56.316+0900",
-          "snippet": "Hi ~@email \n\n \n\nCould you please confirm if any parameter are exceeded from its specified character length in the sent request?\n\nPlease check comments and customer details.\n\nPlease share the details if anything you found.\n\n \n\nRegards\n\nJaffar"
-        },
-        {
-          "author": "Shivam Nishad",
-          "date": "2026-10-27T16:58:50.359+0900",
-          "snippet": "Hii ~@email \n\nPlease check I have added Request and Response now :\n\nRequest :\n\n \n\nGoing to validate Cleaning Service External Service Order Creation Request [{\n  \"IsCommonHeader\" : {\n    \"Company\" : \"C710\",\n    \"Pac\" : \"AE261020-22121635-20261023051817715\",\n    \"Country\" : \"\",\n    \"Lang\" : \"EN\",\n   "
-        }
-      ],
-      "lastCommentBy": "Jaffar Ali",
-      "lastCommentSnippet": "Hi ~@email \n\n \n\nCould you please confirm if any parameter are exceeded from its specified character length in the sent request?\n\nPlease check comments and customer details.\n\nPlease share the details if anything you found.\n\n \n\nRegards\n\nJaffar",
-      "lastCommentDate": "2026-10-28T16:48:56.316+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6660",
-      "linkedTickets": [
-        {
-          "key": "AEME-6657",
-          "summary": "Stuck Order || 22-Oct",
-          "status": "Launch Verification",
-          "statusCategory": "Done",
-          "relation": "clones",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "Stuck Order || 23-Oct — AE261020-22121635\r\nGenerated: 2026-10-29T13:00:00Z\r\n\r\nIssue:\r\n\r\nOrder AE261020-22121635 (AE region, expert care carry-in cleaning service) is in SHIPPED status with the consignment COMPLETED, but the consignment business process (consignment-process-v11-36) is stuck in ERROR state with endMessage \"All went wrong.\" The GCIC_EXPERT_CARE_STANDALONE external service record is in ERROR status with no statusMessage stored. The order was placed on 22-Oct-2026 for product P-GT-LCXOS2BW (Galaxy Expert Care Carry-In) worth 2627 AED via Checkout.com Flow payment. Payment capture was accepted and the consignment completed at 13:31 on 22-Oct. GERP billing number 3250481980 was issued the same day. The GCIC external service activation failed during the processExternalServicesAction step of the consignment process, leaving the external service registration incomplete despite the order being fully shipped and delivered.\r\n\r\nRCA:\r\n\r\nThe root cause is a GCIC API rejection during the expert care standalone service order creation request. The consignment process reached the processExternalServicesAction node, which invoked the TokoGcicActivationService to create the cleaning service order with GCIC. The GCIC API returned an error response, causing the external service to be marked as ERROR and the consignment process to fail with the generic endMessage \"All went wrong.\" (this is the standard error message set by the GCIC activation service when the API call fails).\r\n\r\nBased on the Jira ticket comments, the GCIC team (Jaffar) has been investigating whether a parameter in the cleaning service order creation request exceeded its specified character length limit. The request and response payloads were shared by the reporter (Shivam) on 27-Oct. The GCIC team asked to confirm if any customer detail fields (name, address, phone) exceeded the GCIC API field length constraints. This indicates the likely root cause is data-level: one or more customer or order parameters sent to GCIC exceeded the API's character length validation, causing the request to be rejected.\r\n\r\nThis is the same error pattern seen in AEME-6596 (Expert Care Orders Stuck, 29-Sep) and AEME-6272 (Orders stuck at processExternalServices [GCIC_EXPERT_CLEANING_STANDALONE]), both of which involved GCIC_EXPERT_CARE_STANDALONE external service failures on expert care carry-in orders. The consignment process error pattern is consistent: ES goes to ERROR, process fails at processExternalServicesAction, endMessage is \"All went wrong.\"\r\n\r\nVERIFIED from DB (flexi-order-full.cjs):\r\n- Order: SHIPPED, 2627 AED, ae-CheckoutDotComFlowPaymentMode, created 2026-10-22 12:59:27\r\n- Consignment: COMPLETED, delivery mode ae-galaxy-expertCare-CarryIn, warehouse WC21-S701, GERP billing 3250481980 dated 2026-10-22\r\n- Consignment process: consignment-process-v11-36, state ERROR, endMessage \"All went wrong.\"\r\n- External Service: GCIC_EXPERT_CARE_STANDALONE, status ERROR, statusMessage blank, serviceProduct 11529737437185\r\n- Order process: order-process-v25-69, state RUNNING (order-level process is fine, only consignment-level is stuck)\r\n- Payment: CAPTURE accepted 2627 AED at 2026-10-22 13:11:39\r\n\r\nVERIFIED from Jira comments:\r\n- GCIC team requested request/response payloads for validation (Jaffar, 27-Oct)\r\n- Reporter provided the cleaning service order creation request and response (Shivam, 27-Oct)\r\n- GCIC team asked to confirm if any parameter exceeded its specified character length (Jaffar, 28-Oct)\r\n\r\nLIMITATION: Kibana logs were not retrieved (sub-agent connection failed). BusinessProcessParameter stack trace query failed (incorrect field names). The exact GCIC API error code/response is not available from the DB (statusMessage is blank on the ES record). The GCIC API response details would be in the providerResponseParameters blob on the ExternalService or in Kibana logs, neither of which could be retrieved. The root cause identification relies on DB state + Jira comment evidence.\r\n\r\nPossible remediation:\r\n\r\n1. Confirm with the GCIC team whether the request data needs correction. If a customer parameter (name, address, phone) exceeded the GCIC API character length limit, the data in the external service providerParameters may need to be corrected before re-triggering. Simply resetting and re-triggering with the same data will result in the same rejection.\r\n\r\n2. Once the GCIC team confirms the data is acceptable (or data is corrected): Reset the ExternalService status from ERROR to NEW and restart the consignment business process from the processExternalServicesAction node. This is the exact remediation pattern from reusable PC ticket PC-54773 (script-AEME-6596-expert-care-remediation.groovy, parent AEME-6596, Closed, REUSABLE label).\r\n\r\n3. The GERP billing number (3250481980) is already populated on the consignment, so the GCIC activation service's activateOnBillingIssued gate will pass. The restart should invoke TokoGcicActivationService.processService() which will re-send the cleaning service order creation request to GCIC.\r\n\r\n4. Alternative: If the consignment process cannot be restarted (e.g., process state is irrecoverable), use PC-55204 pattern (script-AEME-6596-gcic-activation-remediation.groovy) which directly invokes extendedWarrantyActivationService.processService(consignment, externalService) via Spring bean without restarting the process.\r\n\r\n5. Same remediation approach confirmed in AEME-6596, AEME-6272, and AEME-4586 for GCIC expert care external service failures.",
-        "sections": {
-          "issue": "Order AE261020-22121635 (AE region, expert care carry-in cleaning service) is in SHIPPED status with the consignment COMPLETED, but the consignment business process (consignment-process-v11-36) is stuck in ERROR state with endMessage \"All went wrong.\" The GCIC_EXPERT_CARE_STANDALONE external service record is in ERROR status with no statusMessage stored. The order was placed on 22-Oct-2026 for product P-GT-LCXOS2BW (Galaxy Expert Care Carry-In) worth 2627 AED via Checkout.com Flow payment. Payment capture was accepted and the consignment completed at 13:31 on 22-Oct. GERP billing number 3250481980 was issued the same day. The GCIC external service activation failed during the processExternalServicesAction step of the consignment process, leaving the external service registration incomplete despite the order being fully shipped and delivered.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-29T12:59:53.232Z"
-      }
-    },
-    {
-      "key": "AEME-6527",
-      "summary": "Stuck Order || 31-Aug",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "UAE Maintenance & Enhancements",
-      "projectKey": "AEME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-29T19:28:59.000+0900",
-      "created": "2026-08-31T16:46:21.000+0900",
-      "statusChangedAt": "2026-10-28T20:53:39.762+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\n \n\nPlease find the SC+ activation error order and fix the issue.\n\n \n|Order ID|Order Status|Order Creation Date|Sale Type|Activation Status|\n|AE260823-66529054|COMPLETED|23-08-26|Bundle|UPDATE_ERROR|\n\n \n|AE260826-69146168|WAITING_FOR_EXTERNAL_FRAUD_RESULT|28/08/2026|\n|KW260830-72315746|WAIT",
-      "commentsCount": 62,
-      "recentComments": [
-        {
-          "author": "Jaffar Ali",
-          "date": "2026-10-29T19:28:51.110+0900",
-          "snippet": "Hi ~@email \n\nAE260723-36597333- Please skip the processExternalServices and move the order to completed.\n\n \n\nRegards\n\nJaffar"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-29T01:23:39.293+0900",
-          "snippet": "Hi ~@email ,\n\nAs the externalService in AE260723-36597333is UPDATED. \n\nKindly confirm if we may skip the processExternalServices\n\nRegards\n\nAryan"
-        }
-      ],
-      "lastCommentBy": "Jaffar Ali",
-      "lastCommentSnippet": "Hi ~@email \n\nAE260723-36597333- Please skip the processExternalServices and move the order to completed.\n\n \n\nRegards\n\nJaffar",
-      "lastCommentDate": "2026-10-29T19:28:51.110+0900",
-      "url": "https://jira.secext.samsung.net/browse/AEME-6527",
-      "linkedTickets": [
-        {
-          "key": "PC-54713",
-          "summary": "Script to fix delivery address country + retrigger SC+ and push NL trade-in consignments to COMPLETED",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "blocks",
-          "assignee": null
-        },
-        {
-          "key": "PC-54929",
-          "summary": "Script to reset NorthLadder ExternalService and retrigger deal creation",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "blocks",
-          "assignee": null
-        },
-        {
-          "key": "PC-55360",
-          "summary": "NL deal creation for AE260723-36597333 (skip KnoxGuard)",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "blocks",
-          "assignee": null
-        },
-        {
-          "key": "PC-55464",
-          "summary": "Script to send FULFILLED status to NorthLadder and update ExternalService to UPDATED",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "blocks",
-          "assignee": null
-        },
-        {
-          "key": "PC-53355",
-          "summary": "AEME-6527 : To retrigger the Order Process",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "is blocked by",
-          "assignee": null
-        },
-        {
-          "key": "PC-53570",
-          "summary": "AEME-6527 | Change trade-in status to REGISTERED",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "relates to",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "Agent encountered an error while processing your request. Please try again or rephrase. Exit code: 1",
-        "sections": {
-          "issue": "",
-          "rca": "Agent encountered an error while processing your request. Please try again or rephrase. Exit code: 1",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-09-14T12:18:37.301Z"
-      }
-    },
-    {
       "key": "PC-56066",
       "summary": "Script to trigger tokoPurchaseDateRecurrenceJob cronjobs and clear UNKNOWN status",
       "status": "To do",
@@ -346,7 +240,7 @@
         {
           "key": "GMT-22312",
           "summary": "SMI - \"tokoPurchaseDateRecurrenceJob\" Cronjobs - Status \"Unknown\" Result \"Unknown\"",
-          "status": "SRE Review",
+          "status": "On-Hold",
           "statusCategory": "Done",
           "relation": "is blocked by",
           "assignee": null
@@ -577,9 +471,23 @@
     "online": true,
     "activeSessions": [],
     "stats": {
-      "totalProcessed": 273
+      "totalProcessed": 275
     },
     "recentActivity": [
+      {
+        "issueNum": 958,
+        "title": "Investigate ticket NPSM-91137",
+        "received": "2026-10-30T02:06:16.457Z",
+        "responded": "",
+        "responseSnippet": ""
+      },
+      {
+        "issueNum": 959,
+        "title": "Investigate ticket NPSM-91163",
+        "received": "2026-10-30T02:06:15.061Z",
+        "responded": "",
+        "responseSnippet": ""
+      },
       {
         "issueNum": 944,
         "title": "Investigate ticket EHME-950",
@@ -705,84 +613,37 @@
         "received": "2026-10-26T02:56:51.020Z",
         "responded": "",
         "responseSnippet": ""
-      },
-      {
-        "issueNum": 846,
-        "title": "Investigate ticket TKME-2379",
-        "received": "2026-10-22T13:29:59.004Z",
-        "responded": "2026-10-22T14:01:21.111Z",
-        "responseSnippet": "Starting the investigation. Let me execute Phase 0 pre-flight checks: reading past learnings, checking for existing RCA/cache files, and the Aryantone style guide.Lock file already exists. Let me read it, find the Aryantone style guide, and check what scripts are available for fetching the ticket.Found the scripts in `C:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin\\`. Now let me fetch the Jira ticket and find the Aryantone style guide. The lock file was just created by the auto-trigger, so I'll pr"
-      },
-      {
-        "issueNum": 832,
-        "title": "Investigate ticket SAHME-3493",
-        "received": "2026-10-21T16:50:25.984Z",
-        "responded": "2026-10-21T17:12:05.745Z",
-        "responseSnippet": "Now I'll start Phase 0 — reading past learnings, checking for existing RCA/cache files, and reading Aryantone style guide in parallel.Good — I have the learnings. A lock file already exists (likely from the auto-trigger). No existing RCA or cache. Let me read the lock file, check for available scripts in the bin directory, and find the Aryantone style guide.Let me find the Aryantone style guide and the hac-direct.cjs / order-error-check.cjs scripts:Now I have the Aryantone style guide. Let me ch"
       }
     ],
-    "pid": 38388,
-    "uptime": 205025,
+    "pid": 19128,
+    "uptime": 100,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
-    "startTime": "2026-10-27T17:08:18.408Z",
+    "startTime": "2026-10-30T08:54:43.253Z",
     "version": "v3",
     "lastResponseAt": "2026-10-29T13:52:04.247Z",
     "lastResponseIssue": 944,
-    "ideSessions": [
-      {
-        "pid": 16500,
-        "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 245112,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
-        "lastExchange": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 mins after the other tabs and it will be working then",
-        "sessionId": "aryan-v1"
-      },
-      {
-        "pid": 21420,
-        "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 244734,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "add both update and revert script in same script for s1",
-        "lastExchange": "add both update and revert script in same script for s1",
-        "sessionId": "bin"
-      },
-      {
-        "pid": 12208,
-        "cwd": "c:\\windows",
-        "ageSeconds": 244734,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "windows",
-        "lastExchange": null,
-        "sessionId": "windows"
-      },
-      {
-        "pid": 34736,
-        "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 131817,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
-        "lastExchange": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 mins after the other tabs and it will be working then",
-        "sessionId": "aryan-v1-1"
-      },
-      {
-        "pid": 37896,
-        "cwd": "unknown",
-        "ageSeconds": 61921,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "aipro session",
-        "lastExchange": null,
-        "sessionId": null
-      }
-    ],
+    "ideSessions": [],
     "activityLog": [
+      {
+        "id": "1793325977294-zw1683",
+        "timestamp": "2026-10-30T02:06:17.295Z",
+        "type": "command",
+        "source": "aryanverma2410",
+        "title": "Investigate ticket NPSM-91137",
+        "detail": "#958",
+        "status": "pending"
+      },
+      {
+        "id": "1793325976235-qmdx9d",
+        "timestamp": "2026-10-30T02:06:16.235Z",
+        "type": "command",
+        "source": "aryanverma2410",
+        "title": "Investigate ticket NPSM-91163",
+        "detail": "#959",
+        "status": "pending"
+      },
       {
         "id": "1793281924251-i4bscl",
         "timestamp": "2026-10-29T13:52:04.251Z",
@@ -1033,24 +894,6 @@
         "source": "aryanverma2410",
         "title": "Investigate ticket TKME-2383",
         "detail": "#866",
-        "status": "pending"
-      },
-      {
-        "id": "1792677681130-nlpsuy",
-        "timestamp": "2026-10-22T14:01:21.130Z",
-        "type": "agent-response",
-        "source": "bridge",
-        "title": "Investigate ticket TKME-2379",
-        "detail": "Starting the investigation. Let me execute Phase 0 pre-flight checks: reading past learnings, checking for existing RCA/cache files, and the Aryantone style guide.Lock file already exists. Let me read",
-        "status": "success"
-      },
-      {
-        "id": "1792675799798-agz1v3",
-        "timestamp": "2026-10-22T13:29:59.798Z",
-        "type": "command",
-        "source": "aryanverma2410",
-        "title": "Investigate ticket TKME-2379",
-        "detail": "#846",
         "status": "pending"
       }
     ],
@@ -4993,22 +4836,48 @@
         ],
         "endTime": "2026-10-29T13:52:04.258Z",
         "lastOutput": "Starting investigation for EHME-950. Let me run pre-flight checks in parallel.Lock file exists for EHME-950. Let me check if it's stale and proceed with the investigation.Good - no prior cache file, no prior RCA MD. The lock is from a recent attempt (~today). Let me remove it and create fresh, then fetch the ticket and check MCP availability.Ticket fetched. This is an Egypt (EG) region Paymob bank installment payment mode issue - integration ID needs updating from 5083915 to 5392297. Let me crea"
+      },
+      "958": {
+        "sessionId": "26f7953b-b000-43a7-8293-52077e077037",
+        "issueNum": 958,
+        "title": "Investigate ticket NPSM-91137",
+        "startTime": "2026-10-30T02:06:17.481Z",
+        "status": "thinking",
+        "commandHistory": [
+          {
+            "title": "Investigate ticket NPSM-91137",
+            "time": "2026-10-30T02:06:17.481Z"
+          }
+        ]
+      },
+      "959": {
+        "sessionId": "0611531f-a1b5-4c5f-8891-469c8e4cb1d9",
+        "issueNum": 959,
+        "title": "Investigate ticket NPSM-91163",
+        "startTime": "2026-10-30T02:06:16.451Z",
+        "status": "thinking",
+        "commandHistory": [
+          {
+            "title": "Investigate ticket NPSM-91163",
+            "time": "2026-10-30T02:06:16.451Z"
+          }
+        ]
       }
     },
-    "bridgeLogTail": "[2026-10-29T13:51:57.584Z] STDOUT data for #944: 118 bytes\n[2026-10-29T13:51:57.588Z] LIVE events write for #944: 298 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt\n[2026-10-29T13:51:57.592Z] STDOUT data for #944: 126 bytes\n[2026-10-29T13:51:57.595Z] LIVE events write for #944: 299 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt\n[2026-10-29T13:51:57.602Z] STDOUT data for #944: 114 bytes\n[2026-10-29T13:51:57.606Z] LIVE events write for #944: 300 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt\n[2026-10-29T13:51:57.612Z] STDOUT data for #944: 117 bytes\n[2026-10-29T13:51:57.615Z] LIVE events write for #944: 301 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt\n[2026-10-29T13:51:57.623Z] STDOUT data for #944: 114 bytes\n[2026-10-29T13:51:57.627Z] LIVE events write for #944: 302 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt\n[2026-10-29T13:51:57.635Z] STDOUT data for #944: 122 bytes\n[2026-10-29T13:51:57.638Z] LIVE events write for #944: 303 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt\n[2026-10-29T13:51:57.641Z] STDOUT data for #944: 109 bytes\n[2026-10-29T13:51:57.644Z] LIVE events write for #944: 304 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt\n[2026-10-29T13:51:57.652Z] STDOUT data for #944: 106 bytes\n[2026-10-29T13:51:57.666Z] LIVE events write for #944: 305 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt\n[2026-10-29T13:51:57.719Z] STDOUT data for #944: 347 bytes\n[2026-10-29T13:51:57.722Z] LIVE events write for #944: 306 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_944.txt\n[2026-10-29T13:52:03.173Z] aipro completed for #944 (2678 chars)\n[2026-10-29T13:52:04.206Z] Comment posted on #944",
+    "bridgeLogTail": "[2026-10-30T02:11:28.494Z] STDOUT data for #958: 108 bytes\n[2026-10-30T02:11:28.496Z] LIVE events write for #958: 127 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_958.txt\n[2026-10-30T02:11:28.543Z] STDOUT data for #958: 113 bytes\n[2026-10-30T02:11:28.546Z] LIVE events write for #958: 128 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_958.txt\n[2026-10-30T02:11:28.548Z] STDOUT data for #958: 104 bytes\n[2026-10-30T02:11:28.550Z] LIVE events write for #958: 129 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_958.txt\n[2026-10-30T02:11:29.854Z] STDOUT data for #958: 671 bytes\n[2026-10-30T02:11:29.856Z] LIVE events write for #958: 130 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_958.txt\n[2026-10-30T02:11:29.857Z] STDOUT data for #958: 311 bytes\n[2026-10-30T02:11:29.859Z] LIVE events write for #958: 131 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_958.txt\n\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000[2026-10-30T08:54:40.900Z] ==========================================\n[2026-10-30T08:54:42.875Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-30T08:54:42.911Z] === with Aipro Auto-Launch ===\n[2026-10-30T08:54:42.945Z] ==========================================\n[2026-10-30T08:54:42.978Z] PID: 19128\n[2026-10-30T08:54:43.059Z] Repo: aryanverma2410/agent-bridge\n[2026-10-30T08:54:43.123Z] Poll interval: 10000ms\n[2026-10-30T08:54:43.159Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-30T08:54:43.177Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-30T08:54:43.217Z] Waiting for messages...",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-30T03:30:41.934Z",
-      "ageMs": 9823
+      "lastWrite": "2026-10-30T03:26:32.188Z",
+      "ageMs": 791
     },
-    "watchdogLogTail": "[2026-10-30T03:28:40.451Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T03:28:55.465Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T03:29:10.471Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T03:29:25.483Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T03:29:40.489Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T03:29:55.491Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T03:30:10.495Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T03:30:25.524Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T03:30:41.930Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T03:30:56.939Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-10-30T03:26:27.088Z] Stale threshold: 30000ms\n[2026-10-30T03:26:27.089Z] Max restarts: 50/hour\n[2026-10-30T03:26:27.090Z] Bridge script: C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\bridge.js\n[2026-10-30T03:26:27.090Z] Dashboard script: C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\jira-dashboard-server.js\n[2026-10-30T03:26:27.097Z] Bridge already running (PID 19128). Adopting.\n[2026-10-30T03:26:27.099Z] Dashboard already running (PID 5524). Adopting.\n[2026-10-30T03:26:29.591Z] DUPLICATE watchdog detected: PID 14568 — killing\n[2026-10-30T03:26:31.631Z] Clock sync: Checking drift against Jira server...\n[2026-10-30T03:26:32.185Z] Clock sync: VDI hw=2026-10-30T08:56:32.185Z Jira=2026-10-30T08:56:35.000Z drift=3s\n[2026-10-30T03:26:32.187Z] Clock sync: Within 5s threshold, no adjustment needed."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-30T03:29:49.083Z",
+      "lastCheck": "2026-10-30T03:25:22.486Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5017,19 +4886,19 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-30T03:29:49.083Z",
-      "downSince": "2026-10-29T17:44:23.705Z",
-      "downDuration": 35125378,
-      "alert": true
+      "lastCheck": "2026-10-30T03:25:22.486Z",
+      "downSince": "2026-10-30T08:54:37.407Z",
+      "downDuration": -19754921,
+      "alert": false
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-30T03:29:49.083Z",
-      "downSince": "2026-10-29T23:38:01.770Z",
-      "downDuration": 13907313,
-      "alert": true
+      "lastCheck": "2026-10-30T03:25:22.486Z",
+      "downSince": "2026-10-30T03:25:22.486Z",
+      "downDuration": 0,
+      "alert": false
     }
   ],
   "hacReport": {
@@ -5170,6 +5039,30 @@
         "statusChangedAt": ""
       },
       {
+        "key": "SAME-4025",
+        "summary": "[EPP] MENA Reports - Domain & Aggregator Based Sales Report",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/SAME-4025",
+        "updated": "2026-10-30T13:32:25.000+0900",
+        "statusChangedAt": "2026-10-22T11:12:39.247+0900"
+      },
+      {
+        "key": "NPSM-91057",
+        "summary": "[110049599][AE] [Online Purchasing]Medallia Alert ",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/NPSM-91057",
+        "updated": "2026-10-30T12:49:15.000+0900",
+        "statusChangedAt": "2026-10-28T00:24:41.443+0900"
+      },
+      {
         "key": "NPSM-91163",
         "summary": "[110165491][TR] [Flagship][Online Purchasing]Medallia Alert ",
         "priority": "None",
@@ -5192,45 +5085,9 @@
         "url": "https://jira.secext.samsung.net/browse/NPSM-91137",
         "updated": "2026-10-30T12:26:24.000+0900",
         "statusChangedAt": "2026-10-30T00:43:33.736+0900"
-      },
-      {
-        "key": "SAME-4025",
-        "summary": "[EPP] MENA Reports - Domain & Aggregator Based Sales Report",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/SAME-4025",
-        "updated": "2026-10-29T21:51:55.000+0900",
-        "statusChangedAt": "2026-10-22T11:12:39.247+0900"
-      },
-      {
-        "key": "AEME-6527",
-        "summary": "Stuck Order || 31-Aug",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/AEME-6527",
-        "updated": "2026-10-29T19:28:59.000+0900",
-        "statusChangedAt": "2026-10-28T20:53:39.762+0900"
       }
     ],
     "actionable": [
-      {
-        "key": "AEME-6660",
-        "summary": "Stuck Order || 23-Oct",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "actionable",
-        "reason": "",
-        "whatToDo": "Respond to Jaffar Ali",
-        "url": "https://jira.secext.samsung.net/browse/AEME-6660",
-        "updated": "2026-10-29T21:46:17.000+0900",
-        "statusChangedAt": "2026-10-23T13:26:40.379+0900"
-      },
       {
         "key": "TKME-2382",
         "summary": "Stuck order on Hybris",
@@ -5258,18 +5115,6 @@
     ],
     "blocked": [
       {
-        "key": "AEME-6686",
-        "summary": "Stuck order on Hybris",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "blocked",
-        "reason": "Waiting for PC-52678 approval (not assigned to you)",
-        "whatToDo": "",
-        "url": "https://jira.secext.samsung.net/browse/AEME-6686",
-        "updated": "2026-10-29T23:04:21.000+0900",
-        "statusChangedAt": "2026-10-29T00:11:07.453+0900"
-      },
-      {
         "key": "PC-55757",
         "summary": "Deploy Updated SC+ Report Cronjob Script to PROD (AEME-6535)",
         "priority": "Low",
@@ -5280,6 +5125,18 @@
         "url": "https://jira.secext.samsung.net/browse/PC-55757",
         "updated": "2026-10-21T22:11:11.000+0900",
         "statusChangedAt": ""
+      },
+      {
+        "key": "TKME-2417",
+        "summary": "Stuck order on Hybris",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "blocked",
+        "reason": "Waiting for PC-52678 approval (not assigned to you)",
+        "whatToDo": "",
+        "url": "https://jira.secext.samsung.net/browse/TKME-2417",
+        "updated": "2026-10-30T15:44:16.000+0900",
+        "statusChangedAt": "2026-10-29T00:11:07.525+0900"
       }
     ],
     "queued": [
@@ -5302,7 +5159,7 @@
     ],
     "totals": {
       "zero": 5,
-      "actionable": 3,
+      "actionable": 2,
       "blocked": 2,
       "queued": 2
     }
@@ -5355,9 +5212,68 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "TKME-2417",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86396,
+        "targetDate": "2026-10-29T13:35:06.859000001Z"
+      },
+      {
+        "key": "TKME-2417",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 2586386,
+        "targetDate": "2026-12-09T13:35:43.602000030Z"
+      },
+      {
+        "key": "SAME-4025",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86125,
+        "targetDate": "2026-10-19T06:51:46.624000001Z"
+      },
+      {
+        "key": "SAME-4025",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 243058,
+        "targetDate": "2026-11-04T04:27:16.782000013Z"
+      },
+      {
+        "key": "TKME-2382",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86399,
+        "targetDate": "2026-10-19T11:35:42.030000001Z"
+      },
+      {
+        "key": "TKME-2382",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1977310,
+        "targetDate": "2026-12-02T06:11:28.355000033Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86179,
+        "targetDate": "2026-09-30T08:16:57.595000001Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1269633,
+        "targetDate": "2026-10-20T08:16:57.595000015Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 0.42h on EHME-950, 1.5h on AEME-6686, 0.75h on SAHME-3509, 0.75h on TKME-2417, 0.75h on TKME-2383, 0.42h on SAHME-3508, 1h on PC-56066, 1.08h on SAHME-3512, 1.5h on SAM-18531, 2h on SAME-4025, 1h on RT-664743, 0.75h on TKME-2408, 1h on PC-56078\nToday: NPSM-91163, NPSM-91137, AEME-6686, SAME-4025, AEME-6660\nBlockers: AEME-6527, PC-56066, PC-55757"
+    "standupText": "Yesterday: 0.42h on EHME-950, 1.5h on AEME-6686, 0.75h on SAHME-3509, 0.75h on TKME-2417, 0.75h on TKME-2383, 0.42h on SAHME-3508, 1h on PC-56066, 1.08h on SAHME-3512, 1.5h on SAM-18531, 2h on SAME-4025, 1h on RT-664743, 0.75h on TKME-2408, 1h on PC-56078\nToday: TKME-2417, SAME-4025, NPSM-91057, NPSM-91163, NPSM-91137\nBlockers: PC-56066, PC-55757"
   }
 }
