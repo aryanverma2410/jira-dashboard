@@ -1,7 +1,60 @@
 {
-  "generatedAt": "2026-10-30T16:37:45.596Z",
+  "generatedAt": "2026-10-30T16:39:10.147Z",
   "totalTickets": 10,
   "tickets": [
+    {
+      "key": "EHME-950",
+      "summary": "Bank Installment Payment Mode isn't working",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Egypt Maintenance & Enhancements",
+      "projectKey": "EHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-10-31T01:38:34.000+0900",
+      "created": "2026-10-20T22:24:48.000+0900",
+      "statusChangedAt": "2026-10-30T22:24:07.967+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nCan you please support Bank Installment payment mode isn't working while pacing order it shows Error Processing Payment.\nPlease check\n!image-2026-10-20-14-50-31-369.png|width=502,height=245!\n\nThanks\nAshwani Verma\n\nCC: ~@email",
+      "commentsCount": 9,
+      "recentComments": [
+        {
+          "author": "Suresh Ganesula",
+          "date": "2026-10-31T01:38:34.943+0900",
+          "snippet": "Hi ~@email As shared in below comment we have updated integration value from 5083915 to 5392297.\nPreviously this was not saved properly\n\n[Jira Link] \n\nPlease find same in below screenshot.\n\n!image-2026-10-30-22-07-24-034.png|width=453,height=257!\n\nKindly please check and let us know if you are facin"
+        },
+        {
+          "author": "Ashwani Verma",
+          "date": "2026-10-30T23:50:08.116+0900",
+          "snippet": "Hi ~@email \n\nplease check these test orders \n\nEG260812-57882518_10\nEG260812-57882518_9\n\nEG261030-35080017_1\nrequests and responses for the order, why the issue is happening for the payment mode.\nplease refer this ticket: [Jira Link]\n\nThanks\n\n~@email"
+        }
+      ],
+      "lastCommentBy": "Suresh Ganesula",
+      "lastCommentSnippet": "Hi ~@email As shared in below comment we have updated integration value from 5083915 to 5392297.\nPreviously this was not saved properly\n\n[Jira Link] \n\nPlease find same in below screenshot.\n\n!image-2026-10-30-22-07-24-034.png|width=453,height=257!\n\nKindly please check and let us know if you are facin",
+      "lastCommentDate": "2026-10-31T01:38:34.943+0900",
+      "url": "https://jira.secext.samsung.net/browse/EHME-950",
+      "linkedTickets": [
+        {
+          "key": "PC-56078",
+          "summary": "Update Paymob bank installments integration ID (eg-paymob-bankinstallments)",
+          "status": "Reviewed",
+          "statusCategory": "In Progress",
+          "relation": "blocks",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "found",
+        "excerpt": "**Summary:** Bank Installment Payment Mode isn't working\r\n**Generated:** 2026-10-29T13:45:00Z\r\n\r\nIssue:\r\n\r\nThe Paymob Bank Installment payment mode (code: eg-paymob-bankinstallments) for the Egypt (EG) store is failing with \"Error Processing Payment\" when customers attempt to place orders. Multiple recent orders using this payment mode are stuck at TEMPORARY status (e.g., EG261029-33912536_1, EG261029-33922410_1, EG261029-33876437_1, EG261029-33932009_2), confirming the issue is ongoing and affects all customers selecting this payment method. The payment mode itself is active in the database (active=1, verified via HAC FlexibleSearch against PaymentMode table).\r\n\r\nRCA:\r\n\r\nThe root cause is an outdated Paymob integration ID stored in the `paymentProviderParameters` map of the `eg-paymob-bankinstallments` PaymentMode. The current integration ID `5083915` is no longer valid on the Paymob side and must be updated to `5392297`.\r\n\r\nVERIFIED via code trace: The integration ID flows from the PaymentMode's `paymentProviderParameters` map through three populator classes to the Paymob API:\r\n\r\n1. `TokoPaymobIntentionRequestDataPopulator.populate()` (line 38) reads `paymentProviderParameters.get(\"integrations\")` from `orderModel.getPaymentMode().getPaymentProviderParameters()`, splits it by comma, parses each value as an integer, and sets it as `paymentMethods` on the Paymob IntentionRequest. This value is sent to Paymob's Intention API to specify which payment integration channels are available for the order.\r\n\r\n2. `TokoPaymobPaymentTokenRequestDataPopulator.populate()` (line 35) reads the same `paymentProviderParameters.get(\"integrations\")` and sets it as `integrationID` on the PaymentTokenRequest sent to Paymob's payment token endpoint.\r\n\r\n3. `TokoPaymobRegisterOrderRequestDataPopulator.populate()` (line 46) reads `paymentProviderParameters.get(\"integrations\")` and sets it as the `integrations` list on the RegisterOrderRequest sent to Paymob's order registration API.\r\n\r\nThe constant `INTEGRATIONS` is defined in `TokopaymobpaymentservicestemplateConstants.java` (line 18) as `\"integrations\"`, which is the key used to look up the integration ID from the payment mode's parameter map.\r\n\r\nVERIFIED via DB query: The payment mode `eg-paymob-bankinstallments` exists in the database with PK 8798911103017, name \"Bank Installments\", and active=1. The `paymentProviderParameters` is stored as a serialized byte array (Map type), which was originally configured via ImpEx in the file `custom/toko/tokoinitialdata/resources/tokoinitialdata/import/coredata/stores/eg/paymob-bankinstallments.impex` and also in the release ImpEx at `custom/toko/tokodeployment/resources/tokodeployment/import/release/ENH-82-RC-1/eg/EHME-653.impex`. Both ImpEx files define the `paymentProviderParameters` map with the key `integrations` mapped to the Paymob integration ID value (the actual numeric value is redacted in the committed ImpEx with `?` placeholder and injected at deployment time).\r\n\r\nVERIFIED via Jira cross-reference: The original bank installments feature was implemented under ticket EHME-653 (SEEG - Paymob - Bank Installments, now Closed). Related Paymob payment mode issues were resolved in EHME-712 (Aman Payment Mode is Not Working, Closed) and EHME-848 (Users are unable to do the payment with Paymob e wallet, Closed), establishing a precedent that Paymob payment mode failures are resolved by updating payment provider parameters via ImpEx or Groovy script through a PC ticket.\r\n\r\nWhen Paymob receives the outdated integration ID `5083915`, it rejects the payment intention/token request because that integration channel has been deactivated or replaced on their side. This causes the \"Error Processing Payment\" message displayed to the customer in the storefront, and the order remains in TEMPORARY status because the payment was never authorized.\r\n\r\nSPECULATION (cannot verify from Kibana — Kibana MCP was not available during this investigation): The exact Paymob API error response containing the rejection reason for integration ID 5083915 was not retrieved from Kibana logs. However, the ticket reporter Ashwani Verma confirmed the fix direction in the ticket comments: update the integration ID from 5083915 to 5392297. The new ID 5392297 is presumably the replacement integration channel provisioned by Paymob for the Egypt bank installments payment method.\r\n\r\nPossible remediation:\r\n\r\nUpdate the `integrations` value in the `paymentProviderParameters` map of the `eg-paymob-bankinstallments` PaymentMode from `5083915` to `5392297`. This can be done via either:\r\n\r\nOption A — ImpEx (recommended for PC ticket):\r\n```\r\nINSERT_UPDATE PaymentMode; code[unique = true]; paymentProviderParameters[map-delimiter = ?][key2value-delimiter = ->][mode = append]\r\n; eg-paymob-bankinstallments; \"integrations->5392297\"\r\n```\r\nThis ImpEx updates only the `integrations` key in the paymentProviderParameters map, leaving all other parameters (intentionURL, unifiedCheckoutURL, publicKey, secretKey, multiplyAmountValue, etc.) unchanged. The `mode = append` ensures the existing map entries are preserved and only the `integrations` key is overwritten with the new value.\r\n\r\nOption B — Groovy script via HAC:\r\nA Groovy script that fetches the PaymentMode by code, accesses the paymentProviderParameters map, and updates the `integrations` entry to `5392297`, then saves the model. This is the approach used in prior Paymob payment mode remediation tickets.\r\n\r\nAfter the update, a test order should be placed using the bank installments payment mode to confirm the payment intention is successfully created on the Paymob side and the order progresses beyond TEMPORARY status.\r\n\r\n## Remediation\r\n- Remediation type: Payment provider parameter update (integration ID change)\r\n- Approach: ImpEx update to PaymentMode paymentProviderParameters\r\n- No reusable PC ticket found in pc-script-library.json for this specific remediation type\r\n- A new PC ticket should be created for this change as requested by Pallavi Mishra in the ticket comments",
+        "sections": {
+          "issue": "The Paymob Bank Installment payment mode (code: eg-paymob-bankinstallments) for the Egypt (EG) store is failing with \"Error Processing Payment\" when customers attempt to place orders. Multiple recent orders using this payment mode are stuck at TEMPORARY status (e.g., EG261029-33912536_1, EG261029-33922410_1, EG261029-33876437_1, EG261029-33932009_2), confirming the issue is ongoing and affects all customers selecting this payment method. The payment mode itself is active in the database (active=1, verified via HAC FlexibleSearch against PaymentMode table).",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-29T13:51:24.903Z"
+      }
+    },
     {
       "key": "SAHME-3513",
       "summary": "Order stuck on Payment Captured\" status",
@@ -44,59 +97,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-10-30T15:48:18.606Z"
-      }
-    },
-    {
-      "key": "EHME-950",
-      "summary": "Bank Installment Payment Mode isn't working",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Egypt Maintenance & Enhancements",
-      "projectKey": "EHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-30T23:50:35.000+0900",
-      "created": "2026-10-20T22:24:48.000+0900",
-      "statusChangedAt": "2026-10-30T22:24:07.967+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nCan you please support Bank Installment payment mode isn't working while pacing order it shows Error Processing Payment.\nPlease check\n!image-2026-10-20-14-50-31-369.png|width=502,height=245!\n\nThanks\nAshwani Verma\n\nCC: ~@email",
-      "commentsCount": 8,
-      "recentComments": [
-        {
-          "author": "Ashwani Verma",
-          "date": "2026-10-30T23:50:08.116+0900",
-          "snippet": "Hi ~@email \n\nplease check these test orders \n\nEG260812-57882518_10\nEG260812-57882518_9\n\nEG261030-35080017_1\nrequests and responses for the order, why the issue is happening for the payment mode.\nplease refer this ticket: [Jira Link]\n\nThanks\n\n~@email"
-        },
-        {
-          "author": "Ashwani Verma",
-          "date": "2026-10-30T22:23:43.207+0900",
-          "snippet": "Hi ~@email \n\nI've checked the integration ID it's still as 5083915.\n\n!image-2026-10-30-17-22-52-938.png|width=440,height=175!\n\nplease check it once.\n\nThanks\n\n~@email"
-        }
-      ],
-      "lastCommentBy": "Ashwani Verma",
-      "lastCommentSnippet": "Hi ~@email \n\nplease check these test orders \n\nEG260812-57882518_10\nEG260812-57882518_9\n\nEG261030-35080017_1\nrequests and responses for the order, why the issue is happening for the payment mode.\nplease refer this ticket: [Jira Link]\n\nThanks\n\n~@email",
-      "lastCommentDate": "2026-10-30T23:50:08.116+0900",
-      "url": "https://jira.secext.samsung.net/browse/EHME-950",
-      "linkedTickets": [
-        {
-          "key": "PC-56078",
-          "summary": "Update Paymob bank installments integration ID (eg-paymob-bankinstallments)",
-          "status": "Reviewed",
-          "statusCategory": "In Progress",
-          "relation": "blocks",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "**Summary:** Bank Installment Payment Mode isn't working\r\n**Generated:** 2026-10-29T13:45:00Z\r\n\r\nIssue:\r\n\r\nThe Paymob Bank Installment payment mode (code: eg-paymob-bankinstallments) for the Egypt (EG) store is failing with \"Error Processing Payment\" when customers attempt to place orders. Multiple recent orders using this payment mode are stuck at TEMPORARY status (e.g., EG261029-33912536_1, EG261029-33922410_1, EG261029-33876437_1, EG261029-33932009_2), confirming the issue is ongoing and affects all customers selecting this payment method. The payment mode itself is active in the database (active=1, verified via HAC FlexibleSearch against PaymentMode table).\r\n\r\nRCA:\r\n\r\nThe root cause is an outdated Paymob integration ID stored in the `paymentProviderParameters` map of the `eg-paymob-bankinstallments` PaymentMode. The current integration ID `5083915` is no longer valid on the Paymob side and must be updated to `5392297`.\r\n\r\nVERIFIED via code trace: The integration ID flows from the PaymentMode's `paymentProviderParameters` map through three populator classes to the Paymob API:\r\n\r\n1. `TokoPaymobIntentionRequestDataPopulator.populate()` (line 38) reads `paymentProviderParameters.get(\"integrations\")` from `orderModel.getPaymentMode().getPaymentProviderParameters()`, splits it by comma, parses each value as an integer, and sets it as `paymentMethods` on the Paymob IntentionRequest. This value is sent to Paymob's Intention API to specify which payment integration channels are available for the order.\r\n\r\n2. `TokoPaymobPaymentTokenRequestDataPopulator.populate()` (line 35) reads the same `paymentProviderParameters.get(\"integrations\")` and sets it as `integrationID` on the PaymentTokenRequest sent to Paymob's payment token endpoint.\r\n\r\n3. `TokoPaymobRegisterOrderRequestDataPopulator.populate()` (line 46) reads `paymentProviderParameters.get(\"integrations\")` and sets it as the `integrations` list on the RegisterOrderRequest sent to Paymob's order registration API.\r\n\r\nThe constant `INTEGRATIONS` is defined in `TokopaymobpaymentservicestemplateConstants.java` (line 18) as `\"integrations\"`, which is the key used to look up the integration ID from the payment mode's parameter map.\r\n\r\nVERIFIED via DB query: The payment mode `eg-paymob-bankinstallments` exists in the database with PK 8798911103017, name \"Bank Installments\", and active=1. The `paymentProviderParameters` is stored as a serialized byte array (Map type), which was originally configured via ImpEx in the file `custom/toko/tokoinitialdata/resources/tokoinitialdata/import/coredata/stores/eg/paymob-bankinstallments.impex` and also in the release ImpEx at `custom/toko/tokodeployment/resources/tokodeployment/import/release/ENH-82-RC-1/eg/EHME-653.impex`. Both ImpEx files define the `paymentProviderParameters` map with the key `integrations` mapped to the Paymob integration ID value (the actual numeric value is redacted in the committed ImpEx with `?` placeholder and injected at deployment time).\r\n\r\nVERIFIED via Jira cross-reference: The original bank installments feature was implemented under ticket EHME-653 (SEEG - Paymob - Bank Installments, now Closed). Related Paymob payment mode issues were resolved in EHME-712 (Aman Payment Mode is Not Working, Closed) and EHME-848 (Users are unable to do the payment with Paymob e wallet, Closed), establishing a precedent that Paymob payment mode failures are resolved by updating payment provider parameters via ImpEx or Groovy script through a PC ticket.\r\n\r\nWhen Paymob receives the outdated integration ID `5083915`, it rejects the payment intention/token request because that integration channel has been deactivated or replaced on their side. This causes the \"Error Processing Payment\" message displayed to the customer in the storefront, and the order remains in TEMPORARY status because the payment was never authorized.\r\n\r\nSPECULATION (cannot verify from Kibana — Kibana MCP was not available during this investigation): The exact Paymob API error response containing the rejection reason for integration ID 5083915 was not retrieved from Kibana logs. However, the ticket reporter Ashwani Verma confirmed the fix direction in the ticket comments: update the integration ID from 5083915 to 5392297. The new ID 5392297 is presumably the replacement integration channel provisioned by Paymob for the Egypt bank installments payment method.\r\n\r\nPossible remediation:\r\n\r\nUpdate the `integrations` value in the `paymentProviderParameters` map of the `eg-paymob-bankinstallments` PaymentMode from `5083915` to `5392297`. This can be done via either:\r\n\r\nOption A — ImpEx (recommended for PC ticket):\r\n```\r\nINSERT_UPDATE PaymentMode; code[unique = true]; paymentProviderParameters[map-delimiter = ?][key2value-delimiter = ->][mode = append]\r\n; eg-paymob-bankinstallments; \"integrations->5392297\"\r\n```\r\nThis ImpEx updates only the `integrations` key in the paymentProviderParameters map, leaving all other parameters (intentionURL, unifiedCheckoutURL, publicKey, secretKey, multiplyAmountValue, etc.) unchanged. The `mode = append` ensures the existing map entries are preserved and only the `integrations` key is overwritten with the new value.\r\n\r\nOption B — Groovy script via HAC:\r\nA Groovy script that fetches the PaymentMode by code, accesses the paymentProviderParameters map, and updates the `integrations` entry to `5392297`, then saves the model. This is the approach used in prior Paymob payment mode remediation tickets.\r\n\r\nAfter the update, a test order should be placed using the bank installments payment mode to confirm the payment intention is successfully created on the Paymob side and the order progresses beyond TEMPORARY status.\r\n\r\n## Remediation\r\n- Remediation type: Payment provider parameter update (integration ID change)\r\n- Approach: ImpEx update to PaymentMode paymentProviderParameters\r\n- No reusable PC ticket found in pc-script-library.json for this specific remediation type\r\n- A new PC ticket should be created for this change as requested by Pallavi Mishra in the ticket comments",
-        "sections": {
-          "issue": "The Paymob Bank Installment payment mode (code: eg-paymob-bankinstallments) for the Egypt (EG) store is failing with \"Error Processing Payment\" when customers attempt to place orders. Multiple recent orders using this payment mode are stuck at TEMPORARY status (e.g., EG261029-33912536_1, EG261029-33922410_1, EG261029-33876437_1, EG261029-33932009_2), confirming the issue is ongoing and affects all customers selecting this payment method. The payment mode itself is active in the database (active=1, verified via HAC FlexibleSearch against PaymentMode table).",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-29T13:51:24.903Z"
       }
     },
     {
@@ -642,7 +642,7 @@
       }
     ],
     "pid": 38884,
-    "uptime": 14677,
+    "uptime": 14762,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -650,7 +650,58 @@
     "version": "v3",
     "lastResponseAt": "2026-10-30T15:48:52.903Z",
     "lastResponseIssue": 966,
-    "ideSessions": [],
+    "ideSessions": [
+      {
+        "pid": 25224,
+        "cwd": "c:\\users\\aryan.v1",
+        "ageSeconds": 25839,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
+        "lastExchange": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 mins after the other tabs and it will be working then",
+        "sessionId": "aryan-v1"
+      },
+      {
+        "pid": 14388,
+        "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
+        "ageSeconds": 25838,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "which error did we see on the orders, is it actually because of the integration key",
+        "lastExchange": "which error did we see on the orders, is it actually because of the integration key",
+        "sessionId": "bin"
+      },
+      {
+        "pid": 23768,
+        "cwd": "c:\\windows",
+        "ageSeconds": 25827,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "windows",
+        "lastExchange": null,
+        "sessionId": "windows"
+      },
+      {
+        "pid": 25120,
+        "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
+        "ageSeconds": 25823,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
+        "lastExchange": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 mins after the other tabs and it will be working then",
+        "sessionId": "aryan-v1-1"
+      },
+      {
+        "pid": 22608,
+        "cwd": "unknown",
+        "ageSeconds": 25821,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "aipro session",
+        "lastExchange": null,
+        "sessionId": null
+      }
+    ],
     "activityLog": [
       {
         "id": "1793375332955-hzkkut",
@@ -4909,7 +4960,7 @@
     "watchdog": {
       "alive": true,
       "lastWrite": "2026-10-30T16:38:29.920Z",
-      "ageMs": 298
+      "ageMs": 44733
     },
     "watchdogLogTail": "[2026-10-30T16:22:03.270Z] CRITICAL: Max dashboard restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T16:22:21.255Z] CRITICAL: Max dashboard restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T16:25:06.166Z] CRITICAL: Max dashboard restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T16:25:36.588Z] CRITICAL: Max dashboard restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T16:26:12.971Z] CRITICAL: Max dashboard restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T16:26:58.342Z] CRITICAL: Max dashboard restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T16:27:30.173Z] CRITICAL: Max dashboard restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T16:31:01.637Z] CRITICAL: Max dashboard restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T16:31:32.503Z] CRITICAL: Max dashboard restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T16:38:29.919Z] CRITICAL: Max dashboard restarts (50/hour) reached. Waiting before retry."
   },
@@ -4918,7 +4969,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-30T16:36:54.834Z",
+      "lastCheck": "2026-10-30T16:38:31.980Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4927,18 +4978,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-30T16:36:54.834Z",
+      "lastCheck": "2026-10-30T16:38:31.980Z",
       "downSince": "2026-10-30T16:28:47.227Z",
-      "downDuration": 487607,
+      "downDuration": 584753,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-30T16:36:54.834Z",
+      "lastCheck": "2026-10-30T16:38:31.980Z",
       "downSince": "2026-10-30T14:55:20.423Z",
-      "downDuration": 6094411,
+      "downDuration": 6191557,
       "alert": true
     }
   ],
@@ -5038,18 +5089,6 @@
         "statusChangedAt": "2026-10-30T01:01:26.762+0900"
       },
       {
-        "key": "EHME-950",
-        "summary": "Bank Installment Payment Mode isn't working",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/EHME-950",
-        "updated": "2026-10-30T23:50:35.000+0900",
-        "statusChangedAt": "2026-10-30T22:24:07.967+0900"
-      },
-      {
         "key": "SAME-4025",
         "summary": "[EPP] MENA Reports - Domain & Aggregator Based Sales Report",
         "priority": "None",
@@ -5075,6 +5114,18 @@
       }
     ],
     "actionable": [
+      {
+        "key": "EHME-950",
+        "summary": "Bank Installment Payment Mode isn't working",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "actionable",
+        "reason": "",
+        "whatToDo": "Respond to Suresh Ganesula",
+        "url": "https://jira.secext.samsung.net/browse/EHME-950",
+        "updated": "2026-10-31T01:38:34.000+0900",
+        "statusChangedAt": "2026-10-30T22:24:07.967+0900"
+      },
       {
         "key": "AEME-6535",
         "summary": "[PROD] | Update SC+ Automated Report",
@@ -5145,8 +5196,8 @@
       }
     ],
     "totals": {
-      "zero": 4,
-      "actionable": 3,
+      "zero": 3,
+      "actionable": 4,
       "blocked": 1,
       "queued": 2
     }
@@ -5199,9 +5250,110 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "EHME-950",
+        "slaName": "Maintenance Response (GMT+2)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 3183,
+        "targetDate": "2026-10-20T15:24:48.423Z"
+      },
+      {
+        "key": "EHME-950",
+        "slaName": "Maintenance Resolution (GMT+2)",
+        "slaStatus": "STILL",
+        "remainingDuration": 25523,
+        "targetDate": "2026-11-01T23:44:33.022000009Z"
+      },
+      {
+        "key": "SAHME-3513",
+        "slaName": "Maintenance Response (GMT+2)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 80648,
+        "targetDate": "2026-10-30T14:25:35.148000001Z"
+      },
+      {
+        "key": "SAHME-3513",
+        "slaName": "Maintenance Resolution (GMT+2)",
+        "slaStatus": "STILL",
+        "remainingDuration": 379316,
+        "targetDate": "2026-11-06T02:01:06.040000006Z"
+      },
+      {
+        "key": "AEME-6535",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85181,
+        "targetDate": "2026-09-04T05:51:44.040000001Z"
+      },
+      {
+        "key": "AEME-6535",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1277310,
+        "targetDate": "2026-11-20T11:27:39.260908186Z"
+      },
+      {
+        "key": "MHME-1474",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86056,
+        "targetDate": "2026-11-02T11:20:04.322000001Z"
+      },
+      {
+        "key": "MHME-1474",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 412855,
+        "targetDate": "2026-11-06T11:20:04.322000005Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86179,
+        "targetDate": "2026-09-30T08:16:57.595000001Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1269633,
+        "targetDate": "2026-10-20T08:16:57.595000015Z"
+      },
+      {
+        "key": "SAME-4025",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86125,
+        "targetDate": "2026-10-19T06:51:46.624000001Z"
+      },
+      {
+        "key": "SAME-4025",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 215287,
+        "targetDate": "2026-11-04T04:27:16.782000013Z"
+      },
+      {
+        "key": "TKME-2382",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86399,
+        "targetDate": "2026-10-19T11:35:42.030000001Z"
+      },
+      {
+        "key": "TKME-2382",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1949538,
+        "targetDate": "2026-12-02T06:11:28.355000033Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 0.42h on EHME-950, 1.5h on AEME-6686, 0.75h on SAHME-3509, 0.75h on TKME-2417, 0.75h on TKME-2383, 0.42h on SAHME-3508, 1h on PC-56066, 1.08h on SAHME-3512, 1.5h on SAM-18531, 2h on SAME-4025, 1h on RT-664743, 0.75h on TKME-2408, 1h on PC-56078\nToday: SAHME-3513, EHME-950, PC-56128, SAME-4025, MHME-1474\nBlockers: PC-56128"
+    "standupText": "Yesterday: 0.42h on EHME-950, 1.5h on AEME-6686, 0.75h on SAHME-3509, 0.75h on TKME-2417, 0.75h on TKME-2383, 0.42h on SAHME-3508, 1h on PC-56066, 1.08h on SAHME-3512, 1.5h on SAM-18531, 2h on SAME-4025, 1h on RT-664743, 0.75h on TKME-2408, 1h on PC-56078\nToday: EHME-950, SAHME-3513, PC-56128, SAME-4025, MHME-1474\nBlockers: PC-56128"
   }
 }
