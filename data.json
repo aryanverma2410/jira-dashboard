@@ -1,49 +1,43 @@
 {
-  "generatedAt": "2026-10-30T05:52:35.742Z",
-  "totalTickets": 9,
+  "generatedAt": "2026-10-30T13:18:52.484Z",
+  "totalTickets": 8,
   "tickets": [
     {
-      "key": "TKME-2417",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Turkey Maintenance & Enhancements",
-      "projectKey": "TKME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-30T15:44:16.000+0900",
-      "created": "2026-10-28T22:35:06.000+0900",
-      "statusChangedAt": "2026-10-29T00:11:07.525+0900",
+      "key": "PC-56128",
+      "summary": "EPP Missing Orders Sales Report - Batched Script for 18885 Orders (SAME-4025)",
+      "status": "To do",
+      "statusCategory": "To Do",
+      "priority": "Medium",
+      "project": "PROD Change",
+      "projectKey": "PC",
+      "issuetype": "Hybris Platform",
+      "updated": "2026-10-30T22:02:24.000+0900",
+      "created": "2026-10-30T21:46:48.000+0900",
+      "statusChangedAt": "",
       "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|TR261027-31416321|2026/10/28|REFUND_FAILED|\n|TR261027-30694853|2026/10/27|SHIPPED|\n|TR261027-30693525|2026/10/27|SHIPPED|\n|TR261027-30688809|2026/10/27|SHIPPED|\n|TR261027",
-      "commentsCount": 3,
-      "recentComments": [
+      "description": "One-time script to generate the EPP MENA Domain & Aggregator sales report for 18,885 missing order IDs identified by Georgina in SAME-4025. Script uses SalesReport framework with same 16 columns as PC-55639.\n\nDelta from PC-55639 (original EPP sales report script):\n1. Base query: Changed from date-ra",
+      "commentsCount": 0,
+      "recentComments": [],
+      "lastCommentBy": "",
+      "lastCommentSnippet": "",
+      "lastCommentDate": "",
+      "url": "https://jira.secext.samsung.net/browse/PC-56128",
+      "linkedTickets": [
         {
-          "author": "Rajeshbabu Yatirajula",
-          "date": "2026-10-30T15:44:08.875+0900",
-          "snippet": "Hi ~@email \n\nMay i know what has been done as part of the remediation for TR order ? I verified the first order in the list and the external services status is  in ERROR but the order is moved to COMPLETED. \n\n!image-2026-10-30-10-35-21-004.png!\n\n!image-2026-10-30-10-36-52-439.png!\n\nAs per the logs, "
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-29T00:08:34.417+0900",
-          "snippet": "Hi Team,\n\nprocessExternalServices (20 orders) — All 20 SUCCEEDED:\nWe ran the auto-retrigger script under PC-52678 to restart all 20 consignment processes from the processExternalServices action. All 20 orders have confirmed SUCCEEDED with endMessage \"Order placed.\"\n\n\nTR261027-30694853  | SUCCEEDED |"
+          "key": "SAME-4025",
+          "summary": "[EPP] MENA Reports - Domain & Aggregator Based Sales Report",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "relation": "is blocked by",
+          "assignee": null
         }
       ],
-      "lastCommentBy": "Rajeshbabu Yatirajula",
-      "lastCommentSnippet": "Hi ~@email \n\nMay i know what has been done as part of the remediation for TR order ? I verified the first order in the list and the external services status is  in ERROR but the order is moved to COMPLETED. \n\n!image-2026-10-30-10-35-21-004.png!\n\n!image-2026-10-30-10-36-52-439.png!\n\nAs per the logs, ",
-      "lastCommentDate": "2026-10-30T15:44:08.875+0900",
-      "url": "https://jira.secext.samsung.net/browse/TKME-2417",
-      "linkedTickets": [],
       "solution": {
-        "status": "found",
-        "excerpt": "Stuck order on Hybris — 23 TR-region orders (20 SHIPPED + 3 REFUND_FAILED)\r\nGenerated: 2026-10-28T14:00:00Z\r\n\r\n## Issue\r\n\r\nTKME-2417 reports 23 orders stuck in the TR region. The ticket lists 20 orders in SHIPPED status and 3 orders in REFUND_FAILED status. All 23 orders have stuck or errored business processes preventing them from reaching a terminal state despite physical fulfilment having completed for the SHIPPED orders.\r\n\r\n## RCA\r\n\r\nTwo distinct populations of orders exist in this ticket, each with a different root cause.\r\n\r\nPopulation 1 — 20 SHIPPED orders (TR261027-30694853, TR261027-30693525, TR261027-30688809, TR261027-30693160, TR261027-30666453, TR261027-30655432, TR261027-30651232, TR261027-30642237, TR261027-30637167, TR261027-30591719, TR261027-30597740, TR261027-30572578, TR261023-25319011, TR261026-29480996, TR261026-29365012, TR261021-23163107, TR261026-29359505, TR261025-28363237, TR261023-25735963, TR261023-25618605):\r\n\r\nAll 20 orders share an identical error pattern verified via DB queries (order-error-check.cjs + flexi-order-full.cjs) against PROD HAC.\r\n\r\nEach order has two business processes:\r\n1. The main order-process-v25-69 is in RUNNING state, stuck at the waitForFinancialInitialUpdate action. The process is waiting for the Financial Integration (FI) initial update to complete.\r\n2. The consignment child process (consignment-process-v11-36, suffix _1) is in ERROR state with endMessage \"All went wrong.\"\r\n\r\nThe isInitialFISuccess action threw an exception (empty returnCode in ProcessTaskLog) in 19 of 20 orders. The exception timestamps cluster tightly — for example, 8 orders on 2026-10-27 show exceptions within the same second (10:38:10.7xx), suggesting a systemic FI integration failure event rather than individual order issues.\r\n\r\nNo BusinessProcessParameter entries were found for any order (no errorStackTrace stored), confirming the error was handled gracefully by the process engine, not a crash.\r\n\r\nThe consignments themselves are physically COMPLETED with GERP billing done (GERP bill numbers present, shipped dates set, warehouse WC17-S751 assigned). The payment side is clean — AUTHORIZATION and CAPTURE both ACCEPTED with no refund entries. The SMC external service is in ERROR state on sampled orders.\r\n\r\nRoot cause: The consignment child process errored during the Financial Integration initial update check (isInitialFISuccess), which set the consignment process to ERROR with the generic endMessage \"All went wrong.\" This blocked the main order process from receiving the FI completion signal, leaving it stuck at waitForFinancialInitialUpdate indefinitely. The physical fulfilment pipeline (warehouse, GERP, shipping) completed independently and successfully, but the process engine layer is stuck because the FI integration handshake failed.\r\n\r\nThis is the same pattern seen in TKME-2387 and TKME-2385 (prior TR healthcheck tickets by aryan.v1), where I/O errors during financial update caused business processes to enter ERROR state. Those tickets were remediated under PC-52605 by retriggering the errored processes.\r\n\r\nPopulation 2 — 3 REFUND_FAILED orders (TR261027-31416321, TR261027-30407887, TR261025-28104424):\r\n\r\nAll 3 orders share an identical payment failure pattern verified via DB queries.\r\n\r\nEach order has:\r\n- Order status: REFUND_FAILED\r\n- Order total: zeroed out (0E-8) — the refund consumed the full captured amount\r\n- Payment mode: tr-masterpassPaymentMode (MasterPass)\r\n- No consignments — orders were cancelled before fulfilment\r\n- Payment transactions show: AUTHORIZATION (ACCEPTED), CAPTURE (ACCEPTED), REFUND_FOLLOW_ON (ERROR)\r\n\r\nThe order-process-v25-69 is in FAILED state with endMessage \"Order failed.\" The last task log action is refundCancelOrder, confirming the process reached the refund step after order cancellation and failed there. No BusinessProcessParameter error stack traces were stored. No ProcessTaskLog exceptions were found.\r\n\r\nRoot cause: The MasterPass payment gateway rejected the follow-on refund request. The AUTHORIZATION and CAPTURE both succeeded (funds were held and captured), but when the system attempted to refund the captured amount after order cancellation, the REFUND_FOLLOW_ON payment transaction entry was set to ERROR status. The process engine handled this gracefully (no crash, no stack trace) and transitioned the order process to FAILED state. The refund needs to be re-attempted through the MasterPass gateway.\r\n\r\n## Possible remediation\r\n\r\nPopulation 1 — 20 SHIPPED orders:\r\n\r\nRemediation: Retrigger the errored consignment processes and stuck order processes using the approach from PC-52605 (Reusable, Closed, reporter: aryan.v1). PC-52605 contains script-TKME-2279-retrigger-business-process.groovy which sets errored processes to ERROR state and restarts them from their last failed action via businessProcessService.restartProcess(). This script was successfully used for the same TR-region I/O error pattern in TKME-2387 and TKME-2385.\r\n\r\nThe script needs to be copied and adapted:\r\n- Update the order list to the 20 SHIPPED orders from TKME-2417\r\n- Update the ITGC header to reference the new PC ticket and TKME-2417\r\n- The script logic (set process to ERROR, remove currentTasks, restartProcess from last actionId) remains unchanged\r\n\r\nThe retrigger will allow the isInitialFISuccess action to re-execute. Since the FI integration failure was transient (clustered timestamps suggest a brief outage), the retry should succeed and the consignment process will complete, unblocking the main order process at waitForFinancialInitialUpdate.\r\n\r\nPopulation 2 — 3 REFUND_FAILED orders:\r\n\r\nRemediation: Update the REFUND_FOLLOW_ON payment transaction entry from ERROR to ACCEPTED, then restart the order process from the refundCancelOrder action. This follows the precedent of PC-35580 (Closed, [SAME-3208] - Update refund follow on entry to success) and PC-48853 (Closed, NUKME-13377 - Update PTE(REFUND_FOLLOW_ON)).\r\n\r\nHowever, before updating the PTE status, the actual refund must be confirmed as completed through the MasterPass gateway externally. The Hybris-side PTE update only records the result — it does not initiate the refund. If the refund has not been processed by MasterPass, a new refund request must be sent first.\r\n\r\nSteps:\r\n1. Verify with the payment team whether the MasterPass refund was successfully processed for each of the 3 orders\r\n2. If refund confirmed: update PaymentTransactionEntry status from ERROR to ACCEPTED and restart the order process from refundCancelOrder\r\n3. If refund not confirmed: initiate the refund through MasterPass first, then update the PTE and restart the process\r\n\r\nBoth remediations can be executed under a single new PC ticket, or PC-52605 can be reused for the SHIPPED orders while a separate PC ticket handles the REFUND_FAILED orders (different remediation type).",
-        "sections": {
-          "issue": "TKME-2417 reports 23 orders stuck in the TR region. The ticket lists 20 orders in SHIPPED status and 3 orders in REFUND_FAILED status. All 23 orders have stuck or errored business processes preventing them from reaching a terminal state despite physical fulfilment having completed for the SHIPPED orders.",
-          "rca": "Two distinct populations of orders exist in this ticket, each with a different root cause.\r\n\r\nPopulation 1 — 20 SHIPPED orders (TR261027-30694853, TR261027-30693525, TR261027-30688809, TR261027-30693160, TR261027-30666453, TR261027-30655432, TR261027-30651232, TR261027-30642237, TR261027-30637167, TR261027-30591719, TR261027-30597740, TR261027-30572578, TR261023-25319011, TR261026-29480996, TR261026-29365012, TR261021-23163107, TR261026-29359505, TR261025-28363237, TR261023-25735963, TR261023-25618605):\r\n\r\nAll 20 orders share an identical error pattern verified via DB queries (order-error-check.cjs + flexi-order-full.cjs) against PROD HAC.\r\n\r\nEach order has two business processes:\r\n1. The main order-process-v25-69 is in RUNNING state, stuck at the waitForFinancialInitialUpdate action. The process is waiting for the Financial Integration (FI) initial update to complete.\r\n2. The consignment child process (consignment-process-v11-36, suffix _1) is in ERROR state with endMessage \"All went wrong.\"\r\n\r\nThe isInitialFISuccess action threw an exception (empty returnCode in ProcessTaskLog) in 19 of 20 orders. The exception timestamps cluster tightly — for example, 8 orders on 2026-10-27 show exceptions within the same second (10:38:10.7xx), suggesting a systemic FI integration failure event rather than individual order issues.\r\n\r\nNo BusinessProcessParameter entries were found for any order (no errorStackTrace stored), confirming the error was handled gracefully by the process engine, not a crash.\r\n\r\nThe consignments themselves are physically COMPLETED with GERP billing done (GERP bill numbers present, shipped dates set, warehouse WC17-S751 assigned). The payment side is clean — AUTHORIZATION and CAPTURE both ACCEPTED with no refund entries. The SMC external service is in ERROR state on sampled orders.\r\n\r\nRoot cause: The consignment child process errored during the Financial Integration initial update check (isInitialFISuccess), which set the consignment process to ERROR with the generic endMessage \"All went wrong.\" This blocked the main order process from receiving the FI completion signal, leaving it stuck at waitForFinancialInitialUpdate indefinitely. The physical fulfilment pipeline (warehouse, GERP, shipping) completed independently and successfully, but the process engine layer is stuck because the FI integration handshake failed.\r\n\r\nThis is the same pattern seen in TKME-2387 and TKME-2385 (prior TR healthcheck tickets by aryan.v1), where I/O errors during financial update caused business processes to enter ERROR state. Those tickets were remediated under PC-52605 by retriggering the errored processes.\r\n\r\nPopulation 2 — 3 REFUND_FAILED orders (TR261027-31416321, TR261027-30407887, TR261025-28104424):\r\n\r\nAll 3 orders share an identical payment failure pattern verified via DB queries.\r\n\r\nEach order has:\r\n- Order status: REFUND_FAILED\r\n- Order total: zeroed out (0E-8) — the refund consumed the full captured amount\r\n- Payment mode: tr-masterpassPaymentMode (MasterPass)\r\n- No consignments — orders were cancelled before fulfilment\r\n- Payment transactions show: AUTHORIZATION (ACCEPTED), CAPTURE (ACCEPTED), REFUND_FOLLOW_ON (ERROR)\r\n\r\nThe order-process-v25-69 is in FAILED state with endMessage \"Order failed.\" The last task log action is refundCancelOrder, confirming the process reached the refund step after order cancellation and failed there. No BusinessProcessParameter error stack traces were stored. No ProcessTaskLog exceptions were found.\r\n\r\nRoot cause: The MasterPass payment gateway rejected the follow-on refund request. The AUTHORIZATION and CAPTURE both succeeded (funds were held and captured), but when the system attempted to refund the captured amount after order cancellation, the REFUND_FOLLOW_ON payment transaction entry was set to ERROR status. The process engine handled this gracefully (no crash, no stack trace) and transitioned the order process to FAILED state. The refund needs to be re-attempted through the MasterPass gateway.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-28T14:20:44.466Z"
+        "status": "none",
+        "excerpt": "",
+        "source": "",
+        "foundAt": "",
+        "issueNumber": null
       }
     },
     {
@@ -55,7 +49,7 @@
       "project": "Kingdom of Saudi Arabia Maintenance & Enhancements",
       "projectKey": "SAME",
       "issuetype": "Maintenance Request",
-      "updated": "2026-10-30T13:32:25.000+0900",
+      "updated": "2026-10-30T21:46:52.000+0900",
       "created": "2026-10-16T15:51:44.000+0900",
       "statusChangedAt": "2026-10-22T11:12:39.247+0900",
       "assignedToMeAt": "",
@@ -79,6 +73,14 @@
       "url": "https://jira.secext.samsung.net/browse/SAME-4025",
       "linkedTickets": [
         {
+          "key": "PC-56128",
+          "summary": "EPP Missing Orders Sales Report - Batched Script for 18885 Orders (SAME-4025)",
+          "status": "To do",
+          "statusCategory": "To Do",
+          "relation": "blocks",
+          "assignee": null
+        },
+        {
           "key": "PC-55639",
           "summary": "SAME-4025 | MENA Reports - Domain & Aggregator Based Sales Report",
           "status": "Approved-ES",
@@ -100,111 +102,116 @@
       }
     },
     {
-      "key": "NPSM-91057",
-      "summary": "[110049599][AE] [Online Purchasing]Medallia Alert ",
-      "status": "In Progress",
+      "key": "AEME-6535",
+      "summary": "[PROD] | Update SC+ Automated Report",
+      "status": "Approved for Launch",
       "statusCategory": "In Progress",
       "priority": "None",
-      "project": "NPS",
-      "projectKey": "NPSM",
+      "project": "UAE Maintenance & Enhancements",
+      "projectKey": "AEME",
       "issuetype": "Maintenance Request",
-      "updated": "2026-10-30T12:49:15.000+0900",
-      "created": "2026-10-27T22:20:13.000+0900",
-      "statusChangedAt": "2026-10-28T00:24:41.443+0900",
+      "updated": "2026-10-30T21:39:05.000+0900",
+      "created": "2026-09-03T14:51:39.000+0900",
+      "statusChangedAt": "2026-10-30T21:37:43.217+0900",
       "assignedToMeAt": "",
-      "description": "Please check Reason for Score field for detail. Note The initial response time is tracked, so once you receive a ticket, please move it to “In Progress” or “Closed” within 48 hours. Issue URL: [Internal Link]",
-      "commentsCount": 3,
+      "description": "Hi Team,\n\n \n\nEnv: PROD Env\n\nBackground:\n\nThe SUBS wants to add columns to the existing SC+ automated report as per the below file:\n\n^UAE PROD Daily SC+ Report29-Jul-2026_Yara (1).xlsx\n\n \n\nApproval:\n\n^20260824_[SGE_Non-PII_Update_SC%2B_Report.eml]\n\n \n\nRegards\n\nTalib\n\nCC: ~@email",
+      "commentsCount": 14,
       "recentComments": [
         {
-          "author": "indra pras",
-          "date": "2026-10-30T01:01:03.508+0900",
-          "snippet": "Hi ~@email ,\n\nUpon checking the Promotion Engine Results at the cart level, I found that no promotions were applied.\n\n!image-2026-10-29-23-00-14-849.png|width=226,height=141!\n\nCould you please help investigate this issue?\n\nRegards,\nIndra Pras"
+          "author": "Dilip Boddula",
+          "date": "2026-10-30T21:39:05.091+0900",
+          "snippet": "Dear ~@email ,\n\n Please proceed with change on production on Monday(Nov-2) after 10 AM .\n\n\n\nLet us know once changes are executed for production validation.\n\nRegards\nDilip"
         },
         {
-          "author": "Vaibhav Jain",
-          "date": "2026-10-29T18:33:35.829+0900",
-          "snippet": "Hi ~@email : Please check if the user cart for valid for any existing Samsung Pay discount"
+          "author": "Talib Raza Zaidi",
+          "date": "2026-10-28T20:19:12.144+0900",
+          "snippet": "Hi ~@email ,\n\n \n\nThe BVT is market confirmed by SUBS. Please approve for PROD deployment.\n\nAlso, the SUBS has requested to take action on below recipients, to add and remove respectively.\n\nAdd:\n\n●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● \n●●●●●●●●●●●●●●●●●●●●●��●●●●●●● \n●●●●●●●●●●●●●●●●●●●●●●●●●●●● \n●●●●●●●●●●"
         }
       ],
-      "lastCommentBy": "indra pras",
-      "lastCommentSnippet": "Hi ~@email ,\n\nUpon checking the Promotion Engine Results at the cart level, I found that no promotions were applied.\n\n!image-2026-10-29-23-00-14-849.png|width=226,height=141!\n\nCould you please help investigate this issue?\n\nRegards,\nIndra Pras",
-      "lastCommentDate": "2026-10-30T01:01:03.508+0900",
-      "url": "https://jira.secext.samsung.net/browse/NPSM-91057",
-      "linkedTickets": [],
+      "lastCommentBy": "Dilip Boddula",
+      "lastCommentSnippet": "Dear ~@email ,\n\n Please proceed with change on production on Monday(Nov-2) after 10 AM .\n\n\n\nLet us know once changes are executed for production validation.\n\nRegards\nDilip",
+      "lastCommentDate": "2026-10-30T21:39:05.091+0900",
+      "url": "https://jira.secext.samsung.net/browse/AEME-6535",
+      "linkedTickets": [
+        {
+          "key": "PC-53535",
+          "summary": "Update SC+ Daily Report - Add 18 SubscriptionData Columns",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        },
+        {
+          "key": "PC-53922",
+          "summary": "Update SC+ Automated Report — column renames, initial order payment mode, Payment Cycle reorder, recipient update, Qatar",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        },
+        {
+          "key": "PC-53923",
+          "summary": "Update SC+ Automated Report — column renames, initial order payment mode, Payment Cycle reorder, recipient update, Qatar",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        },
+        {
+          "key": "PC-55751",
+          "summary": "Update SC+ Report Script - Fix Order Payment Mode (AEME-6535)",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        },
+        {
+          "key": "PC-55757",
+          "summary": "Deploy Updated SC+ Report Cronjob Script to PROD (AEME-6535)",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "blocks",
+          "assignee": null
+        }
+      ],
       "solution": {
-        "status": "none",
-        "excerpt": "",
-        "source": "",
-        "foundAt": "",
-        "issueNumber": null
+        "status": "found",
+        "excerpt": "[PROD] | Update SC+ Automated Report\r\nGenerated: 2026-09-03T20:30:00.000Z\r\n\r\nIssue:\r\nThe SUBS team (Talib Raza Zaidi, CC Dilip B) requested adding new columns to the existing UAE PROD Daily SC+ automated report. The report is a Groovy script stored in the Hybris database as gcc-PROD-Daily-SC-ReportScript (version 44, active), executed daily via the ScriptCronJob gcc-Report-NonPII-Email-PRODDailySCReportCronJob backed by ScriptingJob gcc-PRODDailySCReportScriptingJob. The script queries the ExternalService table for entries where provider is SMC or STANDALONE_SMC, filtering by order codes starting with AE, KW, OM, or BH from the last 60 days, excluding TEMPORARY statuses. The existing report exports 20 columns (indexes 0-19) as a password-protected xlsx emailed to a distribution list including Firas, Anna, Francis, Dilip, Amr, Vishal, Jaffar, Talib, and Yashwant. The SUBS team provided an Excel file showing the desired additional columns covering SubscriptionData fields, and an SGE approval email confirming Non-PII classification for the change.\r\n\r\nRCA:\r\nThis is a report enhancement request, not a platform bug or incident. The current SC+ daily report script (gcc-PROD-Daily-SC-ReportScript, ITGC reference PC-29527) generates 20 columns per ExternalService row but does not include any SubscriptionData fields. The SUBS team needs visibility into subscription payment metadata — subscription tokens, payment cycles, retry counts, payment dates, subscription status, and freeMonths — alongside the existing order and SC+ activation data. The report script is the correct place to add these columns because it already joins ExternalService to Order and iterates per-row. The SubscriptionData model is accessible via the Order's payment information and contains all the requested fields. The Excel attachment (UAE PROD Daily SC+ Report29-Jul-2026_Yara (1).xlsx) specifies 18 new columns to be added as columns U through AL (indexes 20-37).\r\n\r\nPossible remediation:\r\nA Groovy script (script-AEME-6535-scplus-report.groovy, 23311 bytes) was created under PC-53535 to modify gcc-PROD-Daily-SC-ReportScript. The script adds 18 new columns: columns U and V pull Site and Payment Mode from PaymentTransaction; columns W through AL pull SubscriptionData fields (Subscription Token, Payment Info, Payment Mode display, Next Payment Date, Policy Start Date, Last Payment Date, Payment Cycle, Payment Day, Token Created Date, Current Retry Sequence, Max Retry Count, Total Payments, Current Successful Payment No, Subscription Status, Subscription End Date, freeMonths). The second sheet (externalServiceMissingOrders) listing standalone SMC orders without ExternalService entries is preserved. The ITGC reference in the script header is PC-53535(AEME-6535). PC-53535 has been reviewed by Vaibhav Jain and is in Reviewed status. The script is applied by updating the ScriptingJob script content via the HAC scripting console. Rollback is reverting to version 44 (original script without the 18 new columns). Verification is confirming the daily SC+ report email includes columns U-AL populated with SubscriptionData and payment mode data for each order row.\r\n\r\n## Remediation\r\n- PC ticket: PC-53535 (Reviewed by Vaibhav Jain)\r\n- Script: script-AEME-6535-scplus-report.groovy (23311 bytes, attached to PC-53535)\r\n- Implementation: Update ScriptingJob script content for gcc-PROD-Daily-SC-ReportScript via HAC scripting console\r\n- Columns added: 18 new columns U-AL (indexes 20-37) covering SubscriptionData and payment mode fields\r\n- Verification: Daily SC+ report email should include 18 new columns U-AL populated with SubscriptionData and payment mode data for each order row\r\n- Rollback: Revert script content to version 44 (original script without the 18 new columns)\r\n- Parent ticket: AEME-6535 (QA Server Review, Blocks relationship)\r\n- Status: Remediation complete, PC-53535 Reviewed",
+        "sections": {
+          "issue": "The SUBS team (Talib Raza Zaidi, CC Dilip B) requested adding new columns to the existing UAE PROD Daily SC+ automated report. The report is a Groovy script stored in the Hybris database as gcc-PROD-Daily-SC-ReportScript (version 44, active), executed daily via the ScriptCronJob gcc-Report-NonPII-Email-PRODDailySCReportCronJob backed by ScriptingJob gcc-PRODDailySCReportScriptingJob. The script queries the ExternalService table for entries where provider is SMC or STANDALONE_SMC, filtering by order codes starting with AE, KW, OM, or BH from the last 60 days, excluding TEMPORARY statuses. The existing report exports 20 columns (indexes 0-19) as a password-protected xlsx emailed to a distribution list including Firas, Anna, Francis, Dilip, Amr, Vishal, Jaffar, Talib, and Yashwant. The SUBS team provided an Excel file showing the desired additional columns covering SubscriptionData fields, and an SGE approval email confirming Non-PII classification for the change.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-09-03T13:39:50.839Z"
       }
     },
     {
-      "key": "NPSM-91163",
-      "summary": "[110165491][TR] [Flagship][Online Purchasing]Medallia Alert ",
+      "key": "MHME-1474",
+      "summary": "Issue with CE Order Mapping on STG3 - PO: MA261029-08898350",
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "None",
-      "project": "NPS",
-      "projectKey": "NPSM",
+      "project": "Morocco Maintenance & Enhancements",
+      "projectKey": "MHME",
       "issuetype": "Maintenance Request",
-      "updated": "2026-10-30T12:27:42.000+0900",
-      "created": "2026-10-29T17:00:28.000+0900",
-      "statusChangedAt": "2026-10-30T11:52:29.707+0900",
+      "updated": "2026-10-30T20:33:34.000+0900",
+      "created": "2026-10-30T20:20:04.000+0900",
+      "statusChangedAt": "2026-10-30T20:25:48.211+0900",
       "assignedToMeAt": "",
-      "description": "Please check Reason for Score field for detail. Note The initial response time is tracked, so once you receive a ticket, please move it to “In Progress” or “Closed” within 48 hours. Issue URL: [Internal Link]",
-      "commentsCount": 2,
-      "recentComments": [
-        {
-          "author": "Ivana Arum",
-          "date": "2026-10-30T11:52:19.455+0900",
-          "snippet": "Hi team,\n\nThe customer reported that they were unable to complete the purchase of a Z Fold8 using Zip Credit with the RPUAN promotion code. When attempting to use another payment method, the system indicated that the RPUAN code had already been used on another order, preventing them from receiving t"
-        },
-        {
-          "author": "Mulyono Mulyono",
-          "date": "2026-10-30T01:07:56.713+0900",
-          "snippet": "Hi team\n\nBased on my investigation, I checked BO and found the PO in the Cart section. I also checked the Promotion Engine but could not find the RPUAN promotion. Since the customer used a guest account, I was unable to review their order history to verify whether the promotion had been used in a pr"
-        }
-      ],
-      "lastCommentBy": "Ivana Arum",
-      "lastCommentSnippet": "Hi team,\n\nThe customer reported that they were unable to complete the purchase of a Z Fold8 using Zip Credit with the RPUAN promotion code. When attempting to use another payment method, the system indicated that the RPUAN code had already been used on another order, preventing them from receiving t",
-      "lastCommentDate": "2026-10-30T11:52:19.455+0900",
-      "url": "https://jira.secext.samsung.net/browse/NPSM-91163",
-      "linkedTickets": [],
-      "solution": {
-        "status": "none",
-        "excerpt": "",
-        "source": "",
-        "foundAt": "",
-        "issueNumber": null
-      }
-    },
-    {
-      "key": "NPSM-91137",
-      "summary": "[110121088][TR] [Online Purchasing]Medallia Alert ",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "NPS",
-      "projectKey": "NPSM",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-10-30T12:26:24.000+0900",
-      "created": "2026-10-29T01:30:36.000+0900",
-      "statusChangedAt": "2026-10-30T00:43:33.736+0900",
-      "assignedToMeAt": "",
-      "description": "Please check Reason for Score field for detail. Note The initial response time is tracked, so once you receive a ticket, please move it to “In Progress” or “Closed” within 48 hours. Issue URL: [Internal Link]",
+      "description": "Hi Team,\n\nWe are currently testing the mapping of CE orders to storage location {}WCDA{}.\n\nWe have placed an order on the STG3 environment (PO: MA261029-08898350), but it appears to be stuck on the Hybris side. Upon initial review, we suspect the order may have been incorrectly linked to storage {}W",
       "commentsCount": 1,
       "recentComments": [
         {
-          "author": "Ivana Arum",
-          "date": "2026-10-29T10:59:41.523+0900",
-          "snippet": "Hi team,\n\nThe customer reported that the discount code was canceled 8–10 minutes after being added to the cart. However, the specific discount code mentioned in the complaint has not been identified.\n\nBased on the DXA session, there was no attempt to apply a coupon code earlier in the session. Howev"
+          "author": "Vaibhav Jain",
+          "date": "2026-10-30T20:33:15.203+0900",
+          "snippet": "Hi ~@email,\n\n\n\nWe will look into this order for you. However, please kindly note that we typically provide support for STG3 environment issues rather than application issues, as the STG3 environment is primarily used by the ENH team for development. We appreciate your understanding.\n\nAlso reducing t"
         }
       ],
-      "lastCommentBy": "Ivana Arum",
-      "lastCommentSnippet": "Hi team,\n\nThe customer reported that the discount code was canceled 8–10 minutes after being added to the cart. However, the specific discount code mentioned in the complaint has not been identified.\n\nBased on the DXA session, there was no attempt to apply a coupon code earlier in the session. Howev",
-      "lastCommentDate": "2026-10-29T10:59:41.523+0900",
-      "url": "https://jira.secext.samsung.net/browse/NPSM-91137",
+      "lastCommentBy": "Vaibhav Jain",
+      "lastCommentSnippet": "Hi ~@email,\n\n\n\nWe will look into this order for you. However, please kindly note that we typically provide support for STG3 environment issues rather than application issues, as the STG3 environment is primarily used by the ENH team for development. We appreciate your understanding.\n\nAlso reducing t",
+      "lastCommentDate": "2026-10-30T20:33:15.203+0900",
+      "url": "https://jira.secext.samsung.net/browse/MHME-1474",
       "linkedTickets": [],
       "solution": {
         "status": "none",
@@ -537,20 +544,30 @@
         "responseSnippet": ""
       }
     ],
-    "pid": 13444,
-    "uptime": 1643,
+    "pid": 38884,
+    "uptime": 2745,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
-    "startTime": "2026-10-30T10:55:16.455Z",
+    "startTime": "2026-10-30T07:03:48.111Z",
     "version": "v3",
     "lastResponseAt": "2026-10-29T13:52:04.247Z",
     "lastResponseIssue": 944,
     "ideSessions": [
       {
         "pid": 25224,
+        "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
+        "ageSeconds": 13823,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "run cookie bridge if its not working and resume",
+        "lastExchange": "run cookie bridge if its not working and resume",
+        "sessionId": "bin"
+      },
+      {
+        "pid": 14388,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 0,
+        "ageSeconds": 13824,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -558,19 +575,9 @@
         "sessionId": "aryan-v1"
       },
       {
-        "pid": 14388,
-        "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 0,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "MONG THESE ORDERS? TR261027-30694853 | SUCCEEDED | Order placed. TR261027-30693525 | SUCCEEDED | ...",
-        "lastExchange": "MONG THESE ORDERS? TR261027-30694853  | SUCCEEDED | Order placed.\nTR261027-30693525  | SUCCEEDED | Order placed.\nTR261027-30688809  | SUCCEEDED | Order placed.\nTR261027-30693160  | SUCCEEDED | Order placed.\nTR261027-30666453  | SUCCEEDED | Order placed.\nTR261027-30655432  | SUCCEEDED | Order placed.\nTR261027-30651232  | SUCCEEDED | Order placed.\nTR261027-30642237  | SUCCEEDED | Order placed.\nTR261027-30637167  | SUCCEEDED | Order placed.\nTR261027-30591719  | SUCCEEDED | Order placed.\nTR261027-30597740  | SUCCEEDED | Order placed.\nTR261027-30572578  | SUCCEEDED | Order placed.\nTR261023-25319011  | SUCCEEDED | Order placed.\nTR261026-29480996  | SUCCEEDED | Order placed.\nTR261026-29365012  | SUCCEEDED | Order placed.\nTR261021-23163107  | SUCCEEDED | Order placed.\nTR261026-29359505  | SUCCEEDED | Order placed.\nTR261025-28363237  | SUCCEEDED | Order placed.\nTR261023-25735963  | SUCCEEDED | Order placed.\nTR261023-25618605  | SUCCEEDED | Order placed.",
-        "sessionId": "bin"
-      },
-      {
         "pid": 23768,
         "cwd": "c:\\windows",
-        "ageSeconds": 0,
+        "ageSeconds": 13812,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -580,7 +587,7 @@
       {
         "pid": 25120,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 0,
+        "ageSeconds": 13809,
         "status": "running",
         "isChild": false,
         "taskSummary": "the confluence page opens, but it collides with the jira login . make the confluence page open 2 ...",
@@ -590,7 +597,7 @@
       {
         "pid": 22608,
         "cwd": "unknown",
-        "ageSeconds": 0,
+        "ageSeconds": 13806,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -4837,20 +4844,20 @@
         ]
       }
     },
-    "bridgeLogTail": "[2026-10-30T10:54:43.499Z] ==========================================\n[2026-10-30T10:54:44.146Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-30T10:54:44.148Z] === with Aipro Auto-Launch ===\n[2026-10-30T10:54:44.149Z] ==========================================\n[2026-10-30T10:54:44.150Z] PID: 19904\n[2026-10-30T10:54:44.151Z] Repo: aryanverma2410/agent-bridge\n[2026-10-30T10:54:44.152Z] Poll interval: 10000ms\n[2026-10-30T10:54:44.153Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-30T10:54:44.154Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-30T10:54:44.155Z] Waiting for messages...\n[2026-10-30T10:55:16.444Z] ==========================================\n[2026-10-30T10:55:16.447Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-30T10:55:16.448Z] === with Aipro Auto-Launch ===\n[2026-10-30T10:55:16.449Z] ==========================================\n[2026-10-30T10:55:16.449Z] PID: 13444\n[2026-10-30T10:55:16.450Z] Repo: aryanverma2410/agent-bridge\n[2026-10-30T10:55:16.451Z] Poll interval: 10000ms\n[2026-10-30T10:55:16.451Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-30T10:55:16.452Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-30T10:55:16.453Z] Waiting for messages...",
+    "bridgeLogTail": "[2026-10-30T06:56:14.027Z] ==========================================\n[2026-10-30T06:56:14.273Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-30T06:56:15.604Z] === with Aipro Auto-Launch ===\n[2026-10-30T06:56:16.938Z] ==========================================\n[2026-10-30T06:56:18.352Z] PID: 36744\n[2026-10-30T06:56:19.703Z] Repo: aryanverma2410/agent-bridge\n[2026-10-30T06:56:21.608Z] Poll interval: 10000ms\n[2026-10-30T06:56:22.563Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-30T06:56:23.840Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-30T06:56:25.273Z] Waiting for messages...\n[2026-10-30T07:03:48.098Z] ==========================================\n[2026-10-30T07:03:48.101Z] === Hardened GitHub Bridge v3 Started ===\n[2026-10-30T07:03:48.102Z] === with Aipro Auto-Launch ===\n[2026-10-30T07:03:48.103Z] ==========================================\n[2026-10-30T07:03:48.105Z] PID: 38884\n[2026-10-30T07:03:48.106Z] Repo: aryanverma2410/agent-bridge\n[2026-10-30T07:03:48.107Z] Poll interval: 10000ms\n[2026-10-30T07:03:48.107Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-10-30T07:03:48.108Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-10-30T07:03:48.109Z] Waiting for messages...",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-10-30T05:46:35.487Z",
-      "ageMs": 363935
+      "lastWrite": "2026-10-30T13:24:35.654Z",
+      "ageMs": 6164
     },
-    "watchdogLogTail": "[2026-10-30T11:16:28.307Z] Check interval: 15000ms\n[2026-10-30T11:16:28.308Z] Stale threshold: 30000ms\n[2026-10-30T11:16:28.313Z] Max restarts: 50/hour\n[2026-10-30T11:16:28.314Z] Bridge script: C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\bridge.js\n[2026-10-30T11:16:28.315Z] Dashboard script: C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\jira-dashboard-server.js\n[2026-10-30T11:16:28.322Z] Bridge already running (PID 13444). Adopting.\n[2026-10-30T11:16:28.330Z] Dashboard already running (PID 25000). Adopting.\n[2026-10-30T11:16:32.064Z] Clock sync: Checking drift against Jira server...\n[2026-10-30T11:16:32.492Z] Clock sync: VDI hw=2026-10-30T16:46:32.492Z Jira=2026-10-30T11:16:32.000Z drift=-19800s\n[2026-10-30T05:46:35.486Z] Clock sync: ADJUSTED by -19800s. Clock set to 2026-10-30 11:16:32"
+    "watchdogLogTail": "[2026-10-30T13:25:56.413Z] CRITICAL: Max dashboard restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T13:26:15.065Z] CRITICAL: Max dashboard restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T13:26:30.102Z] CRITICAL: Max dashboard restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T13:26:43.336Z] CRITICAL: Max dashboard restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T13:26:59.241Z] CRITICAL: Max dashboard restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T13:27:14.476Z] CRITICAL: Max dashboard restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T13:27:29.488Z] CRITICAL: Max dashboard restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T13:27:43.143Z] DUPLICATE watchdog detected: PID 42456 — killing\n[2026-10-30T13:27:46.745Z] CRITICAL: Max dashboard restarts (50/hour) reached. Waiting before retry.\n[2026-10-30T13:27:59.900Z] CRITICAL: Max dashboard restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-30T05:51:38.453Z",
+      "lastCheck": "2026-10-30T13:13:58.696Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4859,7 +4866,7 @@
       "name": "Kibana",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-10-30T05:51:38.453Z",
+      "lastCheck": "2026-10-30T13:13:58.696Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4868,10 +4875,10 @@
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-10-30T05:51:38.453Z",
-      "downSince": "2026-10-30T11:15:41.352Z",
-      "downDuration": -19442899,
-      "alert": false
+      "lastCheck": "2026-10-30T13:13:58.696Z",
+      "downSince": "2026-10-30T06:27:15.395Z",
+      "downDuration": 24403301,
+      "alert": true
     }
   ],
   "hacReport": {
@@ -4966,47 +4973,35 @@
         "reason": "",
         "whatToDo": "Investigate or continue work",
         "url": "https://jira.secext.samsung.net/browse/SAME-4025",
-        "updated": "2026-10-30T13:32:25.000+0900",
+        "updated": "2026-10-30T21:46:52.000+0900",
         "statusChangedAt": "2026-10-22T11:12:39.247+0900"
       },
       {
-        "key": "NPSM-91057",
-        "summary": "[110049599][AE] [Online Purchasing]Medallia Alert ",
+        "key": "MHME-1474",
+        "summary": "Issue with CE Order Mapping on STG3 - PO: MA261029-08898350",
         "priority": "None",
         "status": "In Progress",
         "category": "zero",
         "reason": "",
         "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/NPSM-91057",
-        "updated": "2026-10-30T12:49:15.000+0900",
-        "statusChangedAt": "2026-10-28T00:24:41.443+0900"
-      },
-      {
-        "key": "NPSM-91163",
-        "summary": "[110165491][TR] [Flagship][Online Purchasing]Medallia Alert ",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/NPSM-91163",
-        "updated": "2026-10-30T12:27:42.000+0900",
-        "statusChangedAt": "2026-10-30T11:52:29.707+0900"
-      },
-      {
-        "key": "NPSM-91137",
-        "summary": "[110121088][TR] [Online Purchasing]Medallia Alert ",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/NPSM-91137",
-        "updated": "2026-10-30T12:26:24.000+0900",
-        "statusChangedAt": "2026-10-30T00:43:33.736+0900"
+        "url": "https://jira.secext.samsung.net/browse/MHME-1474",
+        "updated": "2026-10-30T20:33:34.000+0900",
+        "statusChangedAt": "2026-10-30T20:25:48.211+0900"
       }
     ],
     "actionable": [
+      {
+        "key": "AEME-6535",
+        "summary": "[PROD] | Update SC+ Automated Report",
+        "priority": "None",
+        "status": "Approved for Launch",
+        "category": "actionable",
+        "reason": "",
+        "whatToDo": "Respond to Dilip Boddula",
+        "url": "https://jira.secext.samsung.net/browse/AEME-6535",
+        "updated": "2026-10-30T21:39:05.000+0900",
+        "statusChangedAt": "2026-10-30T21:37:43.217+0900"
+      },
       {
         "key": "TKME-2382",
         "summary": "Stuck order on Hybris",
@@ -5034,16 +5029,16 @@
     ],
     "blocked": [
       {
-        "key": "TKME-2417",
-        "summary": "Stuck order on Hybris",
-        "priority": "None",
-        "status": "In Progress",
+        "key": "PC-56128",
+        "summary": "EPP Missing Orders Sales Report - Batched Script for 18885 Orders (SAME-4025)",
+        "priority": "Medium",
+        "status": "To do",
         "category": "blocked",
-        "reason": "Waiting for PC-52678 approval (not assigned to you)",
+        "reason": "Blocked by SAME-4025 (In Progress)",
         "whatToDo": "",
-        "url": "https://jira.secext.samsung.net/browse/TKME-2417",
-        "updated": "2026-10-30T15:44:16.000+0900",
-        "statusChangedAt": "2026-10-29T00:11:07.525+0900"
+        "url": "https://jira.secext.samsung.net/browse/PC-56128",
+        "updated": "2026-10-30T22:02:24.000+0900",
+        "statusChangedAt": ""
       }
     ],
     "queued": [
@@ -5065,41 +5060,21 @@
       }
     ],
     "totals": {
-      "zero": 4,
-      "actionable": 2,
+      "zero": 2,
+      "actionable": 3,
       "blocked": 1,
       "queued": 2
     }
   },
   "worklogTotals": {
     "todayHours": 0,
-    "weekHours": 27.83,
-    "dailyHours": [
-      4.5,
-      2,
-      8.42,
-      12.92,
-      0,
-      0,
-      0
-    ],
-    "dayLabels": [
-      "Mon",
-      "Tue",
-      "Wed",
-      "Thu",
-      "Fri",
-      "Sat",
-      "Sun"
-    ],
-    "weekStart": "2026-10-26",
-    "todayIndex": 4
+    "weekHours": 0
   },
   "tempoApproval": {
     "status": "ready_to_submit",
-    "workedHours": 196.23,
+    "workedHours": 201.23,
     "requiredHours": 176,
-    "deficitHours": -20.23,
+    "deficitHours": -25.23,
     "periodStart": "2026-10-01",
     "periodEnd": "2026-10-31"
   },
@@ -5119,9 +5094,82 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "SAME-4025",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86125,
+        "targetDate": "2026-10-19T06:51:46.624000001Z"
+      },
+      {
+        "key": "SAME-4025",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 227317,
+        "targetDate": "2026-11-04T04:27:16.782000013Z"
+      },
+      {
+        "key": "MHME-1474",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86056,
+        "targetDate": "2026-11-02T11:20:04.322000001Z"
+      },
+      {
+        "key": "MHME-1474",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 424884,
+        "targetDate": "2026-11-06T11:20:04.322000005Z"
+      },
+      {
+        "key": "TKME-2382",
+        "slaName": "Maintenance Response (GMT+3)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86399,
+        "targetDate": "2026-10-19T11:35:42.030000001Z"
+      },
+      {
+        "key": "TKME-2382",
+        "slaName": "Maintenance Resolution (GMT+3)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1961568,
+        "targetDate": "2026-12-02T06:11:28.355000033Z"
+      },
+      {
+        "key": "AEME-6535",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85181,
+        "targetDate": "2026-09-04T05:51:44.040000001Z"
+      },
+      {
+        "key": "AEME-6535",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1277310,
+        "targetDate": "2026-11-20T08:07:09.997561229Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86179,
+        "targetDate": "2026-09-30T08:16:57.595000001Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1269633,
+        "targetDate": "2026-10-20T08:16:57.595000015Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 0.42h on EHME-950, 1.5h on AEME-6686, 0.75h on SAHME-3509, 0.75h on TKME-2417, 0.75h on TKME-2383, 0.42h on SAHME-3508, 1h on PC-56066, 1.08h on SAHME-3512, 1.5h on SAM-18531, 2h on SAME-4025, 1h on RT-664743, 0.75h on TKME-2408, 1h on PC-56078\nToday: TKME-2417, SAME-4025, NPSM-91057, NPSM-91163, NPSM-91137\nBlockers: none"
+    "standupText": "Yesterday: 0.42h on EHME-950, 1.5h on AEME-6686, 0.75h on SAHME-3509, 0.75h on TKME-2417, 0.75h on TKME-2383, 0.42h on SAHME-3508, 1h on PC-56066, 1.08h on SAHME-3512, 1.5h on SAM-18531, 2h on SAME-4025, 1h on RT-664743, 0.75h on TKME-2408, 1h on PC-56078\nToday: PC-56128, SAME-4025, MHME-1474, TKME-2382, RT-657502\nBlockers: PC-56128"
   }
 }
