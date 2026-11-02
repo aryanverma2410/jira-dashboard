@@ -1039,6 +1039,51 @@ body.has-status-bar .scroll{padding-top:28px}
   </div>
 </div>
 
+<!-- VIEW: AUTOLOGIN SETTINGS -->
+<div class="view" id="view-autologin">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="pulse-dot" id="autologinPulseDot"></div>
+      <h1>Autologin Settings</h1>
+    </div>
+    <div class="refresh-time" id="autologinRefreshTime">...</div>
+  </div>
+  <div class="scroll" id="autologinScroll">
+    <div style="max-width:500px;margin:0 auto;padding:8px 0">
+      <div class="section-card" style="margin-bottom:12px">
+        <div class="section-title" style="margin-bottom:10px">Login Time</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="time" id="autologinTimeInput" value="08:15" style="background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 14px;font-size:18px;font-weight:600;flex:1">
+          <span style="font-size:13px;color:var(--text-dim)">24h format</span>
+        </div>
+      </div>
+      <div class="section-card" style="margin-bottom:12px">
+        <div class="section-title" style="margin-bottom:10px">Active Days</div>
+        <div id="autologinDayToggles" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px"></div>
+      </div>
+      <div class="section-card" style="margin-bottom:12px">
+        <div class="section-title" style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+          <span>Skip Dates (Holidays/Leave)</span>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <input type="date" id="autologinSkipDateInput" style="background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:14px;flex:1">
+          <button class="task-btn primary" onclick="addSkipDate()">+ Add</button>
+        </div>
+        <div id="autologinSkipDatesList"></div>
+      </div>
+      <button class="cmd-send" style="width:100%" onclick="saveAutologinConfig()">Save & Apply</button>
+      <div id="autologinSaveStatus" style="text-align:center;margin-top:8px;font-size:12px;color:var(--text-dim)"></div>
+      <div class="section-card" style="margin-top:16px">
+        <div class="section-title" style="margin-bottom:8px">Quick Actions</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="task-btn" onclick="doAutologin()">&#128274; Run Now</button>
+          <button class="task-btn" onclick="loadAutologinConfig()">&#8635; Reload Config</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Tasks (Scheduled Jobs) view -->
 <div class="view" id="view-tasks">
   <div class="topbar">
@@ -1114,6 +1159,10 @@ body.has-status-bar .scroll{padding-top:28px}
   <div class="nav-item" data-nav="view-hac" onclick="switchView('view-hac')">
     <div class="nav-icon">&#128202;</div>
     <span>HAC</span>
+  </div>
+  <div class="nav-item" data-nav="view-autologin" onclick="switchView('view-autologin')">
+    <div class="nav-icon">&#9728;</div>
+    <span>Autologin</span>
   </div>
   <a class="nav-item" data-nav="view-tasks" onclick="switchView('view-tasks')">
     <span class="nav-icon">&#9201;</span>
@@ -1362,6 +1411,7 @@ function switchView(id){
   if(id==='view-command')document.getElementById('navBadgeCmd').classList.remove('show');
   if(id==='view-sessions')document.getElementById('navBadgeSessions').classList.remove('show');
   if(id==='view-mcps')document.getElementById('navBadgeMcps').classList.remove('show');
+  if(id==='view-autologin')loadAutologinConfig();
 }
 
 // ===== DATA FETCH =====
@@ -4338,6 +4388,166 @@ function fillSuggestionLog(key){
     if(wlArea){wlArea.classList.add('show');var wt=document.getElementById('wt-'+key);if(wt)setTimeout(function(){wt.focus()},100)}
   }
 }
+
+// ===== AUTOLOGIN CONFIG =====
+var autologinConfig={login_time:'08:15',days:{mon:true,tue:true,wed:true,thu:true,fri:true,sat:false,sun:false},skip_dates:[]};
+var dayLabels=[{key:'mon',label:'Mon'},{key:'tue',label:'Tue'},{key:'wed',label:'Wed'},{key:'thu',label:'Thu'},{key:'fri',label:'Fri'},{key:'sat',label:'Sat'},{key:'sun',label:'Sun'}];
+
+function loadAutologinConfig(){
+  var isPhone=(location.protocol==='https:'&&location.hostname!=='127.0.0.1'&&location.hostname!=='localhost');
+  var status=document.getElementById('autologinSaveStatus');
+  if(status)status.textContent='Loading config...';
+  
+  if(isPhone){
+    // Phone: can't reach local server, load from GitHub or show defaults
+    fetch('https://raw.githubusercontent.com/aryanverma2410/jira-dashboard/main/autologin-config.json?'+Date.now())
+      .then(function(r){return r.json()})
+      .then(function(d){autologinConfig=d;renderAutologinUI();if(status)status.textContent='Config loaded from GitHub'})
+      .catch(function(){renderAutologinUI();if(status)status.textContent='Using defaults (could not fetch from GitHub)'});
+    return;
+  }
+  
+  // PC: direct fetch to local server
+  fetch(SERVER_URL+'/autologin-config')
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if(d.ok&&d.config){
+        autologinConfig=d.config;
+        renderAutologinUI();
+        if(status)status.textContent='Config loaded';
+      } else {
+        renderAutologinUI();
+        if(status)status.textContent='Using defaults';
+      }
+    })
+    .catch(function(e){
+      renderAutologinUI();
+      if(status)status.textContent='Using defaults (server unreachable)';
+    });
+}
+
+function renderAutologinUI(){
+  // Time input
+  var ti=document.getElementById('autologinTimeInput');
+  if(ti)ti.value=autologinConfig.login_time||'08:15';
+  
+  // Day toggles
+  var dc=document.getElementById('autologinDayToggles');
+  if(dc){
+    var html='';
+    dayLabels.forEach(function(d){
+      var on=autologinConfig.days&&autologinConfig.days[d.key];
+      var cls=on?'task-btn primary':'task-btn';
+      html+='<button class="'+cls+'" id="dayToggle_'+d.key+'" onclick="toggleDay(\''+d.key+'\')" style="padding:10px 6px;font-size:13px;font-weight:600;text-align:center;border-radius:8px">'+d.label+'</button>';
+    });
+    dc.innerHTML=html;
+  }
+  
+  // Skip dates
+  renderSkipDates();
+  
+  // Pulse dot
+  var pd=document.getElementById('autologinPulseDot');
+  if(pd){pd.classList.toggle('offline',!(rawData&&rawData.agent&&rawData.agent.online))}
+  var rt=document.getElementById('autologinRefreshTime');
+  if(rt)rt.textContent=formatTime(new Date());
+}
+
+function toggleDay(key){
+  if(!autologinConfig.days)autologinConfig.days={};
+  autologinConfig.days[key]=!autologinConfig.days[key];
+  var btn=document.getElementById('dayToggle_'+key);
+  if(btn)btn.className=autologinConfig.days[key]?'task-btn primary':'task-btn';
+}
+
+function addSkipDate(){
+  var inp=document.getElementById('autologinSkipDateInput');
+  if(!inp||!inp.value){showToast('Pick a date first','');return}
+  var date=inp.value; // YYYY-MM-DD
+  if(!autologinConfig.skip_dates)autologinConfig.skip_dates=[];
+  if(autologinConfig.skip_dates.indexOf(date)>=0){showToast('Date already in skip list','');return}
+  autologinConfig.skip_dates.push(date);
+  autologinConfig.skip_dates.sort();
+  inp.value='';
+  renderSkipDates();
+}
+
+function removeSkipDate(date){
+  if(!autologinConfig.skip_dates)return;
+  autologinConfig.skip_dates=autologinConfig.skip_dates.filter(function(d){return d!==date});
+  renderSkipDates();
+}
+
+function renderSkipDates(){
+  var el=document.getElementById('autologinSkipDatesList');
+  if(!el)return;
+  if(!autologinConfig.skip_dates||autologinConfig.skip_dates.length===0){
+    el.innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:4px 0">No skip dates set</div>';
+    return;
+  }
+  var html='';
+  autologinConfig.skip_dates.forEach(function(d){
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--card);border:1px solid var(--border);border-radius:6px;margin-bottom:4px">'+
+      '<span style="font-size:13px">'+escapeHtml(d)+'</span>'+
+      '<button class="task-btn danger" onclick="removeSkipDate(\''+d+'\')" style="padding:2px 8px;font-size:11px">Remove</button>'+
+      '</div>';
+  });
+  el.innerHTML=html;
+}
+
+function saveAutologinConfig(){
+  var status=document.getElementById('autologinSaveStatus');
+  if(status)status.textContent='Saving...';
+  
+  // Read time from input
+  var ti=document.getElementById('autologinTimeInput');
+  if(ti)autologinConfig.login_time=ti.value;
+  
+  var isPhone=(location.protocol==='https:'&&location.hostname!=='127.0.0.1'&&location.hostname!=='localhost');
+  
+  if(isPhone){
+    // Phone: can't reach local server, save via bridge
+    createIssue('AUTOLOGIN-CONFIG: Update settings',
+      'Update the autologin config file at C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\autologin-config.json with:'+NL+
+      'login_time: '+autologinConfig.login_time+NL+
+      'days: '+JSON.stringify(autologinConfig.days)+NL+
+      'skip_dates: '+JSON.stringify(autologinConfig.skip_dates)+NL+
+      NL+
+      'Also update the scheduled task time:'+NL+
+      'schtasks /Change /TN "SamsungAutoLogin" /ST "'+autologinConfig.login_time+'"'+NL+
+      'Sent from dashboard',
+      function(e,d){
+        if(e||!d||!d.number){if(status)status.textContent='Failed to save';showToast('Failed to save config','error');return}
+        if(status)status.textContent='Config saved via bridge (Issue #'+d.number+'). Will apply on next poll.';
+        showToast('Config sent to bridge. PC will update in ~30s.','success');
+      });
+    return;
+  }
+  
+  // PC: direct POST to local server
+  fetch(SERVER_URL+'/autologin-config',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(autologinConfig)
+  })
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if(d.ok){
+        if(d.config)autologinConfig=d.config;
+        renderAutologinUI();
+        if(status)status.textContent=d.message||'Saved and applied!';
+        showToast(d.message||'Config saved and applied','success');
+      } else {
+        if(status)status.textContent='Error: '+(d.error||'unknown');
+        showToast('Save failed: '+(d.error||'unknown'),'error');
+      }
+    })
+    .catch(function(e){
+      if(status)status.textContent='Request failed: '+e.message;
+      showToast('Request failed: '+e.message,'error');
+    });
+}
+
 </script>
 </body>
 </html>
