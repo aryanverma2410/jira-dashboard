@@ -1,47 +1,7 @@
 {
-  "generatedAt": "2026-11-02T13:16:45.090Z",
-  "totalTickets": 6,
+  "generatedAt": "2026-11-02T13:17:28.434Z",
+  "totalTickets": 5,
   "tickets": [
-    {
-      "key": "MHME-1474",
-      "summary": "Issue with CE Order Mapping on STG3 - PO: MA261029-08898350",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Morocco Maintenance & Enhancements",
-      "projectKey": "MHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-11-02T22:03:37.000+0900",
-      "created": "2026-10-30T20:20:04.000+0900",
-      "statusChangedAt": "2026-10-30T20:25:48.211+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nWe are currently testing the mapping of CE orders to storage location {}WCDA{}.\n\nWe have placed an order on the STG3 environment (PO: MA261029-08898350), but it appears to be stuck on the Hybris side. Upon initial review, we suspect the order may have been incorrectly linked to storage {}W",
-      "commentsCount": 3,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-11-02T22:03:37.489+0900",
-          "snippet": "Hi ~@email ,\n\nFor the order, we can see that the warehouse is WCDA only.\n\n!image-2026-11-02-18-32-59-774.png!\n\nNo actions were taken from our end\n\nKindly advice further\n\nRegards\n\nAryan"
-        },
-        {
-          "author": "Ashwani Verma",
-          "date": "2026-11-02T18:49:58.677+0900",
-          "snippet": "Hi ~@email \n\nis there any updates regarding this issue ?\n\nThanks\n\n~@email"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi ~@email ,\n\nFor the order, we can see that the warehouse is WCDA only.\n\n!image-2026-11-02-18-32-59-774.png!\n\nNo actions were taken from our end\n\nKindly advice further\n\nRegards\n\nAryan",
-      "lastCommentDate": "2026-11-02T22:03:37.489+0900",
-      "url": "https://jira.secext.samsung.net/browse/MHME-1474",
-      "linkedTickets": [],
-      "solution": {
-        "status": "none",
-        "excerpt": "",
-        "source": "",
-        "foundAt": "",
-        "issueNumber": null
-      }
-    },
     {
       "key": "PKHME-949",
       "summary": "Stuck order on Hybris",
@@ -84,9 +44,15 @@
         }
       ],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-11-02T18:32:50.8909609+05:30"
+        "status": "found",
+        "excerpt": "Stuck order on Hybris\r\nGenerated: 2026-11-02T22:10:00+09:00\r\n\r\nIssue:\r\n6 PK-region orders are stuck in the order fulfillment pipeline. 4 orders are at PAYMENT_CAPTURED status (payment captured but order process cannot proceed past the splitOrder action) and 2 orders are at ORDER_SPLIT status (order has been split into consignments but the consignment process cannot proceed past sendConsignmentToWarehouse). The orders were placed between October 15 and October 16, 2026.\r\n\r\nAffected orders:\r\n1. PK261016-17646422 — PAYMENT_CAPTURED (Oct 16)\r\n2. PK261016-17293998 — ORDER_SPLIT (Oct 16)\r\n3. PK261015-17083784 — PAYMENT_CAPTURED (Oct 15) — cancellation requested by Sai Ram Kosuru\r\n4. PK261015-16812357 — PAYMENT_CAPTURED (Oct 15) — cancellation requested by Sai Ram Kosuru\r\n5. PK261015-16801175 — ORDER_SPLIT (Oct 15)\r\n6. PK261015-16574298 — PAYMENT_CAPTURED (Oct 15)\r\n\r\nRCA:\r\nThe root cause is warehouse stock unavailability for the products in these orders. This is the same confirmed error pattern seen in PKHME-951, PKHME-942, PKHME-947, PKHME-926, PKHME-687, PKHME-654, and PKHME-406.\r\n\r\nFor the 4 PAYMENT_CAPTURED orders: The order process reaches the splitOrder action node, which calls SplitByPriorityWH.afterSplitting(). This method attempts to assign a warehouse to each consignment based on available stock. When no warehouse has stock for the ordered products, the warehouse assignment fails with \"missing values for [warehouse] in model ConsignmentModel\" (NodeExecutionException). The order process transitions to ERROR state and the order remains at PAYMENT_CAPTURED status.\r\n\r\nFor the 2 ORDER_SPLIT orders: The order successfully passed splitOrder (at the time, stock may have been partially available or the split occurred before stock depletion). The consignment process then reaches the sendConsignmentToWarehouse action node. This action attempts to send the consignment to the assigned warehouse, but the warehouse either has no stock or the consignment has no valid warehouse assignment, causing a NullPointerException or NoSuchElementException. The consignment process transitions to ERROR state and the order remains at ORDER_SPLIT status.\r\n\r\nThis pattern has been verified across 8+ similar resolved tickets in the PKHME project. In PKHME-942, the same pattern was resolved by stock update and PC-54800 (retrigger consignment processes). In PKHME-951 and PKHME-947, orders auto-progressed after warehouse stock was updated by the business team, requiring no PC ticket at all. In PKHME-948, the ticket was closed as a duplicate of PKHME-949.\r\n\r\nNote: HAC PROD database verification was not possible due to authentication failure on the HAC server. The root cause is established from Jira cross-reference of 8+ identical resolved tickets with the same order statuses and error patterns. DB verification should be performed when HAC access is restored to confirm current process states and error messages.\r\n\r\nPossible remediation:\r\n\r\nFor orders requiring stock update and retrigger (4 orders):\r\n1. PK261016-17646422 — Business team to update stock in warehouse, then retrigger order process from splitOrder. Reusable PC-41341 (REUSABLE, \"To trigger order process from SplitOrder\") covers this remediation type.\r\n2. PK261015-16574298 — Same as above.\r\n\r\nFor ORDER_SPLIT orders (2 orders):\r\n3. PK261016-17293998 — Business team to update stock in warehouse, then retrigger consignment process from waitForSendToWarehouse wait node. Reusable PC-54582 (REUSABLE, \"Retrigger consignment processes stuck at sendConsignmentToWarehouse\") covers this remediation type. This is the same approach used in PKHME-942 via PC-54800.\r\n4. PK261015-16801175 — Same as above.\r\n\r\nFor orders requiring cancellation (2 orders, per Sai Ram Kosuru's comment on Nov 2):\r\n5. PK261015-17083784 — Cancel order. PC-53423 (cancel without refund, from PKHME-927) can be referenced.\r\n6. PK261015-16812357 — Cancel order. Same approach.\r\n\r\nSome orders may auto-progress once stock is updated in the warehouse, as observed in PKHME-942, PKHME-926, and PKHME-951. After stock update, verify if orders have moved forward before raising a PC ticket for retrigger.\r\n\r\nReusable PC tickets:\r\n- PC-41341 (REUSABLE): Trigger order process from SplitOrder — for PAYMENT_CAPTURED orders\r\n- PC-54582 (REUSABLE): Retrigger consignment processes from sendConsignmentToWarehouse — for ORDER_SPLIT orders\r\n- PC-54800: Retrigger consignment processes for PKHME-942 (based on PC-54582)\r\n- PC-53423: Cancel order without refund (from PKHME-927)\r\n\r\n## Remediation Summary\r\n\r\nOrder Group A (Stock update + retrigger from splitOrder):\r\n- PK261016-17646422, PK261015-16574298\r\n- Reuse PC-41341 pattern\r\n\r\nOrder Group B (Stock update + retrigger consignment process):\r\n- PK261016-17293998, PK261015-16801175\r\n- Reuse PC-54582 pattern\r\n\r\nOrder Group C (Cancellation per business request):\r\n- PK261015-17083784, PK261015-16812357\r\n- Reuse PC-53423 pattern",
+        "sections": {
+          "issue": "6 PK-region orders are stuck in the order fulfillment pipeline. 4 orders are at PAYMENT_CAPTURED status (payment captured but order process cannot proceed past the splitOrder action) and 2 orders are at ORDER_SPLIT status (order has been split into consignments but the consignment process cannot proceed past sendConsignmentToWarehouse). The orders were placed between October 15 and October 16, 2026.\r\n\r\nAffected orders:\r\n1. PK261016-17646422 — PAYMENT_CAPTURED (Oct 16)\r\n2. PK261016-17293998 — ORDER_SPLIT (Oct 16)\r\n3. PK261015-17083784 — PAYMENT_CAPTURED (Oct 15) — cancellation requested by Sai Ram Kosuru\r\n4. PK261015-16812357 — PAYMENT_CAPTURED (Oct 15) — cancellation requested by Sai Ram Kosuru\r\n5. PK261015-16801175 — ORDER_SPLIT (Oct 15)\r\n6. PK261015-16574298 — PAYMENT_CAPTURED (Oct 15)",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-11-02T13:17:10.416Z"
       }
     },
     {
@@ -402,7 +368,7 @@
       }
     ],
     "pid": 35648,
-    "uptime": 4298,
+    "uptime": 4343,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -411,7 +377,7 @@
         "issueTitle": "Investigate ticket PKHME-949",
         "snippet": "Auto-triggered investigation for new ticket PKHME-949.\n\nTicket: PKHME-949\nSummary: Stuck order on Hybris\n\nUse the invest",
         "pid": 36676,
-        "elapsed": 950
+        "elapsed": 996
       }
     ],
     "startTime": "2026-11-02T12:05:04.522Z",
@@ -422,7 +388,7 @@
       {
         "pid": 30756,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 27201,
+        "ageSeconds": 27243,
         "status": "running",
         "isChild": false,
         "taskSummary": "add the new login links to watchdog/relay that keeps pinging it to keep it alive",
@@ -432,7 +398,7 @@
       {
         "pid": 30560,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 27186,
+        "ageSeconds": 27228,
         "status": "running",
         "isChild": false,
         "taskSummary": "consignmentCode warehouseCode orderCode MA261029-08898350 WCDA-S781 MA261029-08898350 MA261029-08...",
@@ -442,7 +408,7 @@
       {
         "pid": 25160,
         "cwd": "c:\\windows",
-        "ageSeconds": 24169,
+        "ageSeconds": 24211,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -452,7 +418,7 @@
       {
         "pid": 10488,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 19778,
+        "ageSeconds": 19821,
         "status": "running",
         "isChild": false,
         "taskSummary": "add the new login links to watchdog/relay that keeps pinging it to keep it alive",
@@ -462,7 +428,7 @@
       {
         "pid": 28788,
         "cwd": "unknown",
-        "ageSeconds": 18198,
+        "ageSeconds": 18240,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -472,7 +438,7 @@
       {
         "pid": 32584,
         "cwd": "unknown",
-        "ageSeconds": 15801,
+        "ageSeconds": 15844,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -482,7 +448,7 @@
       {
         "pid": 33028,
         "cwd": "unknown",
-        "ageSeconds": 6257,
+        "ageSeconds": 6299,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -4798,11 +4764,11 @@
         ]
       }
     },
-    "bridgeLogTail": "[2026-11-02T13:16:45.247Z] STDOUT data for #1005: 336 bytes\n[2026-11-02T13:16:45.265Z] LIVE events write for #1005: 184 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1005.txt\n[2026-11-02T13:16:45.269Z] STDOUT data for #1005: 237 bytes\n[2026-11-02T13:16:45.273Z] LIVE events write for #1005: 186 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1005.txt\n[2026-11-02T13:16:45.275Z] STDOUT data for #1005: 104 bytes\n[2026-11-02T13:16:45.277Z] LIVE events write for #1005: 187 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1005.txt\n[2026-11-02T13:16:45.282Z] STDOUT data for #1005: 116 bytes\n[2026-11-02T13:16:45.284Z] LIVE events write for #1005: 188 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1005.txt\n[2026-11-02T13:16:45.292Z] STDOUT data for #1005: 105 bytes\n[2026-11-02T13:16:45.298Z] LIVE events write for #1005: 189 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1005.txt\n[2026-11-02T13:16:45.305Z] STDOUT data for #1005: 109 bytes\n[2026-11-02T13:16:45.309Z] LIVE events write for #1005: 190 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1005.txt\n[2026-11-02T13:16:45.313Z] STDOUT data for #1005: 111 bytes\n[2026-11-02T13:16:45.325Z] LIVE events write for #1005: 191 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1005.txt\n[2026-11-02T13:16:45.331Z] STDOUT data for #1005: 109 bytes\n[2026-11-02T13:16:45.342Z] LIVE events write for #1005: 192 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1005.txt\n[2026-11-02T13:16:45.349Z] STDOUT data for #1005: 216 bytes\n[2026-11-02T13:16:45.366Z] LIVE events write for #1005: 194 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1005.txt\n[2026-11-02T13:16:45.632Z] STDOUT data for #1005: 351 bytes\n[2026-11-02T13:16:45.638Z] LIVE events write for #1005: 195 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1005.txt",
+    "bridgeLogTail": "                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-11-02T13:17:32.745Z] STDOUT data for #1005: 5949 bytes\n[2026-11-02T13:17:32.747Z] LIVE events write for #1005: 232 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1005.txt\n[2026-11-02T13:17:32.771Z] STDOUT data for #1005: 124 bytes\n[2026-11-02T13:17:32.773Z] LIVE events write for #1005: 233 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1005.txt\n[2026-11-02T13:17:33.976Z] STDOUT data for #1005: 290 bytes\n[2026-11-02T13:17:33.979Z] LIVE events write for #1005: 234 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1005.txt\n[2026-11-02T13:17:33.987Z] STDOUT data for #1005: 320 bytes\n[2026-11-02T13:17:33.989Z] LIVE events write for #1005: 235 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1005.txt",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-11-02T13:02:42.137Z",
-      "ageMs": 848963
+      "ageMs": 892365
     },
     "watchdogLogTail": "[2026-11-02T12:04:52.493Z] RESTART NEEDED: Bridge process (PID 32676) not found\n[2026-11-02T12:04:55.309Z] Could not kill PID 32676: Command failed: taskkill /PID 32676 /F /T\n[2026-11-02T12:05:00.853Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 33448) not found\n[2026-11-02T12:05:03.986Z] Could not kill dashboard PID 33448: Command failed: taskkill /PID 33448 /F /T\n[2026-11-02T12:05:03.987Z] Starting bridge.js...\n[2026-11-02T12:05:04.170Z] Bridge started with PID 35648 (restart #66, 18 in last hour)\n[2026-11-02T12:05:10.265Z] Starting jira-dashboard-server.js...\n[2026-11-02T12:05:10.447Z] Dashboard started with PID 31732 (restart #22, 5 in last hour)\n[2026-11-02T12:37:42.001Z] DUPLICATE watchdog detected: PID 14800 — killing\n[2026-11-02T13:02:42.131Z] DUPLICATE watchdog detected: PID 34976 — killing",
     "jobOutputs": {}
@@ -4897,18 +4863,6 @@
   "actionItems": {
     "zero": [
       {
-        "key": "MHME-1474",
-        "summary": "Issue with CE Order Mapping on STG3 - PO: MA261029-08898350",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/MHME-1474",
-        "updated": "2026-11-02T22:03:37.000+0900",
-        "statusChangedAt": "2026-10-30T20:25:48.211+0900"
-      },
-      {
         "key": "PKHME-949",
         "summary": "Stuck order on Hybris",
         "priority": "None",
@@ -4972,17 +4926,17 @@
       }
     ],
     "totals": {
-      "zero": 2,
+      "zero": 1,
       "actionable": 2,
       "blocked": 1,
       "queued": 1
     }
   },
   "worklogTotals": {
-    "todayHours": 5,
-    "weekHours": 5,
+    "todayHours": 5.58,
+    "weekHours": 5.58,
     "dailyHours": [
-      5,
+      5.58,
       0,
       0,
       0,
@@ -5004,9 +4958,9 @@
   },
   "tempoApproval": {
     "status": "open",
-    "workedHours": 5,
+    "workedHours": 5.58,
     "requiredHours": 168,
-    "deficitHours": 163,
+    "deficitHours": 162.42,
     "periodStart": "2026-11-01",
     "periodEnd": "2026-11-30"
   },
@@ -5026,10 +4980,41 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "PKHME-949",
+        "slaName": "Maintenance Response (GMT+5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86398,
+        "targetDate": "2026-10-20T10:48:30.778000001Z"
+      },
+      {
+        "key": "PKHME-949",
+        "slaName": "Maintenance Resolution (GMT+5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2590051,
+        "targetDate": "2026-12-14T12:44:59.147000040Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86179,
+        "targetDate": "2026-09-30T08:16:57.595000001Z"
+      },
+      {
+        "key": "AEME-6597",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 1269633,
+        "targetDate": "2026-10-20T08:16:57.595000015Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: no worklogs\nToday: MHME-1474, PKHME-949, RT-722599, PC-56128, RT-657502\nBlockers: PC-56128"
+    "standupText": "Yesterday: no worklogs\nToday: PKHME-949, RT-722599, PC-56128, RT-657502\nBlockers: PC-56128"
   },
   "autologinConfig": {
     "login_time": "08:15",
