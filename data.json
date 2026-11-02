@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-02T08:36:00.656Z",
+  "generatedAt": "2026-11-02T08:36:42.253Z",
   "totalTickets": 5,
   "tickets": [
     {
@@ -345,7 +345,7 @@
       }
     ],
     "pid": 18364,
-    "uptime": 2910,
+    "uptime": 2956,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -357,7 +357,7 @@
       {
         "pid": 31608,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 10381,
+        "ageSeconds": 10423,
         "status": "running",
         "isChild": false,
         "taskSummary": "remove the backoffice and hac links. and check today when I turned on the desktop. it opened nd c...",
@@ -367,7 +367,7 @@
       {
         "pid": 30756,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 10355,
+        "ageSeconds": 10396,
         "status": "running",
         "isChild": false,
         "taskSummary": "check now",
@@ -377,7 +377,7 @@
       {
         "pid": 30560,
         "cwd": "c:\\windows",
-        "ageSeconds": 10340,
+        "ageSeconds": 10382,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -387,7 +387,7 @@
       {
         "pid": 25160,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 7323,
+        "ageSeconds": 7365,
         "status": "running",
         "isChild": false,
         "taskSummary": "remove the backoffice and hac links. and check today when I turned on the desktop. it opened nd c...",
@@ -397,7 +397,7 @@
       {
         "pid": 10488,
         "cwd": "unknown",
-        "ageSeconds": 2932,
+        "ageSeconds": 2974,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -407,7 +407,7 @@
       {
         "pid": 28788,
         "cwd": "unknown",
-        "ageSeconds": 1351,
+        "ageSeconds": 1393,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -4714,7 +4714,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-11-02T08:02:14.086Z",
-      "ageMs": 2030922
+      "ageMs": 2072839
     },
     "watchdogLogTail": "[2026-11-02T07:47:51.393Z] DUPLICATE jira-dashboard-server detected: PID 16172 — killing\n[2026-11-02T08:01:48.858Z] DASHBOARD RESTART NEEDED: No dashboard heartbeat file found\n[2026-11-02T08:01:51.876Z] Killed dashboard PID 31256\n[2026-11-02T08:02:00.931Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 31256) not found\n[2026-11-02T08:02:03.426Z] Could not kill dashboard PID 31256: Command failed: taskkill /PID 31256 /F /T\n[2026-11-02T08:02:03.441Z] Starting jira-dashboard-server.js...\n[2026-11-02T08:02:03.607Z] Dashboard started with PID 2668 (restart #16, 5 in last hour)\n[2026-11-02T08:02:09.893Z] Starting jira-dashboard-server.js...\n[2026-11-02T08:02:10.067Z] Dashboard started with PID 2984 (restart #17, 6 in last hour)\n[2026-11-02T08:02:14.086Z] DUPLICATE jira-dashboard-server detected: PID 2668 — killing"
   },
@@ -4723,7 +4723,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-11-02T08:35:25.480Z",
+      "lastCheck": "2026-11-02T08:36:25.011Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4732,18 +4732,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-02T08:35:25.480Z",
+      "lastCheck": "2026-11-02T08:36:25.011Z",
       "downSince": "2026-11-02T08:02:11.486Z",
-      "downDuration": 1993994,
+      "downDuration": 2053525,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-02T08:35:25.480Z",
+      "lastCheck": "2026-11-02T08:36:25.011Z",
       "downSince": "2026-11-02T08:02:11.486Z",
-      "downDuration": 1993994,
+      "downDuration": 2053525,
       "alert": true
     }
   ],
@@ -4782,29 +4782,6 @@
     }
   },
   "actionQueue": [
-    {
-      "id": 3,
-      "ticket": "RT-722599",
-      "actions": {
-        "comment": "Hi [~t.zaidi@samsung.com] ,\n\nThe order AE260901-08628165 has 2 SC+ subscriptions by design (AE AddedServiceConfig for SMC has maxPerOrder=3). Both subscriptions were created from the same Checkout.com token during order placement.\n\nWhen a user updates card details from the my-orders page, the Checkout.com card update callback flows through TokoCheckoutDotComFacadeImpl.doAuthorize() -> handleSubscriptionOrder() -> updatePaymentInfo(). The updatePaymentInfo() method (line 995) calls getPaymentTransactionForOrderAndPid() which searches the order PaymentTransactions by paymentProvider and paymentId, returning the most recent matching PT. It then gets the subscriptionData from that PT and updates only that single subscription token, paymentInfo, and paymentMode.\n\nAll 4 PaymentTransactions on this order are linked to sub1 (ARE26I0411465355) or have no subscriptionData. Zero PTs exist for sub2 (ARE26I0461157598). When the card update callback fires, getPaymentTransactionForOrderAndPid() finds PT4 (created Sep 17, linked to sub1), updates sub1 token successfully, but sub2 is never reached.\n\nThe Adyen facade handles this correctly via updateEachSubscriptionData() (line 4523) which iterates all ExternalServiceEntries on the order and updates each subscription token + paymentInfo individually. Checkout.com had no equivalent iteration logic.\n\nWe also verified that the manual \"_1\" appended to the token is not a contributing factor. The token is an output that gets SET from the Checkout.com response source ID, not an input used for PT matching. The subscription ONHOLD status does not block the card update flow either -- the update code does not check subscription status.\n\nProposed fix: In TokoCheckoutDotComFacadeImpl.updatePaymentInfo(), after updating the matched PT subscription, iterate all remaining subscriptions on the order and call updateSingleSubscriptionPaymentInfo() for each, mirroring Adyen updateEachSubscriptionData() pattern. The existing updateSingleSubscriptionPaymentInfo() method handles the actual update logic per subscription (token, paymentInfo, paymentMode). This is the minimal change that addresses the bug.\n\nThanks,\nAryan",
-        "worklogHours": 3.75,
-        "transition": null,
-        "fallbackTransition": null,
-        "assignee": "t.zaidi",
-        "linkType": null,
-        "linkTicket": null,
-        "labels": [
-          "a=aryan.v1",
-          "a=t.zaidi",
-          "i=sc+",
-          "rev=dilip.b",
-          "sc=scripting",
-          "rca=done"
-        ]
-      },
-      "createdAt": "2026-10-08",
-      "notes": "RCA comment with proposed fix for multiple SC+ subscription token update issue, 3h45m worklog, assign back to Talib"
-    },
     {
       "id": 5,
       "ticket": "RT-657502",
@@ -4948,38 +4925,7 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": {
-    "byTicket": [
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Response (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86179,
-        "targetDate": "2026-09-30T08:16:57.595000001Z"
-      },
-      {
-        "key": "AEME-6597",
-        "slaName": "Maintenance Resolution (GMT+4)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1269633,
-        "targetDate": "2026-10-20T08:16:57.595000015Z"
-      },
-      {
-        "key": "MHME-1474",
-        "slaName": "Maintenance Response (GMT+1)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86056,
-        "targetDate": "2026-11-02T11:20:04.322000001Z"
-      },
-      {
-        "key": "MHME-1474",
-        "slaName": "Maintenance Resolution (GMT+1)",
-        "slaStatus": "STILL",
-        "remainingDuration": 355444,
-        "targetDate": "2026-11-06T11:20:04.322000005Z"
-      }
-    ]
-  },
+  "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
     "standupText": "Yesterday: no worklogs\nToday: NPSM-91322, PC-56128, MHME-1474, RT-657502\nBlockers: PC-56128"
