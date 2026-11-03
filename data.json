@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-03T12:15:36.378Z",
+  "generatedAt": "2026-11-03T12:16:17.036Z",
   "totalTickets": 5,
   "tickets": [
     {
@@ -35,9 +35,15 @@
       "url": "https://jira.secext.samsung.net/browse/MHME-1467",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-11-03T17:36:21Z"
+        "status": "found",
+        "excerpt": "# RCA: MHME-1467\nSummary: Stuck order on Hybris - 43 Morocco orders in WARNING state\nGenerated: 2026-11-03T17:45:46Z\n\nHi [~ashwani.v@samsung.com] ,\n\nMHME-1467 is a precautionary healthcheck ticket for 43 Morocco (MA-region) orders found in WARNING state during the MENA healthcheck (lookback: 5 days, dated Oct 16). The orders were not in ERROR state but showed two categories of warning signs: 19 orders with no shipping date on consignments (ages 1-4 days), and 24 orders with no GERP Delivery Order number (DO not created in ERP, ages 2-4 days).\n\nBased on cross-referencing similar resolved MA-region tickets (MHME-1463, MHME-1465, MHME-1468, MHME-1470), these warning patterns are characteristic of two known transient issues in the Morocco market:\n\n1. COD credit limit blockage: Morocco uses cash-on-delivery as a primary payment method. When the carrier reaches its credit limit with GERP, new consignments cannot be sent to the warehouse and GERP delivery orders are not created. This is a logistics/finance constraint, not a platform bug. This was the confirmed root cause for MHME-1463 (8 orders, all COD, carrier credit limit issue). The market confirmed no remediation was needed and the orders progressed once the credit limit was reset.\n\n2. Transient GERP/warehouse connection timeouts: Consignment-to-warehouse handoff (sendConsignmentToWarehouse) intermittently fails with I/O errors (Connection reset) due to temporary network/connectivity issues between Hybris and the warehouse/GERP system. These are transient failures that self-resolve on retry or when the connection stabilizes. This was confirmed in MHME-1470 (sendConsignmentToWarehouse I/O error, market confirmed customer cancelled, no remediation needed).\n\nAs noted in your latest comment (Nov 3), the market has confirmed that the majority of these 43 orders have now completed successfully. This is consistent with the pattern seen across all recent MA-region healthcheck tickets — the warnings are transient logistics/integration delays that self-resolve without platform-level remediation.\n\nNo Groovy remediation scripts were executed for any MA-region order in this healthcheck batch. No PC tickets are required. No Hybris platform bug or code defect was involved.\n\nThe remaining orders that have not yet progressed should continue to be monitored. If any order transitions from WARNING to ERROR state (e.g., consignment process moves to ERROR, BusinessProcess endMessage populated), a separate ticket with the specific order code should be raised for individual investigation and remediation.\n\nThanks,\n\nAryan.",
+        "sections": {
+          "issue": "",
+          "rca": "# RCA: MHME-1467\nSummary: Stuck order on Hybris - 43 Morocco orders in WARNING state\nGenerated: 2026-11-03T17:45:46Z\n\nHi [~ashwani.v@samsung.com] ,\n\nMHME-1467 is a precautionary healthcheck ticket for 43 Morocco (MA-region) orders found in WARNING state during the MENA healthcheck (lookback: 5 days, dated Oct 16). The orders were not in ERROR state but showed two categories of warning signs: 19 orders with no shipping date on consignments (ages 1-4 days), and 24 orders with no GERP Delivery Order number (DO not created in ERP, ages 2-4 days).\n\nBased on cross-referencing similar resolved MA-region tickets (MHME-1463, MHME-1465, MHME-1468, MHME-1470), these warning patterns are characteristic of two known transient issues in the Morocco market:\n\n1. COD credit limit blockage: Morocco uses cash-on-delivery as a primary payment method. When the carrier reaches its credit limit with GERP, new consignments cannot be sent to the warehouse and GERP delivery orders are not created. This is a logistics/finance constraint, not a platform bug. This was the confirmed root cause for MHME-1463 (8 orders, all COD, carrier credit limit issue). The market confirmed no remediation was needed and the orders progressed once the credit limit was reset.\n\n2. Transient GERP/warehouse connection timeouts: Consignment-to-warehouse handoff (sendConsignmentToWarehouse) intermittently fails with I/O errors (Connection reset) due to temporary network/connectivity issues between Hybris and the warehouse/GERP system. These are transient failures that self-resolve on retry or when the connection stabilizes. This was confirmed in MHME-1470 (sendConsignmentToWarehouse I/O error, market confirmed customer cancelled, no remediation needed).\n\nAs noted in your latest comment (Nov 3), the market has confirmed that the majority of these 43 orders have now completed successfully. This is consistent with the pattern seen across all recent MA-region healthcheck tickets — the warnings are transient logistics/integration delays that self-resolve without platform-level remediation.\n\nNo Groovy remediation scripts were executed for any MA-region order in this healthcheck batch. No PC tickets are required. No Hybris platform bug or code defect was involved.\n\nThe remaining orders that have not yet progressed should continue to be monitored. If any order transitions from WARNING to ERROR state (e.g., consignment process moves to ERROR, BusinessProcess endMessage populated), a separate ticket with the specific order code should be raised for individual investigation and remediation.\n\nThanks,\n\nAryan.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-11-03T12:15:46.359Z"
       }
     },
     {
@@ -210,8 +216,8 @@
         "issueNum": 1017,
         "title": "Investigate ticket MHME-1467",
         "received": "2026-11-03T12:05:23.073Z",
-        "responded": "",
-        "responseSnippet": ""
+        "responded": "2026-11-03T12:15:57.875Z",
+        "responseSnippet": "Starting the investigation. Let me begin with Phase 0: read past learnings, check for existing RCA/cache files, and create the lock file.I have past learnings loaded. A stale lock file exists (previous investigation started but didn't complete — no RCA .md file, no cache file). Let me remove the stale lock, create a fresh one, and begin the investigation.\n\nFirst, let me check what scripts and tools are available for fetching the Jira ticket.All scripts are available and the lock file is created."
       },
       {
         "issueNum": 1016,
@@ -348,27 +354,19 @@
       }
     ],
     "pid": 20788,
-    "uptime": 13420,
+    "uptime": 13460,
     "failures": 0,
-    "activeJobCount": 1,
-    "jobs": [
-      {
-        "issueNum": 1017,
-        "issueTitle": "Investigate ticket MHME-1467",
-        "snippet": "Auto-triggered investigation for new ticket MHME-1467.\n\nTicket: MHME-1467\nSummary: Stuck order on Hybris\n\nUse the invest",
-        "pid": 13112,
-        "elapsed": 610
-      }
-    ],
+    "activeJobCount": 0,
+    "jobs": [],
     "startTime": "2026-11-03T03:01:53.848Z",
     "version": "v3",
-    "lastResponseAt": "2026-11-03T11:33:22.471Z",
-    "lastResponseIssue": 1016,
+    "lastResponseAt": "2026-11-03T12:15:57.898Z",
+    "lastResponseIssue": 1017,
     "ideSessions": [
       {
         "pid": 16456,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 32137,
+        "ageSeconds": 32177,
         "status": "running",
         "isChild": false,
         "taskSummary": "add the new login links to watchdog/relay that keeps pinging it to keep it alive",
@@ -378,7 +376,7 @@
       {
         "pid": 1356,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 31988,
+        "ageSeconds": 32029,
         "status": "running",
         "isChild": false,
         "taskSummary": "update comment with 1 hr logs, assign back",
@@ -388,7 +386,7 @@
       {
         "pid": 22852,
         "cwd": "c:\\windows",
-        "ageSeconds": 31984,
+        "ageSeconds": 32024,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -398,7 +396,7 @@
       {
         "pid": 13712,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 31979,
+        "ageSeconds": 32019,
         "status": "running",
         "isChild": false,
         "taskSummary": "add the new login links to watchdog/relay that keeps pinging it to keep it alive",
@@ -407,6 +405,15 @@
       }
     ],
     "activityLog": [
+      {
+        "id": "1793708157901-tr7zdb",
+        "timestamp": "2026-11-03T12:15:57.901Z",
+        "type": "agent-response",
+        "source": "bridge",
+        "title": "Investigate ticket MHME-1467",
+        "detail": "Starting the investigation. Let me begin with Phase 0: read past learnings, check for existing RCA/cache files, and create the lock file.I have past learnings loaded. A stale lock file exists (previou",
+        "status": "success"
+      },
       {
         "id": "1793707524179-2kmkjr",
         "timestamp": "2026-11-03T12:05:24.179Z",
@@ -667,15 +674,6 @@
         "title": "Investigate ticket AEME-6686",
         "detail": "#918",
         "status": "pending"
-      },
-      {
-        "id": "1793192418549-lf0zln",
-        "timestamp": "2026-10-28T13:00:18.549Z",
-        "type": "agent-response",
-        "source": "bridge",
-        "title": "Investigate ticket TKME-2383",
-        "detail": "Starting Phase 0 - pre-flight checks. Reading learnings, checking for existing RCA/cache files, and locating available scripts.Read learnings. Key patterns noted: always verify DB state, correlate wit",
-        "status": "success"
       }
     ],
     "sessionMeta": {
@@ -4735,30 +4733,31 @@
         "issueNum": 1017,
         "title": "Investigate ticket MHME-1467",
         "startTime": "2026-11-03T12:05:24.442Z",
-        "status": "thinking",
+        "status": "done",
         "commandHistory": [
           {
             "title": "Investigate ticket MHME-1467",
             "time": "2026-11-03T12:05:24.442Z"
           }
-        ]
+        ],
+        "endTime": "2026-11-03T12:15:57.902Z",
+        "lastOutput": "Starting the investigation. Let me begin with Phase 0: read past learnings, check for existing RCA/cache files, and create the lock file.I have past learnings loaded. A stale lock file exists (previous investigation started but didn't complete — no RCA .md file, no cache file). Let me remove the stale lock, create a fresh one, and begin the investigation.\n\nFirst, let me check what scripts and tools are available for fetching the Jira ticket.All scripts are available and the lock file is created."
       }
     },
-    "bridgeLogTail": "[2026-11-03T12:15:18.618Z] STDOUT data for #1017: 106 bytes\n[2026-11-03T12:15:18.621Z] LIVE events write for #1017: 342 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1017.txt\n[2026-11-03T12:15:18.635Z] STDOUT data for #1017: 117 bytes\n[2026-11-03T12:15:18.639Z] LIVE events write for #1017: 343 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1017.txt\n[2026-11-03T12:15:18.652Z] STDOUT data for #1017: 124 bytes\n[2026-11-03T12:15:18.655Z] LIVE events write for #1017: 344 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1017.txt\n[2026-11-03T12:15:18.661Z] STDOUT data for #1017: 115 bytes\n[2026-11-03T12:15:18.663Z] LIVE events write for #1017: 345 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1017.txt\n[2026-11-03T12:15:18.678Z] STDOUT data for #1017: 112 bytes\n[2026-11-03T12:15:18.681Z] LIVE events write for #1017: 346 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1017.txt\n[2026-11-03T12:15:18.695Z] STDOUT data for #1017: 117 bytes\n[2026-11-03T12:15:18.698Z] LIVE events write for #1017: 347 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1017.txt\n[2026-11-03T12:15:18.705Z] STDOUT data for #1017: 120 bytes\n[2026-11-03T12:15:18.709Z] LIVE events write for #1017: 348 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1017.txt\n[2026-11-03T12:15:18.721Z] STDOUT data for #1017: 116 bytes\n[2026-11-03T12:15:18.724Z] LIVE events write for #1017: 349 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1017.txt\n[2026-11-03T12:15:18.734Z] STDOUT data for #1017: 126 bytes\n[2026-11-03T12:15:18.737Z] LIVE events write for #1017: 350 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1017.txt\n[2026-11-03T12:15:25.589Z] STDOUT data for #1017: 7245 bytes\n[2026-11-03T12:15:25.593Z] LIVE events write for #1017: 351 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1017.txt",
+    "bridgeLogTail": "[2026-11-03T12:15:53.823Z] STDOUT data for #1017: 116 bytes\n[2026-11-03T12:15:53.826Z] LIVE events write for #1017: 502 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1017.txt\n[2026-11-03T12:15:53.836Z] STDOUT data for #1017: 117 bytes\n[2026-11-03T12:15:53.839Z] LIVE events write for #1017: 503 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1017.txt\n[2026-11-03T12:15:53.853Z] STDOUT data for #1017: 113 bytes\n[2026-11-03T12:15:53.856Z] LIVE events write for #1017: 504 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1017.txt\n[2026-11-03T12:15:53.859Z] STDOUT data for #1017: 122 bytes\n[2026-11-03T12:15:53.862Z] LIVE events write for #1017: 505 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1017.txt\n[2026-11-03T12:15:53.867Z] STDOUT data for #1017: 111 bytes\n[2026-11-03T12:15:53.870Z] LIVE events write for #1017: 506 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1017.txt\n[2026-11-03T12:15:53.879Z] STDOUT data for #1017: 114 bytes\n[2026-11-03T12:15:53.883Z] LIVE events write for #1017: 507 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1017.txt\n[2026-11-03T12:15:53.893Z] STDOUT data for #1017: 106 bytes\n[2026-11-03T12:15:53.896Z] LIVE events write for #1017: 508 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1017.txt\n[2026-11-03T12:15:53.905Z] STDOUT data for #1017: 116 bytes\n[2026-11-03T12:15:53.909Z] LIVE events write for #1017: 509 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1017.txt\n[2026-11-03T12:15:53.911Z] STDOUT data for #1017: 346 bytes\n[2026-11-03T12:15:53.914Z] LIVE events write for #1017: 510 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1017.txt\n[2026-11-03T12:15:56.876Z] aipro completed for #1017 (5892 chars)\n[2026-11-03T12:15:57.874Z] Comment posted on #1017",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-11-03T12:02:42.014Z",
-      "ageMs": 777581
+      "ageMs": 818398
     },
-    "watchdogLogTail": "[2026-11-03T09:20:34.632Z] Starting jira-dashboard-server.js...\n[2026-11-03T09:20:34.795Z] Dashboard started with PID 18036 (restart #4, 1 in last hour)\n[2026-11-03T09:20:41.600Z] DASHBOARD RESTART NEEDED: Dashboard heartbeat is stale (19823s old)\n[2026-11-03T09:20:44.646Z] Could not kill dashboard PID 18036: Command failed: taskkill /PID 18036 /F /T\n[2026-11-03T09:20:49.650Z] Starting jira-dashboard-server.js...\n[2026-11-03T09:20:49.864Z] Dashboard started with PID 3148 (restart #5, 2 in last hour)\n[2026-11-03T11:32:42.428Z] DUPLICATE watchdog detected: PID 26320 — killing\n[2026-11-03T11:52:41.048Z] DUPLICATE watchdog detected: PID 13424 — killing\n[2026-11-03T11:57:41.525Z] DUPLICATE watchdog detected: PID 25572 — killing\n[2026-11-03T12:02:42.012Z] DUPLICATE watchdog detected: PID 18224 — killing",
-    "jobOutputs": {}
+    "watchdogLogTail": "[2026-11-03T09:20:34.632Z] Starting jira-dashboard-server.js...\n[2026-11-03T09:20:34.795Z] Dashboard started with PID 18036 (restart #4, 1 in last hour)\n[2026-11-03T09:20:41.600Z] DASHBOARD RESTART NEEDED: Dashboard heartbeat is stale (19823s old)\n[2026-11-03T09:20:44.646Z] Could not kill dashboard PID 18036: Command failed: taskkill /PID 18036 /F /T\n[2026-11-03T09:20:49.650Z] Starting jira-dashboard-server.js...\n[2026-11-03T09:20:49.864Z] Dashboard started with PID 3148 (restart #5, 2 in last hour)\n[2026-11-03T11:32:42.428Z] DUPLICATE watchdog detected: PID 26320 — killing\n[2026-11-03T11:52:41.048Z] DUPLICATE watchdog detected: PID 13424 — killing\n[2026-11-03T11:57:41.525Z] DUPLICATE watchdog detected: PID 25572 — killing\n[2026-11-03T12:02:42.012Z] DUPLICATE watchdog detected: PID 18224 — killing"
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-11-03T12:14:40.780Z",
+      "lastCheck": "2026-11-03T12:15:41.299Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4767,18 +4766,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-03T12:14:40.780Z",
+      "lastCheck": "2026-11-03T12:15:41.299Z",
       "downSince": "2026-11-03T09:20:51.945Z",
-      "downDuration": 10428835,
+      "downDuration": 10489354,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-03T12:14:40.780Z",
+      "lastCheck": "2026-11-03T12:15:41.299Z",
       "downSince": "2026-11-03T09:20:51.945Z",
-      "downDuration": 10428835,
+      "downDuration": 10489354,
       "alert": true
     }
   ],
@@ -4958,7 +4957,52 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "MHME-1467",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86398,
+        "targetDate": "2026-10-19T11:35:23.539000001Z"
+      },
+      {
+        "key": "MHME-1467",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2591237,
+        "targetDate": "2026-12-15T12:03:34.089000042Z"
+      },
+      {
+        "key": "MHME-1470",
+        "slaName": "Maintenance Response (GMT+1)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86396,
+        "targetDate": "2026-10-21T10:09:03.506000001Z"
+      },
+      {
+        "key": "MHME-1470",
+        "slaName": "Maintenance Resolution (GMT+1)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2588290,
+        "targetDate": "2026-12-15T11:14:26.224000040Z"
+      },
+      {
+        "key": "PME-14126",
+        "slaName": "Maintenance Response (GMT+8)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86373,
+        "targetDate": "2026-11-04T02:32:52.655000001Z"
+      },
+      {
+        "key": "PME-14126",
+        "slaName": "Maintenance Resolution (GMT+8)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1260996,
+        "targetDate": "2026-11-24T02:32:52.655000015Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
     "standupText": "Yesterday: 0.25h on MYME-28746, 0.58h on MHME-1474, 3.75h on RT-722599, 1h on NPSM-91322\nToday: MHME-1467, MHME-1470, PME-14126, RT-664743, RT-657502\nBlockers: none"
