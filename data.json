@@ -1,7 +1,40 @@
 {
-  "generatedAt": "2026-11-04T07:01:42.138Z",
+  "generatedAt": "2026-11-04T07:02:22.660Z",
   "totalTickets": 6,
   "tickets": [
+    {
+      "key": "PME-14141",
+      "summary": "[SEPCO] Pending Orders Need to Push Cancelled Status Nov 4",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Philippines Maintenance & Enhancements",
+      "projectKey": "PME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-11-04T16:02:07.000+0900",
+      "created": "2026-11-04T13:02:42.000+0900",
+      "statusChangedAt": "2026-11-04T13:04:06.463+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\nCould you please help cancel these orders in Hybris?\n\n \n|Order nr.|\n|PH261030-89668975|\n|PH261024-87008253|\n\n \n \n\nnote: cancel without refund\n\ncc. ~@email ~@email ~@email ~@email \n\nThanks,\n\nRaymond",
+      "commentsCount": 0,
+      "recentComments": [],
+      "lastCommentBy": "",
+      "lastCommentSnippet": "",
+      "lastCommentDate": "",
+      "url": "https://jira.secext.samsung.net/browse/PME-14141",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "Summary: [SEPCO] Pending Orders Need to Push Cancelled Status Nov 4\r\nGenerated: 2026-11-04T09:15:00+05:30\r\n\r\nIssue:\r\nReporter Raymond Acojido Inumerable (SEPCO team) requested cancellation of 2 Philippines-region orders in Hybris without refund:\r\n- PH261030-89668975\r\n- PH261024-87008253\r\nThe orders are currently in a non-terminal status and need to be pushed to CANCELLED. The reporter explicitly noted \"cancel without refund\" — meaning the payment should not be reversed as part of the cancellation.\r\n\r\nThis is a recurring SEPCO maintenance request pattern. 759 similar resolved PME tickets were found matching \"cancel\" AND \"order\", including:\r\n- PME-13696 (Sep 29, 2026) — same title pattern, same reporter, 2 PH orders, resolved by marking CANCELLED without refund\r\n- PME-13322 (Aug 28, 2026) — same title pattern, 5 orders, resolved with cancellation script\r\n- PME-12202 (May 11, 2026) — same title pattern, 119 orders, periodic cleanup\r\n- PME-3198 (Feb 23, 2024) — same title pattern, test order cancellation\r\n\r\nRCA:\r\nThis is not a system bug or error condition. It is a manual cancellation request — the SEPCO team needs specific orders pushed to CANCELLED status in Hybris, typically because:\r\n1. The orders are stuck in a pre-fulfilment state (e.g., WAITING, ON_HOLD, or similar) where the customer or operations team has decided not to proceed with the order\r\n2. The standard Hybris order cancellation flow (via storefront or CS Cockpit) was not applicable or failed for these orders\r\n3. The \"without refund\" instruction means the payment was either not captured, already manually reversed externally, or the business decision is to skip the refund step in the Hybris cancellation process\r\n\r\nThe resolution involves a Hybris HAC Groovy script that:\r\n- Sets the order status to CANCELLED\r\n- Sets all associated consignments to CANCELLED (if not already COMPLETED or CANCELLED)\r\n- Restarts the order business process to \"failed\" state (to stop any ongoing process loops)\r\n- Restarts the consignment process to \"failed\" state (to stop fulfilment loops)\r\n- Does NOT trigger any refund or payment reversal\r\n\r\nVERIFICATION LIMITATION: HAC authentication was unavailable during this investigation (password expiry). DB state for both orders could not be verified directly. The RCA is based on:\r\n1. Ticket description analysis (VERIFIED — Jira API)\r\n2. Cross-reference with 6 identical resolved tickets (VERIFIED — Jira API)\r\n3. PC script library matching (VERIFIED — pc-script-library.json local index)\r\n4. PC-53423 ticket and script review (VERIFIED — Jira API + script file)\r\n\r\nPossible remediation:\r\nReuse existing approved PC ticket PC-53423 (Closed, REUSABLE label, script: script-PKHME-927-cancel-without-refund.groovy).\r\n\r\nThe script performs the following for each order:\r\n1. Looks up the order by code (WHERE originalversion IS NULL)\r\n2. Restarts the order business process to \"releaseVirtualStockIfApplicable\" or \"failed\"\r\n3. Sets all non-terminal consignments to ConsignmentStatus.CANCELLED\r\n4. Restarts consignment processes to \"failed\" state\r\n5. Sets the order status to OrderStatus.CANCELLED\r\n6. Does NOT touch payment transactions or trigger refund logic\r\n\r\nSteps:\r\n1. Copy script-PKHME-927-cancel-without-refund.groovy to a new file for PME-14141\r\n2. Update the order list to: PH261030-89668975, PH261024-87008253\r\n3. Update the ITGC header to reference the new PC ticket (reuse PC-53423)\r\n4. Run on PROD HAC (requires HAC credential refresh first)\r\n\r\nPREREQUISITE: HAC authentication is currently failing — admin.aryan.v1 password needs to be updated before the script can be executed.\r\n\r\nReusable PC: PC-53423\r\nScript: script-PKHME-927-cancel-without-refund.groovy\r\nParent reference: PKHME-927",
+        "sections": {
+          "issue": "Reporter Raymond Acojido Inumerable (SEPCO team) requested cancellation of 2 Philippines-region orders in Hybris without refund:\r\n- PH261030-89668975\r\n- PH261024-87008253\r\nThe orders are currently in a non-terminal status and need to be pushed to CANCELLED. The reporter explicitly noted \"cancel without refund\" — meaning the payment should not be reversed as part of the cancellation.\r\n\r\nThis is a recurring SEPCO maintenance request pattern. 759 similar resolved PME tickets were found matching \"cancel\" AND \"order\", including:\r\n- PME-13696 (Sep 29, 2026) — same title pattern, same reporter, 2 PH orders, resolved by marking CANCELLED without refund\r\n- PME-13322 (Aug 28, 2026) — same title pattern, 5 orders, resolved with cancellation script\r\n- PME-12202 (May 11, 2026) — same title pattern, 119 orders, periodic cleanup\r\n- PME-3198 (Feb 23, 2024) — same title pattern, test order cancellation",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-11-04T04:16:21.973Z"
+      }
+    },
     {
       "key": "AEME-6643",
       "summary": "Stuck order on Hybris",
@@ -38,39 +71,6 @@
         "status": "investigating",
         "issueNumber": null,
         "lockedAt": "2026-11-04T06:16:43.946Z"
-      }
-    },
-    {
-      "key": "PME-14141",
-      "summary": "[SEPCO] Pending Orders Need to Push Cancelled Status Nov 4",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Philippines Maintenance & Enhancements",
-      "projectKey": "PME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-11-04T13:04:31.000+0900",
-      "created": "2026-11-04T13:02:42.000+0900",
-      "statusChangedAt": "2026-11-04T13:04:06.463+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\nCould you please help cancel these orders in Hybris?\n\n \n|Order nr.|\n|PH261030-89668975|\n|PH261024-87008253|\n\n \n \n\nnote: cancel without refund\n\ncc. ~@email ~@email ~@email ~@email \n\nThanks,\n\nRaymond",
-      "commentsCount": 0,
-      "recentComments": [],
-      "lastCommentBy": "",
-      "lastCommentSnippet": "",
-      "lastCommentDate": "",
-      "url": "https://jira.secext.samsung.net/browse/PME-14141",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Summary: [SEPCO] Pending Orders Need to Push Cancelled Status Nov 4\r\nGenerated: 2026-11-04T09:15:00+05:30\r\n\r\nIssue:\r\nReporter Raymond Acojido Inumerable (SEPCO team) requested cancellation of 2 Philippines-region orders in Hybris without refund:\r\n- PH261030-89668975\r\n- PH261024-87008253\r\nThe orders are currently in a non-terminal status and need to be pushed to CANCELLED. The reporter explicitly noted \"cancel without refund\" — meaning the payment should not be reversed as part of the cancellation.\r\n\r\nThis is a recurring SEPCO maintenance request pattern. 759 similar resolved PME tickets were found matching \"cancel\" AND \"order\", including:\r\n- PME-13696 (Sep 29, 2026) — same title pattern, same reporter, 2 PH orders, resolved by marking CANCELLED without refund\r\n- PME-13322 (Aug 28, 2026) — same title pattern, 5 orders, resolved with cancellation script\r\n- PME-12202 (May 11, 2026) — same title pattern, 119 orders, periodic cleanup\r\n- PME-3198 (Feb 23, 2024) — same title pattern, test order cancellation\r\n\r\nRCA:\r\nThis is not a system bug or error condition. It is a manual cancellation request — the SEPCO team needs specific orders pushed to CANCELLED status in Hybris, typically because:\r\n1. The orders are stuck in a pre-fulfilment state (e.g., WAITING, ON_HOLD, or similar) where the customer or operations team has decided not to proceed with the order\r\n2. The standard Hybris order cancellation flow (via storefront or CS Cockpit) was not applicable or failed for these orders\r\n3. The \"without refund\" instruction means the payment was either not captured, already manually reversed externally, or the business decision is to skip the refund step in the Hybris cancellation process\r\n\r\nThe resolution involves a Hybris HAC Groovy script that:\r\n- Sets the order status to CANCELLED\r\n- Sets all associated consignments to CANCELLED (if not already COMPLETED or CANCELLED)\r\n- Restarts the order business process to \"failed\" state (to stop any ongoing process loops)\r\n- Restarts the consignment process to \"failed\" state (to stop fulfilment loops)\r\n- Does NOT trigger any refund or payment reversal\r\n\r\nVERIFICATION LIMITATION: HAC authentication was unavailable during this investigation (password expiry). DB state for both orders could not be verified directly. The RCA is based on:\r\n1. Ticket description analysis (VERIFIED — Jira API)\r\n2. Cross-reference with 6 identical resolved tickets (VERIFIED — Jira API)\r\n3. PC script library matching (VERIFIED — pc-script-library.json local index)\r\n4. PC-53423 ticket and script review (VERIFIED — Jira API + script file)\r\n\r\nPossible remediation:\r\nReuse existing approved PC ticket PC-53423 (Closed, REUSABLE label, script: script-PKHME-927-cancel-without-refund.groovy).\r\n\r\nThe script performs the following for each order:\r\n1. Looks up the order by code (WHERE originalversion IS NULL)\r\n2. Restarts the order business process to \"releaseVirtualStockIfApplicable\" or \"failed\"\r\n3. Sets all non-terminal consignments to ConsignmentStatus.CANCELLED\r\n4. Restarts consignment processes to \"failed\" state\r\n5. Sets the order status to OrderStatus.CANCELLED\r\n6. Does NOT touch payment transactions or trigger refund logic\r\n\r\nSteps:\r\n1. Copy script-PKHME-927-cancel-without-refund.groovy to a new file for PME-14141\r\n2. Update the order list to: PH261030-89668975, PH261024-87008253\r\n3. Update the ITGC header to reference the new PC ticket (reuse PC-53423)\r\n4. Run on PROD HAC (requires HAC credential refresh first)\r\n\r\nPREREQUISITE: HAC authentication is currently failing — admin.aryan.v1 password needs to be updated before the script can be executed.\r\n\r\nReusable PC: PC-53423\r\nScript: script-PKHME-927-cancel-without-refund.groovy\r\nParent reference: PKHME-927",
-        "sections": {
-          "issue": "Reporter Raymond Acojido Inumerable (SEPCO team) requested cancellation of 2 Philippines-region orders in Hybris without refund:\r\n- PH261030-89668975\r\n- PH261024-87008253\r\nThe orders are currently in a non-terminal status and need to be pushed to CANCELLED. The reporter explicitly noted \"cancel without refund\" — meaning the payment should not be reversed as part of the cancellation.\r\n\r\nThis is a recurring SEPCO maintenance request pattern. 759 similar resolved PME tickets were found matching \"cancel\" AND \"order\", including:\r\n- PME-13696 (Sep 29, 2026) — same title pattern, same reporter, 2 PH orders, resolved by marking CANCELLED without refund\r\n- PME-13322 (Aug 28, 2026) — same title pattern, 5 orders, resolved with cancellation script\r\n- PME-12202 (May 11, 2026) — same title pattern, 119 orders, periodic cleanup\r\n- PME-3198 (Feb 23, 2024) — same title pattern, test order cancellation",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-11-04T04:16:21.973Z"
       }
     },
     {
@@ -383,7 +383,7 @@
       }
     ],
     "pid": 20372,
-    "uptime": 33020,
+    "uptime": 33060,
     "failures": 0,
     "activeJobCount": 1,
     "jobs": [
@@ -392,7 +392,7 @@
         "issueTitle": "Investigate ticket AEME-6643",
         "snippet": "Auto-triggered investigation for new ticket AEME-6643.\n\nTicket: AEME-6643\nSummary: Stuck order on Hybris\n\nUse the invest",
         "pid": 25084,
-        "elapsed": 2680
+        "elapsed": 2719
       }
     ],
     "startTime": "2026-11-03T21:51:19.133Z",
@@ -403,7 +403,7 @@
       {
         "pid": 16456,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 99703,
+        "ageSeconds": 99743,
         "status": "running",
         "isChild": false,
         "taskSummary": "my kibana links from auto login scripts arent correctly reloading with #auto30 thing check the is...",
@@ -413,7 +413,7 @@
       {
         "pid": 1356,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 99554,
+        "ageSeconds": 99594,
         "status": "running",
         "isChild": false,
         "taskSummary": "check if there is any data fetching or sending or collection any sort of data in the following ap...",
@@ -423,7 +423,7 @@
       {
         "pid": 22852,
         "cwd": "c:\\windows",
-        "ageSeconds": 99550,
+        "ageSeconds": 99590,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -433,7 +433,7 @@
       {
         "pid": 28056,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 3541,
+        "ageSeconds": 3582,
         "status": "running",
         "isChild": false,
         "taskSummary": "my kibana links from auto login scripts arent correctly reloading with #auto30 thing check the is...",
@@ -4809,13 +4809,13 @@
         ]
       }
     },
-    "bridgeLogTail": "    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-11-04T07:00:10.085Z] STDOUT data for #1020: 248 bytes\n[2026-11-04T07:00:10.088Z] LIVE events write for #1020: 319 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1020.txt\n[2026-11-04T07:00:10.488Z] aipro stderr for #1020: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
+    "bridgeLogTail": "    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-11-04T07:02:05.931Z] aipro stderr for #1020: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-11-04T07:01:31.200Z",
-      "ageMs": 14247
+      "lastWrite": "2026-11-04T07:02:16.220Z",
+      "ageMs": 9569
     },
-    "watchdogLogTail": "[2026-11-04T06:59:16.126Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T06:59:31.133Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T06:59:46.144Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T07:00:01.153Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T07:00:16.157Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T07:00:31.165Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T07:00:46.175Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T07:01:01.170Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T07:01:16.191Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T07:01:31.198Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.",
+    "watchdogLogTail": "[2026-11-04T07:00:01.153Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T07:00:16.157Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T07:00:31.165Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T07:00:46.175Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T07:01:01.170Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T07:01:16.191Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T07:01:31.198Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T07:01:46.205Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T07:02:01.209Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T07:02:16.218Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.",
     "jobOutputs": {}
   },
   "mcps": [
@@ -4823,7 +4823,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-11-04T07:00:53.211Z",
+      "lastCheck": "2026-11-04T07:01:52.892Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4832,18 +4832,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-04T07:00:53.211Z",
+      "lastCheck": "2026-11-04T07:01:52.892Z",
       "downSince": "2026-11-03T09:20:51.945Z",
-      "downDuration": 78001266,
+      "downDuration": 78060947,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-04T07:00:53.211Z",
+      "lastCheck": "2026-11-04T07:01:52.892Z",
       "downSince": "2026-11-04T06:26:45.016Z",
-      "downDuration": 2048195,
+      "downDuration": 2107876,
       "alert": true
     }
   ],
@@ -4920,6 +4920,18 @@
         "statusChangedAt": "2026-09-28T15:10:33.048+0900"
       },
       {
+        "key": "PME-14141",
+        "summary": "[SEPCO] Pending Orders Need to Push Cancelled Status Nov 4",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/PME-14141",
+        "updated": "2026-11-04T16:02:07.000+0900",
+        "statusChangedAt": "2026-11-04T13:04:06.463+0900"
+      },
+      {
         "key": "AEME-6643",
         "summary": "Stuck order on Hybris",
         "priority": "None",
@@ -4930,18 +4942,6 @@
         "url": "https://jira.secext.samsung.net/browse/AEME-6643",
         "updated": "2026-11-04T15:16:14.000+0900",
         "statusChangedAt": "2026-10-16T20:35:00.506+0900"
-      },
-      {
-        "key": "PME-14141",
-        "summary": "[SEPCO] Pending Orders Need to Push Cancelled Status Nov 4",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/PME-14141",
-        "updated": "2026-11-04T13:04:31.000+0900",
-        "statusChangedAt": "2026-11-04T13:04:06.463+0900"
       },
       {
         "key": "PME-14126",
@@ -5035,10 +5035,55 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "AEME-6643",
+        "slaName": "Maintenance Response (GMT+4)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86398,
+        "targetDate": "2026-10-19T11:34:58.693000001Z"
+      },
+      {
+        "key": "AEME-6643",
+        "slaName": "Maintenance Resolution (GMT+4)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2565179,
+        "targetDate": "2026-12-15T23:35:21.725000043Z"
+      },
+      {
+        "key": "PME-14141",
+        "slaName": "Maintenance Response (GMT+8)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86317,
+        "targetDate": "2026-11-05T04:02:43.919000001Z"
+      },
+      {
+        "key": "PME-14141",
+        "slaName": "Maintenance Resolution (GMT+8)",
+        "slaStatus": "STILL",
+        "remainingDuration": 421221,
+        "targetDate": "2026-11-11T04:02:43.919000005Z"
+      },
+      {
+        "key": "PME-14126",
+        "slaName": "Maintenance Response (GMT+8)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86373,
+        "targetDate": "2026-11-04T02:32:52.655000001Z"
+      },
+      {
+        "key": "PME-14126",
+        "slaName": "Maintenance Resolution (GMT+8)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1193430,
+        "targetDate": "2026-11-24T02:32:52.655000015Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 0.25h on THAME-18378, 1h on RT-722599, 0.33h on AEME-6706, 0.33h on TKME-2430, 1h on SAM-18531\nToday: AEME-6643, PME-14141, PME-14126, RT-722599, RT-664743\nBlockers: none"
+    "standupText": "Yesterday: 0.25h on THAME-18378, 1h on RT-722599, 0.33h on AEME-6706, 0.33h on TKME-2430, 1h on SAM-18531\nToday: PME-14141, AEME-6643, PME-14126, RT-722599, RT-664743\nBlockers: none"
   },
   "autologinConfig": {
     "login_time": "08:15",
