@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-04T10:03:50.895Z",
+  "generatedAt": "2026-11-04T10:04:31.470Z",
   "totalTickets": 1,
   "tickets": [
     {
@@ -209,7 +209,7 @@
       {
         "pid": 16456,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 110631,
+        "ageSeconds": 110672,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -219,17 +219,17 @@
       {
         "pid": 1356,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 110483,
+        "ageSeconds": 110523,
         "status": "running",
         "isChild": false,
-        "taskSummary": "I deleted teh comment, but draft a comment first as it only posted the link to the file",
-        "lastExchange": "I deleted teh comment, but draft a comment first as it only posted the link to the file",
+        "taskSummary": "change 3+ to 4+ years of experience, also, you have excluded my schooling information. Check this...",
+        "lastExchange": "change 3+ to 4+ years of experience, also, you have excluded my schooling information. Check this CV against ATS and make sure it passses all the checks according to the Job descriptions given in the document. also give this a separate project: \"Integrated a codebase knowledge graph (146K files, 1.3M dependency edges) into AI investigation workflows, by deploying a semantic code-graph engine that enables LLM agents to explore type hierarchies, service beans, and API endpoints via structured graph traversal — replacing keyword search with semantic reasoning for 10x faster codebase understanding.\" -following is the documentation for it: Hi All,\n\n\n\nI have built a tool called hygraph. It indexes our SAP Commerce (Hybris) code on your machine and applies the Hybris rules (items.xml merge, Spring overrides, property layers). AI agents (mainly aipro, also Claude Code and Codex) then get exact answers with file:line in one call, instead of grep and many file reads.\n\n\n\nThe zip is attached (hygraph-1.1.0.zip, 9 MB). Please install it and share your feedback.\n\nWhy we need it\nIn SAP Commerce, the real behaviour is spread over many files: one item type is defined in many items.xml files, a Spring alias in one extension overrides a bean in another, and a property value comes from many layers. An AI agent that searches with grep reads a lot of files, fills its context, and often stops at the OOTB definition instead of our override. So the answer is slow, and many times wrong.\n\nBetter answers\nSpring overrides, items.xml merges and load order are already resolved. With the large model, correct answers went from 24 to 39 (out of 40).\n\nPrevents hallucination of small models\nWithout hygraph, small models guessed class names or gave the OOTB bean instead of ours. With hygraph they get the real names and files from the index: correct answers went from 5 to 39 (out of 40).\n\nSaves time\nAbout 3 tool calls per question instead of 15. In an earlier test, the median time per question went from 761 s to 76 s.\n\nSaves tokens\nAbout 20k input tokens per answer instead of 31k–34k, so the agent has more room for your actual task.\n\nEasy to verify\nEvery fact comes with the exact file and line, so you can check it quickly.\n\nSafe\nRuns offline on your machine and only reads the code. No code or data leaves your machine.\n\nIt also helps when you are new to a module: you can see a flow, the overrides and the impact of a change before you touch the code.\n\nExample prompts for your agent\nAsk in normal words. The agent picks the hygraph tools by itself.\n\nFlow: Explain the add-to-cart flow in our project. Start from the OCC endpoint POST /users/{userId}/carts/{cartId}/entries, then go through the controller, facade, service and strategy beans. Show which of them are our custom overrides, with file:line.\n\nBean override: Which bean is behind the alias productService? List every definition in load order and tell me why the winner wins.\n\nItem type: Show the item type TokoVariantProduct: where it is first defined, the attributes that other extensions add, its typecode and its database table.\n\nBefore a change: I want to change getPrice in our price service. Which beans, classes and cron jobs use it and can break?\n\nBefore a PR: What do my current git changes affect, and which tests should I run?\n\nStack trace: Here is a stack trace: <paste>. Which custom classes are in it, and where should I start to debug?\n\nCron job: For the cron job cleanUpFraudOrderCronJob, which job bean, Java class and ImpEx file are behind it?\n\nBusiness process: Which actions run in our order process, in which order, and which Java class is behind each action bean?\n\nProperty: What is the effective value of <property key>, which files set it, and which classes read it?\n\nNew item type: I need a new item type in tokocore. Which typecodes are already used by our custom types, and which one is free?\n\nHow it works\nYour project\nitems.xml, Spring XML, properties, ImpEx, Java, storefront\n\n→\n\nhygraph index\nHybris rules applied, stored on your disk\n\n→\n\nMCP tools\nshort answers with file:line\n\n→\n\naipro / Claude / Codex\nreads only the lines it needs\n\nhygraph reads the project once, and after that only the changed files.\n\nIt works offline and is read-only on your code. It does not store ImpEx data or secret values.\n\nEach answer is short and has the exact file and line, so the agent does not need to search.\n\nMCP tools (the agent uses these; you do not call them yourself)\n\nBy default the agent gets the 4 main tools (hy_explore, hy_type, hy_bean, hy_read), which works best for small models. To get all 10, add --tools full to the install command.\n\nhy_explore\n\nMain tool: a question or a stack trace → the facts and file:line\n\nhy_type\n\nItem type, attribute, enum, relation, typecode (merged over all extensions)\n\nhy_bean\n\nSpring bean or alias after overrides, and why it wins; DTO beans\n\nhy_config\n\nEffective property value, all sources in order, and who reads it\n\nhy_java\n\nJava/Groovy class, method, OCC endpoint, business process, cron job, Spartacus class\n\nhy_refs\n\nWho uses this, and what it uses\n\nhy_impact\n\nWhat can break if this changes; also for your git changes\n\nhy_extension\n\nExtension: load order, dependencies, contents\n\nhy_search\n\nFind types, beans and classes by name\n\nhy_read\n\nShow a short part of a source file around a line\n\nInstallation (Windows laptop, VDI or Mac)\n1. Check Java. hygraph works with JDK 17 and above; JDK 21 is preferred. Check with java -version. If you have no JDK 17 or later, install JDK 21 (for example SapMachine 21 or Temurin 21).\n\n2. Unzip and add to PATH. Use a folder on the local disk. On the VDI, do not use Desktop, Downloads or F: (network share).\n\nWindows\n(PowerShell)\n\nExpand-Archive hygraph-1.1.0.zip $HOME\\tools\n\n[Environment]::SetEnvironmentVariable(\"Path\", [Environment]::GetEnvironmentVariable(\"Path\",\"User\") + \";$HOME\\tools\\hygraph\\bin\", \"User\")\n\nMac\n(Terminal)\n\nunzip hygraph-1.1.0.zip -d ~/tools\n\necho 'export PATH=\"$HOME/tools/hygraph/bin:$PATH\"' >> ~/.zshrc\n\nOpen a new terminal and check: hygraph --version\n\n3. Build the index (one time, about 5 minutes for toko6). Use your project folder, the one that has core-customize:\n\nhygraph init -w <project-folder>          (for example C:/toko/toko6 or ~/work/toko6)\n\n4. Connect your agent. Run this in the folder that you open in your editor:\n\naipro\n\nhygraph install --agent aipro --global -w <project-folder>\n\nThen reload VS Code (Ctrl+Shift+P → Developer: Reload Window). hygraph now shows in the aipro MCP settings. Your other MCP servers stay as they are.\n\nClaude Code\n\nhygraph install --agent claude -w <project-folder>\n\nRestart Claude Code and approve the hygraph server.\n\nCodex\n\nhygraph install --agent codex --global -w <project-folder>\n\nRestart Codex.\n\n5. Optional, recommended: update the index automatically after each git checkout, pull or merge:\n\nhygraph hook install -w <project-folder>\n\nMore commands and examples are in INSTALL.txt in the zip.\n\nBranch switch and file changes\nOnly changed files are read again. On toko6, an update takes about 20 s when nothing changed and about 1.5 minutes after a change. The full index (about 5 minutes) is built again only when localextensions.xml or manifest.json changes.\n\nBranch switch, pull, merge: with the git hook (step 5), the update runs in the background. You do nothing.\n\nFiles that you edit: run hygraph update -w <project-folder>, or keep hygraph watch -w <project-folder> open in a terminal; it updates 2 s after you stop saving.\n\nWhen the agent starts, the hygraph MCP server updates the index first.\n\nIf the index is old, the answer says so (⚠ stale: ... run: hygraph update), so the agent does not trust old line numbers. During an update, the old index still answers.\n\nTest result\nI tested aipro on toko6 with 10 real questions (bean behind an alias, property value, cron job chain, OCC endpoint, and so on), 4 runs each, with and without hygraph, with 2 models. An answer is correct only when all the expected facts are in it. (The test used aipro non-interactive mode, where the agent called the hygraph CLI; the MCP tools run the same queries.)\n\nCorrect answers (out of 40)\n\nWithout hygraph\n\nWith hygraph\n\nGLM-5.2 (large model)\n\n24\n\n39\n\nQwen3.8-27B (small model)\n\n5\n\n39\n\nTool calls per question (average)\n\n15\n\n3\n\nRuns that hit the 15-minute limit (of 80)\n\n51\n\n2\n\nWithout hygraph, the models often picked the OOTB bean instead of our override, or ran out of time on questions that need many files. In an earlier test on a free machine, the median time per question was 761 s without hygraph and 76 s with it. 10 questions is a small set, so please send me real questions that you asked recently; I will add them to the test.\n\nWork done\nDesigned and built hygraph (Java, about 19,000 lines, 10 MCP tools).\n\nTested on the full toko6 project: about 150,000 files, 449 custom extensions and the Spartacus storefront.\n\n122 automated tests, plus 27 tests on the final jar in the zip.\n\nRan the A/B test above (240 runs) and reported an aipro issue with MCP tools in non-interactive mode to the aipro team",
         "sessionId": "bin"
       },
       {
         "pid": 22852,
         "cwd": "c:\\windows",
-        "ageSeconds": 110478,
+        "ageSeconds": 110519,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -239,7 +239,7 @@
       {
         "pid": 28056,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 14470,
+        "ageSeconds": 14511,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -249,7 +249,7 @@
       {
         "pid": 30488,
         "cwd": "unknown",
-        "ageSeconds": 4330,
+        "ageSeconds": 4370,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -4630,17 +4630,17 @@
     "bridgeLogTail": "      at TLSSocket.emit (node:events:531:35)\n      at endReadableNT (node:internal/streams/readable:1698:12)\n      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {\n    code: 'UND_ERR_SOCKET',\n    socket: {\n      localAddress: '107.96.106.219',\n      localPort: 56964,\n      remoteAddress: '70.227.9.12',\n      remotePort: 443,\n      remoteFamily: 'IPv4',\n      timeout: undefined,\n      bytesWritten: 415579,\n      bytesRead: 181\n    }\n  }\n}\n[2026-11-04T07:10:36.206Z] STDOUT data for #1020: 402 bytes\n[2026-11-04T07:10:36.210Z] LIVE events write for #1020: 422 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1020.txt\n[2026-11-04T07:10:39.418Z] aipro completed for #1020 (3667 chars)\n[2026-11-04T07:10:40.522Z] Comment posted on #1020",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-11-04T10:03:41.486Z",
-      "ageMs": 12734
+      "lastWrite": "2026-11-04T10:04:26.515Z",
+      "ageMs": 8590
     },
-    "watchdogLogTail": "[2026-11-04T10:01:26.374Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T10:01:41.383Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T10:01:56.395Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T10:02:11.408Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T10:02:26.422Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T10:02:41.434Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T10:02:56.449Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T10:03:11.462Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T10:03:26.471Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T10:03:41.484Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-11-04T10:02:11.408Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T10:02:26.422Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T10:02:41.434Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T10:02:56.449Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T10:03:11.462Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T10:03:26.471Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T10:03:41.484Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T10:03:56.490Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T10:04:11.492Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-04T10:04:26.502Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-11-04T10:03:14.791Z",
+      "lastCheck": "2026-11-04T10:04:14.442Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4649,18 +4649,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-04T10:03:14.791Z",
+      "lastCheck": "2026-11-04T10:04:14.442Z",
       "downSince": "2026-11-04T08:55:40.909Z",
-      "downDuration": 4053882,
+      "downDuration": 4113533,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-04T10:03:14.791Z",
+      "lastCheck": "2026-11-04T10:04:14.442Z",
       "downSince": "2026-11-04T08:55:40.909Z",
-      "downDuration": 4053882,
+      "downDuration": 4113533,
       "alert": true
     }
   ],
@@ -4772,9 +4772,7 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": {
-    "byTicket": []
-  },
+  "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
     "standupText": "Yesterday: 0.25h on THAME-18378, 1h on RT-722599, 0.33h on AEME-6706, 0.33h on TKME-2430, 1h on SAM-18531\nToday: RT-664743\nBlockers: none"
