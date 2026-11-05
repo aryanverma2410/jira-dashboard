@@ -1,60 +1,7 @@
 {
-  "generatedAt": "2026-11-05T08:34:46.106Z",
-  "totalTickets": 5,
+  "generatedAt": "2026-11-05T08:35:26.445Z",
+  "totalTickets": 4,
   "tickets": [
-    {
-      "key": "HKHME-6809",
-      "summary": "Update incomplete orders to Completed status - 20261104",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Hong Kong Maintenance & Enhancements",
-      "projectKey": "HKHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-11-05T17:34:18.000+0900",
-      "created": "2026-11-04T17:32:32.000+0900",
-      "statusChangedAt": "2026-11-04T17:41:02.992+0900",
-      "assignedToMeAt": "",
-      "description": "Hi team,\n\nWe are working with Order Hub team to check all incomplete orders that were placed in Oct 2026,  but order status is still not updated to Completed. \n\nOrder List:\nPlease update below orders' status to Completed {}with sending Order Completion Email{}{}:{}\nHK260825-65443717\nHK261013-8285916",
-      "commentsCount": 3,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-11-05T17:34:18.829+0900",
-          "snippet": "Hi Rayson,\n\nAll 4 orders have moved forward. HK260910-70470182, HK261013-82859161, and HK261024-87126454 are now COMPLETED. For HK260825-65443717, the SC+ duplicate entry of SMC-HK-NPC-ULTRA-2998 (qty=0) has been removed and the consignment process is now SUCCEEDED. The order has moved from SHIPPED "
-        },
-        {
-          "author": "Rayson Hung",
-          "date": "2026-11-05T00:19:22.589+0900",
-          "snippet": "Hi ~@email \n\nYes, orders are delivered to customers and please help to proceed as requested, thank you."
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Rayson,\n\nAll 4 orders have moved forward. HK260910-70470182, HK261013-82859161, and HK261024-87126454 are now COMPLETED. For HK260825-65443717, the SC+ duplicate entry of SMC-HK-NPC-ULTRA-2998 (qty=0) has been removed and the consignment process is now SUCCEEDED. The order has moved from SHIPPED ",
-      "lastCommentDate": "2026-11-05T17:34:18.829+0900",
-      "url": "https://jira.secext.samsung.net/browse/HKHME-6809",
-      "linkedTickets": [
-        {
-          "key": "HKHME-6643",
-          "summary": "Update incomplete orders to Completed status - 20260910",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "clones",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "HKHME-6809 — Update incomplete orders to Completed status\r\n\r\n=== ORDER STATUS SUMMARY ===\r\n\r\nOrder                  | Status             | Consignments                              | Order Process | Consignment Process\r\nHK260825-65443717      | SHIPPED            | Main: COMPLETED                           | RUNNING       | ERROR (\"All went wrong.\")\r\nHK260910-70470182      | SHIPPED            | Main: COMPLETED, _1: COMPLETED            | RUNNING       | _1: FAILED (\"Order not placed.\")\r\nHK261013-82859161      | SHIPPING_REQUESTED | Main: SHIPPING_REQUESTED, _1: COMPLETED   | RUNNING       | Main: FAILED\r\nHK261024-87126454      | SHIPPING_REQUESTED | Main: SHIPPING_REQUESTED, _1: COMPLETED   | RUNNING       | Main: RUNNING (looping)\r\n\r\n=== ROOT CAUSE PER ORDER ===\r\n\r\n1. HK260825-65443717: Duplicate SC+ entry SMC-HK-NPC-ULTRA-2998 (entry 0 qty=0, entry 2 qty=1). processExternalServices returns NOK. Consignment process ERROR. SC+ registration never succeeded (no ExternalService/SubscriptionData records).\r\n\r\n2. HK260910-70470182: Both consignments COMPLETED but split consignment process FAILED (\"Order not placed.\"). isShippingPreparationDone returned NOK from Oct 27 04:30-11:25. Order process stuck at isProcessCompleted NOK.\r\n\r\n3. HK261013-82859161: Main consignment auto-cancelled (autoCancelPickupOrder CANCEL). Main consignment process FAILED after receiveConsignmentStatus NOK. Split consignment delivered but main consignment stuck in SHIPPING_REQUESTED.\r\n\r\n4. HK261024-87126454: Main consignment process looping at isShippingPreparationDone NOK since Oct 25. Split consignment delivered but main consignment never shipped.\r\n\r\n=== REMEDIATION PLAN ===\r\n\r\n1. All 4 orders: Update order status to COMPLETED + trigger Order Completion Email\r\n2. HK261013-82859161 + HK261024-87126454: Update main consignment to COMPLETED\r\n3. HK260910-70470182: Restart failed consignment process\r\n4. HK260825-65443717: Remove duplicate SC+ entry (qty=0) + trigger SC+ registration\r\n\r\n=== DATA SOURCES ===\r\n- SMS PROD HAC (hac-direct-sms.cjs) — order status, consignment status, business process state, consignment process state, ProcessTaskLog, order entries, ExternalService, SubscriptionData\r\n- ProcessState PKs: CREATED=8796093644891, RUNNING=8796100427867, WAITING=8796100460635, SUCCEEDED=8796100493403, FAILED=8796100526171, ERROR=8796100558939\r\n- Kibana: DOWN (relay timeout)\r\n- No BusinessProcessParameter error stack traces found for any order\r\n\r\n=== PC TICKET REFERENCES ===\r\n- PC-52596 (Closed) — Push order to COMPLETED (SAME-3931). Potential reuse for orders in SHIPPED.\r\n- PC-52678 (Closed, REUSABLE) — SC+ reset ERROR/UPDATE_ERROR→NEW. Not directly applicable (this is a duplicate entry removal, not status reset).\r\n- New PC ticket likely needed for this multi-order remediation.",
-        "sections": {
-          "issue": "",
-          "rca": "HKHME-6809 — Update incomplete orders to Completed status\r\n\r\n=== ORDER STATUS SUMMARY ===\r\n\r\nOrder                  | Status             | Consignments                              | Order Process | Consignment Process\r\nHK260825-65443717      | SHIPPED            | Main: COMPLETED                           | RUNNING       | ERROR (\"All went wrong.\")\r\nHK260910-70470182      | SHIPPED            | Main: COMPLETED, _1: COMPLETED            | RUNNING       | _1: FAILED (\"Order not placed.\")\r\nHK261013-82859161      | SHIPPING_REQUESTED | Main: SHIPPING_REQUESTED, _1: COMPLETED   | RUNNING       | Main: FAILED\r\nHK261024-87126454      | SHIPPING_REQUESTED | Main: SHIPPING_REQUESTED, _1: COMPLETED   | RUNNING       | Main: RUNNING (looping)\r\n\r\n=== ROOT CAUSE PER ORDER ===\r\n\r\n1. HK260825-65443717: Duplicate SC+ entry SMC-HK-NPC-ULTRA-2998 (entry 0 qty=0, entry 2 qty=1). processExternalServices returns NOK. Consignment process ERROR. SC+ registration never succeeded (no ExternalService/SubscriptionData records).\r\n\r\n2. HK260910-70470182: Both consignments COMPLETED but split consignment process FAILED (\"Order not placed.\"). isShippingPreparationDone returned NOK from Oct 27 04:30-11:25. Order process stuck at isProcessCompleted NOK.\r\n\r\n3. HK261013-82859161: Main consignment auto-cancelled (autoCancelPickupOrder CANCEL). Main consignment process FAILED after receiveConsignmentStatus NOK. Split consignment delivered but main consignment stuck in SHIPPING_REQUESTED.\r\n\r\n4. HK261024-87126454: Main consignment process looping at isShippingPreparationDone NOK since Oct 25. Split consignment delivered but main consignment never shipped.\r\n\r\n=== REMEDIATION PLAN ===\r\n\r\n1. All 4 orders: Update order status to COMPLETED + trigger Order Completion Email\r\n2. HK261013-82859161 + HK261024-87126454: Update main consignment to COMPLETED\r\n3. HK260910-70470182: Restart failed consignment process\r\n4. HK260825-65443717: Remove duplicate SC+ entry (qty=0) + trigger SC+ registration\r\n\r\n=== DATA SOURCES ===\r\n- SMS PROD HAC (hac-direct-sms.cjs) — order status, consignment status, business process state, consignment process state, ProcessTaskLog, order entries, ExternalService, SubscriptionData\r\n- ProcessState PKs: CREATED=8796093644891, RUNNING=8796100427867, WAITING=8796100460635, SUCCEEDED=8796100493403, FAILED=8796100526171, ERROR=8796100558939\r\n- Kibana: DOWN (relay timeout)\r\n- No BusinessProcessParameter error stack traces found for any order\r\n\r\n=== PC TICKET REFERENCES ===\r\n- PC-52596 (Closed) — Push order to COMPLETED (SAME-3931). Potential reuse for orders in SHIPPED.\r\n- PC-52678 (Closed, REUSABLE) — SC+ reset ERROR/UPDATE_ERROR→NEW. Not directly applicable (this is a duplicate entry removal, not status reset).\r\n- New PC ticket likely needed for this multi-order remediation.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-11-05T04:07:24.141Z"
-      }
-    },
     {
       "key": "TWME-7460",
       "summary": "Order remediation",
@@ -354,7 +301,7 @@
       {
         "pid": 28056,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 95526,
+        "ageSeconds": 95566,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -364,7 +311,7 @@
       {
         "pid": 26688,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 2667,
+        "ageSeconds": 2707,
         "status": "running",
         "isChild": false,
         "taskSummary": "post the comment with 45m logs, assign back and put to LV and update labels",
@@ -374,7 +321,7 @@
       {
         "pid": 868,
         "cwd": "c:\\windows",
-        "ageSeconds": 2662,
+        "ageSeconds": 2702,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -384,7 +331,7 @@
       {
         "pid": 19928,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 1552,
+        "ageSeconds": 1592,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -4765,10 +4712,10 @@
     "bridgeLogTail": "      at TLSSocket.emit (node:events:531:35)\n      at endReadableNT (node:internal/streams/readable:1698:12)\n      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {\n    code: 'UND_ERR_SOCKET',\n    socket: {\n      localAddress: '107.96.106.219',\n      localPort: 56964,\n      remoteAddress: '70.227.9.12',\n      remotePort: 443,\n      remoteFamily: 'IPv4',\n      timeout: undefined,\n      bytesWritten: 415579,\n      bytesRead: 181\n    }\n  }\n}\n[2026-11-04T07:10:36.206Z] STDOUT data for #1020: 402 bytes\n[2026-11-04T07:10:36.210Z] LIVE events write for #1020: 422 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1020.txt\n[2026-11-04T07:10:39.418Z] aipro completed for #1020 (3667 chars)\n[2026-11-04T07:10:40.522Z] Comment posted on #1020",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-11-05T08:34:43.560Z",
-      "ageMs": 5871
+      "lastWrite": "2026-11-05T08:35:28.577Z",
+      "ageMs": 1331
     },
-    "watchdogLogTail": "[2026-11-05T08:32:28.444Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-05T08:32:43.456Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-05T08:32:58.468Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-05T08:33:13.478Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-05T08:33:28.486Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-05T08:33:43.495Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-05T08:33:58.503Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-05T08:34:13.504Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-05T08:34:28.547Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-05T08:34:43.558Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-11-05T08:33:13.478Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-05T08:33:28.486Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-05T08:33:43.495Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-05T08:33:58.503Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-05T08:34:13.504Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-05T08:34:28.547Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-05T08:34:43.558Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-05T08:34:58.568Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-05T08:35:13.575Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-05T08:35:28.575Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
@@ -4837,18 +4784,6 @@
   "actionItems": {
     "zero": [
       {
-        "key": "HKHME-6809",
-        "summary": "Update incomplete orders to Completed status - 20261104",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/HKHME-6809",
-        "updated": "2026-11-05T17:34:18.000+0900",
-        "statusChangedAt": "2026-11-04T17:41:02.992+0900"
-      },
-      {
         "key": "TWME-7460",
         "summary": "Order remediation",
         "priority": "None",
@@ -4901,20 +4836,20 @@
     "blocked": [],
     "queued": [],
     "totals": {
-      "zero": 5,
+      "zero": 4,
       "actionable": 0,
       "blocked": 0,
       "queued": 0
     }
   },
   "worklogTotals": {
-    "todayHours": 0.83,
-    "weekHours": 17.17,
+    "todayHours": 1.58,
+    "weekHours": 17.92,
     "dailyHours": [
       5.58,
       2.92,
       7.83,
-      0.83,
+      1.58,
       0,
       0,
       0
@@ -4933,9 +4868,9 @@
   },
   "tempoApproval": {
     "status": "open",
-    "workedHours": 17.17,
+    "workedHours": 17.92,
     "requiredHours": 168,
-    "deficitHours": 150.83,
+    "deficitHours": 150.08,
     "periodStart": "2026-11-01",
     "periodEnd": "2026-11-30"
   },
@@ -4955,69 +4890,10 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": {
-    "byTicket": [
-      {
-        "key": "TWME-7460",
-        "slaName": "Maintenance Response (GMT+8)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85402,
-        "targetDate": "2026-11-06T03:16:30.473000001Z"
-      },
-      {
-        "key": "TWME-7460",
-        "slaName": "Maintenance Resolution (GMT+8)",
-        "slaStatus": "STILL",
-        "remainingDuration": 412905,
-        "targetDate": "2026-11-12T03:16:30.473000005Z"
-      },
-      {
-        "key": "HKHME-6809",
-        "slaName": "Maintenance Response (GMT+8)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86365,
-        "targetDate": "2026-11-05T08:40:28.684000001Z"
-      },
-      {
-        "key": "HKHME-6809",
-        "slaName": "Maintenance Resolution (GMT+8)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1221856,
-        "targetDate": "2026-11-25T11:59:01.149000015Z"
-      },
-      {
-        "key": "PME-14153",
-        "slaName": "Maintenance Response (GMT+8)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 82778,
-        "targetDate": "2026-11-06T06:30:14.387000001Z"
-      },
-      {
-        "key": "PME-14153",
-        "slaName": "Maintenance Resolution (GMT+8)",
-        "slaStatus": "STILL",
-        "remainingDuration": 424529,
-        "targetDate": "2026-11-12T06:30:14.387000005Z"
-      },
-      {
-        "key": "AUME-21034",
-        "slaName": "Maintenance Response (GMT+10)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85463,
-        "targetDate": "2026-11-06T07:15:27.970000001Z"
-      },
-      {
-        "key": "AUME-21034",
-        "slaName": "Maintenance Resolution (GMT+10)",
-        "slaStatus": "STILL",
-        "remainingDuration": 427242,
-        "targetDate": "2026-11-12T07:15:27.970000005Z"
-      }
-    ]
-  },
+  "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 1.5h on PME-14141, 0.58h on PME-14126, 0.42h on MYME-28862, 0.58h on MYME-28854, 0.25h on MYME-28855, 1.5h on RT-722599, 3h on RT-657502\nToday: HKHME-6809, TWME-7460, PME-14153, AUME-21034, RT-664743\nBlockers: none"
+    "standupText": "Yesterday: 1.5h on PME-14141, 0.58h on PME-14126, 0.42h on MYME-28862, 0.58h on MYME-28854, 0.25h on MYME-28855, 1.5h on RT-722599, 3h on RT-657502\nToday: TWME-7460, PME-14153, AUME-21034, RT-664743\nBlockers: none"
   },
   "autologinConfig": {
     "login_time": "08:15",
