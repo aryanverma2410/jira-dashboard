@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-06T13:16:39.520Z",
+  "generatedAt": "2026-11-06T13:17:20.442Z",
   "totalTickets": 2,
   "tickets": [
     {
@@ -35,9 +35,15 @@
       "url": "https://jira.secext.samsung.net/browse/RT-722599",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-11-06T12:23:20.858Z"
+        "status": "found",
+        "excerpt": "Ticket Summary: [STG2] Multiple Samsung Care+ services per order | Subscription Values Token\r\nGenerated: 2026-11-06T12:55:00Z\r\n\r\nIssue\r\n\r\nOrder AE260901-08628165 on STG2 has 2 Samsung Care+ subscriptions (SC+ service SKU SMC-AE-C710-P-GT-AKXCS0GC with quantity 2). When the user updates their card on the my-orders page, the Checkout.com Flow payment flow correctly generates a new source token and saves the new card to PaymentInfo for the 1st subscription. However, for the 2nd subscription, the new card details are saved to PaymentInfo but the source token is not regenerated. The recurring payment for the 2nd subscription subsequently fails because the old token is used.\r\n\r\nRCA\r\n\r\nThe root cause is in TokoCheckoutDotComFacadeImpl.updatePaymentInfo() in the tokocheckoutdotcompaymentservices extension. When a user updates their card on the my-orders page, the Checkout.com Flow payment callback calls handleSubscriptionOrder() which calls updatePaymentInfo(). This method finds the PaymentTransaction matching the payment provider and payment ID, then retrieves the matched SubscriptionData via paymentTransaction.getSubscriptionData(). It calls updateSingleSubscriptionPaymentInfo() to save the new source token and create a new CreditCardPaymentInfo for only that one matched subscription.\r\n\r\nThe problem is that when a card update is initiated for the 2nd subscription, a new PaymentTransaction is created for the card verification (amount=0, type=AUTHORIZATION). This new PT is created without a subscriptionData reference set. So when updatePaymentInfo() looks up the PT by payment ID and provider, it finds the PT but paymentTransaction.getSubscriptionData() returns null. matchedSubscriptionData becomes null, and updateSingleSubscriptionPaymentInfo() is never called. The 2nd subscription's SubscriptionData.paymentInfo and SubscriptionData.token remain pointing to the old card data.\r\n\r\nDB evidence from S2 confirms this: SubscriptionData SD1 (pk=8811461257926) has paymentInfo pointing to a Checkout.com source token (code=src_4eiwxp5yqpnuzjfqa7dbocotom, subscriptionId=f2ce85f6-...) which was updated. SubscriptionData SD2 (pk=8811461290694) has paymentInfo pointing to the original CreditCardPaymentInfo (code=70051768-77bf-4279-bf0c-798982f86c66, subscriptionId=0e52b90e-...) which was never updated. The 3 card-update PaymentTransactions (ARE26I0411465355_*) all have amount=0 and were created during the card update flow, but none of them have subscriptionData linked to SD2.\r\n\r\nThe ticket mentions that '_1' was manually appended to the source token for both subscriptions. This manual modification does not cause the issue but highlights that both subscriptions originally shared the same token. The code's inability to propagate the new token to all subscriptions on the order is the defect.\r\n\r\nA fix already exists in the codebase (visible in the current code with an RT-722599 comment) that iterates all subscriptions on the order via order.getSubscriptions() and calls updateSingleSubscriptionPaymentInfo() for each subscription that was not the matched one. This fix needs to be deployed to STG2.\r\n\r\nPossible remediation\r\n\r\n1. Deploy the existing code fix to STG2. The fix in TokoCheckoutDotComFacadeImpl.updatePaymentInfo() iterates all subscriptions on the order and calls updateSingleSubscriptionPaymentInfo() for each one, ensuring all subscriptions get the new source token and updated PaymentInfo regardless of which PaymentTransaction was matched.\r\n\r\n2. For the specific test order AE260901-08628165 on STG2, run a Groovy script to update SubscriptionData SD2 (pk=8811461290694) to set paymentInfo to the newly created CreditCardPaymentInfo (the one with the updated source token src_4eiwxp5yqpnuzjfqa7dbocotom) and set the token field to the new source token ID. This will align SD2 with SD1 and allow the recurring payment to use the correct token.\r\n\r\n3. After deploying the fix, re-test the card update flow on a new order with multiple SC+ subscriptions to verify that both subscriptions receive the new token.",
+        "sections": {
+          "issue": "",
+          "rca": "Ticket Summary: [STG2] Multiple Samsung Care+ services per order | Subscription Values Token\r\nGenerated: 2026-11-06T12:55:00Z\r\n\r\nIssue\r\n\r\nOrder AE260901-08628165 on STG2 has 2 Samsung Care+ subscriptions (SC+ service SKU SMC-AE-C710-P-GT-AKXCS0GC with quantity 2). When the user updates their card on the my-orders page, the Checkout.com Flow payment flow correctly generates a new source token and saves the new card to PaymentInfo for the 1st subscription. However, for the 2nd subscription, the new card details are saved to PaymentInfo but the source token is not regenerated. The recurring payment for the 2nd subscription subsequently fails because the old token is used.\r\n\r\nRCA\r\n\r\nThe root cause is in TokoCheckoutDotComFacadeImpl.updatePaymentInfo() in the tokocheckoutdotcompaymentservices extension. When a user updates their card on the my-orders page, the Checkout.com Flow payment callback calls handleSubscriptionOrder() which calls updatePaymentInfo(). This method finds the PaymentTransaction matching the payment provider and payment ID, then retrieves the matched SubscriptionData via paymentTransaction.getSubscriptionData(). It calls updateSingleSubscriptionPaymentInfo() to save the new source token and create a new CreditCardPaymentInfo for only that one matched subscription.\r\n\r\nThe problem is that when a card update is initiated for the 2nd subscription, a new PaymentTransaction is created for the card verification (amount=0, type=AUTHORIZATION). This new PT is created without a subscriptionData reference set. So when updatePaymentInfo() looks up the PT by payment ID and provider, it finds the PT but paymentTransaction.getSubscriptionData() returns null. matchedSubscriptionData becomes null, and updateSingleSubscriptionPaymentInfo() is never called. The 2nd subscription's SubscriptionData.paymentInfo and SubscriptionData.token remain pointing to the old card data.\r\n\r\nDB evidence from S2 confirms this: SubscriptionData SD1 (pk=8811461257926) has paymentInfo pointing to a Checkout.com source token (code=src_4eiwxp5yqpnuzjfqa7dbocotom, subscriptionId=f2ce85f6-...) which was updated. SubscriptionData SD2 (pk=8811461290694) has paymentInfo pointing to the original CreditCardPaymentInfo (code=70051768-77bf-4279-bf0c-798982f86c66, subscriptionId=0e52b90e-...) which was never updated. The 3 card-update PaymentTransactions (ARE26I0411465355_*) all have amount=0 and were created during the card update flow, but none of them have subscriptionData linked to SD2.\r\n\r\nThe ticket mentions that '_1' was manually appended to the source token for both subscriptions. This manual modification does not cause the issue but highlights that both subscriptions originally shared the same token. The code's inability to propagate the new token to all subscriptions on the order is the defect.\r\n\r\nA fix already exists in the codebase (visible in the current code with an RT-722599 comment) that iterates all subscriptions on the order via order.getSubscriptions() and calls updateSingleSubscriptionPaymentInfo() for each subscription that was not the matched one. This fix needs to be deployed to STG2.\r\n\r\nPossible remediation\r\n\r\n1. Deploy the existing code fix to STG2. The fix in TokoCheckoutDotComFacadeImpl.updatePaymentInfo() iterates all subscriptions on the order and calls updateSingleSubscriptionPaymentInfo() for each one, ensuring all subscriptions get the new source token and updated PaymentInfo regardless of which PaymentTransaction was matched.\r\n\r\n2. For the specific test order AE260901-08628165 on STG2, run a Groovy script to update SubscriptionData SD2 (pk=8811461290694) to set paymentInfo to the newly created CreditCardPaymentInfo (the one with the updated source token src_4eiwxp5yqpnuzjfqa7dbocotom) and set the token field to the new source token ID. This will align SD2 with SD1 and allow the recurring payment to use the correct token.\r\n\r\n3. After deploying the fix, re-test the card update flow on a new order with multiple SC+ subscriptions to verify that both subscriptions receive the new token.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-11-06T13:16:49.152Z"
       }
     },
     {
@@ -97,8 +103,8 @@
         "issueNum": 1076,
         "title": "Investigate ticket RT-722599",
         "received": "2026-11-06T12:23:31.598Z",
-        "responded": "",
-        "responseSnippet": ""
+        "responded": "2026-11-06T13:17:18.957Z",
+        "responseSnippet": "Now let me fetch the ticket and check MCP availability. Let me look at what scripts are available for Jira operations.Good, I have the learnings and Aryantone style. Now let me fetch the ticket and check for key scripts.Ticket fetched. Let me now launch parallel investigations: STG2 DB queries, codebase trace, and Jira cross-reference.STG2 HAC had SSO issues. Let me try the CCv2 S2 environment and run codebase searches directly.Order found on CCv2 S2. The status PK needs resolving - let me run t"
       },
       {
         "issueNum": 1044,
@@ -235,27 +241,19 @@
       }
     ],
     "pid": 43056,
-    "uptime": 17112,
+    "uptime": 17152,
     "failures": 0,
-    "activeJobCount": 1,
-    "jobs": [
-      {
-        "issueNum": 1076,
-        "issueTitle": "Investigate ticket RT-722599",
-        "snippet": "Auto-triggered investigation for new ticket RT-722599.\n\nTicket: RT-722599\nSummary: [STG2] Multiple Samsung Care+ service",
-        "pid": 29152,
-        "elapsed": 3187
-      }
-    ],
+    "activeJobCount": 0,
+    "jobs": [],
     "startTime": "2026-11-06T08:31:27.991Z",
     "version": "v3",
-    "lastResponseAt": "2026-11-06T09:54:21.477Z",
-    "lastResponseIssue": 1044,
+    "lastResponseAt": "2026-11-06T13:17:18.973Z",
+    "lastResponseIssue": 1076,
     "ideSessions": [
       {
         "pid": 28056,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 198839,
+        "ageSeconds": 198880,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -265,7 +263,7 @@
       {
         "pid": 28000,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 101335,
+        "ageSeconds": 101376,
         "status": "running",
         "isChild": false,
         "taskSummary": "even after logging jira in, it says , network error: fetch failed. it was working properly the fi...",
@@ -275,7 +273,7 @@
       {
         "pid": 34464,
         "cwd": "c:\\windows",
-        "ageSeconds": 32399,
+        "ageSeconds": 32440,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -284,6 +282,15 @@
       }
     ],
     "activityLog": [
+      {
+        "id": "1793971038979-i7ombv",
+        "timestamp": "2026-11-06T13:17:18.979Z",
+        "type": "agent-response",
+        "source": "bridge",
+        "title": "Investigate ticket RT-722599",
+        "detail": "Now let me fetch the ticket and check MCP availability. Let me look at what scripts are available for Jira operations.Good, I have the learnings and Aryantone style. Now let me fetch the ticket and ch",
+        "status": "success"
+      },
       {
         "id": "1793967812277-fo1xca",
         "timestamp": "2026-11-06T12:23:32.277Z",
@@ -543,15 +550,6 @@
         "source": "aryanverma2410",
         "title": "Investigate ticket MYME-28851",
         "detail": "#1053",
-        "status": "pending"
-      },
-      {
-        "id": "1793953891616-d4fzva",
-        "timestamp": "2026-11-06T08:31:31.616Z",
-        "type": "command",
-        "source": "aryanverma2410",
-        "title": "Investigate ticket VNME-30544",
-        "detail": "#1054",
         "status": "pending"
       }
     ],
@@ -4882,30 +4880,31 @@
         "issueNum": 1076,
         "title": "Investigate ticket RT-722599",
         "startTime": "2026-11-06T12:23:32.517Z",
-        "status": "thinking",
+        "status": "done",
         "commandHistory": [
           {
             "title": "Investigate ticket RT-722599",
             "time": "2026-11-06T12:23:32.517Z"
           }
-        ]
+        ],
+        "endTime": "2026-11-06T13:17:18.980Z",
+        "lastOutput": "Now let me fetch the ticket and check MCP availability. Let me look at what scripts are available for Jira operations.Good, I have the learnings and Aryantone style. Now let me fetch the ticket and check for key scripts.Ticket fetched. Let me now launch parallel investigations: STG2 DB queries, codebase trace, and Jira cross-reference.STG2 HAC had SSO issues. Let me try the CCv2 S2 environment and run codebase searches directly.Order found on CCv2 S2. The status PK needs resolving - let me run t"
       }
     },
-    "bridgeLogTail": "[2026-11-06T13:16:19.200Z] STDOUT data for #1076: 108 bytes\n[2026-11-06T13:16:19.203Z] LIVE events write for #1076: 546 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1076.txt\n[2026-11-06T13:16:19.209Z] STDOUT data for #1076: 107 bytes\n[2026-11-06T13:16:19.212Z] LIVE events write for #1076: 547 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1076.txt\n[2026-11-06T13:16:19.218Z] STDOUT data for #1076: 119 bytes\n[2026-11-06T13:16:19.223Z] LIVE events write for #1076: 548 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1076.txt\n[2026-11-06T13:16:19.229Z] STDOUT data for #1076: 108 bytes\n[2026-11-06T13:16:19.232Z] LIVE events write for #1076: 549 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1076.txt\n[2026-11-06T13:16:19.237Z] STDOUT data for #1076: 113 bytes\n[2026-11-06T13:16:19.240Z] LIVE events write for #1076: 550 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1076.txt\n[2026-11-06T13:16:19.247Z] STDOUT data for #1076: 121 bytes\n[2026-11-06T13:16:19.250Z] LIVE events write for #1076: 551 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1076.txt\n[2026-11-06T13:16:19.257Z] STDOUT data for #1076: 109 bytes\n[2026-11-06T13:16:19.262Z] LIVE events write for #1076: 552 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1076.txt\n[2026-11-06T13:16:19.835Z] STDOUT data for #1076: 822 bytes\n[2026-11-06T13:16:19.838Z] LIVE events write for #1076: 553 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1076.txt\n[2026-11-06T13:16:19.843Z] STDOUT data for #1076: 836 bytes\n[2026-11-06T13:16:19.847Z] LIVE events write for #1076: 554 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1076.txt\n[2026-11-06T13:16:25.660Z] STDOUT data for #1076: 4811 bytes\n[2026-11-06T13:16:25.664Z] LIVE events write for #1076: 555 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1076.txt",
+    "bridgeLogTail": "[2026-11-06T13:17:14.759Z] STDOUT data for #1076: 108 bytes\n[2026-11-06T13:17:14.762Z] LIVE events write for #1076: 654 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1076.txt\n[2026-11-06T13:17:14.770Z] STDOUT data for #1076: 126 bytes\n[2026-11-06T13:17:14.775Z] LIVE events write for #1076: 655 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1076.txt\n[2026-11-06T13:17:14.781Z] STDOUT data for #1076: 124 bytes\n[2026-11-06T13:17:14.785Z] LIVE events write for #1076: 656 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1076.txt\n[2026-11-06T13:17:14.790Z] STDOUT data for #1076: 111 bytes\n[2026-11-06T13:17:14.793Z] LIVE events write for #1076: 657 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1076.txt\n[2026-11-06T13:17:14.835Z] STDOUT data for #1076: 116 bytes\n[2026-11-06T13:17:14.839Z] LIVE events write for #1076: 658 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1076.txt\n[2026-11-06T13:17:14.840Z] STDOUT data for #1076: 459 bytes\n[2026-11-06T13:17:14.844Z] LIVE events write for #1076: 662 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1076.txt\n[2026-11-06T13:17:14.849Z] STDOUT data for #1076: 109 bytes\n[2026-11-06T13:17:14.852Z] LIVE events write for #1076: 663 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1076.txt\n[2026-11-06T13:17:14.863Z] STDOUT data for #1076: 106 bytes\n[2026-11-06T13:17:14.866Z] LIVE events write for #1076: 664 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1076.txt\n[2026-11-06T13:17:14.867Z] STDOUT data for #1076: 348 bytes\n[2026-11-06T13:17:14.871Z] LIVE events write for #1076: 665 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1076.txt\n[2026-11-06T13:17:17.603Z] aipro completed for #1076 (5742 chars)\n[2026-11-06T13:17:18.957Z] Comment posted on #1076",
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-11-06T11:42:42.016Z",
-      "ageMs": 5640799
+      "ageMs": 5681583
     },
-    "watchdogLogTail": "[2026-11-06T11:19:04.197Z] Killed dashboard PID 53924\n[2026-11-06T11:19:12.287Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 53924) not found\n[2026-11-06T11:19:15.471Z] Could not kill dashboard PID 53924: Command failed: taskkill /PID 53924 /F /T\n[2026-11-06T11:19:15.477Z] Starting jira-dashboard-server.js...\n[2026-11-06T11:19:15.963Z] Dashboard started with PID 46520 (restart #5, 1 in last hour)\n[2026-11-06T11:19:23.535Z] Starting jira-dashboard-server.js...\n[2026-11-06T11:19:23.763Z] Dashboard started with PID 55728 (restart #6, 2 in last hour)\n[2026-11-06T11:19:29.533Z] DUPLICATE jira-dashboard-server detected: PID 46520 — killing\n[2026-11-06T11:22:42.402Z] DUPLICATE watchdog detected: PID 27736 — killing\n[2026-11-06T11:42:42.013Z] DUPLICATE watchdog detected: PID 26960 — killing",
-    "jobOutputs": {}
+    "watchdogLogTail": "[2026-11-06T11:19:04.197Z] Killed dashboard PID 53924\n[2026-11-06T11:19:12.287Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 53924) not found\n[2026-11-06T11:19:15.471Z] Could not kill dashboard PID 53924: Command failed: taskkill /PID 53924 /F /T\n[2026-11-06T11:19:15.477Z] Starting jira-dashboard-server.js...\n[2026-11-06T11:19:15.963Z] Dashboard started with PID 46520 (restart #5, 1 in last hour)\n[2026-11-06T11:19:23.535Z] Starting jira-dashboard-server.js...\n[2026-11-06T11:19:23.763Z] Dashboard started with PID 55728 (restart #6, 2 in last hour)\n[2026-11-06T11:19:29.533Z] DUPLICATE jira-dashboard-server detected: PID 46520 — killing\n[2026-11-06T11:22:42.402Z] DUPLICATE watchdog detected: PID 27736 — killing\n[2026-11-06T11:42:42.013Z] DUPLICATE watchdog detected: PID 26960 — killing"
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-11-06T13:16:11.799Z",
+      "lastCheck": "2026-11-06T13:17:11.433Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4914,18 +4913,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-06T13:16:11.799Z",
+      "lastCheck": "2026-11-06T13:17:11.433Z",
       "downSince": "2026-11-06T11:19:25.168Z",
-      "downDuration": 7006631,
+      "downDuration": 7066265,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-06T13:16:11.799Z",
+      "lastCheck": "2026-11-06T13:17:11.433Z",
       "downSince": "2026-11-06T11:19:25.168Z",
-      "downDuration": 7006631,
+      "downDuration": 7066265,
       "alert": true
     }
   ],
