@@ -1,46 +1,7 @@
 {
-  "generatedAt": "2026-11-06T10:42:08.735Z",
-  "totalTickets": 4,
+  "generatedAt": "2026-11-06T10:42:51.968Z",
+  "totalTickets": 3,
   "tickets": [
-    {
-      "key": "TWME-7467",
-      "summary": "Order remediation",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Taiwan Maintenance & Enhancements",
-      "projectKey": "TWME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-11-06T19:41:42.000+0900",
-      "created": "2026-11-06T11:14:18.000+0900",
-      "statusChangedAt": "2026-11-06T11:28:00.197+0900",
-      "assignedToMeAt": "",
-      "description": "Hi team,\n\nBelow order please help with triggering Requested Action\n||Order Number||Payment Method||Installment||Status||Action Required||\n|TW261016-84008288|Credit Card|Y|RETURN_COMPLETED|Refund is completed. Please help to trigger RFI and Credit note|\n\nBest regards,\nClaire\nCC. ~@email ~@email ~@ema",
-      "commentsCount": 1,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-11-06T19:41:42.406+0900",
-          "snippet": "Hi ~@email ,\n\nRFI and credit note sent.\n\nRegards\n\nAryan"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi ~@email ,\n\nRFI and credit note sent.\n\nRegards\n\nAryan",
-      "lastCommentDate": "2026-11-06T19:41:42.406+0900",
-      "url": "https://jira.secext.samsung.net/browse/TWME-7467",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: TWME-7467\n\nOrder remediation - TW261016-84008288\nGenerated: 2026-11-06T15:05:45.142Z\n\nIssue:\n\nOrder TW261016-84008288 (TW region, Credit Card, installment order) is in RETURN_COMPLETED status. The refund has been completed but the RFI (Request for Invoice) and Credit Note were not triggered. The reporter (Claire H) requests triggering RFI and Credit note generation for this order.\n\nThis is a recurring pattern seen across 575+ similar closed TWME tickets where TW-region return orders complete the return/refund cycle but the downstream financial document generation (RFI and Credit Note) fails to fire.\n\nRCA:\n\nThe order reached RETURN_COMPLETED status, confirming the return and refund cycle completed on the Hybris side. However, the RFI and Credit Note generation steps were not triggered downstream.\n\nBased on the resolution pattern from similar closed tickets (TWME-4154, TWME-5722, TWME-7429), the root cause is one of the following:\n\n1. The return-refund business process encountered a NodeExecutionException at the refundShortPicksIfRequired action (confirmed in TWME-4154). When this process node fails, the downstream events that trigger RFI and Credit Note generation to NERP/GERP are never dispatched. The order status progresses to RETURN_COMPLETED through an alternate path, but the financial integration documents remain ungenerated.\n\n2. For installment orders specifically (Installment=Y as in this case), TWME-5722 documented 17 installment orders stuck at REFUND_FAILED where the finance team had to manually refund, and the Hybris team (Naveen Chauhan) had to manually trigger RFI and Credit notes from the backend. Installment orders may have additional complexity in the refund-to-RFI chain that makes them more susceptible to this failure mode.\n\n3. The NERP callback that should trigger RFI/Credit Note after return completion may not have been received or processed by Hybris (similar to TWME-4865 where SIT RETURN was complete on NERP side but Hybris did not update).\n\nVerification limitation: HAC (Hybris Administration Console) authentication was unavailable during this investigation, so the order's business process state, consignment process state, and external service status could not be directly verified against the database. The RCA is based on Jira cross-reference of 575+ identical resolved tickets and the documented root causes from TWME-4154 and TWME-5722. When HAC access is restored, the following should be verified: (a) the order's business process state (check for ERROR state on return-refund process), (b) the specific failed action node (endMessage in BusinessProcess), (c) whether any NERP callback was received for this order.\n\nPossible remediation:\n\n1. Verify the order's current business process state via HAC FlexibleSearch once access is restored. Query BusinessProcess where code LIKE '%TW261016-84008288%' to identify the return-refund process and its state. If the process is in ERROR state, identify the failed action from the endMessage field.\n\n2. If the return-refund process is stuck in ERROR: Restart the process from the failed action node. This will re-trigger the downstream RFI and Credit Note generation events. The specific restart point depends on which action failed (refundShortPicksIfRequired or a later RFI/credit note action).\n\n3. If the process completed but RFI/Credit Note were never generated: Manually trigger the RFI and Credit Note events via HAC Groovy script. This is the same approach used by the NERP/Hybris team in TWME-5722 (17 installment orders) and TWME-7429 (recently resolved Oct 31, 2026).\n\n4. For the installment-specific case: The NERP/finance team may need to confirm that the installment refund was properly posted on their side before triggering RFI, as installment refunds involve multiple payment periods and may require special handling.\n\n5. PC-56284 and PC-56267 are existing clone tickets for the same remediation type (\"CLONE - Order remediation: Refund, RFI and Credit note\") but both are in \"To do\" status with no scripts attached. No reusable PC ticket with an approved script was found for this remediation type. A new PC ticket may need to be created with a Groovy script to trigger RFI and Credit Note for this order.",
-        "sections": {
-          "issue": "Order TW261016-84008288 (TW region, Credit Card, installment order) is in RETURN_COMPLETED status. The refund has been completed but the RFI (Request for Invoice) and Credit Note were not triggered. The reporter (Claire H) requests triggering RFI and Credit note generation for this order.\n\nThis is a recurring pattern seen across 575+ similar closed TWME tickets where TW-region return orders complete the return/refund cycle but the downstream financial document generation (RFI and Credit Note) fails to fire.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-11-06T09:35:45.181Z"
-      }
-    },
     {
       "key": "TWME-7460",
       "summary": "Order remediation",
@@ -313,7 +274,7 @@
       }
     ],
     "pid": 43056,
-    "uptime": 7840,
+    "uptime": 7884,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -325,7 +286,7 @@
       {
         "pid": 28056,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 189569,
+        "ageSeconds": 189612,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -335,7 +296,7 @@
       {
         "pid": 24712,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 92762,
+        "ageSeconds": 92805,
         "status": "running",
         "isChild": false,
         "taskSummary": "it shuld go to samsung.net",
@@ -345,7 +306,7 @@
       {
         "pid": 28000,
         "cwd": "c:\\windows",
-        "ageSeconds": 92065,
+        "ageSeconds": 92108,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -355,7 +316,7 @@
       {
         "pid": 39464,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 86732,
+        "ageSeconds": 86775,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -365,7 +326,7 @@
       {
         "pid": 34464,
         "cwd": "unknown",
-        "ageSeconds": 23129,
+        "ageSeconds": 23172,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -4971,17 +4932,17 @@
     "bridgeLogTail": "[2026-11-06T09:54:16.167Z] STDOUT data for #1044: 124 bytes\n[2026-11-06T09:54:16.171Z] LIVE events write for #1044: 607 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1044.txt\n[2026-11-06T09:54:16.179Z] STDOUT data for #1044: 105 bytes\n[2026-11-06T09:54:16.182Z] LIVE events write for #1044: 608 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1044.txt\n[2026-11-06T09:54:16.190Z] STDOUT data for #1044: 117 bytes\n[2026-11-06T09:54:16.194Z] LIVE events write for #1044: 609 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1044.txt\n[2026-11-06T09:54:16.201Z] STDOUT data for #1044: 112 bytes\n[2026-11-06T09:54:16.205Z] LIVE events write for #1044: 610 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1044.txt\n[2026-11-06T09:54:16.212Z] STDOUT data for #1044: 121 bytes\n[2026-11-06T09:54:16.216Z] LIVE events write for #1044: 611 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1044.txt\n[2026-11-06T09:54:16.247Z] STDOUT data for #1044: 112 bytes\n[2026-11-06T09:54:16.251Z] LIVE events write for #1044: 612 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1044.txt\n[2026-11-06T09:54:16.252Z] STDOUT data for #1044: 124 bytes\n[2026-11-06T09:54:16.256Z] LIVE events write for #1044: 613 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1044.txt\n[2026-11-06T09:54:16.258Z] STDOUT data for #1044: 104 bytes\n[2026-11-06T09:54:16.261Z] LIVE events write for #1044: 614 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1044.txt\n[2026-11-06T09:54:16.270Z] STDOUT data for #1044: 349 bytes\n[2026-11-06T09:54:16.274Z] LIVE events write for #1044: 615 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1044.txt\n[2026-11-06T09:54:20.234Z] aipro completed for #1044 (5560 chars)\n[2026-11-06T09:54:21.458Z] Comment posted on #1044",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-11-06T10:32:43.465Z",
-      "ageMs": 570538
+      "lastWrite": "2026-11-06T10:42:42.943Z",
+      "ageMs": 13683
     },
-    "watchdogLogTail": "[2026-11-06T09:21:16.558Z] Killed dashboard PID 41844\n[2026-11-06T09:21:38.658Z] DASHBOARD RESTART NEEDED: Dashboard heartbeat is stale (19836s old)\n[2026-11-06T09:21:51.615Z] Could not kill dashboard PID 41844: Command failed: taskkill /PID 41844 /F /T\n[2026-11-06T09:21:51.650Z] Starting jira-dashboard-server.js...\n[2026-11-06T09:21:51.909Z] Dashboard started with PID 52688 (restart #3, 1 in last hour)\n[2026-11-06T09:22:22.317Z] Starting jira-dashboard-server.js...\n[2026-11-06T09:22:22.719Z] Dashboard started with PID 53924 (restart #4, 2 in last hour)\n[2026-11-06T09:23:44.846Z] DUPLICATE jira-dashboard-server detected: PID 52688 — killing\n[2026-11-06T09:47:42.861Z] DUPLICATE watchdog detected: PID 55284 — killing\n[2026-11-06T10:32:43.465Z] DUPLICATE watchdog detected: PID 53940 — killing"
+    "watchdogLogTail": "[2026-11-06T09:21:38.658Z] DASHBOARD RESTART NEEDED: Dashboard heartbeat is stale (19836s old)\n[2026-11-06T09:21:51.615Z] Could not kill dashboard PID 41844: Command failed: taskkill /PID 41844 /F /T\n[2026-11-06T09:21:51.650Z] Starting jira-dashboard-server.js...\n[2026-11-06T09:21:51.909Z] Dashboard started with PID 52688 (restart #3, 1 in last hour)\n[2026-11-06T09:22:22.317Z] Starting jira-dashboard-server.js...\n[2026-11-06T09:22:22.719Z] Dashboard started with PID 53924 (restart #4, 2 in last hour)\n[2026-11-06T09:23:44.846Z] DUPLICATE jira-dashboard-server detected: PID 52688 — killing\n[2026-11-06T09:47:42.861Z] DUPLICATE watchdog detected: PID 55284 — killing\n[2026-11-06T10:32:43.465Z] DUPLICATE watchdog detected: PID 53940 — killing\n[2026-11-06T10:42:42.941Z] DUPLICATE watchdog detected: PID 41124 — killing"
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-11-06T10:41:32.933Z",
+      "lastCheck": "2026-11-06T10:42:32.728Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4990,18 +4951,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-06T10:41:32.933Z",
+      "lastCheck": "2026-11-06T10:42:32.728Z",
       "downSince": "2026-11-06T09:22:24.782Z",
-      "downDuration": 4748151,
+      "downDuration": 4807946,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-06T10:41:32.933Z",
+      "lastCheck": "2026-11-06T10:42:32.728Z",
       "downSince": "2026-11-06T10:20:11.433Z",
-      "downDuration": 1281500,
+      "downDuration": 1341295,
       "alert": true
     }
   ],
@@ -5043,18 +5004,6 @@
   "actionItems": {
     "zero": [
       {
-        "key": "TWME-7467",
-        "summary": "Order remediation",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/TWME-7467",
-        "updated": "2026-11-06T19:41:42.000+0900",
-        "statusChangedAt": "2026-11-06T11:28:00.197+0900"
-      },
-      {
         "key": "TWME-7460",
         "summary": "Order remediation",
         "priority": "None",
@@ -5095,21 +5044,21 @@
     "blocked": [],
     "queued": [],
     "totals": {
-      "zero": 4,
+      "zero": 3,
       "actionable": 0,
       "blocked": 0,
       "queued": 0
     }
   },
   "worklogTotals": {
-    "todayHours": 4.67,
-    "weekHours": 32,
+    "todayHours": 5.25,
+    "weekHours": 32.58,
     "dailyHours": [
       7.58,
       2.92,
       9.83,
       7,
-      4.67,
+      5.25,
       0,
       0
     ],
@@ -5127,9 +5076,9 @@
   },
   "tempoApproval": {
     "status": "open",
-    "workedHours": 32,
+    "workedHours": 32.58,
     "requiredHours": 168,
-    "deficitHours": 136,
+    "deficitHours": 135.42,
     "periodStart": "2026-11-01",
     "periodEnd": "2026-11-30"
   },
@@ -5149,10 +5098,41 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "TWME-7464",
+        "slaName": "Maintenance Response (GMT+8)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85215,
+        "targetDate": "2026-11-09T02:07:59.204000001Z"
+      },
+      {
+        "key": "TWME-7464",
+        "slaName": "Maintenance Resolution (GMT+8)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1265108,
+        "targetDate": "2026-11-27T02:07:59.204000015Z"
+      },
+      {
+        "key": "TWME-7460",
+        "slaName": "Maintenance Response (GMT+8)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85402,
+        "targetDate": "2026-11-06T03:16:30.473000001Z"
+      },
+      {
+        "key": "TWME-7460",
+        "slaName": "Maintenance Resolution (GMT+8)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 412269,
+        "targetDate": "2026-11-12T03:16:38.758000005Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 0.83h on MYME-28854, 1h on TWME-7460, 0.92h on NZHME-11407, 1h on SAM-18530, 1h on SAM-18531, 0.75h on HKHME-6809, 0.75h on PME-14153, 0.75h on AUME-21034\nToday: TWME-7467, TWME-7460, TWME-7464, RT-664743\nBlockers: none"
+    "standupText": "Yesterday: 0.83h on MYME-28854, 1h on TWME-7460, 0.92h on NZHME-11407, 1h on SAM-18530, 1h on SAM-18531, 0.75h on HKHME-6809, 0.75h on PME-14153, 0.75h on AUME-21034\nToday: TWME-7460, TWME-7464, RT-664743\nBlockers: none"
   },
   "autologinConfig": {
     "login_time": "08:15",
