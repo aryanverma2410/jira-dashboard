@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-06T09:26:09.708Z",
+  "generatedAt": "2026-11-06T09:26:57.242Z",
   "totalTickets": 5,
   "tickets": [
     {
@@ -137,11 +137,15 @@
         }
       ],
       "solution": {
-        "status": "none",
-        "excerpt": "",
-        "source": "",
-        "foundAt": "",
-        "issueNumber": null
+        "status": "found",
+        "excerpt": "Stuck order on Hybris _20261104\r\nGenerated: 2026-11-06T14:55:16Z\r\n\r\nIssue\r\n\r\nThree SC+ (Samsung Care+) orders in the Vietnam (VN) region are stuck and require investigation:\r\n\r\n1. VN261006-80136417 — SC+ Standalone, IMEI 352342860698075 — reported as \"Not API\", meaning the SC+ registration API was not triggered for this order. The reporter asks to check the log.\r\n2. VN261003-78779479 — SC+ Standalone, IMEI 350557093046915 — reported as \"Wrong promotion\", pending customer action.\r\n3. VN261022-864726 — SC+ Bundle, IMEI 351129971034808 — reported as \"Wrong SKU\", pending customer action.\r\n\r\nThe ticket was raised by huu.lq (Le Quang Huu) and assigned to aryan.v1. This is the same reporter who filed VNME-29859 (Stuck order on Hybris _20260907) with similar SC+ standalone stuck orders, which was resolved by resetting the external service and retriggering SC+ activation.\r\n\r\nRCA\r\n\r\nIMPORTANT LIMITATION: Both HAC (Hybris Administration Console) and Kibana were unavailable during this investigation. HAC authentication failed (password expired for admin.aryan.v1 account) and Kibana cookies were stale (401 Unauthorized on all domains). The DB state, process states, external service statuses, and Kibana log analysis could NOT be performed. The RCA below is based on Jira cross-referencing, ticket description analysis, and known SC+ remediation patterns from prior resolved tickets. All findings should be treated as PENDING until DB and log verification is possible.\r\n\r\nBased on the ticket description and cross-referencing with prior VN SC+ tickets:\r\n\r\nOrder 1 — VN261006-80136417 (SC+ Standalone, \"Not API\"):\r\nThe issue \"Not API\" indicates the SC+ registration API was never called for this order. This is the same pattern documented in VNME-21170 ([VN] SC+ Bundle - Hybris doesn't send registration API to SC+ portal), where SC+ Bundle orders were shipped without the registration API being triggered to the SC+ portal. For SC+ Standalone orders, the SC+ external service (samsungcareplus) is invoked via ProcessExternalServicesOnConsignmentAction during the consignment process. If the external service record is in ERROR or UPDATE_ERROR status, or if the consignment process errored before reaching the SC+ activation step, the API call would never fire.\r\n\r\nThe most likely root cause is one of:\r\n- The external service record (samsungcareplus) is in ERROR or UPDATE_ERROR status after an initial failed registration attempt, blocking any retry.\r\n- The consignment process hit an error at or before ProcessExternalServicesOnConsignmentAction, preventing the SC+ activation step from executing.\r\n- The order was created and placed but the business process stalled before reaching the external service invocation, potentially due to a missing or incorrect configuration (e.g., delivery mode mapping, payment mode assignment).\r\n\r\nWithout DB verification, the specific error code and external service status cannot be confirmed. The remediation approach from VNME-29859 (resetting the external service to NEW and retriggering the process) was confirmed to work for similar VN SC+ standalone orders.\r\n\r\nOrder 2 — VN261003-78779479 (SC+ Standalone, \"Wrong promotion\"):\r\nThe issue \"Wrong promotion\" suggests the order captured an incorrect promotion or the SC+ product was linked to the wrong promotional campaign. This may be related to VNME-30351 (SC+ Wrong PID link), where SC+ SKUs were linked to wrong PIDs (product identifiers) in the SMC system. VNME-30351 was closed on Oct 21, 2026 after correcting the PID mappings via Excel import. If this order was placed before the PID correction (order code prefix VN261003 = Oct 3, 2026), the wrong PID linkage could have caused the SC+ registration to fail or apply the wrong promotion. The reporter marks this as \"Pending for customer\", suggesting the issue may require customer-facing resolution rather than a platform fix.\r\n\r\nOrder 3 — VN261022-864726 (SC+ Bundle, \"Wrong SKU\"):\r\nThe issue \"Wrong SKU\" indicates the SC+ Bundle product was associated with an incorrect SKU. Similar to Order 2, this may be related to the PID linkage issues addressed in VNME-30351. For SC+ Bundle orders, the main product and the SC+ care product are linked as a bundle. If the SC+ SKU was mapped to the wrong product variant (e.g., 6-month vs 24-month coverage, ADH vs EW warranty type), the SMC API would reject the registration or register the wrong coverage plan. The reporter marks this as \"Pending for customer\", indicating the resolution likely involves correcting the SKU mapping and re-triggering, or coordinating with the customer for the correct product.\r\n\r\nCross-reference with VNME-30351 (closed Oct 21, 2026): That ticket corrected 12 SC+ SKU-to-PID mappings for both standalone and bundle products in the Vietnam region. Orders placed before Oct 21 may have used the old (incorrect) PID mappings, leading to wrong promotion or wrong SKU issues at the SMC registration level. Orders VN261003-78779479 (Oct 3) and VN261022-864726 (Oct 22 — borderline) may have been affected by the pre-correction PID mappings.\r\n\r\nPossible remediation\r\n\r\nOrder 1 — VN261006-80136417 (Not API):\r\nOnce HAC access is restored, verify the external service status for this order. If the samsungcareplus external service is in ERROR or UPDATE_ERROR, reset it to NEW and retrigger the consignment process at ProcessExternalServicesOnConsignmentAction. This is the standard SC+ remediation workflow confirmed in PC-52678 (REUSABLE). The script script-AEME-6495-scplus-remediation.groovy handles this: it finds the external service by order code, resets the status to NEW, clears the error fields, and re-triggers the process. This same approach was used successfully in VNME-29859 for the same reporter's prior SC+ stuck orders.\r\n\r\nOrder 2 — VN261003-78779479 (Wrong promotion):\r\nVerify whether this order was placed before the PID correction in VNME-30351 (Oct 21). If so, the SC+ SKU may have been linked to the wrong PID. The external service may have been registered with incorrect product data at SMC. Remediation would involve: (1) verifying the current external service status, (2) if registered with wrong data, cancelling the SMC registration and re-registering with the correct PID, or (3) if not yet registered, updating the SKU-to-PID mapping in the order data and retriggering. The reporter has marked this as \"Pending for customer\" — confirm with the reporter whether a platform-side fix is needed or if this requires customer coordination.\r\n\r\nOrder 3 — VN261022-864726 (Wrong SKU):\r\nSimilar to Order 2, verify whether the wrong SKU was due to the pre-correction PID mapping. Since this is a Bundle order (SC+ Bundle combines the main device with the care product), the wrong SKU may affect the bundle composition. Remediation: (1) check the consignment entries to identify which SC+ SKU was assigned, (2) compare against the corrected PID mapping from VNME-30351, (3) if the SKU is incorrect, update the consignment entry product code and retrigger the SC+ registration. The reporter has marked this as \"Pending for customer\" — confirm whether platform remediation is required.\r\n\r\nGeneral note: All three orders require DB state verification (external service status, business process state, consignment status) before any remediation script is executed. HAC access must be restored first. The reusable PC ticket PC-52678 and its script (script-AEME-6495-scplus-remediation.groovy) are the primary remediation tools for SC+ ERROR/UPDATE_ERROR reset scenarios.\r\n\r\n## Remediation\r\n\r\nReusable PC ticket: PC-52678 (REUSABLE) — script-AEME-6495-scplus-remediation.groovy\r\nRemediation type: scplus-reset (SC+ ERROR/UPDATE_ERROR to NEW, retrigger ProcessExternalServicesOnConsignmentAction)\r\n\r\nActions required before remediation:\r\n1. Restore HAC access (admin.aryan.v1 password reset or credential update)\r\n2. Refresh Kibana cookies (login to APAC Kibana dashboard to refresh SAML session)\r\n3. Run flexi-order-full.cjs for all 3 order codes to verify DB state\r\n4. Run order-error-check.cjs for all 3 order codes to identify error patterns\r\n5. Check Kibana logs for SC+/insurance/external service errors for each order\r\n\r\nFor Order 1 (VN261006-80136417): Likely candidate for PC-52678 script reuse — reset external service and retrigger.\r\nFor Orders 2 and 3: May require SKU/PID correction before retrigger, or customer coordination as indicated by the reporter.",
+        "sections": {
+          "issue": "",
+          "rca": "Stuck order on Hybris _20261104\r\nGenerated: 2026-11-06T14:55:16Z\r\n\r\nIssue\r\n\r\nThree SC+ (Samsung Care+) orders in the Vietnam (VN) region are stuck and require investigation:\r\n\r\n1. VN261006-80136417 — SC+ Standalone, IMEI 352342860698075 — reported as \"Not API\", meaning the SC+ registration API was not triggered for this order. The reporter asks to check the log.\r\n2. VN261003-78779479 — SC+ Standalone, IMEI 350557093046915 — reported as \"Wrong promotion\", pending customer action.\r\n3. VN261022-864726 — SC+ Bundle, IMEI 351129971034808 — reported as \"Wrong SKU\", pending customer action.\r\n\r\nThe ticket was raised by huu.lq (Le Quang Huu) and assigned to aryan.v1. This is the same reporter who filed VNME-29859 (Stuck order on Hybris _20260907) with similar SC+ standalone stuck orders, which was resolved by resetting the external service and retriggering SC+ activation.\r\n\r\nRCA\r\n\r\nIMPORTANT LIMITATION: Both HAC (Hybris Administration Console) and Kibana were unavailable during this investigation. HAC authentication failed (password expired for admin.aryan.v1 account) and Kibana cookies were stale (401 Unauthorized on all domains). The DB state, process states, external service statuses, and Kibana log analysis could NOT be performed. The RCA below is based on Jira cross-referencing, ticket description analysis, and known SC+ remediation patterns from prior resolved tickets. All findings should be treated as PENDING until DB and log verification is possible.\r\n\r\nBased on the ticket description and cross-referencing with prior VN SC+ tickets:\r\n\r\nOrder 1 — VN261006-80136417 (SC+ Standalone, \"Not API\"):\r\nThe issue \"Not API\" indicates the SC+ registration API was never called for this order. This is the same pattern documented in VNME-21170 ([VN] SC+ Bundle - Hybris doesn't send registration API to SC+ portal), where SC+ Bundle orders were shipped without the registration API being triggered to the SC+ portal. For SC+ Standalone orders, the SC+ external service (samsungcareplus) is invoked via ProcessExternalServicesOnConsignmentAction during the consignment process. If the external service record is in ERROR or UPDATE_ERROR status, or if the consignment process errored before reaching the SC+ activation step, the API call would never fire.\r\n\r\nThe most likely root cause is one of:\r\n- The external service record (samsungcareplus) is in ERROR or UPDATE_ERROR status after an initial failed registration attempt, blocking any retry.\r\n- The consignment process hit an error at or before ProcessExternalServicesOnConsignmentAction, preventing the SC+ activation step from executing.\r\n- The order was created and placed but the business process stalled before reaching the external service invocation, potentially due to a missing or incorrect configuration (e.g., delivery mode mapping, payment mode assignment).\r\n\r\nWithout DB verification, the specific error code and external service status cannot be confirmed. The remediation approach from VNME-29859 (resetting the external service to NEW and retriggering the process) was confirmed to work for similar VN SC+ standalone orders.\r\n\r\nOrder 2 — VN261003-78779479 (SC+ Standalone, \"Wrong promotion\"):\r\nThe issue \"Wrong promotion\" suggests the order captured an incorrect promotion or the SC+ product was linked to the wrong promotional campaign. This may be related to VNME-30351 (SC+ Wrong PID link), where SC+ SKUs were linked to wrong PIDs (product identifiers) in the SMC system. VNME-30351 was closed on Oct 21, 2026 after correcting the PID mappings via Excel import. If this order was placed before the PID correction (order code prefix VN261003 = Oct 3, 2026), the wrong PID linkage could have caused the SC+ registration to fail or apply the wrong promotion. The reporter marks this as \"Pending for customer\", suggesting the issue may require customer-facing resolution rather than a platform fix.\r\n\r\nOrder 3 — VN261022-864726 (SC+ Bundle, \"Wrong SKU\"):\r\nThe issue \"Wrong SKU\" indicates the SC+ Bundle product was associated with an incorrect SKU. Similar to Order 2, this may be related to the PID linkage issues addressed in VNME-30351. For SC+ Bundle orders, the main product and the SC+ care product are linked as a bundle. If the SC+ SKU was mapped to the wrong product variant (e.g., 6-month vs 24-month coverage, ADH vs EW warranty type), the SMC API would reject the registration or register the wrong coverage plan. The reporter marks this as \"Pending for customer\", indicating the resolution likely involves correcting the SKU mapping and re-triggering, or coordinating with the customer for the correct product.\r\n\r\nCross-reference with VNME-30351 (closed Oct 21, 2026): That ticket corrected 12 SC+ SKU-to-PID mappings for both standalone and bundle products in the Vietnam region. Orders placed before Oct 21 may have used the old (incorrect) PID mappings, leading to wrong promotion or wrong SKU issues at the SMC registration level. Orders VN261003-78779479 (Oct 3) and VN261022-864726 (Oct 22 — borderline) may have been affected by the pre-correction PID mappings.\r\n\r\nPossible remediation\r\n\r\nOrder 1 — VN261006-80136417 (Not API):\r\nOnce HAC access is restored, verify the external service status for this order. If the samsungcareplus external service is in ERROR or UPDATE_ERROR, reset it to NEW and retrigger the consignment process at ProcessExternalServicesOnConsignmentAction. This is the standard SC+ remediation workflow confirmed in PC-52678 (REUSABLE). The script script-AEME-6495-scplus-remediation.groovy handles this: it finds the external service by order code, resets the status to NEW, clears the error fields, and re-triggers the process. This same approach was used successfully in VNME-29859 for the same reporter's prior SC+ stuck orders.\r\n\r\nOrder 2 — VN261003-78779479 (Wrong promotion):\r\nVerify whether this order was placed before the PID correction in VNME-30351 (Oct 21). If so, the SC+ SKU may have been linked to the wrong PID. The external service may have been registered with incorrect product data at SMC. Remediation would involve: (1) verifying the current external service status, (2) if registered with wrong data, cancelling the SMC registration and re-registering with the correct PID, or (3) if not yet registered, updating the SKU-to-PID mapping in the order data and retriggering. The reporter has marked this as \"Pending for customer\" — confirm with the reporter whether a platform-side fix is needed or if this requires customer coordination.\r\n\r\nOrder 3 — VN261022-864726 (Wrong SKU):\r\nSimilar to Order 2, verify whether the wrong SKU was due to the pre-correction PID mapping. Since this is a Bundle order (SC+ Bundle combines the main device with the care product), the wrong SKU may affect the bundle composition. Remediation: (1) check the consignment entries to identify which SC+ SKU was assigned, (2) compare against the corrected PID mapping from VNME-30351, (3) if the SKU is incorrect, update the consignment entry product code and retrigger the SC+ registration. The reporter has marked this as \"Pending for customer\" — confirm whether platform remediation is required.\r\n\r\nGeneral note: All three orders require DB state verification (external service status, business process state, consignment status) before any remediation script is executed. HAC access must be restored first. The reusable PC ticket PC-52678 and its script (script-AEME-6495-scplus-remediation.groovy) are the primary remediation tools for SC+ ERROR/UPDATE_ERROR reset scenarios.\r\n\r\n## Remediation\r\n\r\nReusable PC ticket: PC-52678 (REUSABLE) — script-AEME-6495-scplus-remediation.groovy\r\nRemediation type: scplus-reset (SC+ ERROR/UPDATE_ERROR to NEW, retrigger ProcessExternalServicesOnConsignmentAction)\r\n\r\nActions required before remediation:\r\n1. Restore HAC access (admin.aryan.v1 password reset or credential update)\r\n2. Refresh Kibana cookies (login to APAC Kibana dashboard to refresh SAML session)\r\n3. Run flexi-order-full.cjs for all 3 order codes to verify DB state\r\n4. Run order-error-check.cjs for all 3 order codes to identify error patterns\r\n5. Check Kibana logs for SC+/insurance/external service errors for each order\r\n\r\nFor Order 1 (VN261006-80136417): Likely candidate for PC-52678 script reuse — reset external service and retrigger.\r\nFor Orders 2 and 3: May require SKU/PID correction before retrigger, or customer coordination as indicated by the reporter.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-11-06T09:26:11.547Z"
       }
     },
     {
@@ -339,7 +343,7 @@
       }
     ],
     "pid": 43056,
-    "uptime": 3278,
+    "uptime": 3328,
     "failures": 0,
     "activeJobCount": 7,
     "jobs": [
@@ -348,107 +352,56 @@
         "issueTitle": "Investigate ticket TWME-7460",
         "snippet": "Auto-triggered investigation for new ticket TWME-7460.\n\nTicket: TWME-7460\nSummary: Order remediation\n\nUse the investigat",
         "pid": 46432,
-        "elapsed": 23067
+        "elapsed": 23117
       },
       {
         "issueNum": 1044,
         "issueTitle": "Investigate ticket JPME-2297",
         "snippet": "Auto-triggered investigation for new ticket JPME-2297.\n\nTicket: JPME-2297\nSummary: Full return order status stuck at COM",
         "pid": 47828,
-        "elapsed": 23070
+        "elapsed": 23120
       },
       {
         "issueNum": 1045,
         "issueTitle": "Investigate ticket AUME-21034",
         "snippet": "Auto-triggered investigation for new ticket AUME-21034.\n\nTicket: AUME-21034\nSummary: Reinstate Missing Reward Points fro",
         "pid": 34616,
-        "elapsed": 23072
+        "elapsed": 23122
       },
       {
         "issueNum": 1054,
         "issueTitle": "Investigate ticket VNME-30544",
         "snippet": "Auto-triggered investigation for new ticket VNME-30544.\n\nTicket: VNME-30544\nSummary: Stuck order on Hybris _20261104\n\nUs",
         "pid": 29136,
-        "elapsed": 3274
+        "elapsed": 3324
       },
       {
         "issueNum": 1068,
         "issueTitle": "Investigate ticket MYME-28892",
         "snippet": "Auto-triggered investigation for new ticket MYME-28892.\n\nTicket: MYME-28892\nSummary: Generate invoices and push orders t",
         "pid": 46872,
-        "elapsed": 20341
+        "elapsed": 20391
       },
       {
         "issueNum": 1069,
         "issueTitle": "Investigate ticket TWME-7464",
         "snippet": "Auto-triggered investigation for new ticket TWME-7464.\n\nTicket: TWME-7464\nSummary: Order remediation\n\nUse the investigat",
         "pid": 45656,
-        "elapsed": 20342
+        "elapsed": 20392
       },
       {
         "issueNum": 1070,
         "issueTitle": "Investigate ticket TWME-7467",
         "snippet": "Auto-triggered investigation for new ticket TWME-7467.\n\nTicket: TWME-7467\nSummary: Order remediation\n\nUse the investigat",
         "pid": 34024,
-        "elapsed": 20344
+        "elapsed": 20394
       }
     ],
     "startTime": "2026-11-06T08:31:27.991Z",
     "version": "v3",
     "lastResponseAt": "2026-11-06T09:24:48.049Z",
     "lastResponseIssue": 1051,
-    "ideSessions": [
-      {
-        "pid": 28056,
-        "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 185014,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
-        "lastExchange": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.sap/app/data-explorer/discover#?_a=h@5389b62&_g=h@c823129&_q=h@fd5d437 afterwards with the confluence links as 2sign ins together create issue",
-        "sessionId": "aryan-v1"
-      },
-      {
-        "pid": 24712,
-        "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 88207,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "now tell me remediation for these orders",
-        "lastExchange": "now tell me remediation for these orders",
-        "sessionId": "bin"
-      },
-      {
-        "pid": 28000,
-        "cwd": "c:\\windows",
-        "ageSeconds": 87510,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "windows",
-        "lastExchange": null,
-        "sessionId": "windows"
-      },
-      {
-        "pid": 39464,
-        "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 82178,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
-        "lastExchange": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.sap/app/data-explorer/discover#?_a=h@5389b62&_g=h@c823129&_q=h@fd5d437 afterwards with the confluence links as 2sign ins together create issue",
-        "sessionId": "aryan-v1-1"
-      },
-      {
-        "pid": 34464,
-        "cwd": "unknown",
-        "ageSeconds": 18574,
-        "status": "running",
-        "isChild": false,
-        "taskSummary": "aipro session",
-        "lastExchange": null,
-        "sessionId": null
-      }
-    ],
+    "ideSessions": [],
     "activityLog": [
       {
         "id": "1793957088053-x0roln",
@@ -5030,11 +4983,11 @@
         ]
       }
     },
-    "bridgeLogTail": "    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-11-06T09:26:19.765Z] aipro stderr for #1045: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
+    "bridgeLogTail": "[2026-11-06T09:26:52.327Z] LIVE events write for #1054: 218 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1054.txt\n[2026-11-06T09:26:52.344Z] STDOUT data for #1054: 124 bytes\n[2026-11-06T09:26:52.355Z] LIVE events write for #1054: 219 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1054.txt\n[2026-11-06T09:26:54.779Z] STDOUT data for #1054: 336 bytes\n[2026-11-06T09:26:54.790Z] LIVE events write for #1054: 220 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1054.txt\n[2026-11-06T09:27:00.992Z] aipro stderr for #1069: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\n[2026-11-06T09:27:06.980Z] STDOUT data for #1035: 124 bytes\n[2026-11-06T09:27:06.983Z] LIVE events write for #1035: 454 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1035.txt",
     "watchdog": {
       "alive": true,
       "lastWrite": "2026-11-06T09:23:44.866Z",
-      "ageMs": 155755
+      "ageMs": 203045
     },
     "watchdogLogTail": "[2026-11-06T03:47:44.758Z] DUPLICATE watchdog detected: PID 55104 — killing\n[2026-11-06T09:20:57.081Z] DASHBOARD RESTART NEEDED: Dashboard heartbeat is stale (19805s old)\n[2026-11-06T09:21:16.558Z] Killed dashboard PID 41844\n[2026-11-06T09:21:38.658Z] DASHBOARD RESTART NEEDED: Dashboard heartbeat is stale (19836s old)\n[2026-11-06T09:21:51.615Z] Could not kill dashboard PID 41844: Command failed: taskkill /PID 41844 /F /T\n[2026-11-06T09:21:51.650Z] Starting jira-dashboard-server.js...\n[2026-11-06T09:21:51.909Z] Dashboard started with PID 52688 (restart #3, 1 in last hour)\n[2026-11-06T09:22:22.317Z] Starting jira-dashboard-server.js...\n[2026-11-06T09:22:22.719Z] Dashboard started with PID 53924 (restart #4, 2 in last hour)\n[2026-11-06T09:23:44.846Z] DUPLICATE jira-dashboard-server detected: PID 52688 — killing",
     "jobOutputs": {}
@@ -5044,7 +4997,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-11-06T09:25:34.285Z",
+      "lastCheck": "2026-11-06T09:26:34.813Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5053,18 +5006,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-06T09:25:34.285Z",
+      "lastCheck": "2026-11-06T09:26:34.813Z",
       "downSince": "2026-11-06T09:22:24.782Z",
-      "downDuration": 189503,
+      "downDuration": 250031,
       "alert": false
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-06T09:25:34.285Z",
+      "lastCheck": "2026-11-06T09:26:34.813Z",
       "downSince": "2026-11-06T09:22:24.782Z",
-      "downDuration": 189503,
+      "downDuration": 250031,
       "alert": false
     }
   ],
@@ -5224,7 +5177,66 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "MYME-28892",
+        "slaName": "Maintenance Response (GMT+8)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85213,
+        "targetDate": "2026-11-09T01:20:02.791000001Z"
+      },
+      {
+        "key": "MYME-28892",
+        "slaName": "Maintenance Resolution (GMT+8)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1266786,
+        "targetDate": "2026-11-27T01:20:02.791000015Z"
+      },
+      {
+        "key": "TWME-7464",
+        "slaName": "Maintenance Response (GMT+8)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85215,
+        "targetDate": "2026-11-09T02:07:59.204000001Z"
+      },
+      {
+        "key": "TWME-7464",
+        "slaName": "Maintenance Resolution (GMT+8)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1269662,
+        "targetDate": "2026-11-27T02:07:59.204000015Z"
+      },
+      {
+        "key": "TWME-7467",
+        "slaName": "Maintenance Response (GMT+8)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85580,
+        "targetDate": "2026-11-09T02:14:20.250000001Z"
+      },
+      {
+        "key": "TWME-7467",
+        "slaName": "Maintenance Resolution (GMT+8)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1270043,
+        "targetDate": "2026-11-27T02:14:20.250000015Z"
+      },
+      {
+        "key": "VNME-30544",
+        "slaName": "Maintenance Response (GMT+7)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86400,
+        "targetDate": "2026-11-05T09:46:12.493000001Z"
+      },
+      {
+        "key": "VNME-30544",
+        "slaName": "Maintenance Resolution (GMT+7)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2421131,
+        "targetDate": "2026-12-16T09:59:07.763000030Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
     "standupText": "Yesterday: 0.83h on MYME-28854, 1h on TWME-7460, 0.92h on NZHME-11407, 1h on SAM-18530, 1h on SAM-18531, 0.75h on HKHME-6809, 0.75h on PME-14153, 0.75h on AUME-21034\nToday: MYME-28892, TWME-7464, TWME-7467, VNME-30544, RT-664743\nBlockers: none"
