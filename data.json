@@ -1,51 +1,7 @@
 {
-  "generatedAt": "2026-11-06T10:53:02.457Z",
-  "totalTickets": 2,
+  "generatedAt": "2026-11-06T10:53:49.332Z",
+  "totalTickets": 1,
   "tickets": [
-    {
-      "key": "TWME-7460",
-      "summary": "Order remediation",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Taiwan Maintenance & Enhancements",
-      "projectKey": "TWME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-11-06T19:52:52.000+0900",
-      "created": "2026-11-05T12:16:28.000+0900",
-      "statusChangedAt": "2026-11-06T18:56:15.576+0900",
-      "assignedToMeAt": "",
-      "description": "Hi team,\n\nBelow order please help with triggering Requested Action\n||Order Number||Payment Method||Installment||Status||Action Required||\n|TW261027-88385386|Credit Card|Y|WAITING_FOR_REFUND_RESULT_2|Please help to trigger refund ,RFI and Credit note|\n\nBest regards,\nClaire\nCC. ~@email ~@email ~@email",
-      "commentsCount": 7,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-11-06T19:52:52.786+0900",
-          "snippet": "Hi ~@email ,\n\nOrder status set to RETURN_COMPLETED\n\n!image-2026-11-06-16-22-39-150.png|width=321,height=172!\n\nRegards\n\nAryan"
-        },
-        {
-          "author": "Claire Huang",
-          "date": "2026-11-06T18:56:07.410+0900",
-          "snippet": "Hi ~@email,\nWe will refund manually, but could you help to provide the response why this order failed.\nAnd please help to update the order status to \"RETURN_COMPLETED\"\n\nThanks,\nClaire\ncc. ~@email ~@email ~@email ~@email ~@email"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi ~@email ,\n\nOrder status set to RETURN_COMPLETED\n\n!image-2026-11-06-16-22-39-150.png|width=321,height=172!\n\nRegards\n\nAryan",
-      "lastCommentDate": "2026-11-06T19:52:52.786+0900",
-      "url": "https://jira.secext.samsung.net/browse/TWME-7460",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Order remediation - TW261027-88385386\r\nGenerated: 2026-11-06T09:30:00Z\r\n\r\nIssue:\r\nOrder TW261027-88385386 (TW region, Credit Card, Installment=Y) is stuck at WAITING_FOR_REFUND_RESULT_2. The reporter (Claire H) requested refund re-triggering, RFI, and credit note. RFI and credit note were already sent (comment 2026-11-05 17:44 JST). The refund was attempted twice via the TokoSingleRefundProcess and failed both times (confirmed in ticket comments 2026-11-05 18:47 and 2026-11-06 13:36 JST). The order remains at WAITING_FOR_REFUND_RESULT_2 and the reporter is requesting another refund attempt or the reason for failure.\r\n\r\nRCA:\r\nThe refund is processed by TokoSingleRefundAction (com.samsung.toko.fulfilmentprocess.actions.order.TokoSingleRefundAction), which is part of the TokoSingleRefundProcess (defined in toko-single-refund-process.xml). The process flow is: refundbyEOD -> tokoSingleRefund -> success/failed.\r\n\r\nWhen the process reaches the tokoSingleRefund action, it calls tokoPaymentService.refundFollowOn() to execute the refund against the payment gateway (CTBC Pay for TW region Credit Card Installment). The action checks the returned PaymentTransactionEntry transaction status. If the status is not ACCEPTED, the action returns NOK (Transition.NOK), which transitions the process to the \"failed\" end state. The order status was set to WAITING_FOR_REFUND_RESULT_2 by WaitForAsyncRefundResultOrderProcessAction before the refund subprocess was triggered, and it remains at this status because the refund failed.\r\n\r\nThe TokoSingleRefundAction also has a WAIT transition for installment orders (TokoCommonUtils.isInstallmentOrder). If there are pending consignments or the order is not fully returned, it returns WAIT and the process loops back to waitForEODRefund. However, since the refund was actually attempted (and failed), the order passed these checks and the failure is at the payment gateway level.\r\n\r\nThe exact payment gateway error could not be verified because HAC (database access) authentication failed during this investigation and Kibana MCP was unavailable. Based on the ticket comments confirming the refund was attempted and failed, and the code showing that NOK is returned when the transaction status is not ACCEPTED, the root cause is a payment gateway-level rejection during the refundFollowOn call. The TokoSingleRefundProcess is in FAILED state (process code: TokoSingleRefundProcess-TW261027-88385386-1793699529643).\r\n\r\nEvidence sources:\r\n- VERIFIED: Ticket comments (Jira API) confirm two refund attempts, both failed\r\n- VERIFIED: Code trace of TokoSingleRefundAction.java shows NOK transition on non-ACCEPTED transaction status\r\n- VERIFIED: Process definition toko-single-refund-process.xml confirms NOK -> failed end state\r\n- VERIFIED: Existing remediation script script-TW261027-88385386-refund-retrigger.groovy confirms process code and restart action\r\n- SPECULATION: Exact payment gateway error message not verified (HAC and Kibana were unavailable)\r\n- VERIFIED: Jira cross-reference found 150+ similar TWME tickets with WAITING_FOR_REFUND_RESULT, all Closed\r\n\r\nPossible remediation:\r\n1. The existing script script-TW261027-88385386-refund-retrigger.groovy restarts the TokoSingleRefundProcess from the tokoSingleRefund action. This script has already been used (based on the ticket comments showing two refund attempts). If the payment gateway continues to reject the refund, re-triggering will fail again.\r\n\r\n2. The reporter mentioned \"this order only has one SO with a payable amount\" (comment 2026-11-06 11:33 JST), suggesting the refund amount may be valid but the gateway is rejecting the transaction for another reason (e.g., expired authorization, installment plan constraints, or CTBC Pay gateway issue).\r\n\r\n3. Recommended approach: Since the refund has failed twice via the automated process, the refund likely needs to be processed manually by the payment team. The order should remain at WAITING_FOR_REFUND_RESULT_2 while the manual refund is processed externally. Once the manual refund is confirmed, the process can be manually completed or the order status updated.\r\n\r\n4. If a third automated attempt is desired, the existing script can be reused under a new PC ticket. The script restarts the process by: removing current tasks, setting process state to ERROR, then calling businessProcessService.restartProcess(process, \"tokoSingleRefund\"). However, given two prior failures, a manual refund is the recommended path.\r\n\r\n5. Alternative: Check with the payment team (CTBC Pay) for the specific rejection reason on this order's refund transaction. The PaymentTransactionEntry for the refund attempt would contain the exact gateway response code/message, which requires HAC access (currently unavailable due to expired credentials).\r\n\r\n## Remediation\r\n- Script: script-TW261027-88385386-refund-retrigger.groovy (already exists)\r\n- PC Ticket: PC-TBD (not yet created)\r\n- Process to restart: TokoSingleRefundProcess-TW261027-88385386-1793699529643\r\n- Action to restart from: tokoSingleRefund\r\n- Note: Two prior refund attempts failed. Manual refund recommended.",
-        "sections": {
-          "issue": "Order TW261027-88385386 (TW region, Credit Card, Installment=Y) is stuck at WAITING_FOR_REFUND_RESULT_2. The reporter (Claire H) requested refund re-triggering, RFI, and credit note. RFI and credit note were already sent (comment 2026-11-05 17:44 JST). The refund was attempted twice via the TokoSingleRefundProcess and failed both times (confirmed in ticket comments 2026-11-05 18:47 and 2026-11-06 13:36 JST). The order remains at WAITING_FOR_REFUND_RESULT_2 and the reporter is requesting another refund attempt or the reason for failure.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-11-06T09:27:21.877Z"
-      }
-    },
     {
       "key": "RT-664743",
       "summary": "Mena - Israel | STG1| Order Status is stuck at order split status",
@@ -241,7 +197,7 @@
       }
     ],
     "pid": 43056,
-    "uptime": 8491,
+    "uptime": 8541,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -253,7 +209,7 @@
       {
         "pid": 28056,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 190222,
+        "ageSeconds": 190269,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -263,7 +219,7 @@
       {
         "pid": 24712,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 93415,
+        "ageSeconds": 93462,
         "status": "running",
         "isChild": false,
         "taskSummary": "it shuld go to samsung.net",
@@ -273,7 +229,7 @@
       {
         "pid": 28000,
         "cwd": "c:\\windows",
-        "ageSeconds": 92718,
+        "ageSeconds": 92765,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -283,7 +239,7 @@
       {
         "pid": 39464,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 87386,
+        "ageSeconds": 87433,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -293,7 +249,7 @@
       {
         "pid": 34464,
         "cwd": "unknown",
-        "ageSeconds": 23783,
+        "ageSeconds": 23829,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -4900,7 +4856,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-11-06T10:42:42.943Z",
-      "ageMs": 624385
+      "ageMs": 669701
     },
     "watchdogLogTail": "[2026-11-06T09:21:38.658Z] DASHBOARD RESTART NEEDED: Dashboard heartbeat is stale (19836s old)\n[2026-11-06T09:21:51.615Z] Could not kill dashboard PID 41844: Command failed: taskkill /PID 41844 /F /T\n[2026-11-06T09:21:51.650Z] Starting jira-dashboard-server.js...\n[2026-11-06T09:21:51.909Z] Dashboard started with PID 52688 (restart #3, 1 in last hour)\n[2026-11-06T09:22:22.317Z] Starting jira-dashboard-server.js...\n[2026-11-06T09:22:22.719Z] Dashboard started with PID 53924 (restart #4, 2 in last hour)\n[2026-11-06T09:23:44.846Z] DUPLICATE jira-dashboard-server detected: PID 52688 — killing\n[2026-11-06T09:47:42.861Z] DUPLICATE watchdog detected: PID 55284 — killing\n[2026-11-06T10:32:43.465Z] DUPLICATE watchdog detected: PID 53940 — killing\n[2026-11-06T10:42:42.941Z] DUPLICATE watchdog detected: PID 41124 — killing"
   },
@@ -4909,7 +4865,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-11-06T10:52:32.661Z",
+      "lastCheck": "2026-11-06T10:53:32.590Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -4918,18 +4874,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-06T10:52:32.661Z",
+      "lastCheck": "2026-11-06T10:53:32.590Z",
       "downSince": "2026-11-06T09:22:24.782Z",
-      "downDuration": 5407879,
+      "downDuration": 5467808,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-06T10:52:32.661Z",
+      "lastCheck": "2026-11-06T10:53:32.590Z",
       "downSince": "2026-11-06T10:20:11.433Z",
-      "downDuration": 1941228,
+      "downDuration": 2001157,
       "alert": true
     }
   ],
@@ -4971,18 +4927,6 @@
   "actionItems": {
     "zero": [
       {
-        "key": "TWME-7460",
-        "summary": "Order remediation",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/TWME-7460",
-        "updated": "2026-11-06T19:52:52.000+0900",
-        "statusChangedAt": "2026-11-06T18:56:15.576+0900"
-      },
-      {
         "key": "RT-664743",
         "summary": "Mena - Israel | STG1| Order Status is stuck at order split status",
         "priority": "Critical",
@@ -4999,21 +4943,21 @@
     "blocked": [],
     "queued": [],
     "totals": {
-      "zero": 2,
+      "zero": 1,
       "actionable": 0,
       "blocked": 0,
       "queued": 0
     }
   },
   "worklogTotals": {
-    "todayHours": 6,
-    "weekHours": 33.33,
+    "todayHours": 6.58,
+    "weekHours": 33.92,
     "dailyHours": [
       7.58,
       2.92,
       9.83,
       7,
-      6,
+      6.58,
       0,
       0
     ],
@@ -5031,9 +4975,9 @@
   },
   "tempoApproval": {
     "status": "open",
-    "workedHours": 33.33,
+    "workedHours": 33.92,
     "requiredHours": 168,
-    "deficitHours": 134.67,
+    "deficitHours": 134.08,
     "periodStart": "2026-11-01",
     "periodEnd": "2026-11-30"
   },
@@ -5053,10 +4997,12 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": []
+  },
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 0.83h on MYME-28854, 1h on TWME-7460, 0.92h on NZHME-11407, 1h on SAM-18530, 1h on SAM-18531, 0.75h on HKHME-6809, 0.75h on PME-14153, 0.75h on AUME-21034\nToday: TWME-7460, RT-664743\nBlockers: none"
+    "standupText": "Yesterday: 0.83h on MYME-28854, 1h on TWME-7460, 0.92h on NZHME-11407, 1h on SAM-18530, 1h on SAM-18531, 0.75h on HKHME-6809, 0.75h on PME-14153, 0.75h on AUME-21034\nToday: RT-664743\nBlockers: none"
   },
   "autologinConfig": {
     "login_time": "08:15",
