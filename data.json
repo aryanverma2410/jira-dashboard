@@ -1,49 +1,7 @@
 {
-  "generatedAt": "2026-11-06T09:32:28.058Z",
-  "totalTickets": 5,
+  "generatedAt": "2026-11-06T09:33:10.229Z",
+  "totalTickets": 4,
   "tickets": [
-    {
-      "key": "MYME-28892",
-      "summary": "Generate invoices and push orders to Completed",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Malaysia Maintenance & Enhancements",
-      "projectKey": "MYME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-11-06T18:16:51.000+0900",
-      "created": "2026-11-06T10:20:02.000+0900",
-      "statusChangedAt": "2026-11-06T10:39:49.476+0900",
-      "assignedToMeAt": "",
-      "description": "Dear Team,\n\n \n\nPlease update the order status to Pick Up Complete to trigger SC+.\n\nOnce that is done, please change the status to Completed and generate the invoice.\n\n \n|Serial No.|Document No.|Material Number|Billing No|Billing Date|Customer PO|SO No|\n|356028674746772|7338837934|SM-S948BZSCXME|3223",
-      "commentsCount": 0,
-      "recentComments": [],
-      "lastCommentBy": "",
-      "lastCommentSnippet": "",
-      "lastCommentDate": "",
-      "url": "https://jira.secext.samsung.net/browse/MYME-28892",
-      "linkedTickets": [
-        {
-          "key": "MYME-28791",
-          "summary": "Generate invoices and push orders to Completed",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "clones",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "Generate invoices and push orders to Completed\r\nGenerated: 2026-11-06T00:00:00Z\r\n\r\n## Issue\r\n\r\nOrder MY260310-06222018 (Malaysia region) needs to be pushed to Completed status so that the tax invoice can be generated. The reporter (coryn.wong@samsung.com) also requests that the order status be set to \"Pick Up Complete\" first to trigger Samsung Care+ (SC+) activation, before moving to Completed and generating the invoice.\r\n\r\nProduct: SM-S948BZSCXME, Serial: 356028674746772, Document No: 7338837934, Billing No: 3223740339, SO No: 1329406725.\r\n\r\nNote: HAC PROD authentication is currently failing, so the current DB state of this order (status, consignment status, process states) could not be directly verified. This RCA is based on Jira cross-reference analysis of 686 similar MYME tickets and the established remediation pattern.\r\n\r\n## RCA\r\n\r\nThis is a standard operational remediation request, not a platform bug. The order has been delivered/picked up but the Hybris order process has not progressed to COMPLETED status automatically. This is a well-known pattern in the Malaysia (MYME) region, with 686 similar resolved tickets in Jira.\r\n\r\nThe typical root cause is one of:\r\n1. The consignment process is stuck at the \"waitForWarehouse\" or \"isShippedComplete\" action, preventing the order from transitioning to COMPLETED.\r\n2. The order process is in FAILED state after consignment completion, preventing the isFullyFulfilled check from passing.\r\n3. The order is at an intermediate status (e.g., SHIPPED, DELIVERY_COMPLETED, or WAITING_FOR_FINANCIAL) and needs manual intervention to progress to COMPLETED.\r\n\r\nOnce the order reaches COMPLETED status, the tax invoice is generated automatically by the Hybris order completion flow. The SC+ (Samsung Care+) activation is triggered when the order or consignment reaches a specific pickup/delivery completion status.\r\n\r\nThe remediation pattern is well-established and has been executed successfully in at least 3 reusable PC tickets:\r\n- PC-46045 (MYME-25747): Same ticket title, REUSABLE, Closed, approved by Oliver Leung on 2026-04-22\r\n- PC-48775 (MYME-26646): Same ticket title, REUSABLE, Closed, approved on 2026-06-12\r\n- PC-43233: Same ticket title, REUSABLE, Closed, approved on 2026-03-02\r\n- PC-52596 (SAME-3931): Listed in pc-script-library.json as the \"push-to-completed\" reusable script\r\n\r\n## Possible remediation\r\n\r\nReuse the push-to-completed remediation pattern from PC-46045 or PC-52596 (both REUSABLE, Closed, approved). The script should:\r\n\r\n1. Suppress email notifications for ORDER_COMPLETED and ORDER_SHIPPED to avoid sending duplicate customer emails.\r\n2. If the order needs to go through \"Pick Up Complete\" status first:\r\n   a. Set the consignment status to the appropriate pickup-complete status\r\n   b. Allow SC+ activation to trigger\r\n3. Set all consignments to COMPLETED status.\r\n4. Restart consignment processes from \"isShippedComplete\" action (if process is in ERROR/FAILED/RUNNING state).\r\n5. Restart order processes from \"isFullyFulfilled\" action (if process is in FAILED state).\r\n6. This will trigger the order completion flow, which includes automatic tax invoice generation.\r\n\r\nScript template: script-PME-14153-push-to-completed.groovy (based on PC-52596, already in the bin directory).\r\nReusable PC ticket: PC-46045 (MYME-25747, REUSABLE, Closed) or PC-52596 (SAME-3931, REUSABLE, Closed).\r\n\r\nIMPORTANT: Before executing the script, verify the current order status via HAC once authentication is restored. The \"Pick Up Complete\" step requested by the reporter may require an intermediate status change before pushing to COMPLETED, depending on the order's current state and delivery mode.\r\n\r\nVerification queries to run post-remediation:\r\n- Order status: SELECT {os.code} FROM {Order AS o LEFT JOIN OrderStatus AS os ON {os.pk}={o.status}} WHERE {o.code}='MY260310-06222018' AND {o.originalversion} IS NULL\r\n- Consignment status: SELECT {cs.code} FROM {Consignment AS co LEFT JOIN ConsignmentStatus AS cs ON {cs.pk}={co.status}} WHERE {co.code}='MY260310-06222018'\r\n- Expected: orderStatus=COMPLETED, consignmentStatus=COMPLETED, tax invoice generated",
-        "sections": {
-          "issue": "Order MY260310-06222018 (Malaysia region) needs to be pushed to Completed status so that the tax invoice can be generated. The reporter (coryn.wong@samsung.com) also requests that the order status be set to \"Pick Up Complete\" first to trigger Samsung Care+ (SC+) activation, before moving to Completed and generating the invoice.\r\n\r\nProduct: SM-S948BZSCXME, Serial: 356028674746772, Document No: 7338837934, Billing No: 3223740339, SO No: 1329406725.\r\n\r\nNote: HAC PROD authentication is currently failing, so the current DB state of this order (status, consignment status, process states) could not be directly verified. This RCA is based on Jira cross-reference analysis of 686 similar MYME tickets and the established remediation pattern.",
-          "rca": "This is a standard operational remediation request, not a platform bug. The order has been delivered/picked up but the Hybris order process has not progressed to COMPLETED status automatically. This is a well-known pattern in the Malaysia (MYME) region, with 686 similar resolved tickets in Jira.\r\n\r\nThe typical root cause is one of:\r\n1. The consignment process is stuck at the \"waitForWarehouse\" or \"isShippedComplete\" action, preventing the order from transitioning to COMPLETED.\r\n2. The order process is in FAILED state after consignment completion, preventing the isFullyFulfilled check from passing.\r\n3. The order is at an intermediate status (e.g., SHIPPED, DELIVERY_COMPLETED, or WAITING_FOR_FINANCIAL) and needs manual intervention to progress to COMPLETED.\r\n\r\nOnce the order reaches COMPLETED status, the tax invoice is generated automatically by the Hybris order completion flow. The SC+ (Samsung Care+) activation is triggered when the order or consignment reaches a specific pickup/delivery completion status.\r\n\r\nThe remediation pattern is well-established and has been executed successfully in at least 3 reusable PC tickets:\r\n- PC-46045 (MYME-25747): Same ticket title, REUSABLE, Closed, approved by Oliver Leung on 2026-04-22\r\n- PC-48775 (MYME-26646): Same ticket title, REUSABLE, Closed, approved on 2026-06-12\r\n- PC-43233: Same ticket title, REUSABLE, Closed, approved on 2026-03-02\r\n- PC-52596 (SAME-3931): Listed in pc-script-library.json as the \"push-to-completed\" reusable script",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-11-06T09:29:53.498Z"
-      }
-    },
     {
       "key": "TWME-7464",
       "summary": "Order remediation",
@@ -347,7 +305,7 @@
       }
     ],
     "pid": 43056,
-    "uptime": 3659,
+    "uptime": 3699,
     "failures": 0,
     "activeJobCount": 3,
     "jobs": [
@@ -356,21 +314,21 @@
         "issueTitle": "Investigate ticket JPME-2297",
         "snippet": "Auto-triggered investigation for new ticket JPME-2297.\n\nTicket: JPME-2297\nSummary: Full return order status stuck at COM",
         "pid": 47828,
-        "elapsed": 23452
+        "elapsed": 23492
       },
       {
         "issueNum": 1069,
         "issueTitle": "Investigate ticket TWME-7464",
         "snippet": "Auto-triggered investigation for new ticket TWME-7464.\n\nTicket: TWME-7464\nSummary: Order remediation\n\nUse the investigat",
         "pid": 45656,
-        "elapsed": 20724
+        "elapsed": 20764
       },
       {
         "issueNum": 1070,
         "issueTitle": "Investigate ticket TWME-7467",
         "snippet": "Auto-triggered investigation for new ticket TWME-7467.\n\nTicket: TWME-7467\nSummary: Order remediation\n\nUse the investigat",
         "pid": 34024,
-        "elapsed": 20725
+        "elapsed": 20765
       }
     ],
     "startTime": "2026-11-06T08:31:27.991Z",
@@ -381,7 +339,7 @@
       {
         "pid": 28056,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 185388,
+        "ageSeconds": 185431,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -391,7 +349,7 @@
       {
         "pid": 24712,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 88581,
+        "ageSeconds": 88624,
         "status": "running",
         "isChild": false,
         "taskSummary": "now tell me remediation for these orders",
@@ -401,7 +359,7 @@
       {
         "pid": 28000,
         "cwd": "c:\\windows",
-        "ageSeconds": 87884,
+        "ageSeconds": 87927,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -411,7 +369,7 @@
       {
         "pid": 39464,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 82551,
+        "ageSeconds": 82595,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -421,7 +379,7 @@
       {
         "pid": 34464,
         "cwd": "unknown",
-        "ageSeconds": 18948,
+        "ageSeconds": 18991,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -5018,11 +4976,11 @@
         ]
       }
     },
-    "bridgeLogTail": "[2026-11-06T09:32:26.294Z] STDOUT data for #1044: 578 bytes\n[2026-11-06T09:32:26.307Z] LIVE events write for #1044: 303 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1044.txt\n[2026-11-06T09:32:26.313Z] STDOUT data for #1044: 545 bytes\n[2026-11-06T09:32:26.323Z] LIVE events write for #1044: 304 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1044.txt\n[2026-11-06T09:32:30.839Z] STDOUT data for #1070: 106 bytes\n[2026-11-06T09:32:30.849Z] LIVE events write for #1070: 257 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1070.txt\n[2026-11-06T09:32:30.939Z] STDOUT data for #1070: 115 bytes\n[2026-11-06T09:32:30.950Z] LIVE events write for #1070: 258 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1070.txt\n[2026-11-06T09:32:30.955Z] STDOUT data for #1070: 112 bytes\n[2026-11-06T09:32:30.965Z] LIVE events write for #1070: 259 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1070.txt\n[2026-11-06T09:32:31.000Z] STDOUT data for #1070: 107 bytes\n[2026-11-06T09:32:31.011Z] LIVE events write for #1070: 260 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1070.txt\n[2026-11-06T09:32:31.026Z] STDOUT data for #1070: 122 bytes\n[2026-11-06T09:32:31.036Z] LIVE events write for #1070: 261 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1070.txt\n[2026-11-06T09:32:31.054Z] STDOUT data for #1070: 120 bytes\n[2026-11-06T09:32:31.064Z] LIVE events write for #1070: 262 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1070.txt\n[2026-11-06T09:32:31.192Z] STDOUT data for #1070: 104 bytes\n[2026-11-06T09:32:31.204Z] LIVE events write for #1070: 263 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1070.txt\n[2026-11-06T09:32:32.238Z] STDOUT data for #1070: 903 bytes\n[2026-11-06T09:32:32.247Z] LIVE events write for #1070: 265 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1070.txt",
+    "bridgeLogTail": "[2026-11-06T09:33:11.237Z] STDOUT data for #1070: 108 bytes\n[2026-11-06T09:33:11.247Z] LIVE events write for #1070: 271 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1070.txt\n[2026-11-06T09:33:11.252Z] STDOUT data for #1070: 111 bytes\n[2026-11-06T09:33:11.261Z] LIVE events write for #1070: 272 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1070.txt\n[2026-11-06T09:33:11.266Z] STDOUT data for #1070: 123 bytes\n[2026-11-06T09:33:11.276Z] LIVE events write for #1070: 273 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1070.txt\n[2026-11-06T09:33:11.284Z] STDOUT data for #1070: 116 bytes\n[2026-11-06T09:33:11.293Z] LIVE events write for #1070: 274 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1070.txt\n[2026-11-06T09:33:11.303Z] STDOUT data for #1070: 119 bytes\n[2026-11-06T09:33:11.314Z] LIVE events write for #1070: 275 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1070.txt\n[2026-11-06T09:33:11.325Z] STDOUT data for #1070: 120 bytes\n[2026-11-06T09:33:11.335Z] LIVE events write for #1070: 276 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1070.txt\n[2026-11-06T09:33:11.340Z] STDOUT data for #1070: 122 bytes\n[2026-11-06T09:33:11.350Z] LIVE events write for #1070: 277 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1070.txt\n[2026-11-06T09:33:11.356Z] STDOUT data for #1070: 123 bytes\n[2026-11-06T09:33:11.367Z] LIVE events write for #1070: 278 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1070.txt\n[2026-11-06T09:33:12.649Z] STDOUT data for #1070: 720 bytes\n[2026-11-06T09:33:12.661Z] LIVE events write for #1070: 280 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1070.txt\n[2026-11-06T09:33:12.667Z] STDOUT data for #1070: 465 bytes\n[2026-11-06T09:33:12.678Z] LIVE events write for #1070: 281 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1070.txt",
     "watchdog": {
       "alive": true,
       "lastWrite": "2026-11-06T09:23:44.866Z",
-      "ageMs": 528822
+      "ageMs": 572773
     },
     "watchdogLogTail": "[2026-11-06T03:47:44.758Z] DUPLICATE watchdog detected: PID 55104 — killing\n[2026-11-06T09:20:57.081Z] DASHBOARD RESTART NEEDED: Dashboard heartbeat is stale (19805s old)\n[2026-11-06T09:21:16.558Z] Killed dashboard PID 41844\n[2026-11-06T09:21:38.658Z] DASHBOARD RESTART NEEDED: Dashboard heartbeat is stale (19836s old)\n[2026-11-06T09:21:51.615Z] Could not kill dashboard PID 41844: Command failed: taskkill /PID 41844 /F /T\n[2026-11-06T09:21:51.650Z] Starting jira-dashboard-server.js...\n[2026-11-06T09:21:51.909Z] Dashboard started with PID 52688 (restart #3, 1 in last hour)\n[2026-11-06T09:22:22.317Z] Starting jira-dashboard-server.js...\n[2026-11-06T09:22:22.719Z] Dashboard started with PID 53924 (restart #4, 2 in last hour)\n[2026-11-06T09:23:44.846Z] DUPLICATE jira-dashboard-server detected: PID 52688 — killing",
     "jobOutputs": {}
@@ -5032,7 +4990,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-11-06T09:31:53.317Z",
+      "lastCheck": "2026-11-06T09:32:52.985Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5041,18 +4999,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-06T09:31:53.317Z",
+      "lastCheck": "2026-11-06T09:32:52.985Z",
       "downSince": "2026-11-06T09:22:24.782Z",
-      "downDuration": 568535,
+      "downDuration": 628203,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-06T09:31:53.317Z",
+      "lastCheck": "2026-11-06T09:32:52.985Z",
       "downSince": "2026-11-06T09:22:24.782Z",
-      "downDuration": 568535,
+      "downDuration": 628203,
       "alert": true
     }
   ],
@@ -5093,18 +5051,6 @@
   "actionQueue": [],
   "actionItems": {
     "zero": [
-      {
-        "key": "MYME-28892",
-        "summary": "Generate invoices and push orders to Completed",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/MYME-28892",
-        "updated": "2026-11-06T18:16:51.000+0900",
-        "statusChangedAt": "2026-11-06T10:39:49.476+0900"
-      },
       {
         "key": "TWME-7464",
         "summary": "Order remediation",
@@ -5158,7 +5104,7 @@
     "blocked": [],
     "queued": [],
     "totals": {
-      "zero": 5,
+      "zero": 4,
       "actionable": 0,
       "blocked": 0,
       "queued": 0
@@ -5215,7 +5161,7 @@
   "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 0.83h on MYME-28854, 1h on TWME-7460, 0.92h on NZHME-11407, 1h on SAM-18530, 1h on SAM-18531, 0.75h on HKHME-6809, 0.75h on PME-14153, 0.75h on AUME-21034\nToday: MYME-28892, TWME-7464, TWME-7467, VNME-30544, RT-664743\nBlockers: none"
+    "standupText": "Yesterday: 0.83h on MYME-28854, 1h on TWME-7460, 0.92h on NZHME-11407, 1h on SAM-18530, 1h on SAM-18531, 0.75h on HKHME-6809, 0.75h on PME-14153, 0.75h on AUME-21034\nToday: TWME-7464, TWME-7467, VNME-30544, RT-664743\nBlockers: none"
   },
   "autologinConfig": {
     "login_time": "08:15",
