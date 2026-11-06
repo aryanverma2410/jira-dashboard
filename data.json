@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-06T09:29:20.375Z",
+  "generatedAt": "2026-11-06T09:30:08.157Z",
   "totalTickets": 5,
   "tickets": [
     {
@@ -33,11 +33,15 @@
         }
       ],
       "solution": {
-        "status": "none",
-        "excerpt": "",
-        "source": "",
-        "foundAt": "",
-        "issueNumber": null
+        "status": "found",
+        "excerpt": "Generate invoices and push orders to Completed\r\nGenerated: 2026-11-06T00:00:00Z\r\n\r\n## Issue\r\n\r\nOrder MY260310-06222018 (Malaysia region) needs to be pushed to Completed status so that the tax invoice can be generated. The reporter (coryn.wong@samsung.com) also requests that the order status be set to \"Pick Up Complete\" first to trigger Samsung Care+ (SC+) activation, before moving to Completed and generating the invoice.\r\n\r\nProduct: SM-S948BZSCXME, Serial: 356028674746772, Document No: 7338837934, Billing No: 3223740339, SO No: 1329406725.\r\n\r\nNote: HAC PROD authentication is currently failing, so the current DB state of this order (status, consignment status, process states) could not be directly verified. This RCA is based on Jira cross-reference analysis of 686 similar MYME tickets and the established remediation pattern.\r\n\r\n## RCA\r\n\r\nThis is a standard operational remediation request, not a platform bug. The order has been delivered/picked up but the Hybris order process has not progressed to COMPLETED status automatically. This is a well-known pattern in the Malaysia (MYME) region, with 686 similar resolved tickets in Jira.\r\n\r\nThe typical root cause is one of:\r\n1. The consignment process is stuck at the \"waitForWarehouse\" or \"isShippedComplete\" action, preventing the order from transitioning to COMPLETED.\r\n2. The order process is in FAILED state after consignment completion, preventing the isFullyFulfilled check from passing.\r\n3. The order is at an intermediate status (e.g., SHIPPED, DELIVERY_COMPLETED, or WAITING_FOR_FINANCIAL) and needs manual intervention to progress to COMPLETED.\r\n\r\nOnce the order reaches COMPLETED status, the tax invoice is generated automatically by the Hybris order completion flow. The SC+ (Samsung Care+) activation is triggered when the order or consignment reaches a specific pickup/delivery completion status.\r\n\r\nThe remediation pattern is well-established and has been executed successfully in at least 3 reusable PC tickets:\r\n- PC-46045 (MYME-25747): Same ticket title, REUSABLE, Closed, approved by Oliver Leung on 2026-04-22\r\n- PC-48775 (MYME-26646): Same ticket title, REUSABLE, Closed, approved on 2026-06-12\r\n- PC-43233: Same ticket title, REUSABLE, Closed, approved on 2026-03-02\r\n- PC-52596 (SAME-3931): Listed in pc-script-library.json as the \"push-to-completed\" reusable script\r\n\r\n## Possible remediation\r\n\r\nReuse the push-to-completed remediation pattern from PC-46045 or PC-52596 (both REUSABLE, Closed, approved). The script should:\r\n\r\n1. Suppress email notifications for ORDER_COMPLETED and ORDER_SHIPPED to avoid sending duplicate customer emails.\r\n2. If the order needs to go through \"Pick Up Complete\" status first:\r\n   a. Set the consignment status to the appropriate pickup-complete status\r\n   b. Allow SC+ activation to trigger\r\n3. Set all consignments to COMPLETED status.\r\n4. Restart consignment processes from \"isShippedComplete\" action (if process is in ERROR/FAILED/RUNNING state).\r\n5. Restart order processes from \"isFullyFulfilled\" action (if process is in FAILED state).\r\n6. This will trigger the order completion flow, which includes automatic tax invoice generation.\r\n\r\nScript template: script-PME-14153-push-to-completed.groovy (based on PC-52596, already in the bin directory).\r\nReusable PC ticket: PC-46045 (MYME-25747, REUSABLE, Closed) or PC-52596 (SAME-3931, REUSABLE, Closed).\r\n\r\nIMPORTANT: Before executing the script, verify the current order status via HAC once authentication is restored. The \"Pick Up Complete\" step requested by the reporter may require an intermediate status change before pushing to COMPLETED, depending on the order's current state and delivery mode.\r\n\r\nVerification queries to run post-remediation:\r\n- Order status: SELECT {os.code} FROM {Order AS o LEFT JOIN OrderStatus AS os ON {os.pk}={o.status}} WHERE {o.code}='MY260310-06222018' AND {o.originalversion} IS NULL\r\n- Consignment status: SELECT {cs.code} FROM {Consignment AS co LEFT JOIN ConsignmentStatus AS cs ON {cs.pk}={co.status}} WHERE {co.code}='MY260310-06222018'\r\n- Expected: orderStatus=COMPLETED, consignmentStatus=COMPLETED, tax invoice generated",
+        "sections": {
+          "issue": "Order MY260310-06222018 (Malaysia region) needs to be pushed to Completed status so that the tax invoice can be generated. The reporter (coryn.wong@samsung.com) also requests that the order status be set to \"Pick Up Complete\" first to trigger Samsung Care+ (SC+) activation, before moving to Completed and generating the invoice.\r\n\r\nProduct: SM-S948BZSCXME, Serial: 356028674746772, Document No: 7338837934, Billing No: 3223740339, SO No: 1329406725.\r\n\r\nNote: HAC PROD authentication is currently failing, so the current DB state of this order (status, consignment status, process states) could not be directly verified. This RCA is based on Jira cross-reference analysis of 686 similar MYME tickets and the established remediation pattern.",
+          "rca": "This is a standard operational remediation request, not a platform bug. The order has been delivered/picked up but the Hybris order process has not progressed to COMPLETED status automatically. This is a well-known pattern in the Malaysia (MYME) region, with 686 similar resolved tickets in Jira.\r\n\r\nThe typical root cause is one of:\r\n1. The consignment process is stuck at the \"waitForWarehouse\" or \"isShippedComplete\" action, preventing the order from transitioning to COMPLETED.\r\n2. The order process is in FAILED state after consignment completion, preventing the isFullyFulfilled check from passing.\r\n3. The order is at an intermediate status (e.g., SHIPPED, DELIVERY_COMPLETED, or WAITING_FOR_FINANCIAL) and needs manual intervention to progress to COMPLETED.\r\n\r\nOnce the order reaches COMPLETED status, the tax invoice is generated automatically by the Hybris order completion flow. The SC+ (Samsung Care+) activation is triggered when the order or consignment reaches a specific pickup/delivery completion status.\r\n\r\nThe remediation pattern is well-established and has been executed successfully in at least 3 reusable PC tickets:\r\n- PC-46045 (MYME-25747): Same ticket title, REUSABLE, Closed, approved by Oliver Leung on 2026-04-22\r\n- PC-48775 (MYME-26646): Same ticket title, REUSABLE, Closed, approved on 2026-06-12\r\n- PC-43233: Same ticket title, REUSABLE, Closed, approved on 2026-03-02\r\n- PC-52596 (SAME-3931): Listed in pc-script-library.json as the \"push-to-completed\" reusable script",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-11-06T09:29:53.498Z"
       }
     },
     {
@@ -343,7 +347,7 @@
       }
     ],
     "pid": 43056,
-    "uptime": 3469,
+    "uptime": 3519,
     "failures": 0,
     "activeJobCount": 5,
     "jobs": [
@@ -352,35 +356,35 @@
         "issueTitle": "Investigate ticket JPME-2297",
         "snippet": "Auto-triggered investigation for new ticket JPME-2297.\n\nTicket: JPME-2297\nSummary: Full return order status stuck at COM",
         "pid": 47828,
-        "elapsed": 23261
+        "elapsed": 23311
       },
       {
         "issueNum": 1045,
         "issueTitle": "Investigate ticket AUME-21034",
         "snippet": "Auto-triggered investigation for new ticket AUME-21034.\n\nTicket: AUME-21034\nSummary: Reinstate Missing Reward Points fro",
         "pid": 34616,
-        "elapsed": 23262
+        "elapsed": 23312
       },
       {
         "issueNum": 1068,
         "issueTitle": "Investigate ticket MYME-28892",
         "snippet": "Auto-triggered investigation for new ticket MYME-28892.\n\nTicket: MYME-28892\nSummary: Generate invoices and push orders t",
         "pid": 46872,
-        "elapsed": 20532
+        "elapsed": 20582
       },
       {
         "issueNum": 1069,
         "issueTitle": "Investigate ticket TWME-7464",
         "snippet": "Auto-triggered investigation for new ticket TWME-7464.\n\nTicket: TWME-7464\nSummary: Order remediation\n\nUse the investigat",
         "pid": 45656,
-        "elapsed": 20533
+        "elapsed": 20583
       },
       {
         "issueNum": 1070,
         "issueTitle": "Investigate ticket TWME-7467",
         "snippet": "Auto-triggered investigation for new ticket TWME-7467.\n\nTicket: TWME-7467\nSummary: Order remediation\n\nUse the investigat",
         "pid": 34024,
-        "elapsed": 20534
+        "elapsed": 20585
       }
     ],
     "startTime": "2026-11-06T08:31:27.991Z",
@@ -391,7 +395,7 @@
       {
         "pid": 28056,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 185204,
+        "ageSeconds": 185249,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -401,7 +405,7 @@
       {
         "pid": 24712,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 88397,
+        "ageSeconds": 88442,
         "status": "running",
         "isChild": false,
         "taskSummary": "now tell me remediation for these orders",
@@ -411,7 +415,7 @@
       {
         "pid": 28000,
         "cwd": "c:\\windows",
-        "ageSeconds": 87701,
+        "ageSeconds": 87745,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -421,7 +425,7 @@
       {
         "pid": 39464,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 82368,
+        "ageSeconds": 82412,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -431,7 +435,7 @@
       {
         "pid": 34464,
         "cwd": "unknown",
-        "ageSeconds": 18765,
+        "ageSeconds": 18809,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -5024,11 +5028,11 @@
         ]
       }
     },
-    "bridgeLogTail": "    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-11-06T09:29:28.824Z] STDOUT data for #1068: 248 bytes\n[2026-11-06T09:29:28.837Z] LIVE events write for #1068: 280 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1068.txt\n[2026-11-06T09:29:29.468Z] aipro stderr for #1068: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
+    "bridgeLogTail": "    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\n[2026-11-06T09:30:14.869Z] aipro stderr for #1069: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
     "watchdog": {
       "alive": true,
       "lastWrite": "2026-11-06T09:23:44.866Z",
-      "ageMs": 346443
+      "ageMs": 393240
     },
     "watchdogLogTail": "[2026-11-06T03:47:44.758Z] DUPLICATE watchdog detected: PID 55104 — killing\n[2026-11-06T09:20:57.081Z] DASHBOARD RESTART NEEDED: Dashboard heartbeat is stale (19805s old)\n[2026-11-06T09:21:16.558Z] Killed dashboard PID 41844\n[2026-11-06T09:21:38.658Z] DASHBOARD RESTART NEEDED: Dashboard heartbeat is stale (19836s old)\n[2026-11-06T09:21:51.615Z] Could not kill dashboard PID 41844: Command failed: taskkill /PID 41844 /F /T\n[2026-11-06T09:21:51.650Z] Starting jira-dashboard-server.js...\n[2026-11-06T09:21:51.909Z] Dashboard started with PID 52688 (restart #3, 1 in last hour)\n[2026-11-06T09:22:22.317Z] Starting jira-dashboard-server.js...\n[2026-11-06T09:22:22.719Z] Dashboard started with PID 53924 (restart #4, 2 in last hour)\n[2026-11-06T09:23:44.846Z] DUPLICATE jira-dashboard-server detected: PID 52688 — killing",
     "jobOutputs": {}
@@ -5038,7 +5042,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-11-06T09:28:44.346Z",
+      "lastCheck": "2026-11-06T09:29:43.773Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5047,18 +5051,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-06T09:28:44.346Z",
+      "lastCheck": "2026-11-06T09:29:43.773Z",
       "downSince": "2026-11-06T09:22:24.782Z",
-      "downDuration": 379564,
+      "downDuration": 438991,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-06T09:28:44.346Z",
+      "lastCheck": "2026-11-06T09:29:43.773Z",
       "downSince": "2026-11-06T09:22:24.782Z",
-      "downDuration": 379564,
+      "downDuration": 438991,
       "alert": true
     }
   ],
@@ -5218,66 +5222,7 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": {
-    "byTicket": [
-      {
-        "key": "TWME-7464",
-        "slaName": "Maintenance Response (GMT+8)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85215,
-        "targetDate": "2026-11-09T02:07:59.204000001Z"
-      },
-      {
-        "key": "TWME-7464",
-        "slaName": "Maintenance Resolution (GMT+8)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1269519,
-        "targetDate": "2026-11-27T02:07:59.204000015Z"
-      },
-      {
-        "key": "MYME-28892",
-        "slaName": "Maintenance Response (GMT+8)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85213,
-        "targetDate": "2026-11-09T01:20:02.791000001Z"
-      },
-      {
-        "key": "MYME-28892",
-        "slaName": "Maintenance Resolution (GMT+8)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1266642,
-        "targetDate": "2026-11-27T01:20:02.791000015Z"
-      },
-      {
-        "key": "VNME-30544",
-        "slaName": "Maintenance Response (GMT+7)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86400,
-        "targetDate": "2026-11-05T09:46:12.493000001Z"
-      },
-      {
-        "key": "VNME-30544",
-        "slaName": "Maintenance Resolution (GMT+7)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2420987,
-        "targetDate": "2026-12-16T09:59:07.763000030Z"
-      },
-      {
-        "key": "TWME-7467",
-        "slaName": "Maintenance Response (GMT+8)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85580,
-        "targetDate": "2026-11-09T02:14:20.250000001Z"
-      },
-      {
-        "key": "TWME-7467",
-        "slaName": "Maintenance Resolution (GMT+8)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1269900,
-        "targetDate": "2026-11-27T02:14:20.250000015Z"
-      }
-    ]
-  },
+  "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
     "standupText": "Yesterday: 0.83h on MYME-28854, 1h on TWME-7460, 0.92h on NZHME-11407, 1h on SAM-18530, 1h on SAM-18531, 0.75h on HKHME-6809, 0.75h on PME-14153, 0.75h on AUME-21034\nToday: MYME-28892, TWME-7464, TWME-7467, VNME-30544, RT-664743\nBlockers: none"
