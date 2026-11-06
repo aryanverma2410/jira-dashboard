@@ -1,46 +1,7 @@
 {
-  "generatedAt": "2026-11-06T10:48:50.363Z",
-  "totalTickets": 3,
+  "generatedAt": "2026-11-06T10:49:32.699Z",
+  "totalTickets": 2,
   "tickets": [
-    {
-      "key": "TWME-7464",
-      "summary": "Order remediation",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Taiwan Maintenance & Enhancements",
-      "projectKey": "TWME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-11-06T19:48:45.000+0900",
-      "created": "2026-11-06T11:07:57.000+0900",
-      "statusChangedAt": "2026-11-06T11:27:43.942+0900",
-      "assignedToMeAt": "",
-      "description": "Hi team,\n\nBelow order please help with triggering Requested Action\n||Order Number||Payment Method||Installment||Status||Action Required||\n|TW261102-90760320|Credit Card|Y|CANCELLED|Please trigger Refund, RFI and Credit note|\n\nBest regards,\nClaire\nCC. ~@email ~@email ~@email ~@email ~@email",
-      "commentsCount": 1,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-11-06T19:47:19.229+0900",
-          "snippet": "Hi ~@email ,\n\nRefund sent\n\n!image-2026-11-06-16-16-40-555.png|width=465,height=232!\n\nRegards\n\nAryan"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi ~@email ,\n\nRefund sent\n\n!image-2026-11-06-16-16-40-555.png|width=465,height=232!\n\nRegards\n\nAryan",
-      "lastCommentDate": "2026-11-06T19:47:19.229+0900",
-      "url": "https://jira.secext.samsung.net/browse/TWME-7464",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: TWME-7464\nOrder remediation - Trigger Refund, RFI and Credit Note for TW261102-90760320\nGenerated: 2026-11-06T15:14:29.665Z\n\nIssue:\nOrder TW261102-90760320 (Taiwan, Credit Card with Installment, CANCELLED) requires manual triggering of Refund, RFI (Request for Information / FI posting), and Credit Note. The order was cancelled but the downstream financial processes (payment gateway refund, RFI posting to GERP, and credit note generation) were not automatically triggered by the Hybris order cancellation workflow.\n\nRCA:\nThis is a known systemic issue in the Taiwan (TWME) region, confirmed by 50+ similar resolved tickets (TWME-3484, TWME-3520, TWME-4015, TWME-4184, TWME-5570 and others). The root cause is a platform gap where the Hybris order cancellation flow does not reliably trigger the TokoSingleRefundProcess and associated RFI/credit note actions for Taiwan orders using the Pay2go/NewebPay payment gateway.\n\nFrom resolution comments on TWME-4184 and TWME-5570, the specific error observed in the BusinessProcess is:\n  Error executing ActionNode with ID [refundCancelOrder]: Request object or endPointURL for Pay2go API is invalid\n\nFor installment orders specifically, Pay2go/NewebPay returns error TRA10058 (\"分期交易只接受全額請退款\" - installment transactions only accept full refund), which rejects partial refund attempts. Since the order is cancelled with installment payment, the refund process fails at the Pay2go API call and the remaining downstream actions (RFI posting and credit note generation) do not execute.\n\nThe order cancellation process flow:\n1. Order is set to CANCELLED status in Hybris\n2. The TokoSingleRefundProcess should trigger the refund via Pay2go API\n3. The refundCancelOrder action node calls Pay2go/NewebPay to process the refund\n4. The Pay2go API call fails (endpoint configuration issue or installment refund restriction)\n5. The process enters ERROR state at the refundCancelOrder action\n6. Downstream RFI posting and credit note generation never execute because they are sequential after the refund action\n\nMultiple enhancement tickets have been raised to address this systemic gap:\n- TWME-3200: Add Refund Trigger Point (Closed)\n- PC-28256: Refund Retry Automation - New Cronjob (Closed)\n- PC-37881/PC-38373/PC-39436: Refund retry mechanism for Read timed out error (Closed series)\n\nDespite these automation efforts, individual orders still require manual remediation when the refund process fails for reasons not covered by the retry cronjob (such as Pay2go API endpoint issues or installment-specific refund restrictions).\n\nPossible remediation:\n1. Query the order's BusinessProcess to identify the exact TokoSingleRefundProcess and its current state/endMessage\n2. Restart the failed TokoSingleRefundProcess from the tokoSingleRefund action (or refundCancelOrder action for cancellation refunds) using businessProcessService.restartProcess()\n3. An existing script template is available: script-TW261027-88385386-refund-retrigger.groovy (created for a prior Taiwan installment refund retrigger case under PC ticket). This script finds the TokoSingleRefundProcess by process code, sets it to ERROR state, and restarts from the tokoSingleRefund action node\n4. For the RFI and credit note: after the refund process succeeds, restart the order process from the RFI/credit note action nodes to trigger financial postings to GERP\n5. If Pay2go returns TRA10058 (installment-only-full-refund restriction), coordinate with Finance for manual refund and then trigger only RFI and credit note via HAC script\n\nNote: HAC PROD authentication was unavailable during this investigation (credentials expired). The DB state of the order's BusinessProcess could not be verified directly. The RCA is based on Jira cross-reference evidence from 50+ identical TWME tickets with the same order pattern (cancelled installment order needing refund/RFI/credit note retrigger). Kibana logs were also unavailable (MCP server down). A re-investigation with HAC access would confirm the exact process code and endMessage for this order.\n\nReferences:\n- TWME-4184: Order remediation - retrigger refund, RFI and credit note (Closed, 10+ orders, same Pay2go error)\n- TWME-5570: Please trigger refund and RFI posting - TW250613-66740285 (Closed, same Pay2go error)\n- TWME-3484: Cancel orders but Hybris does not trigger RFI and PG refund (Closed, root cause ticket)\n- TWME-3200: Add Refund Trigger Point (Closed, enhancement)\n- PC-28256: Refund Retry Automation - New Cronjob (Closed)\n- PC-37881/PC-38373/PC-39436: Refund retry mechanism (Closed series)\n- script-TW261027-88385386-refund-retrigger.groovy: Existing TW refund retrigger script",
-        "sections": {
-          "issue": "Order TW261102-90760320 (Taiwan, Credit Card with Installment, CANCELLED) requires manual triggering of Refund, RFI (Request for Information / FI posting), and Credit Note. The order was cancelled but the downstream financial processes (payment gateway refund, RFI posting to GERP, and credit note generation) were not automatically triggered by the Hybris order cancellation workflow.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-11-06T09:44:29.743Z"
-      }
-    },
     {
       "key": "TWME-7460",
       "summary": "Order remediation",
@@ -280,7 +241,7 @@
       }
     ],
     "pid": 43056,
-    "uptime": 8242,
+    "uptime": 8281,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -292,7 +253,7 @@
       {
         "pid": 28056,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 189970,
+        "ageSeconds": 190013,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -302,7 +263,7 @@
       {
         "pid": 24712,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 93163,
+        "ageSeconds": 93206,
         "status": "running",
         "isChild": false,
         "taskSummary": "it shuld go to samsung.net",
@@ -312,7 +273,7 @@
       {
         "pid": 28000,
         "cwd": "c:\\windows",
-        "ageSeconds": 92466,
+        "ageSeconds": 92509,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -322,7 +283,7 @@
       {
         "pid": 39464,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 87134,
+        "ageSeconds": 87177,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -332,7 +293,7 @@
       {
         "pid": 34464,
         "cwd": "unknown",
-        "ageSeconds": 23530,
+        "ageSeconds": 23573,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -4939,7 +4900,7 @@
     "watchdog": {
       "alive": true,
       "lastWrite": "2026-11-06T10:42:42.943Z",
-      "ageMs": 370798
+      "ageMs": 415227
     },
     "watchdogLogTail": "[2026-11-06T09:21:38.658Z] DASHBOARD RESTART NEEDED: Dashboard heartbeat is stale (19836s old)\n[2026-11-06T09:21:51.615Z] Could not kill dashboard PID 41844: Command failed: taskkill /PID 41844 /F /T\n[2026-11-06T09:21:51.650Z] Starting jira-dashboard-server.js...\n[2026-11-06T09:21:51.909Z] Dashboard started with PID 52688 (restart #3, 1 in last hour)\n[2026-11-06T09:22:22.317Z] Starting jira-dashboard-server.js...\n[2026-11-06T09:22:22.719Z] Dashboard started with PID 53924 (restart #4, 2 in last hour)\n[2026-11-06T09:23:44.846Z] DUPLICATE jira-dashboard-server detected: PID 52688 — killing\n[2026-11-06T09:47:42.861Z] DUPLICATE watchdog detected: PID 55284 — killing\n[2026-11-06T10:32:43.465Z] DUPLICATE watchdog detected: PID 53940 — killing\n[2026-11-06T10:42:42.941Z] DUPLICATE watchdog detected: PID 41124 — killing"
   },
@@ -5010,18 +4971,6 @@
   "actionItems": {
     "zero": [
       {
-        "key": "TWME-7464",
-        "summary": "Order remediation",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/TWME-7464",
-        "updated": "2026-11-06T19:48:45.000+0900",
-        "statusChangedAt": "2026-11-06T11:27:43.942+0900"
-      },
-      {
         "key": "TWME-7460",
         "summary": "Order remediation",
         "priority": "None",
@@ -5050,7 +4999,7 @@
     "blocked": [],
     "queued": [],
     "totals": {
-      "zero": 3,
+      "zero": 2,
       "actionable": 0,
       "blocked": 0,
       "queued": 0
@@ -5104,10 +5053,27 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "TWME-7460",
+        "slaName": "Maintenance Response (GMT+8)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85402,
+        "targetDate": "2026-11-06T03:16:30.473000001Z"
+      },
+      {
+        "key": "TWME-7460",
+        "slaName": "Maintenance Resolution (GMT+8)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 412269,
+        "targetDate": "2026-11-12T03:16:38.758000005Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 0.83h on MYME-28854, 1h on TWME-7460, 0.92h on NZHME-11407, 1h on SAM-18530, 1h on SAM-18531, 0.75h on HKHME-6809, 0.75h on PME-14153, 0.75h on AUME-21034\nToday: TWME-7464, TWME-7460, RT-664743\nBlockers: none"
+    "standupText": "Yesterday: 0.83h on MYME-28854, 1h on TWME-7460, 0.92h on NZHME-11407, 1h on SAM-18530, 1h on SAM-18531, 0.75h on HKHME-6809, 0.75h on PME-14153, 0.75h on AUME-21034\nToday: TWME-7460, RT-664743\nBlockers: none"
   },
   "autologinConfig": {
     "login_time": "08:15",
