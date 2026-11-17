@@ -1,80 +1,7 @@
 {
-  "generatedAt": "2026-11-17T09:47:26.880Z",
-  "totalTickets": 6,
+  "generatedAt": "2026-11-17T09:48:09.354Z",
+  "totalTickets": 4,
   "tickets": [
-    {
-      "key": "TWME-7498",
-      "summary": "Order remediation",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Taiwan Maintenance & Enhancements",
-      "projectKey": "TWME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-11-17T18:46:59.000+0900",
-      "created": "2026-11-16T11:59:50.000+0900",
-      "statusChangedAt": "2026-11-16T12:26:24.692+0900",
-      "assignedToMeAt": "",
-      "description": "Hi team,\n\nBelow order please help with triggering Requested Action\n||Order Number||Payment Method||Installment||Status||Action Required||\n|TW261029-89259842|Credit Card|Y|PARTIAL_REFUND_FAILED|Refund will be done manually, please help to trigger RFI and Credit note|\n|TW261101-90351883|Credit Card|Y|",
-      "commentsCount": 3,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-11-17T18:46:59.830+0900",
-          "snippet": "Hi Claire,\n\nWe checked the refund failure for TW261101-90351883. The instant refund process sent a refundFollowOn request to the CTBC Pay2Go gateway on Nov 3 at 13:30 IST for 48,400 TWD. The process ran for about 61 seconds and then failed with an exception. No response was received from the CTBC ga"
-        },
-        {
-          "author": "Claire Huang",
-          "date": "2026-11-17T17:39:24.541+0900",
-          "snippet": "Hi ~@email,\nFor order TW261101-90351883, we still haven't received the refund.\nCould you please help check why the refund failed and try triggering it again?\nIf it fails again, could you please share the error response or relevant error logs.\n\nThanks,\nClaire\ncc. ~@email ~@email ~@email ~@email ~@ema"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Claire,\n\nWe checked the refund failure for TW261101-90351883. The instant refund process sent a refundFollowOn request to the CTBC Pay2Go gateway on Nov 3 at 13:30 IST for 48,400 TWD. The process ran for about 61 seconds and then failed with an exception. No response was received from the CTBC ga",
-      "lastCommentDate": "2026-11-17T18:46:59.830+0900",
-      "url": "https://jira.secext.samsung.net/browse/TWME-7498",
-      "linkedTickets": [],
-      "solution": {
-        "status": "none",
-        "excerpt": "",
-        "source": "",
-        "foundAt": "",
-        "issueNumber": null
-      }
-    },
-    {
-      "key": "AUME-21016",
-      "summary": "Order Stuck in ORDER_SPLIT",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Australia Maintenance & Enhancements",
-      "projectKey": "AUME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-11-17T17:43:48.000+0900",
-      "created": "2026-11-04T14:59:56.000+0900",
-      "statusChangedAt": "2026-11-04T15:06:11.047+0900",
-      "assignedToMeAt": "",
-      "description": "Hi team,\n\n \n\nWe have below order stuck in Order split due to \"Customer data is not assigned to sold-to party.\".\n\n \n|I/F Key|Message|Original Message|System No.|PO No.|S.Org|Dist. Ch.|Div.|S/O Type|Create By|C. Date|\n|AU48991221|Customer data is not assigned to sold-to party.|Customer data is not ass",
-      "commentsCount": 0,
-      "recentComments": [],
-      "lastCommentBy": "",
-      "lastCommentSnippet": "",
-      "lastCommentDate": "",
-      "url": "https://jira.secext.samsung.net/browse/AUME-21016",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: AUME-21016\nOrder Stuck in ORDER_SPLIT\nGenerated: 2026-11-17T00:00:00Z\n\nHi [~tj1.park@samsung.com] ,\n\nThe order AU261020-48991221 is stuck in ORDER_SPLIT because SAP ERP (NERP) rejected the order during the SD10305 interface call with the error \"Customer data is not assigned to sold-to party.\"\n\nWhen Hybris sends the order to NERP via the documentRequest_SD10305 interface, SAP validates the partner relationship between the ship-to party and sold-to party in the customer master data (transaction VD02). The ship-to party 3180750 is not assigned to sold-to party 2234924 in the ERP system, so SAP returns an E-type error message and refuses to create the sales order.\n\nThis is not a Hybris platform issue. The order data is correct on the Hybris side. The root cause is missing partner assignment in the SAP ERP customer master data.\n\nThe same NERP rejection pattern was confirmed in AUME-17299 (AU region, same error, closed) where the resolution was to chase the subs ERP team to update the sold-to party configuration. Cross-region precedents include UAME-3960 (US), CLME-3301 (CL), CSME-5459 (CS), and PLME-10064 (PL) — all closed with the same root cause.\n\nTo resolve this, the AU subs ERP team needs to expand sold-to party 2234924 to include ship-to party 3180750 in the SAP customer master. Once the ERP data is updated, the order can be retriggered from Hybris to resend to NERP. A process-restart script (PC-52605 reusable) can be used to retrigger the NERP send after the ERP fix is confirmed.\n\nNo Hybris-side remediation script is needed at this stage. The blocking dependency is the ERP team action.\n\nThanks,\n\nAryan",
-        "sections": {
-          "issue": "",
-          "rca": "# RCA: AUME-21016\nOrder Stuck in ORDER_SPLIT\nGenerated: 2026-11-17T00:00:00Z\n\nHi [~tj1.park@samsung.com] ,\n\nThe order AU261020-48991221 is stuck in ORDER_SPLIT because SAP ERP (NERP) rejected the order during the SD10305 interface call with the error \"Customer data is not assigned to sold-to party.\"\n\nWhen Hybris sends the order to NERP via the documentRequest_SD10305 interface, SAP validates the partner relationship between the ship-to party and sold-to party in the customer master data (transaction VD02). The ship-to party 3180750 is not assigned to sold-to party 2234924 in the ERP system, so SAP returns an E-type error message and refuses to create the sales order.\n\nThis is not a Hybris platform issue. The order data is correct on the Hybris side. The root cause is missing partner assignment in the SAP ERP customer master data.\n\nThe same NERP rejection pattern was confirmed in AUME-17299 (AU region, same error, closed) where the resolution was to chase the subs ERP team to update the sold-to party configuration. Cross-region precedents include UAME-3960 (US), CLME-3301 (CL), CSME-5459 (CS), and PLME-10064 (PL) — all closed with the same root cause.\n\nTo resolve this, the AU subs ERP team needs to expand sold-to party 2234924 to include ship-to party 3180750 in the SAP customer master. Once the ERP data is updated, the order can be retriggered from Hybris to resend to NERP. A process-restart script (PC-52605 reusable) can be used to retrigger the NERP send after the ERP fix is confirmed.\n\nNo Hybris-side remediation script is needed at this stage. The blocking dependency is the ERP team action.\n\nThanks,\n\nAryan",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-11-17T08:57:15.483Z"
-      }
-    },
     {
       "key": "VNME-30521",
       "summary": "SC+ MPMC PAYMENT MODE ISSUE",
@@ -400,7 +327,7 @@
       }
     ],
     "pid": 19368,
-    "uptime": 18005,
+    "uptime": 18045,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -412,7 +339,7 @@
       {
         "pid": 30304,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 11624,
+        "ageSeconds": 11667,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -422,7 +349,7 @@
       {
         "pid": 33280,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 5210,
+        "ageSeconds": 5253,
         "status": "running",
         "isChild": false,
         "taskSummary": "remove \"No Hybris-side remediation is required.\" and post the comment with 45m logs, assign to al...",
@@ -432,7 +359,7 @@
       {
         "pid": 33672,
         "cwd": "c:\\windows",
-        "ageSeconds": 4370,
+        "ageSeconds": 4413,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -442,7 +369,7 @@
       {
         "pid": 24160,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 4203,
+        "ageSeconds": 4246,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -452,7 +379,7 @@
       {
         "pid": 31304,
         "cwd": "unknown",
-        "ageSeconds": 3807,
+        "ageSeconds": 3850,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -5146,17 +5073,17 @@
     "bridgeLogTail": "[2026-11-17T09:39:32.007Z] STDOUT data for #1109: 124 bytes\n[2026-11-17T09:39:32.011Z] LIVE events write for #1109: 522 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.023Z] STDOUT data for #1109: 104 bytes\n[2026-11-17T09:39:32.027Z] LIVE events write for #1109: 523 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.038Z] STDOUT data for #1109: 106 bytes\n[2026-11-17T09:39:32.042Z] LIVE events write for #1109: 524 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.070Z] STDOUT data for #1109: 236 bytes\n[2026-11-17T09:39:32.092Z] LIVE events write for #1109: 526 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.100Z] STDOUT data for #1109: 226 bytes\n[2026-11-17T09:39:32.108Z] LIVE events write for #1109: 528 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.112Z] STDOUT data for #1109: 122 bytes\n[2026-11-17T09:39:32.117Z] LIVE events write for #1109: 529 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.128Z] STDOUT data for #1109: 113 bytes\n[2026-11-17T09:39:32.173Z] LIVE events write for #1109: 530 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.192Z] STDOUT data for #1109: 463 bytes\n[2026-11-17T09:39:32.225Z] LIVE events write for #1109: 534 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.237Z] STDOUT data for #1109: 453 bytes\n[2026-11-17T09:39:32.242Z] LIVE events write for #1109: 536 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:38.632Z] aipro completed for #1109 (5012 chars)\n[2026-11-17T09:39:39.406Z] Comment posted on #1109",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-11-17T09:47:30.919Z",
-      "ageMs": 211
+      "lastWrite": "2026-11-17T09:48:00.943Z",
+      "ageMs": 13528
     },
-    "watchdogLogTail": "[2026-11-17T09:45:15.863Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T09:45:30.881Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T09:45:45.878Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T09:46:00.877Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T09:46:15.882Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T09:46:30.889Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T09:46:45.889Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T09:47:00.905Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T09:47:15.913Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T09:47:30.919Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-11-17T09:45:45.878Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T09:46:00.877Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T09:46:15.882Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T09:46:30.889Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T09:46:45.889Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T09:47:00.905Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T09:47:15.913Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T09:47:30.919Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T09:47:45.925Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T09:48:00.942Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-11-17T09:46:44.873Z",
+      "lastCheck": "2026-11-17T09:47:39.693Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5165,18 +5092,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-17T09:46:44.873Z",
+      "lastCheck": "2026-11-17T09:47:39.693Z",
       "downSince": "2026-11-17T09:16:46.757Z",
-      "downDuration": 1798116,
+      "downDuration": 1852936,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-17T09:46:44.873Z",
+      "lastCheck": "2026-11-17T09:47:39.693Z",
       "downSince": "2026-11-17T09:16:46.757Z",
-      "downDuration": 1798116,
+      "downDuration": 1852936,
       "alert": true
     }
   ],
@@ -5217,30 +5144,6 @@
   "actionQueue": [],
   "actionItems": {
     "zero": [
-      {
-        "key": "TWME-7498",
-        "summary": "Order remediation",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/TWME-7498",
-        "updated": "2026-11-17T18:46:59.000+0900",
-        "statusChangedAt": "2026-11-16T12:26:24.692+0900"
-      },
-      {
-        "key": "AUME-21016",
-        "summary": "Order Stuck in ORDER_SPLIT",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/AUME-21016",
-        "updated": "2026-11-17T17:43:48.000+0900",
-        "statusChangedAt": "2026-11-04T15:06:11.047+0900"
-      },
       {
         "key": "VNME-30521",
         "summary": "SC+ MPMC PAYMENT MODE ISSUE",
@@ -5295,7 +5198,7 @@
     "blocked": [],
     "queued": [],
     "totals": {
-      "zero": 5,
+      "zero": 3,
       "actionable": 1,
       "blocked": 0,
       "queued": 0
@@ -5349,10 +5252,41 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "VNME-30521",
+        "slaName": "Maintenance Response (GMT+7)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86129,
+        "targetDate": "2026-11-03T11:28:30.465000001Z"
+      },
+      {
+        "key": "VNME-30521",
+        "slaName": "Maintenance Resolution (GMT+7)",
+        "slaStatus": "STILL",
+        "remainingDuration": 351621,
+        "targetDate": "2026-11-23T11:28:30.465000015Z"
+      },
+      {
+        "key": "TWME-7460",
+        "slaName": "Maintenance Response (GMT+8)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85402,
+        "targetDate": "2026-11-06T03:16:30.473000001Z"
+      },
+      {
+        "key": "TWME-7460",
+        "slaName": "Maintenance Resolution (GMT+8)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 412269,
+        "targetDate": "2026-11-12T03:16:38.758000005Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: no worklogs\nToday: TWME-7498, AUME-21016, VNME-30521, RT-722599, RT-664743\nBlockers: none"
+    "standupText": "Yesterday: no worklogs\nToday: VNME-30521, RT-722599, RT-664743\nBlockers: none"
   },
   "autologinConfig": {
     "login_time": "08:15",
