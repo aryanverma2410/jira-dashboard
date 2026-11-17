@@ -1,55 +1,7 @@
 {
-  "generatedAt": "2026-11-17T10:21:26.286Z",
-  "totalTickets": 4,
+  "generatedAt": "2026-11-17T10:22:09.605Z",
+  "totalTickets": 3,
   "tickets": [
-    {
-      "key": "VNME-30521",
-      "summary": "SC+ MPMC PAYMENT MODE ISSUE",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Vietnam Maintenance & Enhancements",
-      "projectKey": "VNME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-11-17T19:21:06.000+0900",
-      "created": "2026-11-02T20:28:30.000+0900",
-      "statusChangedAt": "2026-11-02T20:33:00.753+0900",
-      "assignedToMeAt": "",
-      "description": "Dear team\n\n \n\nPlease help me to fix issue of MPMC payment + NERP unmatching API data\n\nBACKGROUND\n\nMPMC payment issue may same reason in ticket VNME-29896\n\nISSUE\n\nSubscription capture should be \"True\" _Issue capture.png_\n\nACTION\n\nStep 1. Hybris Cancel SC+ in below orders, DO NOT refund.\n\nStep 2. SC+ ",
-      "commentsCount": 1,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-11-17T19:21:06.125+0900",
-          "snippet": "Hi Harvey,\n\nWe have investigated all 14 orders and confirmed the root cause. All 14 orders are in COMPLETED status. 8 orders have SC+ CANCELLED with SubscriptionProcess in FAILED state (endMessage: \"Order not placed\"), and 6 orders have SC+ UPDATED with SubscriptionProcess in RUNNING state.\n\nWe conf"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi Harvey,\n\nWe have investigated all 14 orders and confirmed the root cause. All 14 orders are in COMPLETED status. 8 orders have SC+ CANCELLED with SubscriptionProcess in FAILED state (endMessage: \"Order not placed\"), and 6 orders have SC+ UPDATED with SubscriptionProcess in RUNNING state.\n\nWe conf",
-      "lastCommentDate": "2026-11-17T19:21:06.125+0900",
-      "url": "https://jira.secext.samsung.net/browse/VNME-30521",
-      "linkedTickets": [
-        {
-          "key": "VNME-29896",
-          "summary": "SC+ MPMC PAYMENT MODE ISSUE",
-          "status": "QA Server Review",
-          "statusCategory": "In Progress",
-          "relation": "clones",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "SC+ MPMC PAYMENT MODE ISSUE\r\n\r\nGenerated: 2026-11-17T14:28:00Z\r\n\r\nIssue:\r\n14 Vietnam-region orders with SC+ MPMC (Monthly Premium Care) subscription have recurring payment failures. The subscriptionCapture flag is not set to \"True\" on the VNPT payment mode, causing the recurring billing job to skip the payment capture step entirely. The 2nd payment (SAVINA0004) is never attempted via MEGAPay/VNPT, and NERP API data is not created for these orders.\r\n\r\nRCA:\r\nThe root cause is a configuration issue in the Vietnam VNPT payment mode. The subscriptionCapture parameter is set to false in two ImpEx configuration files: vnpt-configuration.impex (line 110) and smcSubscriptionSetup.impex (line 2948), both under the Vietnam store setup in tokoinitialdata.\r\n\r\nThe recurring billing flow works as follows:\r\n\r\n1. The cronjob vn-tokoRecurringBillingJob (running daily at 2 AM per store) calls TokoSubscriptionRecurringBillingJob.perform() which fetches eligible SubscriptionData records and calls TokoFulfilmentService.triggerRecurringBillingForSubscriptions()\r\n\r\n2. The subscription process reaches IsCaptureNeededAction (com.samsung.toko.fulfilmentprocess.actions.subscription.IsCaptureNeededAction), which reads the subscriptionCapture parameter from the payment mode's paymentProviderParameters map\r\n\r\n3. IsCaptureNeededAction.executeAction() does: Boolean.parseBoolean(paymentParameters.get(TokoFulfilmentProcessConstants.SUBSCRIPTION_CAPTURE)). When subscriptionCapture is false, this returns Transition.NOK\r\n\r\n4. NOK transitions skip the payment capture step, so the VNPT capture command (TokovnptCaptureCommand) is never invoked, and no payment capture request is sent to MEGAPay\r\n\r\n5. Without the capture, the PaymentTransactionEntry for the recurring payment is never created, and the downstream NERP order creation never fires\r\n\r\nThis was confirmed by Payal Srivastava in VNME-29896 (comment dated 2026-11-03): \"recurring payment capture will happen only if subscriptionCapture flag is set to true under paymentProviderParameter.\"\r\n\r\nThe MPMC payment mode splits payment into two steps: 1st payment via SAVINA0001 (initial checkout) and 2nd recurring payment via SAVINA0004 (monthly subscription). The subscriptionCapture=false setting was carried over from the initial VNPT payment mode configuration and was not updated when MPMC was launched in March 2026. Other regions that support SC+ recurring payments (AU, DE, FR, IT, NL, PL, SG, TH, NZ) all have subscriptionCapture=true on their Adyen/payment payment modes.\r\n\r\nThe NERP data mismatch issue mentioned in the ticket is a downstream consequence: because the 2nd payment capture never fires, the order data sent to NERP (if it was sent at all) does not include the recurring payment information, resulting in unmatching API data.\r\n\r\nNote: HAC PROD was unavailable during this investigation (authentication failure with stored credentials). Kibana cookies were expired (last refreshed 2026-11-02, 15 days stale). The RCA is based on codebase trace and Jira cross-reference with VNME-29896, VNME-29552, VNME-30519, PC-50086, and PC-50104.\r\n\r\nPossible remediation:\r\nThe remediation requires a multi-step approach as outlined in the ticket:\r\n\r\n1. Cancel SC+ on all 14 orders (DO NOT refund) — this involves setting the ExternalService status to CANCELLED via TokoExternalServiceImpl.cancelExternalServiceByProvider() or the SMC cancel flow, without triggering a refund\r\n\r\n2. SC+ team handles the data on their side (SC+ platform cancellation)\r\n\r\n3. After SC+ confirmation, retrigger the orders. For recurring payments, some orders need to be retried more than once:\r\n   - Orders needing 1 retrigger: VN260721-49009432, VN260819-63282842, VN260907-69525016, VN260929-77357693\r\n   - Orders needing 2 retriggers: VN260725-51652002, VN260826-65779850\r\n   - Orders needing no recurring retrigger: VN260304-04007015, VN260304-04030299, VN260922-74714450, VN260928-77102619, VN261004-79194678, VN261007-80438898, VN261008-80699029, VN261017-84429756\r\n\r\n4. The subscriptionCapture parameter on the vn-creditCardvnptPaymentMode payment mode must be updated to true (via BackOffice or ImpEx) to prevent this issue for future orders. This is a configuration fix, not a code change.\r\n\r\nNote: The cancel-and-retrigger remediation for SC+ has a reusable PC ticket: PC-52678 (Closed, REUSABLE) with script script-AEME-6495-scplus-remediation.groovy. However, this ticket's remediation is more nuanced because it involves: (a) cancelling SC+ without refund, (b) SC+ platform data handling, and (c) order retrigger for recurring payments. The script from PC-52678 handles SC+ reset (ERROR/UPDATE_ERROR to NEW + retrigger ProcessExternalServicesOnConsignmentAction) but may need adaptation for the cancel-without-refund flow.\r\n\r\nReferences: VNME-29896 (same issue, QA Server Review), VNME-29552 (earlier MPMC recurring issue, Closed), VNME-30519 (NERP pilot, Closed), PC-50086 (SAVINA payWithTokenRequestURI update, Closed), PC-50104 (SAVINA MPMC subscription date update, Closed)",
-        "sections": {
-          "issue": "14 Vietnam-region orders with SC+ MPMC (Monthly Premium Care) subscription have recurring payment failures. The subscriptionCapture flag is not set to \"True\" on the VNPT payment mode, causing the recurring billing job to skip the payment capture step entirely. The 2nd payment (SAVINA0004) is never attempted via MEGAPay/VNPT, and NERP API data is not created for these orders.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-11-17T09:39:09.978Z"
-      }
-    },
     {
       "key": "TWME-7460",
       "summary": "Order remediation",
@@ -345,7 +297,7 @@
       {
         "pid": 30304,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 13665,
+        "ageSeconds": 13707,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -355,7 +307,7 @@
       {
         "pid": 33280,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 7250,
+        "ageSeconds": 7293,
         "status": "running",
         "isChild": false,
         "taskSummary": "log 1h 20m, assign back and put to LV",
@@ -365,7 +317,7 @@
       {
         "pid": 33672,
         "cwd": "c:\\windows",
-        "ageSeconds": 6411,
+        "ageSeconds": 6453,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -375,7 +327,7 @@
       {
         "pid": 24160,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 6243,
+        "ageSeconds": 6285,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -385,7 +337,7 @@
       {
         "pid": 31304,
         "cwd": "unknown",
-        "ageSeconds": 5847,
+        "ageSeconds": 5889,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -5079,10 +5031,10 @@
     "bridgeLogTail": "[2026-11-17T09:39:32.007Z] STDOUT data for #1109: 124 bytes\n[2026-11-17T09:39:32.011Z] LIVE events write for #1109: 522 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.023Z] STDOUT data for #1109: 104 bytes\n[2026-11-17T09:39:32.027Z] LIVE events write for #1109: 523 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.038Z] STDOUT data for #1109: 106 bytes\n[2026-11-17T09:39:32.042Z] LIVE events write for #1109: 524 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.070Z] STDOUT data for #1109: 236 bytes\n[2026-11-17T09:39:32.092Z] LIVE events write for #1109: 526 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.100Z] STDOUT data for #1109: 226 bytes\n[2026-11-17T09:39:32.108Z] LIVE events write for #1109: 528 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.112Z] STDOUT data for #1109: 122 bytes\n[2026-11-17T09:39:32.117Z] LIVE events write for #1109: 529 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.128Z] STDOUT data for #1109: 113 bytes\n[2026-11-17T09:39:32.173Z] LIVE events write for #1109: 530 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.192Z] STDOUT data for #1109: 463 bytes\n[2026-11-17T09:39:32.225Z] LIVE events write for #1109: 534 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.237Z] STDOUT data for #1109: 453 bytes\n[2026-11-17T09:39:32.242Z] LIVE events write for #1109: 536 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:38.632Z] aipro completed for #1109 (5012 chars)\n[2026-11-17T09:39:39.406Z] Comment posted on #1109",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-11-17T10:21:18.745Z",
-      "ageMs": 13708
+      "lastWrite": "2026-11-17T10:22:03.769Z",
+      "ageMs": 10576
     },
-    "watchdogLogTail": "[2026-11-17T10:19:03.674Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T10:19:18.685Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T10:19:33.694Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T10:19:48.709Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T10:20:03.712Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T10:20:18.715Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T10:20:33.718Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T10:20:48.733Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T10:21:03.738Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T10:21:18.744Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-11-17T10:19:48.709Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T10:20:03.712Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T10:20:18.715Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T10:20:33.718Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T10:20:48.733Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T10:21:03.738Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T10:21:18.744Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T10:21:33.756Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T10:21:48.757Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-17T10:22:03.767Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
@@ -5151,18 +5103,6 @@
   "actionItems": {
     "zero": [
       {
-        "key": "VNME-30521",
-        "summary": "SC+ MPMC PAYMENT MODE ISSUE",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/VNME-30521",
-        "updated": "2026-11-17T19:21:06.000+0900",
-        "statusChangedAt": "2026-11-02T20:33:00.753+0900"
-      },
-      {
         "key": "TWME-7460",
         "summary": "Order remediation",
         "priority": "None",
@@ -5204,7 +5144,7 @@
     "blocked": [],
     "queued": [],
     "totals": {
-      "zero": 3,
+      "zero": 2,
       "actionable": 1,
       "blocked": 0,
       "queued": 0
@@ -5261,7 +5201,7 @@
   "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: no worklogs\nToday: VNME-30521, RT-722599, RT-664743\nBlockers: none"
+    "standupText": "Yesterday: no worklogs\nToday: RT-722599, RT-664743\nBlockers: none"
   },
   "autologinConfig": {
     "login_time": "08:15",
