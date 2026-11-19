@@ -1,60 +1,7 @@
 {
-  "generatedAt": "2026-11-19T15:45:06.187Z",
-  "totalTickets": 4,
+  "generatedAt": "2026-11-19T15:45:53.728Z",
+  "totalTickets": 3,
   "tickets": [
-    {
-      "key": "PKHME-949",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Pakistan Maintenance & Enhancements",
-      "projectKey": "PKHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-11-19T18:49:22.000+0900",
-      "created": "2026-10-19T19:48:30.000+0900",
-      "statusChangedAt": "2026-10-19T19:48:32.574+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nFollowing orders were found to be stuck.\nKindly check remediation is required for these.\n\n|Order|Creation_Date|Status|\n|PK261016-17646422|2026/10/16|PAYMENT_CAPTURED|\n|PK261016-17293998|2026/10/16|ORDER_SPLIT|\n|PK261015-17083784|2026/10/15|PAYMENT_CAPTURED|\n|PK261015-16812357|2026/10/15|PA",
-      "commentsCount": 4,
-      "recentComments": [
-        {
-          "author": "Sai Ram Kosuru",
-          "date": "2026-11-19T18:49:14.722+0900",
-          "snippet": "Hi ~@email,\n\nPlease close the ticket as all the orders are updated to the final status.\n\n \n\nRegards,\n\nSairam K.\n\ncc ~@email"
-        },
-        {
-          "author": "Harshita Kohli",
-          "date": "2026-11-03T19:57:13.216+0900",
-          "snippet": "Hi ~@email ,\n\nKindly confirm if the refund has already been done for the above orders or it needs to be cancelled with refund?\n\nAlso, kindly confirm if these are cancelled in ERP?\n\nThanks\n\nHarshita"
-        }
-      ],
-      "lastCommentBy": "Sai Ram Kosuru",
-      "lastCommentSnippet": "Hi ~@email,\n\nPlease close the ticket as all the orders are updated to the final status.\n\n \n\nRegards,\n\nSairam K.\n\ncc ~@email",
-      "lastCommentDate": "2026-11-19T18:49:14.722+0900",
-      "url": "https://jira.secext.samsung.net/browse/PKHME-949",
-      "linkedTickets": [
-        {
-          "key": "PKHME-958",
-          "summary": "Stuck order on Hybris",
-          "status": "Closed",
-          "statusCategory": "Done",
-          "relation": "is cloned by",
-          "assignee": null
-        }
-      ],
-      "solution": {
-        "status": "found",
-        "excerpt": "Stuck order on Hybris\r\nGenerated: 2026-11-02T22:10:00+09:00\r\n\r\nIssue:\r\n6 PK-region orders are stuck in the order fulfillment pipeline. 4 orders are at PAYMENT_CAPTURED status (payment captured but order process cannot proceed past the splitOrder action) and 2 orders are at ORDER_SPLIT status (order has been split into consignments but the consignment process cannot proceed past sendConsignmentToWarehouse). The orders were placed between October 15 and October 16, 2026.\r\n\r\nAffected orders:\r\n1. PK261016-17646422 — PAYMENT_CAPTURED (Oct 16)\r\n2. PK261016-17293998 — ORDER_SPLIT (Oct 16)\r\n3. PK261015-17083784 — PAYMENT_CAPTURED (Oct 15) — cancellation requested by Sai Ram Kosuru\r\n4. PK261015-16812357 — PAYMENT_CAPTURED (Oct 15) — cancellation requested by Sai Ram Kosuru\r\n5. PK261015-16801175 — ORDER_SPLIT (Oct 15)\r\n6. PK261015-16574298 — PAYMENT_CAPTURED (Oct 15)\r\n\r\nRCA:\r\nThe root cause is warehouse stock unavailability for the products in these orders. This is the same confirmed error pattern seen in PKHME-951, PKHME-942, PKHME-947, PKHME-926, PKHME-687, PKHME-654, and PKHME-406.\r\n\r\nFor the 4 PAYMENT_CAPTURED orders: The order process reaches the splitOrder action node, which calls SplitByPriorityWH.afterSplitting(). This method attempts to assign a warehouse to each consignment based on available stock. When no warehouse has stock for the ordered products, the warehouse assignment fails with \"missing values for [warehouse] in model ConsignmentModel\" (NodeExecutionException). The order process transitions to ERROR state and the order remains at PAYMENT_CAPTURED status.\r\n\r\nFor the 2 ORDER_SPLIT orders: The order successfully passed splitOrder (at the time, stock may have been partially available or the split occurred before stock depletion). The consignment process then reaches the sendConsignmentToWarehouse action node. This action attempts to send the consignment to the assigned warehouse, but the warehouse either has no stock or the consignment has no valid warehouse assignment, causing a NullPointerException or NoSuchElementException. The consignment process transitions to ERROR state and the order remains at ORDER_SPLIT status.\r\n\r\nThis pattern has been verified across 8+ similar resolved tickets in the PKHME project. In PKHME-942, the same pattern was resolved by stock update and PC-54800 (retrigger consignment processes). In PKHME-951 and PKHME-947, orders auto-progressed after warehouse stock was updated by the business team, requiring no PC ticket at all. In PKHME-948, the ticket was closed as a duplicate of PKHME-949.\r\n\r\nNote: HAC PROD database verification was not possible due to authentication failure on the HAC server. The root cause is established from Jira cross-reference of 8+ identical resolved tickets with the same order statuses and error patterns. DB verification should be performed when HAC access is restored to confirm current process states and error messages.\r\n\r\nPossible remediation:\r\n\r\nFor orders requiring stock update and retrigger (4 orders):\r\n1. PK261016-17646422 — Business team to update stock in warehouse, then retrigger order process from splitOrder. Reusable PC-41341 (REUSABLE, \"To trigger order process from SplitOrder\") covers this remediation type.\r\n2. PK261015-16574298 — Same as above.\r\n\r\nFor ORDER_SPLIT orders (2 orders):\r\n3. PK261016-17293998 — Business team to update stock in warehouse, then retrigger consignment process from waitForSendToWarehouse wait node. Reusable PC-54582 (REUSABLE, \"Retrigger consignment processes stuck at sendConsignmentToWarehouse\") covers this remediation type. This is the same approach used in PKHME-942 via PC-54800.\r\n4. PK261015-16801175 — Same as above.\r\n\r\nFor orders requiring cancellation (2 orders, per Sai Ram Kosuru's comment on Nov 2):\r\n5. PK261015-17083784 — Cancel order. PC-53423 (cancel without refund, from PKHME-927) can be referenced.\r\n6. PK261015-16812357 — Cancel order. Same approach.\r\n\r\nSome orders may auto-progress once stock is updated in the warehouse, as observed in PKHME-942, PKHME-926, and PKHME-951. After stock update, verify if orders have moved forward before raising a PC ticket for retrigger.\r\n\r\nReusable PC tickets:\r\n- PC-41341 (REUSABLE): Trigger order process from SplitOrder — for PAYMENT_CAPTURED orders\r\n- PC-54582 (REUSABLE): Retrigger consignment processes from sendConsignmentToWarehouse — for ORDER_SPLIT orders\r\n- PC-54800: Retrigger consignment processes for PKHME-942 (based on PC-54582)\r\n- PC-53423: Cancel order without refund (from PKHME-927)\r\n\r\n## Remediation Summary\r\n\r\nOrder Group A (Stock update + retrigger from splitOrder):\r\n- PK261016-17646422, PK261015-16574298\r\n- Reuse PC-41341 pattern\r\n\r\nOrder Group B (Stock update + retrigger consignment process):\r\n- PK261016-17293998, PK261015-16801175\r\n- Reuse PC-54582 pattern\r\n\r\nOrder Group C (Cancellation per business request):\r\n- PK261015-17083784, PK261015-16812357\r\n- Reuse PC-53423 pattern",
-        "sections": {
-          "issue": "6 PK-region orders are stuck in the order fulfillment pipeline. 4 orders are at PAYMENT_CAPTURED status (payment captured but order process cannot proceed past the splitOrder action) and 2 orders are at ORDER_SPLIT status (order has been split into consignments but the consignment process cannot proceed past sendConsignmentToWarehouse). The orders were placed between October 15 and October 16, 2026.\r\n\r\nAffected orders:\r\n1. PK261016-17646422 — PAYMENT_CAPTURED (Oct 16)\r\n2. PK261016-17293998 — ORDER_SPLIT (Oct 16)\r\n3. PK261015-17083784 — PAYMENT_CAPTURED (Oct 15) — cancellation requested by Sai Ram Kosuru\r\n4. PK261015-16812357 — PAYMENT_CAPTURED (Oct 15) — cancellation requested by Sai Ram Kosuru\r\n5. PK261015-16801175 — ORDER_SPLIT (Oct 15)\r\n6. PK261015-16574298 — PAYMENT_CAPTURED (Oct 15)",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-11-02T13:17:10.416Z"
-      }
-    },
     {
       "key": "TWME-7509",
       "summary": "Order remediation",
@@ -335,7 +282,7 @@
       {
         "pid": 62736,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 17775,
+        "ageSeconds": 17822,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -345,7 +292,7 @@
       {
         "pid": 15688,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 17318,
+        "ageSeconds": 17365,
         "status": "running",
         "isChild": false,
         "taskSummary": "yes, resume from there and start implementing the enhancements for us",
@@ -5039,17 +4986,17 @@
     "bridgeLogTail": "[2026-11-17T09:39:32.007Z] STDOUT data for #1109: 124 bytes\n[2026-11-17T09:39:32.011Z] LIVE events write for #1109: 522 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.023Z] STDOUT data for #1109: 104 bytes\n[2026-11-17T09:39:32.027Z] LIVE events write for #1109: 523 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.038Z] STDOUT data for #1109: 106 bytes\n[2026-11-17T09:39:32.042Z] LIVE events write for #1109: 524 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.070Z] STDOUT data for #1109: 236 bytes\n[2026-11-17T09:39:32.092Z] LIVE events write for #1109: 526 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.100Z] STDOUT data for #1109: 226 bytes\n[2026-11-17T09:39:32.108Z] LIVE events write for #1109: 528 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.112Z] STDOUT data for #1109: 122 bytes\n[2026-11-17T09:39:32.117Z] LIVE events write for #1109: 529 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.128Z] STDOUT data for #1109: 113 bytes\n[2026-11-17T09:39:32.173Z] LIVE events write for #1109: 530 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.192Z] STDOUT data for #1109: 463 bytes\n[2026-11-17T09:39:32.225Z] LIVE events write for #1109: 534 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.237Z] STDOUT data for #1109: 453 bytes\n[2026-11-17T09:39:32.242Z] LIVE events write for #1109: 536 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:38.632Z] aipro completed for #1109 (5012 chars)\n[2026-11-17T09:39:39.406Z] Comment posted on #1109",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-11-19T15:44:58.193Z",
-      "ageMs": 11969
+      "lastWrite": "2026-11-19T15:45:43.218Z",
+      "ageMs": 14456
     },
-    "watchdogLogTail": "[2026-11-19T15:42:43.116Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-19T15:42:58.121Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-19T15:43:13.131Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-19T15:43:28.146Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-19T15:43:43.148Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-19T15:43:58.163Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-19T15:44:13.163Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-19T15:44:28.172Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-19T15:44:43.181Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-19T15:44:58.192Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-11-19T15:43:28.146Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-19T15:43:43.148Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-19T15:43:58.163Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-19T15:44:13.163Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-19T15:44:28.172Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-19T15:44:43.181Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-19T15:44:58.192Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-19T15:45:13.207Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-19T15:45:28.216Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-19T15:45:43.217Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-11-19T15:44:43.831Z",
+      "lastCheck": "2026-11-19T15:45:43.467Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5058,18 +5005,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-19T15:44:43.831Z",
+      "lastCheck": "2026-11-19T15:45:43.467Z",
       "downSince": "2026-11-19T10:37:14.734Z",
-      "downDuration": 18449097,
+      "downDuration": 18508733,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-19T15:44:43.831Z",
+      "lastCheck": "2026-11-19T15:45:43.467Z",
       "downSince": "2026-11-19T10:37:14.734Z",
-      "downDuration": 18449097,
+      "downDuration": 18508733,
       "alert": true
     }
   ],
@@ -5110,18 +5057,6 @@
   "actionQueue": [],
   "actionItems": {
     "zero": [
-      {
-        "key": "PKHME-949",
-        "summary": "Stuck order on Hybris",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/PKHME-949",
-        "updated": "2026-11-19T18:49:22.000+0900",
-        "statusChangedAt": "2026-10-19T19:48:32.574+0900"
-      },
       {
         "key": "TWME-7509",
         "summary": "Order remediation",
@@ -5164,7 +5099,7 @@
     "blocked": [],
     "queued": [],
     "totals": {
-      "zero": 3,
+      "zero": 2,
       "actionable": 1,
       "blocked": 0,
       "queued": 0
@@ -5218,10 +5153,27 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "TWME-7509",
+        "slaName": "Maintenance Response (GMT+8)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85265,
+        "targetDate": "2026-11-19T10:11:54.069000001Z"
+      },
+      {
+        "key": "TWME-7509",
+        "slaName": "Maintenance Resolution (GMT+8)",
+        "slaStatus": "STILL",
+        "remainingDuration": 325560,
+        "targetDate": "2026-11-25T10:11:54.069000005Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 1h on SAM-18530, 3h on SAM-18531, 1h on GMT-23461, 1.33h on TWME-7460, 1.33h on THAME-18231\nToday: PKHME-949, TWME-7509, RT-722599, RT-664743\nBlockers: none"
+    "standupText": "Yesterday: 1h on SAM-18530, 3h on SAM-18531, 1h on GMT-23461, 1.33h on TWME-7460, 1.33h on THAME-18231\nToday: TWME-7509, RT-722599, RT-664743\nBlockers: none"
   },
   "autologinConfig": {
     "login_time": "08:15",
