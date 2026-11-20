@@ -1,51 +1,7 @@
 {
-  "generatedAt": "2026-11-20T06:42:38.436Z",
-  "totalTickets": 7,
+  "generatedAt": "2026-11-20T06:43:19.507Z",
+  "totalTickets": 6,
   "tickets": [
-    {
-      "key": "PKHME-946",
-      "summary": "Stuck order on Hybris",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Pakistan Maintenance & Enhancements",
-      "projectKey": "PKHME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-11-20T15:24:48.000+0900",
-      "created": "2026-10-16T20:35:25.000+0900",
-      "statusChangedAt": "2026-10-16T20:35:31.334+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nPrecautionary ticket for 133 orders in WARNING state found during MENA healthcheck.\n\n|Issue Type|Order Count|\n|No shipping date (consignment age: 1d)|31|\n|No shipping date (consignment age: 2d)|35|\n|No GERP Delivery Order Nr - DO not created in ERP (age: 2d)|15|\n|No GERP Delivery Order Nr ",
-      "commentsCount": 4,
-      "recentComments": [
-        {
-          "author": "Sai Ram Kosuru",
-          "date": "2026-11-20T15:24:40.147+0900",
-          "snippet": "Hi ~@email,\n\nUpon checking, all the orders are moved to final status and some orders are moving as expected. Please close the ticket and let us know if there is an issue.\n\n \n\nRegards,\n\nSairam K.\n\ncc ~@email"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-10-19T22:01:43.811+0900",
-          "snippet": "Hi Sai Ram,\n\nChecked all PK orders from October 11 to 16 on PROD. There are 285 orders in total for this period. Here is the current status breakdown:\n\nCOMPLETED: 134 orders\nSHIPPED: 81 orders\nSHIPPING_REQUESTED: 58 orders\nCANCELLED: 8 orders\nPAYMENT_CAPTURED: 4 orders\n\n134 orders have already moved"
-        }
-      ],
-      "lastCommentBy": "Sai Ram Kosuru",
-      "lastCommentSnippet": "Hi ~@email,\n\nUpon checking, all the orders are moved to final status and some orders are moving as expected. Please close the ticket and let us know if there is an issue.\n\n \n\nRegards,\n\nSairam K.\n\ncc ~@email",
-      "lastCommentDate": "2026-11-20T15:24:40.147+0900",
-      "url": "https://jira.secext.samsung.net/browse/PKHME-946",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: PKHME-946\nStuck order on Hybris\nGenerated: 2026-10-19T15:27:44.6126093+05:30\n\nIssue:\n\n133 Pakistan-region orders were flagged in WARNING state during MENA healthcheck (5-day lookback) on Oct 16. The warnings were for two categories: no shipping date on consignments aged 1-4 days (106 orders) and no GERP Delivery Order Number on consignments aged 2-3 days (27 orders). The ticket was raised as a precautionary measure to check if any action was needed from the Hybris platform team.\n\nRCA:\n\nDB verification was run on Oct 19 against production HAC for all PK-region consignments with no shipping date created since Oct 12. 200 consignments were returned. The status breakdown is: 157 COMPLETED, 69 SHIPPED, 161 SHIPPING_REQUESTED, 3 WAITING_FOR_TRANSFER.\n\nOf the 200 consignments flagged with no shipping date, 226 (157 COMPLETED + 69 SHIPPED) have already progressed to terminal or near-terminal states. The shippingDate field remains NULL on these consignments even after completion -- this is a known data pattern where the shippingDate is not always populated by the warehouse integration for PK region. The orders themselves are not stuck; they have completed their lifecycle normally.\n\nThe remaining 161 SHIPPING_REQUESTED consignments are mostly recent orders from Oct 16-19 (1-3 days old). SHIPPING_REQUESTED is a normal interim state where the consignment has been sent to the warehouse and is awaiting the warehouse to confirm shipment. For PK region, the warehouse processing turnaround is typically 1-3 business days, so these orders are within the expected processing window.\n\nOnly 3 consignments (all created today, Oct 19) are missing GERP Delivery Order Numbers. These are brand-new orders that have not yet been processed by the GERP integration -- the DO number gets populated when GERP creates the delivery order, which happens within hours of order placement. This is normal behaviour for same-day orders.\n\nsram.k confirmed on Oct 19 that most of the orders have moved to completed status, which aligns with the DB evidence. A small number of orders from Oct 12-14 remain in SHIPPING_REQUESTED (approximately 5-7 days) which may warrant a check with the logistics/warehouse team to confirm if there is a genuine warehouse-side delay for those specific consignments. No ERROR process states were found -- these are not Hybris platform issues.\n\nNo platform bug or code defect was involved. The WARNING state was a point-in-time snapshot during the healthcheck run, and the majority of orders self-resolved through normal processing within 1-3 days.\n\nPossible remediation:\n\n1. Compile the current status of all 133 orders in an Excel sheet (as requested by sram.k in the ticket comment) and share with the logistics team. The DB query results show most orders are already COMPLETED or SHIPPED.\n\n2. For the approximately 10-15 orders from Oct 12-14 still in SHIPPING_REQUESTED, check with the PK warehouse/logistics team (sram.k, cc suresh@samsung.com) to confirm if there is a warehouse-side backlog. These orders may need a manual push from the warehouse or could be delayed due to stock availability.\n\n3. No Hybris-side remediation script is needed. No process is in ERROR state. No consignment process restart is required. The orders are progressing normally through the warehouse integration pipeline.\n\n4. The ticket can be closed as expected behaviour once the Excel sheet with current statuses is shared with sram.k.",
-        "sections": {
-          "issue": "133 Pakistan-region orders were flagged in WARNING state during MENA healthcheck (5-day lookback) on Oct 16. The warnings were for two categories: no shipping date on consignments aged 1-4 days (106 orders) and no GERP Delivery Order Number on consignments aged 2-3 days (27 orders). The ticket was raised as a precautionary measure to check if any action was needed from the Hybris platform team.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-10-19T09:57:44.682Z"
-      }
-    },
     {
       "key": "HKHME-6861",
       "summary": "HK261108-93097758: Update order completion date and resend order completion email with tax invoice ",
@@ -431,7 +387,7 @@
       }
     ],
     "pid": 38920,
-    "uptime": 4788,
+    "uptime": 4827,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -443,7 +399,7 @@
       {
         "pid": 25732,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 13065,
+        "ageSeconds": 13106,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -453,7 +409,7 @@
       {
         "pid": 5844,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 13061,
+        "ageSeconds": 13102,
         "status": "running",
         "isChild": false,
         "taskSummary": "remember to verify the comment as well and as a summary, show me the comment that was posted, wor...",
@@ -463,7 +419,7 @@
       {
         "pid": 43468,
         "cwd": "c:\\windows",
-        "ageSeconds": 13057,
+        "ageSeconds": 13098,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -473,7 +429,7 @@
       {
         "pid": 15476,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 11201,
+        "ageSeconds": 11242,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -483,7 +439,7 @@
       {
         "pid": 29536,
         "cwd": "unknown",
-        "ageSeconds": 11199,
+        "ageSeconds": 11239,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -5313,17 +5269,17 @@
     "bridgeLogTail": "[2026-11-20T05:21:11.469Z] ==========================================\n[2026-11-20T05:21:11.471Z] === Hardened GitHub Bridge v3 Started ===\n[2026-11-20T05:21:11.472Z] === with Aipro Auto-Launch ===\n[2026-11-20T05:21:11.473Z] ==========================================\n[2026-11-20T05:21:11.473Z] PID: 48764\n[2026-11-20T05:21:11.474Z] Repo: aryanverma2410/agent-bridge\n[2026-11-20T05:21:11.474Z] Poll interval: 10000ms\n[2026-11-20T05:21:11.475Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-11-20T05:21:11.475Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-11-20T05:21:11.476Z] Waiting for messages...\n[2026-11-20T05:22:50.258Z] ==========================================\n[2026-11-20T05:22:50.260Z] === Hardened GitHub Bridge v3 Started ===\n[2026-11-20T05:22:50.260Z] === with Aipro Auto-Launch ===\n[2026-11-20T05:22:50.261Z] ==========================================\n[2026-11-20T05:22:50.262Z] PID: 38920\n[2026-11-20T05:22:50.262Z] Repo: aryanverma2410/agent-bridge\n[2026-11-20T05:22:50.263Z] Poll interval: 10000ms\n[2026-11-20T05:22:50.264Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-11-20T05:22:50.265Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-11-20T05:22:50.266Z] Waiting for messages...",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-11-20T06:42:38.534Z",
-      "ageMs": 4056
+      "lastWrite": "2026-11-20T06:43:23.561Z",
+      "ageMs": 622
     },
-    "watchdogLogTail": "[2026-11-20T06:40:23.467Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:40:38.472Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:40:53.487Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:41:08.489Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:41:23.490Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:41:38.506Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:41:53.514Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:42:08.522Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:42:23.524Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:42:38.533Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-11-20T06:41:08.489Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:41:23.490Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:41:38.506Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:41:53.514Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:42:08.522Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:42:23.524Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:42:38.533Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:42:53.542Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:43:08.549Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:43:23.559Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-11-20T06:42:02.081Z",
+      "lastCheck": "2026-11-20T06:43:02.011Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5332,18 +5288,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-20T06:42:02.081Z",
+      "lastCheck": "2026-11-20T06:43:02.011Z",
       "downSince": "2026-11-20T04:41:46.798Z",
-      "downDuration": 7215283,
+      "downDuration": 7275213,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-20T06:42:02.081Z",
+      "lastCheck": "2026-11-20T06:43:02.011Z",
       "downSince": "2026-11-20T04:41:46.798Z",
-      "downDuration": 7215283,
+      "downDuration": 7275213,
       "alert": true
     }
   ],
@@ -5457,25 +5413,13 @@
         "url": "https://jira.secext.samsung.net/browse/RT-722599",
         "updated": "2026-11-06T21:23:07.000+0900",
         "statusChangedAt": "2026-09-28T15:10:33.048+0900"
-      },
-      {
-        "key": "PKHME-946",
-        "summary": "Stuck order on Hybris",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "actionable",
-        "reason": "",
-        "whatToDo": "Respond to Sai Ram Kosuru",
-        "url": "https://jira.secext.samsung.net/browse/PKHME-946",
-        "updated": "2026-11-20T15:24:48.000+0900",
-        "statusChangedAt": "2026-10-16T20:35:31.334+0900"
       }
     ],
     "blocked": [],
     "queued": [],
     "totals": {
       "zero": 5,
-      "actionable": 2,
+      "actionable": 1,
       "blocked": 0,
       "queued": 0
     }
@@ -5528,69 +5472,10 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": {
-    "byTicket": [
-      {
-        "key": "HKHME-6861",
-        "slaName": "Maintenance Response (GMT+8)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86209,
-        "targetDate": "2026-11-20T09:12:46.544000001Z"
-      },
-      {
-        "key": "HKHME-6861",
-        "slaName": "Maintenance Resolution (GMT+8)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1218608,
-        "targetDate": "2026-12-10T09:12:46.544000015Z"
-      },
-      {
-        "key": "PKHME-946",
-        "slaName": "Maintenance Response (GMT+5)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86398,
-        "targetDate": "2026-10-19T11:35:29.536000001Z"
-      },
-      {
-        "key": "PKHME-946",
-        "slaName": "Maintenance Resolution (GMT+5)",
-        "slaStatus": "STILL",
-        "remainingDuration": 2578989,
-        "targetDate": "2027-01-05T03:05:47.842000055Z"
-      },
-      {
-        "key": "TWME-7499",
-        "slaName": "Maintenance Response (GMT+8)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85965,
-        "targetDate": "2026-11-17T03:19:14.595000001Z"
-      },
-      {
-        "key": "TWME-7499",
-        "slaName": "Maintenance Resolution (GMT+8)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 1194527,
-        "targetDate": "2026-12-07T03:19:23.487000015Z"
-      },
-      {
-        "key": "HKHME-6864",
-        "slaName": "Maintenance Response (GMT+8)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 86049,
-        "targetDate": "2026-11-23T05:50:39.728000001Z"
-      },
-      {
-        "key": "HKHME-6864",
-        "slaName": "Maintenance Resolution (GMT+8)",
-        "slaStatus": "STILL",
-        "remainingDuration": 1292881,
-        "targetDate": "2026-12-11T05:50:39.728000015Z"
-      }
-    ]
-  },
+  "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 0.42h on HKHME-6859, 2.5h on SAM-18531, 1h on SAM-18530, 1h on GMT-23461, 1.33h on TWME-7460, 0.75h on TWME-7498, 0.75h on TWME-7499\nToday: PKHME-946, HKHME-6861, HKHME-6864, NPSM-92727, TWME-7499\nBlockers: none"
+    "standupText": "Yesterday: 0.42h on HKHME-6859, 2.5h on SAM-18531, 1h on SAM-18530, 1h on GMT-23461, 1.33h on TWME-7460, 0.75h on TWME-7498, 0.75h on TWME-7499\nToday: HKHME-6861, HKHME-6864, NPSM-92727, TWME-7499, RT-722599\nBlockers: none"
   },
   "autologinConfig": {
     "login_time": "08:15",
