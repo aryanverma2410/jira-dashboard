@@ -1,7 +1,193 @@
 {
-  "generatedAt": "2026-11-20T04:33:01.339Z",
-  "totalTickets": 3,
+  "generatedAt": "2026-11-20T06:40:34.078Z",
+  "totalTickets": 8,
   "tickets": [
+    {
+      "key": "EHME-947",
+      "summary": "Stuck order on Hybris",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Egypt Maintenance & Enhancements",
+      "projectKey": "EHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-11-20T15:26:11.000+0900",
+      "created": "2026-10-16T20:35:01.000+0900",
+      "statusChangedAt": "2026-10-16T20:35:06.591+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nPrecautionary ticket for 88 orders in WARNING state found during MENA healthcheck.\n\n|Issue Type|Order Count|\n|No shipping date (consignment age: 1d)|71|\n|No GERP Delivery Order Nr - DO not created in ERP (age: 2d)|12|\n|No GERP Delivery Order Nr - DO not created in ERP (age: 3d)|2|\n|No GERP",
+      "commentsCount": 4,
+      "recentComments": [
+        {
+          "author": "Sai Ram Kosuru",
+          "date": "2026-11-20T15:26:03.289+0900",
+          "snippet": "Hi ~@email,\n\nUpon checking, the order are moving as expected and most of the orders are moved to final status. Please close the ticket.\n\n \n\nRegards,\n\nSairam K.\n\ncc ~@email"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-22T20:14:26.093+0900",
+          "snippet": "Hi Sairam,\n\nRechecked all the EG orders from the healthcheck. Excel file attached with the current status of each order.\n\nTotal orders checked: 142. 61 are now COMPLETED. 33 are SHIPPED and in transit. 22 are still in SHIPPING_REQUESTED waiting for shipment confirmation from the warehouse. 26 are in"
+        }
+      ],
+      "lastCommentBy": "Sai Ram Kosuru",
+      "lastCommentSnippet": "Hi ~@email,\n\nUpon checking, the order are moving as expected and most of the orders are moved to final status. Please close the ticket.\n\n \n\nRegards,\n\nSairam K.\n\ncc ~@email",
+      "lastCommentDate": "2026-11-20T15:26:03.289+0900",
+      "url": "https://jira.secext.samsung.net/browse/EHME-947",
+      "linkedTickets": [],
+      "solution": {
+        "status": "none",
+        "excerpt": "",
+        "source": "",
+        "foundAt": "",
+        "issueNumber": null
+      }
+    },
+    {
+      "key": "PKHME-946",
+      "summary": "Stuck order on Hybris",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Pakistan Maintenance & Enhancements",
+      "projectKey": "PKHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-11-20T15:24:48.000+0900",
+      "created": "2026-10-16T20:35:25.000+0900",
+      "statusChangedAt": "2026-10-16T20:35:31.334+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nPrecautionary ticket for 133 orders in WARNING state found during MENA healthcheck.\n\n|Issue Type|Order Count|\n|No shipping date (consignment age: 1d)|31|\n|No shipping date (consignment age: 2d)|35|\n|No GERP Delivery Order Nr - DO not created in ERP (age: 2d)|15|\n|No GERP Delivery Order Nr ",
+      "commentsCount": 4,
+      "recentComments": [
+        {
+          "author": "Sai Ram Kosuru",
+          "date": "2026-11-20T15:24:40.147+0900",
+          "snippet": "Hi ~@email,\n\nUpon checking, all the orders are moved to final status and some orders are moving as expected. Please close the ticket and let us know if there is an issue.\n\n \n\nRegards,\n\nSairam K.\n\ncc ~@email"
+        },
+        {
+          "author": "Aryan Verma",
+          "date": "2026-10-19T22:01:43.811+0900",
+          "snippet": "Hi Sai Ram,\n\nChecked all PK orders from October 11 to 16 on PROD. There are 285 orders in total for this period. Here is the current status breakdown:\n\nCOMPLETED: 134 orders\nSHIPPED: 81 orders\nSHIPPING_REQUESTED: 58 orders\nCANCELLED: 8 orders\nPAYMENT_CAPTURED: 4 orders\n\n134 orders have already moved"
+        }
+      ],
+      "lastCommentBy": "Sai Ram Kosuru",
+      "lastCommentSnippet": "Hi ~@email,\n\nUpon checking, all the orders are moved to final status and some orders are moving as expected. Please close the ticket and let us know if there is an issue.\n\n \n\nRegards,\n\nSairam K.\n\ncc ~@email",
+      "lastCommentDate": "2026-11-20T15:24:40.147+0900",
+      "url": "https://jira.secext.samsung.net/browse/PKHME-946",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "# RCA: PKHME-946\nStuck order on Hybris\nGenerated: 2026-10-19T15:27:44.6126093+05:30\n\nIssue:\n\n133 Pakistan-region orders were flagged in WARNING state during MENA healthcheck (5-day lookback) on Oct 16. The warnings were for two categories: no shipping date on consignments aged 1-4 days (106 orders) and no GERP Delivery Order Number on consignments aged 2-3 days (27 orders). The ticket was raised as a precautionary measure to check if any action was needed from the Hybris platform team.\n\nRCA:\n\nDB verification was run on Oct 19 against production HAC for all PK-region consignments with no shipping date created since Oct 12. 200 consignments were returned. The status breakdown is: 157 COMPLETED, 69 SHIPPED, 161 SHIPPING_REQUESTED, 3 WAITING_FOR_TRANSFER.\n\nOf the 200 consignments flagged with no shipping date, 226 (157 COMPLETED + 69 SHIPPED) have already progressed to terminal or near-terminal states. The shippingDate field remains NULL on these consignments even after completion -- this is a known data pattern where the shippingDate is not always populated by the warehouse integration for PK region. The orders themselves are not stuck; they have completed their lifecycle normally.\n\nThe remaining 161 SHIPPING_REQUESTED consignments are mostly recent orders from Oct 16-19 (1-3 days old). SHIPPING_REQUESTED is a normal interim state where the consignment has been sent to the warehouse and is awaiting the warehouse to confirm shipment. For PK region, the warehouse processing turnaround is typically 1-3 business days, so these orders are within the expected processing window.\n\nOnly 3 consignments (all created today, Oct 19) are missing GERP Delivery Order Numbers. These are brand-new orders that have not yet been processed by the GERP integration -- the DO number gets populated when GERP creates the delivery order, which happens within hours of order placement. This is normal behaviour for same-day orders.\n\nsram.k confirmed on Oct 19 that most of the orders have moved to completed status, which aligns with the DB evidence. A small number of orders from Oct 12-14 remain in SHIPPING_REQUESTED (approximately 5-7 days) which may warrant a check with the logistics/warehouse team to confirm if there is a genuine warehouse-side delay for those specific consignments. No ERROR process states were found -- these are not Hybris platform issues.\n\nNo platform bug or code defect was involved. The WARNING state was a point-in-time snapshot during the healthcheck run, and the majority of orders self-resolved through normal processing within 1-3 days.\n\nPossible remediation:\n\n1. Compile the current status of all 133 orders in an Excel sheet (as requested by sram.k in the ticket comment) and share with the logistics team. The DB query results show most orders are already COMPLETED or SHIPPED.\n\n2. For the approximately 10-15 orders from Oct 12-14 still in SHIPPING_REQUESTED, check with the PK warehouse/logistics team (sram.k, cc suresh@samsung.com) to confirm if there is a warehouse-side backlog. These orders may need a manual push from the warehouse or could be delayed due to stock availability.\n\n3. No Hybris-side remediation script is needed. No process is in ERROR state. No consignment process restart is required. The orders are progressing normally through the warehouse integration pipeline.\n\n4. The ticket can be closed as expected behaviour once the Excel sheet with current statuses is shared with sram.k.",
+        "sections": {
+          "issue": "133 Pakistan-region orders were flagged in WARNING state during MENA healthcheck (5-day lookback) on Oct 16. The warnings were for two categories: no shipping date on consignments aged 1-4 days (106 orders) and no GERP Delivery Order Number on consignments aged 2-3 days (27 orders). The ticket was raised as a precautionary measure to check if any action was needed from the Hybris platform team.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-10-19T09:57:44.682Z"
+      }
+    },
+    {
+      "key": "HKHME-6861",
+      "summary": "HK261108-93097758: Update order completion date and resend order completion email with tax invoice ",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Hong Kong Maintenance & Enhancements",
+      "projectKey": "HKHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-11-20T14:59:28.000+0900",
+      "created": "2026-11-19T18:12:42.000+0900",
+      "statusChangedAt": "2026-11-19T18:15:57.456+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nOrder HK261108-93097758 was delivered on 2026.11.10 14:02:19 HKT but completion date shown in Tax Invoice(sales invoice) is showing 18/11/2026, please help to update completion date of ALL order items to 2026.11.10 14:02:19 HKT  and resend order completion email with tax invoice, thank you",
+      "commentsCount": 0,
+      "recentComments": [],
+      "lastCommentBy": "",
+      "lastCommentSnippet": "",
+      "lastCommentDate": "",
+      "url": "https://jira.secext.samsung.net/browse/HKHME-6861",
+      "linkedTickets": [],
+      "solution": {
+        "status": "none",
+        "excerpt": "",
+        "source": "",
+        "foundAt": "",
+        "issueNumber": null
+      }
+    },
+    {
+      "key": "HKHME-6864",
+      "summary": "Update Serial No and resend order completion email for Order - HK261026-87859570",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Hong Kong Maintenance & Enhancements",
+      "projectKey": "HKHME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-11-20T14:58:42.000+0900",
+      "created": "2026-11-20T14:48:42.000+0900",
+      "statusChangedAt": "2026-11-20T14:56:29.809+0900",
+      "assignedToMeAt": "",
+      "description": "Hi Team,\n\nWe found that the incorrect SN was updated in HK261026-87859570, please help update the correct Serial NO. and resend Order Completion email, thank you.\n \nSKU: QA55LS03HWJXZK\nSerial NO. As-is: 12WG3NELA00045\nSerial NO. To-be: 12WG3NELA00047\n\nRequest:\nPlease help to update Serial No. to 12W",
+      "commentsCount": 0,
+      "recentComments": [],
+      "lastCommentBy": "",
+      "lastCommentSnippet": "",
+      "lastCommentDate": "",
+      "url": "https://jira.secext.samsung.net/browse/HKHME-6864",
+      "linkedTickets": [
+        {
+          "key": "HKHME-6770",
+          "summary": "Update Serial No and resend order completion email for Order - HK261021-86037127",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "relation": "clones",
+          "assignee": null
+        }
+      ],
+      "solution": {
+        "status": "none",
+        "excerpt": "",
+        "source": "",
+        "foundAt": "",
+        "issueNumber": null
+      }
+    },
+    {
+      "key": "NPSM-92727",
+      "summary": "[111450807][AU] [Online Purchasing]Medallia Alert ",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "NPS",
+      "projectKey": "NPSM",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-11-20T14:09:51.000+0900",
+      "created": "2026-11-20T12:40:14.000+0900",
+      "statusChangedAt": "2026-11-20T13:40:31.108+0900",
+      "assignedToMeAt": "",
+      "description": "Please check Reason for Score field for detail. Note The initial response time is tracked, so once you receive a ticket, please move it to “In Progress” or “Closed” within 48 hours. Issue URL: [Internal Link]",
+      "commentsCount": 1,
+      "recentComments": [
+        {
+          "author": "Yomara Oktafamero",
+          "date": "2026-11-20T13:40:52.447+0900",
+          "snippet": "Hi team,\n\nCustomer reported that they encountered issues with the billing address. However, after checking the Back Office, we found that the order is already in Shipping Requested status, and the billing address has been recorded successfully. Upon reviewing the DXA session, we observed that the cu"
+        }
+      ],
+      "lastCommentBy": "Yomara Oktafamero",
+      "lastCommentSnippet": "Hi team,\n\nCustomer reported that they encountered issues with the billing address. However, after checking the Back Office, we found that the order is already in Shipping Requested status, and the billing address has been recorded successfully. Upon reviewing the DXA session, we observed that the cu",
+      "lastCommentDate": "2026-11-20T13:40:52.447+0900",
+      "url": "https://jira.secext.samsung.net/browse/NPSM-92727",
+      "linkedTickets": [],
+      "solution": {
+        "status": "none",
+        "excerpt": "",
+        "source": "",
+        "foundAt": "",
+        "issueNumber": null
+      }
+    },
     {
       "key": "TWME-7499",
       "summary": "Order remediation",
@@ -35,9 +221,15 @@
       "url": "https://jira.secext.samsung.net/browse/TWME-7499",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-11-20T03:55:31.701Z"
+        "status": "found",
+        "excerpt": "Ticket: TWME-7499 — Order remediation\r\nGenerated: 2026-11-20T14:00:00Z\r\n\r\n## Issue\r\n\r\nOrder TW261027-88241529 (Credit Card, installment=Y) is at PARTIAL_RETURN_COMPLETED status. The return and refund processes have completed successfully, but the Return Fee Invoice (RFI) and Credit Note were not generated during the normal return process flow. Reporter Claire Huang confirmed on Nov 20 that all required financial processes have been completed by Finance, and requested re-triggering of the RFI and Credit Note.\r\n\r\n## RCA\r\n\r\nThe order TW261027-88241529 reached PARTIAL_RETURN_COMPLETED status, meaning the return request was processed and the refund was completed. However, the RFI (Return Fee Invoice, internally called \"financial short picks update\") and Credit Note generation steps were skipped during the return business process.\r\n\r\nThe RFI is generated by `tokoConsignmentFinancialsServiceImpl.sendFinancialShortPicksUpdate()`, which sends the financial short picks (return-related financial invoice) to the external party (GERP/SAP). The Credit Note is generated by `tokoGlobalSendInvoiceToExternalPartyStrategy.sendCreditNoteToExternalParty()`, which sends a credit note to the external party for cancelled consignments that have a GERP sales order number (`gerpSalesOrderNr`).\r\n\r\nBoth operations are conditional — they require the consignment to be in CANCELLED status with a non-empty `gerpSalesOrderNr`. During the normal return process flow, these are triggered as part of the consignment financial update sequence. When the process reaches a state where these steps are expected to fire but the conditions are not met at that exact moment (e.g., the consignment was not yet marked CANCELLED, or the GERP sales order number was not yet populated when the process action executed), the step is skipped and the process moves on to the next action without retrying.\r\n\r\nOnce the return process completes (PARTIAL_RETURN_COMPLETED), there is no automatic retry mechanism for the skipped RFI and Credit Note steps. The process considers the return complete and does not loop back to re-attempt financial document generation. This leaves the order in a state where the return is financially processed from the refund perspective but the associated financial invoices (RFI and Credit Note) were never sent to the external system.\r\n\r\nNote: DB state verification could not be performed (HAC authentication expired during investigation). Kibana logs were unavailable (Kibana MCP/cookie bridge was down). The RCA is based on the ticket description, the comment from Aryan on Nov 19 confirming RFI and Credit Note are being skipped, and the codebase logic traced from the sibling ticket TWME-7498 which had the identical issue pattern.\r\n\r\n## Possible remediation\r\n\r\nThe remediation approach is identical to the sibling ticket TWME-7498, which was resolved using the same pattern under reusable PC ticket PC-52678.\r\n\r\nThe remediation script performs two operations:\r\n\r\n1. RFI (Return Fee Invoice): Calls `tokoConsignmentFinancialsServiceImpl.sendFinancialShortPicksUpdate(order)` to send the financial short picks update to the external party. This generates the RFI without triggering any additional refund — it only sends the financial invoice data.\r\n\r\n2. Credit Note: For each consignment on the order that is in CANCELLED status and has a non-empty `gerpSalesOrderNr`, calls `tokoGlobalSendInvoiceToExternalPartyStrategy.sendCreditNoteToExternalParty(consignment)` to send the credit note to the external party.\r\n\r\nThe script should be adapted from `script-TWME-7498-rfi-creditnote.groovy` with the following changes:\r\n- Update the order list to include only TW261027-88241529\r\n- Update the ITGC header to reference PC-52678(TWME-7499) — reusing the same approved PC ticket since the remediation type is identical\r\n- If the credit note number is generated but not persisted (as seen in TWME-7498 where a second script was needed to save the `externalCreditNoteNumber` on consignments), a follow-up save script may be needed\r\n\r\nVerification after remediation:\r\n- Confirm RFI was sent by checking the order's financial process logs\r\n- Confirm Credit Note was sent by checking `consignment.externalCreditNoteNumber` for each cancelled consignment\r\n- Check with Finance (Claire confirmed they can verify on their end)\r\n\r\nThe existing reusable PC ticket PC-52678 can be reused for this remediation. No new PC ticket is required.",
+        "sections": {
+          "issue": "Order TW261027-88241529 (Credit Card, installment=Y) is at PARTIAL_RETURN_COMPLETED status. The return and refund processes have completed successfully, but the Return Fee Invoice (RFI) and Credit Note were not generated during the normal return process flow. Reporter Claire Huang confirmed on Nov 20 that all required financial processes have been completed by Finance, and requested re-triggering of the RFI and Credit Note.",
+          "rca": "The order TW261027-88241529 reached PARTIAL_RETURN_COMPLETED status, meaning the return request was processed and the refund was completed. However, the RFI (Return Fee Invoice, internally called \"financial short picks update\") and Credit Note generation steps were skipped during the return business process.\r\n\r\nThe RFI is generated by `tokoConsignmentFinancialsServiceImpl.sendFinancialShortPicksUpdate()`, which sends the financial short picks (return-related financial invoice) to the external party (GERP/SAP). The Credit Note is generated by `tokoGlobalSendInvoiceToExternalPartyStrategy.sendCreditNoteToExternalParty()`, which sends a credit note to the external party for cancelled consignments that have a GERP sales order number (`gerpSalesOrderNr`).\r\n\r\nBoth operations are conditional — they require the consignment to be in CANCELLED status with a non-empty `gerpSalesOrderNr`. During the normal return process flow, these are triggered as part of the consignment financial update sequence. When the process reaches a state where these steps are expected to fire but the conditions are not met at that exact moment (e.g., the consignment was not yet marked CANCELLED, or the GERP sales order number was not yet populated when the process action executed), the step is skipped and the process moves on to the next action without retrying.\r\n\r\nOnce the return process completes (PARTIAL_RETURN_COMPLETED), there is no automatic retry mechanism for the skipped RFI and Credit Note steps. The process considers the return complete and does not loop back to re-attempt financial document generation. This leaves the order in a state where the return is financially processed from the refund perspective but the associated financial invoices (RFI and Credit Note) were never sent to the external system.\r\n\r\nNote: DB state verification could not be performed (HAC authentication expired during investigation). Kibana logs were unavailable (Kibana MCP/cookie bridge was down). The RCA is based on the ticket description, the comment from Aryan on Nov 19 confirming RFI and Credit Note are being skipped, and the codebase logic traced from the sibling ticket TWME-7498 which had the identical issue pattern.",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-11-20T05:07:39.723Z"
       }
     },
     {
@@ -138,11 +330,25 @@
     },
     "recentActivity": [
       {
+        "issueNum": 1166,
+        "title": "Investigate ticket TWME-7499",
+        "received": "2026-11-20T04:16:36.575Z",
+        "responded": "2026-11-20T05:09:40.221Z",
+        "responseSnippet": "Starting the investigation workflow. Running Phase 0 pre-flight checks in parallel — reading learnings, checking for existing RCA/cache files, running task-observer session start protocol, and checking MCP health.A lock file exists but no cache file — meaning a previous investigation was started but never completed. Let me read the lock file, check for the Jira MCP availability, and look for jira-ops scripts to fetch the ticket.The lock file indicates a prior auto-trigger that never completed. N"
+      },
+      {
         "issueNum": 1136,
         "title": "Investigate ticket TWME-7509",
         "received": "2026-11-20T04:16:42.156Z",
-        "responded": "",
-        "responseSnippet": ""
+        "responded": "2026-11-20T04:55:50.223Z",
+        "responseSnippet": "Starting the investigation workflow for TWME-7509. Let me begin with Phase 0 pre-flight checks.No existing RCA or cache found — this is a fresh investigation. Let me re-run the scan with the correct bash path and start fetching the ticket.The workspace is sandboxed — can't access `C:\\toko\\toko6\\...`. Let me find tools available within the workspace.I can see the patterns from previous investigations. Let me read the fetch-ticket script and create the ticket fetch.The `\\t` in the path is being in"
+      },
+      {
+        "issueNum": 1165,
+        "title": "Investigate ticket PME-14269",
+        "received": "2026-11-20T04:16:37.582Z",
+        "responded": "2026-11-20T04:38:13.291Z",
+        "responseSnippet": "Let me fix the session-start scan and proceed with the investigation pre-flight checks in parallel.Both an RCA file and cache file already exist for PME-14269. This is a re-investigation. Let me read both to understand prior findings and gaps.This is a re-investigation — prior investigation (same day, 15:25 IST) concluded the order was a false positive, already progressing normally. Following the Delta+Refresh workflow, I need to refresh mutable DB fields and check if the order has progressed fu"
       },
       {
         "issueNum": 1149,
@@ -162,20 +368,6 @@
         "issueNum": 1153,
         "title": "Investigate ticket HKHME-6859",
         "received": "2026-11-20T04:16:38.684Z",
-        "responded": "",
-        "responseSnippet": ""
-      },
-      {
-        "issueNum": 1165,
-        "title": "Investigate ticket PME-14269",
-        "received": "2026-11-20T04:16:37.582Z",
-        "responded": "",
-        "responseSnippet": ""
-      },
-      {
-        "issueNum": 1166,
-        "title": "Investigate ticket TWME-7499",
-        "received": "2026-11-20T04:16:36.575Z",
         "responded": "",
         "responseSnippet": ""
       },
@@ -278,88 +470,95 @@
         "responseSnippet": "Good, lock file created, learnings reviewed, Aryantone style guide loaded. No existing cache or RCA for this ticket. Now fetching the ticket details.Ticket fetched. Key findings:\n- Order: AU260910-43635923, Customer SSO: sqr5gvdavb, Points: 20,849, Transaction ID: 2026000054071361\n- Remediation ALREADY DONE by Aryan on 2026-11-05 (Rewards API returned success)\n- Ticket now in \"Launch Verification\" status\n- Reporter: aldwin.j@samsung.com\n- Kibana MCP: DOWN (no tools registered)\n- HAC: need to tes"
       }
     ],
-    "pid": 36520,
-    "uptime": 986,
+    "pid": 38920,
+    "uptime": 4663,
     "failures": 0,
-    "activeJobCount": 10,
-    "jobs": [
+    "activeJobCount": 0,
+    "jobs": [],
+    "startTime": "2026-11-20T05:22:50.267Z",
+    "version": "v3",
+    "lastResponseAt": "2026-11-20T05:09:40.247Z",
+    "lastResponseIssue": 1166,
+    "ideSessions": [
       {
-        "issueNum": 1115,
-        "issueTitle": "Investigate ticket THAME-18231",
-        "snippet": "Auto-triggered investigation for new ticket THAME-18231.\n\nTicket: THAME-18231\nSummary: [TSE] Order stuck 19.09.2026\n\nUse",
-        "pid": 828,
-        "elapsed": 20777
+        "pid": 25732,
+        "cwd": "c:\\users\\aryan.v1",
+        "ageSeconds": 12940,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
+        "lastExchange": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.sap/app/data-explorer/discover#?_a=h@5389b62&_g=h@c823129&_q=h@fd5d437 afterwards with the confluence links as 2sign ins together create issue",
+        "sessionId": "aryan-v1"
       },
       {
-        "issueNum": 1116,
-        "issueTitle": "Investigate ticket GMT-23461",
-        "snippet": "Auto-triggered investigation for new ticket GMT-23461.\n\nTicket: GMT-23461\nSummary: SMS | Order Spike TH Tenant\n\nUse the ",
-        "pid": 40312,
-        "elapsed": 20778
+        "pid": 5844,
+        "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
+        "ageSeconds": 12936,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "remember to verify the comment as well and as a summary, show me the comment that was posted, wor...",
+        "lastExchange": "remember to verify the comment as well and as a summary, show me the comment that was posted, worklogs, labels, , status, assignee by fetching it fresh how its looking there , not from memory",
+        "sessionId": "bin"
       },
       {
-        "issueNum": 1132,
-        "issueTitle": "Investigate ticket TWME-7498",
-        "snippet": "Auto-triggered investigation for new ticket TWME-7498.\n\nTicket: TWME-7498\nSummary: Order remediation\n\nUse the investigat",
-        "pid": 35652,
-        "elapsed": 20779
+        "pid": 43468,
+        "cwd": "c:\\windows",
+        "ageSeconds": 12933,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "windows",
+        "lastExchange": null,
+        "sessionId": "windows"
       },
       {
-        "issueNum": 1135,
-        "issueTitle": "Investigate ticket TWME-7499",
-        "snippet": "Auto-triggered investigation for new ticket TWME-7499.\n\nTicket: TWME-7499\nSummary: Order remediation\n\nUse the investigat",
-        "pid": 57392,
-        "elapsed": 20780
+        "pid": 15476,
+        "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
+        "ageSeconds": 11076,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
+        "lastExchange": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.sap/app/data-explorer/discover#?_a=h@5389b62&_g=h@c823129&_q=h@fd5d437 afterwards with the confluence links as 2sign ins together create issue",
+        "sessionId": "aryan-v1-1"
       },
       {
-        "issueNum": 1136,
-        "issueTitle": "Investigate ticket TWME-7509",
-        "snippet": "Auto-triggered investigation for new ticket TWME-7509.\n\nTicket: TWME-7509\nSummary: Order remediation\n\nUse the investigat",
-        "pid": 28312,
-        "elapsed": 20781
-      },
-      {
-        "issueNum": 1149,
-        "issueTitle": "Investigate ticket MYME-29013",
-        "snippet": "Auto-triggered investigation for new ticket MYME-29013.\n\nTicket: MYME-29013\nSummary: Generate invoice and push orders to",
-        "pid": 23568,
-        "elapsed": 979
-      },
-      {
-        "issueNum": 1150,
-        "issueTitle": "Investigate ticket AUME-21100",
-        "snippet": "Auto-triggered investigation for new ticket AUME-21100.\n\nTicket: AUME-21100\nSummary: Order Return Issue - AU261021-49228",
-        "pid": 60836,
-        "elapsed": 980
-      },
-      {
-        "issueNum": 1153,
-        "issueTitle": "Investigate ticket HKHME-6859",
-        "snippet": "Auto-triggered investigation for new ticket HKHME-6859.\n\nTicket: HKHME-6859\nSummary: Order cannot pass to NERP for HK261",
-        "pid": 27192,
-        "elapsed": 981
-      },
-      {
-        "issueNum": 1165,
-        "issueTitle": "Investigate ticket PME-14269",
-        "snippet": "Auto-triggered investigation for new ticket PME-14269.\n\nTicket: PME-14269\nSummary: Stuck order on Hybris November 20\n\nUs",
-        "pid": 39072,
-        "elapsed": 982
-      },
-      {
-        "issueNum": 1166,
-        "issueTitle": "Investigate ticket TWME-7499",
-        "snippet": "Auto-triggered investigation for new ticket TWME-7499.\n\nTicket: TWME-7499\nSummary: Order remediation\n\nUse the investigat",
-        "pid": 62040,
-        "elapsed": 983
+        "pid": 29536,
+        "cwd": "unknown",
+        "ageSeconds": 11074,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "aipro session",
+        "lastExchange": null,
+        "sessionId": null
       }
     ],
-    "startTime": "2026-11-20T04:16:35.049Z",
-    "version": "v3",
-    "lastResponseAt": "2026-11-17T09:39:39.451Z",
-    "lastResponseIssue": 1109,
-    "ideSessions": [],
     "activityLog": [
+      {
+        "id": "1795151380251-ihbnfc",
+        "timestamp": "2026-11-20T05:09:40.251Z",
+        "type": "agent-response",
+        "source": "bridge",
+        "title": "Investigate ticket TWME-7499",
+        "detail": "Starting the investigation workflow. Running Phase 0 pre-flight checks in parallel — reading learnings, checking for existing RCA/cache files, running task-observer session start protocol, and checkin",
+        "status": "success"
+      },
+      {
+        "id": "1795150550762-1o4i76",
+        "timestamp": "2026-11-20T04:55:50.762Z",
+        "type": "agent-response",
+        "source": "bridge",
+        "title": "Investigate ticket TWME-7509",
+        "detail": "Starting the investigation workflow for TWME-7509. Let me begin with Phase 0 pre-flight checks.No existing RCA or cache found — this is a fresh investigation. Let me re-run the scan with the correct b",
+        "status": "success"
+      },
+      {
+        "id": "1795149493320-1xu7zy",
+        "timestamp": "2026-11-20T04:38:13.320Z",
+        "type": "agent-response",
+        "source": "bridge",
+        "title": "Investigate ticket PME-14269",
+        "detail": "Let me fix the session-start scan and proceed with the investigation pre-flight checks in parallel.Both an RCA file and cache file already exist for PME-14269. This is a re-investigation. Let me read ",
+        "status": "success"
+      },
       {
         "id": "1795128404193-l47ekn",
         "timestamp": "2026-11-19T22:46:44.193Z",
@@ -602,33 +801,6 @@
         "title": "Investigate ticket TWME-7460",
         "detail": "I'll investigate TWME-7460 using the investigate workflow. Let me activate the skill and run the session start protocol simultaneously.Now let me run the pre-flight checks: read past learnings, run se",
         "status": "success"
-      },
-      {
-        "id": "1793957257006-rtcq1r",
-        "timestamp": "2026-11-06T09:27:37.006Z",
-        "type": "agent-response",
-        "source": "bridge",
-        "title": "Investigate ticket VNME-30544",
-        "detail": "Lock file created. Now I need to fetch the Jira ticket VNME-30544. Let me find the jira-ops script and also try to locate the Aryantone reference.I'm restricted to specific workspace directories. Let ",
-        "status": "success"
-      },
-      {
-        "id": "1793957088053-x0roln",
-        "timestamp": "2026-11-06T09:24:48.053Z",
-        "type": "agent-response",
-        "source": "bridge",
-        "title": "Investigate ticket TWME-7460",
-        "detail": "Starting the investigation workflow for TWME-7460. Let me begin Phase 0: pre-flight checks and ticket intake.Good. I see a lock file already exists for TWME-7460. No cache file exists yet. Let me fetc",
-        "status": "success"
-      },
-      {
-        "id": "1793936824312-livoc7",
-        "timestamp": "2026-11-06T03:47:04.312Z",
-        "type": "command",
-        "source": "aryanverma2410",
-        "title": "Investigate ticket MYME-28892",
-        "detail": "#1068",
-        "status": "pending"
       }
     ],
     "sessionMeta": {
@@ -5098,13 +5270,15 @@
         "issueNum": 1136,
         "title": "Investigate ticket TWME-7509",
         "startTime": "2026-11-19T22:46:39.907Z",
-        "status": "thinking",
+        "status": "done",
         "commandHistory": [
           {
             "title": "Investigate ticket TWME-7509",
             "time": "2026-11-19T22:46:39.907Z"
           }
-        ]
+        ],
+        "endTime": "2026-11-20T04:55:50.783Z",
+        "lastOutput": "Starting the investigation workflow for TWME-7509. Let me begin with Phase 0 pre-flight checks.No existing RCA or cache found — this is a fresh investigation. Let me re-run the scan with the correct bash path and start fetching the ticket.The workspace is sandboxed — can't access `C:\\toko\\toko6\\...`. Let me find tools available within the workspace.I can see the patterns from previous investigations. Let me read the fetch-ticket script and create the ticket fetch.The `\\t` in the path is being in"
       },
       "1149": {
         "sessionId": "9626bc8e-7f67-434c-941a-5c4c62275c23",
@@ -5150,64 +5324,67 @@
         "issueNum": 1165,
         "title": "Investigate ticket PME-14269",
         "startTime": "2026-11-20T04:16:38.678Z",
-        "status": "thinking",
+        "status": "done",
         "commandHistory": [
           {
             "title": "Investigate ticket PME-14269",
             "time": "2026-11-20T04:16:38.678Z"
           }
-        ]
+        ],
+        "endTime": "2026-11-20T04:38:13.321Z",
+        "lastOutput": "Let me fix the session-start scan and proceed with the investigation pre-flight checks in parallel.Both an RCA file and cache file already exist for PME-14269. This is a re-investigation. Let me read both to understand prior findings and gaps.This is a re-investigation — prior investigation (same day, 15:25 IST) concluded the order was a false positive, already progressing normally. Following the Delta+Refresh workflow, I need to refresh mutable DB fields and check if the order has progressed fu"
       },
       "1166": {
         "sessionId": "ec36b117-9e3b-47dd-bef0-34ec9d2e5c2c",
         "issueNum": 1166,
         "title": "Investigate ticket TWME-7499",
         "startTime": "2026-11-20T04:16:37.576Z",
-        "status": "thinking",
+        "status": "done",
         "commandHistory": [
           {
             "title": "Investigate ticket TWME-7499",
             "time": "2026-11-20T04:16:37.576Z"
           }
-        ]
+        ],
+        "endTime": "2026-11-20T05:09:40.252Z",
+        "lastOutput": "Starting the investigation workflow. Running Phase 0 pre-flight checks in parallel — reading learnings, checking for existing RCA/cache files, running task-observer session start protocol, and checking MCP health.A lock file exists but no cache file — meaning a previous investigation was started but never completed. Let me read the lock file, check for the Jira MCP availability, and look for jira-ops scripts to fetch the ticket.The lock file indicates a prior auto-trigger that never completed. N"
       }
     },
-    "bridgeLogTail": "    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-11-20T04:33:34.737Z] STDOUT data for #1115: 248 bytes\n[2026-11-20T04:33:34.740Z] LIVE events write for #1115: 26 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1115.txt\n[2026-11-20T04:33:35.176Z] aipro stderr for #1115: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-11-20T04:33:48.396Z] STDOUT data for #1115: 662 bytes\n[2026-11-20T04:33:48.426Z] LIVE events write for #1115: 28 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1115.txt",
+    "bridgeLogTail": "[2026-11-20T05:21:11.469Z] ==========================================\n[2026-11-20T05:21:11.471Z] === Hardened GitHub Bridge v3 Started ===\n[2026-11-20T05:21:11.472Z] === with Aipro Auto-Launch ===\n[2026-11-20T05:21:11.473Z] ==========================================\n[2026-11-20T05:21:11.473Z] PID: 48764\n[2026-11-20T05:21:11.474Z] Repo: aryanverma2410/agent-bridge\n[2026-11-20T05:21:11.474Z] Poll interval: 10000ms\n[2026-11-20T05:21:11.475Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-11-20T05:21:11.475Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-11-20T05:21:11.476Z] Waiting for messages...\n[2026-11-20T05:22:50.258Z] ==========================================\n[2026-11-20T05:22:50.260Z] === Hardened GitHub Bridge v3 Started ===\n[2026-11-20T05:22:50.260Z] === with Aipro Auto-Launch ===\n[2026-11-20T05:22:50.261Z] ==========================================\n[2026-11-20T05:22:50.262Z] PID: 38920\n[2026-11-20T05:22:50.262Z] Repo: aryanverma2410/agent-bridge\n[2026-11-20T05:22:50.263Z] Poll interval: 10000ms\n[2026-11-20T05:22:50.264Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-11-20T05:22:50.265Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-11-20T05:22:50.266Z] Waiting for messages...",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-11-20T04:33:48.568Z",
-      "ageMs": 1420
+      "lastWrite": "2026-11-20T06:40:23.471Z",
+      "ageMs": 14129
     },
-    "watchdogLogTail": "[2026-11-20T04:16:34.495Z] Bridge script: C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\bridge.js\n[2026-11-20T04:16:34.496Z] Dashboard script: C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\jira-dashboard-server.js\n[2026-11-20T04:16:34.498Z] Bridge not running. Starting fresh.\n[2026-11-20T04:16:34.499Z] Starting bridge.js...\n[2026-11-20T04:16:34.678Z] Bridge started with PID 36520 (restart #1, 1 in last hour)\n[2026-11-20T04:16:34.687Z] Dashboard already running (PID 34876). Adopting.\n[2026-11-20T04:16:38.872Z] Clock sync: Checking drift against Jira server...\n[2026-11-20T04:16:39.680Z] Clock sync: VDI hw=2026-11-20T09:46:39.680Z Jira=2026-11-20T04:16:39.000Z drift=-19801s\n[2026-11-19T22:46:42.190Z] Clock sync: ADJUSTED by -19801s. Clock set to 2026-11-20 04:16:39\n[2026-11-20T04:33:48.525Z] DASHBOARD RESTART NEEDED: Dashboard heartbeat is stale (51s old)",
-    "jobOutputs": {}
+    "watchdogLogTail": "[2026-11-20T06:38:08.406Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:38:23.421Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:38:38.423Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:38:53.433Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:39:08.439Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:39:23.444Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:39:38.447Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:39:53.460Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:40:08.460Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T06:40:23.467Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
-      "status": "up",
-      "httpStatus": 200,
-      "lastCheck": "2026-11-19T23:01:54.258Z",
-      "downSince": null,
-      "downDuration": 0,
-      "alert": false
+      "status": "down",
+      "httpStatus": 401,
+      "lastCheck": "2026-11-20T06:39:58.292Z",
+      "downSince": "2026-11-20T04:41:46.798Z",
+      "downDuration": 7091494,
+      "alert": true
     },
     {
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-19T23:01:54.258Z",
-      "downSince": "2026-11-19T21:55:18.866Z",
-      "downDuration": 3995392,
+      "lastCheck": "2026-11-20T06:39:58.292Z",
+      "downSince": "2026-11-20T04:41:46.798Z",
+      "downDuration": 7091494,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-19T23:01:54.258Z",
-      "downSince": "2026-11-20T01:18:19.351Z",
-      "downDuration": -8185093,
-      "alert": false
+      "lastCheck": "2026-11-20T06:39:58.292Z",
+      "downSince": "2026-11-20T04:41:46.798Z",
+      "downDuration": 7091494,
+      "alert": true
     }
   ],
   "hacReport": {
@@ -5248,6 +5425,54 @@
   "actionItems": {
     "zero": [
       {
+        "key": "EHME-947",
+        "summary": "Stuck order on Hybris",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/EHME-947",
+        "updated": "2026-11-20T15:26:11.000+0900",
+        "statusChangedAt": "2026-10-16T20:35:06.591+0900"
+      },
+      {
+        "key": "HKHME-6861",
+        "summary": "HK261108-93097758: Update order completion date and resend order completion email with tax invoice ",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/HKHME-6861",
+        "updated": "2026-11-20T14:59:28.000+0900",
+        "statusChangedAt": "2026-11-19T18:15:57.456+0900"
+      },
+      {
+        "key": "HKHME-6864",
+        "summary": "Update Serial No and resend order completion email for Order - HK261026-87859570",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/HKHME-6864",
+        "updated": "2026-11-20T14:58:42.000+0900",
+        "statusChangedAt": "2026-11-20T14:56:29.809+0900"
+      },
+      {
+        "key": "NPSM-92727",
+        "summary": "[111450807][AU] [Online Purchasing]Medallia Alert ",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/NPSM-92727",
+        "updated": "2026-11-20T14:09:51.000+0900",
+        "statusChangedAt": "2026-11-20T13:40:31.108+0900"
+      },
+      {
         "key": "TWME-7499",
         "summary": "Order remediation",
         "priority": "None",
@@ -5284,13 +5509,25 @@
         "url": "https://jira.secext.samsung.net/browse/RT-722599",
         "updated": "2026-11-06T21:23:07.000+0900",
         "statusChangedAt": "2026-09-28T15:10:33.048+0900"
+      },
+      {
+        "key": "PKHME-946",
+        "summary": "Stuck order on Hybris",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "actionable",
+        "reason": "",
+        "whatToDo": "Respond to Sai Ram Kosuru",
+        "url": "https://jira.secext.samsung.net/browse/PKHME-946",
+        "updated": "2026-11-20T15:24:48.000+0900",
+        "statusChangedAt": "2026-10-16T20:35:31.334+0900"
       }
     ],
     "blocked": [],
     "queued": [],
     "totals": {
-      "zero": 2,
-      "actionable": 1,
+      "zero": 6,
+      "actionable": 2,
       "blocked": 0,
       "queued": 0
     }
@@ -5346,6 +5583,62 @@
   "slaCards": {
     "byTicket": [
       {
+        "key": "EHME-947",
+        "slaName": "Maintenance Response (GMT+2)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86398,
+        "targetDate": "2026-10-19T11:35:05.134000001Z"
+      },
+      {
+        "key": "EHME-947",
+        "slaName": "Maintenance Resolution (GMT+2)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2488792,
+        "targetDate": "2027-01-04T02:00:21.047000054Z"
+      },
+      {
+        "key": "PKHME-946",
+        "slaName": "Maintenance Response (GMT+5)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86398,
+        "targetDate": "2026-10-19T11:35:29.536000001Z"
+      },
+      {
+        "key": "PKHME-946",
+        "slaName": "Maintenance Resolution (GMT+5)",
+        "slaStatus": "STILL",
+        "remainingDuration": 2579119,
+        "targetDate": "2027-01-05T03:05:47.842000055Z"
+      },
+      {
+        "key": "HKHME-6861",
+        "slaName": "Maintenance Response (GMT+8)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86209,
+        "targetDate": "2026-11-20T09:12:46.544000001Z"
+      },
+      {
+        "key": "HKHME-6861",
+        "slaName": "Maintenance Resolution (GMT+8)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1218738,
+        "targetDate": "2026-12-10T09:12:46.544000015Z"
+      },
+      {
+        "key": "HKHME-6864",
+        "slaName": "Maintenance Response (GMT+8)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 86049,
+        "targetDate": "2026-11-23T05:50:39.728000001Z"
+      },
+      {
+        "key": "HKHME-6864",
+        "slaName": "Maintenance Resolution (GMT+8)",
+        "slaStatus": "STILL",
+        "remainingDuration": 1293011,
+        "targetDate": "2026-12-11T05:50:39.728000015Z"
+      },
+      {
         "key": "TWME-7499",
         "slaName": "Maintenance Response (GMT+8)",
         "slaStatus": "SUCCESS",
@@ -5363,7 +5656,7 @@
   },
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 0.42h on HKHME-6859, 2.5h on SAM-18531, 1h on SAM-18530, 1h on GMT-23461, 1.33h on TWME-7460, 0.75h on TWME-7498, 0.75h on TWME-7499\nToday: TWME-7499, RT-722599, RT-664743\nBlockers: none"
+    "standupText": "Yesterday: 0.42h on HKHME-6859, 2.5h on SAM-18531, 1h on SAM-18530, 1h on GMT-23461, 1.33h on TWME-7460, 0.75h on TWME-7498, 0.75h on TWME-7499\nToday: EHME-947, PKHME-946, HKHME-6861, HKHME-6864, NPSM-92727\nBlockers: none"
   },
   "autologinConfig": {
     "login_time": "08:15",
