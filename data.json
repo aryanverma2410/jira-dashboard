@@ -1,46 +1,7 @@
 {
-  "generatedAt": "2026-11-20T03:44:23.115Z",
-  "totalTickets": 4,
+  "generatedAt": "2026-11-20T03:45:14.137Z",
+  "totalTickets": 3,
   "tickets": [
-    {
-      "key": "PME-14269",
-      "summary": "Stuck order on Hybris November 20",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Philippines Maintenance & Enhancements",
-      "projectKey": "PME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-11-20T12:40:31.000+0900",
-      "created": "2026-11-20T10:50:11.000+0900",
-      "statusChangedAt": "2026-11-20T11:00:16.751+0900",
-      "assignedToMeAt": "",
-      "description": "Hi Team,\n\nCould you please help remediate the following order listed below? \n \n|po_id|order_date|order_status|\n|PH261119-97811114|2026-11-19 23:01 PST|ORDER_SPLIT|\n\n \n\ncc. ~@email  ~@email ~@email ~@email \n\nThanks,\n\nRaymond",
-      "commentsCount": 1,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-11-20T12:40:31.340+0900",
-          "snippet": "--file"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "--file",
-      "lastCommentDate": "2026-11-20T12:40:31.340+0900",
-      "url": "https://jira.secext.samsung.net/browse/PME-14269",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "# RCA: PME-14269\n\n**Ticket Summary**: Stuck order on Hybris November 20 — PH261119-97811114 ORDER_SPLIT\n**Generated**: 2026-11-20T15:25:00+0530\n\nHi [~raymond.inu@partner.samsung.com] ,\n\nWe checked order PH261119-97811114 and found that it has already progressed past the ORDER_SPLIT stage. The order is currently in SHIPPING_PREPARATION status and is proceeding normally through the fulfilment flow.\n\nThe order process (order-process-v25-69) is in RUNNING state with no endMessage and no error stack traces stored. The splitOrder action completed successfully with returnCode OK at 2026-11-20 01:00:38 UTC (06:31 IST). Payment was captured successfully via iPay88 Home Credit for PHP 30,770.50.\n\nThe consignment (PH261119-97811114, warehouse WC3L-S513, delivery mode ph-delivery-standard) is in SHIPPING_PREPARATION status. The consignment process (consignment-process-v11-36) is in RUNNING state. The process polled the warehouse for shipping preparation status three times at approximately 30-minute intervals (01:31, 02:01, 02:31 UTC) with isShippingPreparationDone returning NOK each time. On the fourth poll at 02:49 UTC, isShippingPreparationDone returned OK and the process advanced past the shipping preparation stage.\n\nThe process has now moved to isShippedDone which returned NOK, which is expected behaviour — this means the process is waiting for the warehouse to physically ship the consignment. Once the warehouse completes the physical shipment, the consignment status will update and the process will continue to completion.\n\nNo errors were found in Kibana logs for this order. No BusinessProcessParameter error entries exist. Both payment transaction entries (AUTHORIZATION and CAPTURE) are in ACCEPTED status with SUCCESFULL details. The order is progressing normally and no remediation is required from the Hybris side.\n\nThanks,\nAryan.\n\n## Remediation\n\nNo remediation required. Order is progressing normally through the fulfilment flow. The ORDER_SPLIT status reported in the ticket was the state at order creation; the order has since moved to SHIPPING_PREPARATION and is awaiting warehouse physical shipment.",
-        "sections": {
-          "issue": "",
-          "rca": "# RCA: PME-14269\n\n**Ticket Summary**: Stuck order on Hybris November 20 — PH261119-97811114 ORDER_SPLIT\n**Generated**: 2026-11-20T15:25:00+0530\n\nHi [~raymond.inu@partner.samsung.com] ,\n\nWe checked order PH261119-97811114 and found that it has already progressed past the ORDER_SPLIT stage. The order is currently in SHIPPING_PREPARATION status and is proceeding normally through the fulfilment flow.\n\nThe order process (order-process-v25-69) is in RUNNING state with no endMessage and no error stack traces stored. The splitOrder action completed successfully with returnCode OK at 2026-11-20 01:00:38 UTC (06:31 IST). Payment was captured successfully via iPay88 Home Credit for PHP 30,770.50.\n\nThe consignment (PH261119-97811114, warehouse WC3L-S513, delivery mode ph-delivery-standard) is in SHIPPING_PREPARATION status. The consignment process (consignment-process-v11-36) is in RUNNING state. The process polled the warehouse for shipping preparation status three times at approximately 30-minute intervals (01:31, 02:01, 02:31 UTC) with isShippingPreparationDone returning NOK each time. On the fourth poll at 02:49 UTC, isShippingPreparationDone returned OK and the process advanced past the shipping preparation stage.\n\nThe process has now moved to isShippedDone which returned NOK, which is expected behaviour — this means the process is waiting for the warehouse to physically ship the consignment. Once the warehouse completes the physical shipment, the consignment status will update and the process will continue to completion.\n\nNo errors were found in Kibana logs for this order. No BusinessProcessParameter error entries exist. Both payment transaction entries (AUTHORIZATION and CAPTURE) are in ACCEPTED status with SUCCESFULL details. The order is progressing normally and no remediation is required from the Hybris side.\n\nThanks,\nAryan.\n\n## Remediation\n\nNo remediation required. Order is progressing normally through the fulfilment flow. The ORDER_SPLIT status reported in the ticket was the state at order creation; the order has since moved to SHIPPING_PREPARATION and is awaiting warehouse physical shipment.",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-11-20T03:30:33.866Z"
-      }
-    },
     {
       "key": "TWME-7509",
       "summary": "Order remediation",
@@ -321,7 +282,7 @@
       {
         "pid": 25732,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 2371,
+        "ageSeconds": 2420,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -331,7 +292,7 @@
       {
         "pid": 5844,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 2367,
+        "ageSeconds": 2416,
         "status": "running",
         "isChild": false,
         "taskSummary": "draft in AryanTone",
@@ -341,7 +302,7 @@
       {
         "pid": 43468,
         "cwd": "c:\\windows",
-        "ageSeconds": 2364,
+        "ageSeconds": 2413,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -351,7 +312,7 @@
       {
         "pid": 15476,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 507,
+        "ageSeconds": 556,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -361,7 +322,7 @@
       {
         "pid": 29536,
         "cwd": "unknown",
-        "ageSeconds": 505,
+        "ageSeconds": 554,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -5055,17 +5016,17 @@
     "bridgeLogTail": "[2026-11-17T09:39:32.007Z] STDOUT data for #1109: 124 bytes\n[2026-11-17T09:39:32.011Z] LIVE events write for #1109: 522 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.023Z] STDOUT data for #1109: 104 bytes\n[2026-11-17T09:39:32.027Z] LIVE events write for #1109: 523 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.038Z] STDOUT data for #1109: 106 bytes\n[2026-11-17T09:39:32.042Z] LIVE events write for #1109: 524 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.070Z] STDOUT data for #1109: 236 bytes\n[2026-11-17T09:39:32.092Z] LIVE events write for #1109: 526 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.100Z] STDOUT data for #1109: 226 bytes\n[2026-11-17T09:39:32.108Z] LIVE events write for #1109: 528 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.112Z] STDOUT data for #1109: 122 bytes\n[2026-11-17T09:39:32.117Z] LIVE events write for #1109: 529 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.128Z] STDOUT data for #1109: 113 bytes\n[2026-11-17T09:39:32.173Z] LIVE events write for #1109: 530 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.192Z] STDOUT data for #1109: 463 bytes\n[2026-11-17T09:39:32.225Z] LIVE events write for #1109: 534 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:32.237Z] STDOUT data for #1109: 453 bytes\n[2026-11-17T09:39:32.242Z] LIVE events write for #1109: 536 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1109.txt\n[2026-11-17T09:39:38.632Z] aipro completed for #1109 (5012 chars)\n[2026-11-17T09:39:39.406Z] Comment posted on #1109",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-11-20T03:44:23.541Z",
-      "ageMs": 10420
+      "lastWrite": "2026-11-20T03:45:08.547Z",
+      "ageMs": 10212
     },
-    "watchdogLogTail": "[2026-11-20T03:42:08.400Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T03:42:23.400Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T03:42:38.487Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T03:42:53.501Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T03:43:08.513Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T03:43:23.515Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T03:43:38.519Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T03:43:53.523Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T03:44:08.534Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T03:44:23.541Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-11-20T03:42:53.501Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T03:43:08.513Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T03:43:23.515Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T03:43:38.519Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T03:43:53.523Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T03:44:08.534Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T03:44:23.541Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T03:44:38.545Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T03:44:53.546Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-20T03:45:08.547Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-11-20T03:43:35.264Z",
+      "lastCheck": "2026-11-20T03:44:38.167Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5074,18 +5035,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-20T03:43:35.264Z",
+      "lastCheck": "2026-11-20T03:44:38.167Z",
       "downSince": "2026-11-19T21:55:18.866Z",
-      "downDuration": 20896398,
+      "downDuration": 20959301,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-20T03:43:35.264Z",
+      "lastCheck": "2026-11-20T03:44:38.167Z",
       "downSince": "2026-11-20T01:18:19.351Z",
-      "downDuration": 8715913,
+      "downDuration": 8778816,
       "alert": true
     }
   ],
@@ -5126,18 +5087,6 @@
   "actionQueue": [],
   "actionItems": {
     "zero": [
-      {
-        "key": "PME-14269",
-        "summary": "Stuck order on Hybris November 20",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/PME-14269",
-        "updated": "2026-11-20T12:40:31.000+0900",
-        "statusChangedAt": "2026-11-20T11:00:16.751+0900"
-      },
       {
         "key": "TWME-7509",
         "summary": "Order remediation",
@@ -5180,21 +5129,21 @@
     "blocked": [],
     "queued": [],
     "totals": {
-      "zero": 3,
+      "zero": 2,
       "actionable": 1,
       "blocked": 0,
       "queued": 0
     }
   },
   "worklogTotals": {
-    "todayHours": 4.08,
-    "weekHours": 26.42,
+    "todayHours": 4.33,
+    "weekHours": 26.67,
     "dailyHours": [
       0,
       7.25,
       7.33,
       7.75,
-      4.08,
+      4.33,
       0,
       0
     ],
@@ -5212,9 +5161,9 @@
   },
   "tempoApproval": {
     "status": "open",
-    "workedHours": 60.33,
+    "workedHours": 60.58,
     "requiredHours": 168,
-    "deficitHours": 107.67,
+    "deficitHours": 107.42,
     "periodStart": "2026-11-01",
     "periodEnd": "2026-11-30"
   },
@@ -5234,10 +5183,27 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "TWME-7509",
+        "slaName": "Maintenance Response (GMT+8)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85265,
+        "targetDate": "2026-11-19T10:11:54.069000001Z"
+      },
+      {
+        "key": "TWME-7509",
+        "slaName": "Maintenance Resolution (GMT+8)",
+        "slaStatus": "STILL",
+        "remainingDuration": 282400,
+        "targetDate": "2026-11-25T10:11:54.069000005Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 0.42h on HKHME-6859, 2.5h on SAM-18531, 1h on SAM-18530, 1h on GMT-23461, 1.33h on TWME-7460, 0.75h on TWME-7498, 0.75h on TWME-7499\nToday: PME-14269, TWME-7509, RT-722599, RT-664743\nBlockers: none"
+    "standupText": "Yesterday: 0.42h on HKHME-6859, 2.5h on SAM-18531, 1h on SAM-18530, 1h on GMT-23461, 1.33h on TWME-7460, 0.75h on TWME-7498, 0.75h on TWME-7499\nToday: TWME-7509, RT-722599, RT-664743\nBlockers: none"
   },
   "autologinConfig": {
     "login_time": "08:15",
