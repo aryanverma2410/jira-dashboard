@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-24T12:54:12.570Z",
+  "generatedAt": "2026-11-24T12:54:53.805Z",
   "totalTickets": 2,
   "tickets": [
     {
@@ -241,7 +241,7 @@
       }
     ],
     "pid": 39672,
-    "uptime": 22365,
+    "uptime": 22406,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -253,7 +253,7 @@
       {
         "pid": 27188,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 50751,
+        "ageSeconds": 50792,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -263,17 +263,17 @@
       {
         "pid": 39544,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 22404,
+        "ageSeconds": 22445,
         "status": "running",
         "isChild": false,
-        "taskSummary": "can these scripts be somehow conjoined and different passwords for different links as the process...",
-        "lastExchange": "can these scripts be somehow conjoined and different passwords for different links as the process is same: // ==UserScript==\n// @name         SMS S1 Backoffice/HAC Auto Login\n// @match        https://backoffice.cnmzsgcaar-samsungel3-s1-public.model-t.cc.commerce.ondemand.com/backoffice/*\n// @match        https://backoffice.cnmzsgcaar-samsungel3-s1-public.model-t.cc.commerce.ondemand.com/hac/*\n// @run-at       document-idle\n// ==/UserScript==\n\nconst setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, \"value\").set;\nconst LAST_TRY_KEY = \"bo_last_try\";\nconst COOLDOWN_MS = 5000;   // don't retry within 5s of last click (handles page reload)\n\n// Phase 1: Fill credentials, tick remember-me, click login\nconst i = setInterval(() => {\n    const lastTry = parseInt(sessionStorage.getItem(LAST_TRY_KEY) || \"0\");\n    if (Date.now() - lastTry < COOLDOWN_MS) return;\n\n    const u = document.querySelector(\"input[name='j_username']\");\n    const p = document.querySelector(\"input[name='j_password']\");\n    if (!u || !p) return;\n\n    const boBtn = [...document.querySelectorAll(\"button.login_btn\")]\n        .find(b => b.textContent.includes(\"Sign In\"));\n    const hacBtn = document.querySelector(\"button[type='submit']\");\n    const btn = boBtn || hacBtn;\n    if (!btn) return;\n\n    clearInterval(i);\n    sessionStorage.setItem(LAST_TRY_KEY, String(Date.now()));\n\n    setter.call(u, \"admin.aryan.v1\");\n    u.dispatchEvent(new Event(\"input\", { bubbles: true }));\n    setter.call(p, \"uK30LabpI8eDxoO\");\n    p.dispatchEvent(new Event(\"input\", { bubbles: true }));\n\n    // Tick \"Remember Me\" so the session survives longer\n    const rm = document.querySelector(\"input[name='_spring_security_remember_me']\");\n    if (rm && !rm.checked) {\n        rm.checked = true;\n        rm.dispatchEvent(new Event(\"change\", { bubbles: true }));\n        rm.dispatchEvent(new Event(\"click\", { bubbles: true }));\n    }\n\n    setTimeout(() => btn.click(), 300);\n}, 300);\n\n// Phase 2: Click PROCEED when it appears (backoffice only)\nconst j = setInterval(() => {\n    const pro = [...document.querySelectorAll(\"button\")].find(b => b.textContent.trim().includes(\"PROCEED\"));\n    if (pro) {\n        clearInterval(j);\n        setTimeout(() => pro.click(), 300);\n    }\n}, 500);\n, // ==UserScript==\n// @name         SMS S2 Backoffice/HAC Auto Login\n// @match        https://backoffice.cnmzsgcaar-samsungel3-s2-public.model-t.cc.commerce.ondemand.com/backoffice/*\n// @match        https://backoffice.cnmzsgcaar-samsungel3-s2-public.model-t.cc.commerce.ondemand.com/hac/*\n// @run-at       document-idle\n// ==/UserScript==\n\nconst setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, \"value\").set;\nconst LAST_TRY_KEY = \"bo_last_try\";\nconst COOLDOWN_MS = 5000;   // don't retry within 5s of last click (handles page reload)\n\n// Phase 1: Fill credentials, tick remember-me, click login\nconst i = setInterval(() => {\n    const lastTry = parseInt(sessionStorage.getItem(LAST_TRY_KEY) || \"0\");\n    if (Date.now() - lastTry < COOLDOWN_MS) return;\n\n    const u = document.querySelector(\"input[name='j_username']\");\n    const p = document.querySelector(\"input[name='j_password']\");\n    if (!u || !p) return;\n\n    const boBtn = [...document.querySelectorAll(\"button.login_btn\")]\n        .find(b => b.textContent.includes(\"Sign In\"));\n    const hacBtn = document.querySelector(\"button[type='submit']\");\n    const btn = boBtn || hacBtn;\n    if (!btn) return;\n\n    clearInterval(i);\n    sessionStorage.setItem(LAST_TRY_KEY, String(Date.now()));\n\n    setter.call(u, \"admin.aryan.v1\");\n    u.dispatchEvent(new Event(\"input\", { bubbles: true }));\n    setter.call(p, \"2XH97FNpnPPR701\");\n    p.dispatchEvent(new Event(\"input\", { bubbles: true }));\n\n    // Tick \"Remember Me\" so the session survives longer\n    const rm = document.querySelector(\"input[name='_spring_security_remember_me']\");\n    if (rm && !rm.checked) {\n        rm.checked = true;\n        rm.dispatchEvent(new Event(\"change\", { bubbles: true }));\n        rm.dispatchEvent(new Event(\"click\", { bubbles: true }));\n    }\n\n    setTimeout(() => btn.click(), 300);\n}, 300);\n\n// Phase 2: Click PROCEED when it appears (backoffice only)\nconst j = setInterval(() => {\n    const pro = [...document.querySelectorAll(\"button\")].find(b => b.textContent.trim().includes(\"PROCEED\"));\n    if (pro) {\n        clearInterval(j);\n        setTimeout(() => pro.click(), 300);\n    }\n}, 500);\n // ==UserScript==\n// @name         SMS Backoffice/HAC Auto Login\n// @match        https://backoffice.cnmzsgcaar-samsungel3-p1-public.model-t.cc.commerce.ondemand.com/backoffice/*\n// @match        https://backoffice.cnmzsgcaar-samsungel3-p1-public.model-t.cc.commerce.ondemand.com/hac/*\n// @run-at       document-idle\n// ==/UserScript==\n\nconst setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, \"value\").set;\nconst LAST_TRY_KEY = \"bo_last_try\";\nconst COOLDOWN_MS = 5000;   // don't retry within 5s of last click (handles page reload)\n\n// Phase 1: Fill credentials, tick remember-me, click login\nconst i = setInterval(() => {\n    const lastTry = parseInt(sessionStorage.getItem(LAST_TRY_KEY) || \"0\");\n    if (Date.now() - lastTry < COOLDOWN_MS) return;\n\n    const u = document.querySelector(\"input[name='j_username']\");\n    const p = document.querySelector(\"input[name='j_password']\");\n    if (!u || !p) return;\n\n    const boBtn = [...document.querySelectorAll(\"button.login_btn\")]\n        .find(b => b.textContent.includes(\"Sign In\"));\n    const hacBtn = document.querySelector(\"button[type='submit']\");\n    const btn = boBtn || hacBtn;\n    if (!btn) return;\n\n    clearInterval(i);\n    sessionStorage.setItem(LAST_TRY_KEY, String(Date.now()));\n\n    setter.call(u, \"admcs.aryan.v1\");\n    u.dispatchEvent(new Event(\"input\", { bubbles: true }));\n    setter.call(p, \"3Ks56NcCRpBXHUN\");\n    p.dispatchEvent(new Event(\"input\", { bubbles: true }));\n\n    // Tick \"Remember Me\" so the session survives longer\n    const rm = document.querySelector(\"input[name='_spring_security_remember_me']\");\n    if (rm && !rm.checked) {\n        rm.checked = true;\n        rm.dispatchEvent(new Event(\"change\", { bubbles: true }));\n        rm.dispatchEvent(new Event(\"click\", { bubbles: true }));\n    }\n\n    setTimeout(() => btn.click(), 300);\n}, 300);\n\n// Phase 2: Click PROCEED when it appears (backoffice only)\nconst j = setInterval(() => {\n    const pro = [...document.querySelectorAll(\"button\")].find(b => b.textContent.trim().includes(\"PROCEED\"));\n    if (pro) {\n        clearInterval(j);\n        setTimeout(() => pro.click(), 300);\n    }\n}, 500); // ==UserScript==\n// @name         SMA S1 Backoffice/HAC Auto Login\n// @match        https://backoffice.cnmzsgcaar-samsungel5-s1-public.model-t.cc.commerce.ondemand.com/backoffice/*\n// @match        https://backoffice.cnmzsgcaar-samsungel5-s1-public.model-t.cc.commerce.ondemand.com/hac/*\n// @run-at       document-idle\n// ==/UserScript==\n\nconst setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, \"value\").set;\nconst LAST_TRY_KEY = \"bo_last_try\";\nconst COOLDOWN_MS = 5000;   // don't retry within 5s of last click (handles page reload)\n\n// Phase 1: Fill credentials, tick remember-me, click login\nconst i = setInterval(() => {\n    const lastTry = parseInt(sessionStorage.getItem(LAST_TRY_KEY) || \"0\");\n    if (Date.now() - lastTry < COOLDOWN_MS) return;\n\n    const u = document.querySelector(\"input[name='j_username']\");\n    const p = document.querySelector(\"input[name='j_password']\");\n    if (!u || !p) return;\n\n    const boBtn = [...document.querySelectorAll(\"button.login_btn\")]\n        .find(b => b.textContent.includes(\"Sign In\"));\n    const hacBtn = document.querySelector(\"button[type='submit']\");\n    const btn = boBtn || hacBtn;\n    if (!btn) return;\n\n    clearInterval(i);\n    sessionStorage.setItem(LAST_TRY_KEY, String(Date.now()));\n\n    setter.call(u, \"admin.aryan.v1\");\n    u.dispatchEvent(new Event(\"input\", { bubbles: true }));\n    setter.call(p, \"og2qIgZJNfph5wi\");\n    p.dispatchEvent(new Event(\"input\", { bubbles: true }));\n\n    // Tick \"Remember Me\" so the session survives longer\n    const rm = document.querySelector(\"input[name='_spring_security_remember_me']\");\n    if (rm && !rm.checked) {\n        rm.checked = true;\n        rm.dispatchEvent(new Event(\"change\", { bubbles: true }));\n        rm.dispatchEvent(new Event(\"click\", { bubbles: true }));\n    }\n\n    setTimeout(() => btn.click(), 300);\n}, 300);\n\n// Phase 2: Click PROCEED when it appears (backoffice only)\nconst j = setInterval(() => {\n    const pro = [...document.querySelectorAll(\"button\")].find(b => b.textContent.trim().includes(\"PROCEED\"));\n    if (pro) {\n        clearInterval(j);\n        setTimeout(() => pro.click(), 300);\n    }\n}, 500);\n // ==UserScript==\n// @name         SMA S2 Backoffice/HAC Auto Login\n// @match        https://backoffice.cnmzsgcaar-samsungel5-s2-public.model-t.cc.commerce.ondemand.com/backoffice/*\n// @match        https://backoffice.cnmzsgcaar-samsungel5-s2-public.model-t.cc.commerce.ondemand.com/hac/*\n// @run-at       document-idle\n// ==/UserScript==\n\nconst setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, \"value\").set;\nconst LAST_TRY_KEY = \"bo_last_try\";\nconst COOLDOWN_MS = 5000;   // don't retry within 5s of last click (handles page reload)\n\n// Phase 1: Fill credentials, tick remember-me, click login\nconst i = setInterval(() => {\n    const lastTry = parseInt(sessionStorage.getItem(LAST_TRY_KEY) || \"0\");\n    if (Date.now() - lastTry < COOLDOWN_MS) return;\n\n    const u = document.querySelector(\"input[name='j_username']\");\n    const p = document.querySelector(\"input[name='j_password']\");\n    if (!u || !p) return;\n\n    const boBtn = [...document.querySelectorAll(\"button.login_btn\")]\n        .find(b => b.textContent.includes(\"Sign In\"));\n    const hacBtn = document.querySelector(\"button[type='submit']\");\n    const btn = boBtn || hacBtn;\n    if (!btn) return;\n\n    clearInterval(i);\n    sessionStorage.setItem(LAST_TRY_KEY, String(Date.now()));\n\n    setter.call(u, \"admin.aryan.v1\");\n    u.dispatchEvent(new Event(\"input\", { bubbles: true }));\n    setter.call(p, \"4EE5xfsTy5WtOpU\");\n    p.dispatchEvent(new Event(\"input\", { bubbles: true }));\n\n    // Tick \"Remember Me\" so the session survives longer\n    const rm = document.querySelector(\"input[name='_spring_security_remember_me']\");\n    if (rm && !rm.checked) {\n        rm.checked = true;\n        rm.dispatchEvent(new Event(\"change\", { bubbles: true }));\n        rm.dispatchEvent(new Event(\"click\", { bubbles: true }));\n    }\n\n    setTimeout(() => btn.click(), 300);\n}, 300);\n\n// Phase 2: Click PROCEED when it appears (backoffice only)\nconst j = setInterval(() => {\n    const pro = [...document.querySelectorAll(\"button\")].find(b => b.textContent.trim().includes(\"PROCEED\"));\n    if (pro) {\n        clearInterval(j);\n        setTimeout(() => pro.click(), 300);\n    }\n}, 500);\n // ==UserScript==\n// @name         SMA Backoffice/HAC Auto Login\n// @match        https://backoffice.cnmzsgcaar-samsungel5-p1-public.model-t.cc.commerce.ondemand.com/backoffice/*\n// @match        https://backoffice.cnmzsgcaar-samsungel5-p1-public.model-t.cc.commerce.ondemand.com/hac/*\n// @run-at       document-idle\n// ==/UserScript==\n\nconst setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, \"value\").set;\nconst LAST_TRY_KEY = \"bo_last_try\";\nconst COOLDOWN_MS = 5000;   // don't retry within 5s of last click (handles page reload)\n\n// Phase 1: Fill credentials, tick remember-me, click login\nconst i = setInterval(() => {\n    const lastTry = parseInt(sessionStorage.getItem(LAST_TRY_KEY) || \"0\");\n    if (Date.now() - lastTry < COOLDOWN_MS) return;\n\n    const u = document.querySelector(\"input[name='j_username']\");\n    const p = document.querySelector(\"input[name='j_password']\");\n    if (!u || !p) return;\n\n    const boBtn = [...document.querySelectorAll(\"button.login_btn\")]\n        .find(b => b.textContent.includes(\"Sign In\"));\n    const hacBtn = document.querySelector(\"button[type='submit']\");\n    const btn = boBtn || hacBtn;\n    if (!btn) return;\n\n    clearInterval(i);\n    sessionStorage.setItem(LAST_TRY_KEY, String(Date.now()));\n\n    setter.call(u, \"admcs.aryan.v1\");\n    u.dispatchEvent(new Event(\"input\", { bubbles: true }));\n    setter.call(p, \"a22siojYKeZWy9j\");\n    p.dispatchEvent(new Event(\"input\", { bubbles: true }));\n\n    // Tick \"Remember Me\" so the session survives longer\n    const rm = document.querySelector(\"input[name='_spring_security_remember_me']\");\n    if (rm && !rm.checked) {\n        rm.checked = true;\n        rm.dispatchEvent(new Event(\"change\", { bubbles: true }));\n        rm.dispatchEvent(new Event(\"click\", { bubbles: true }));\n    }\n\n    setTimeout(() => btn.click(), 300);\n}, 300);\n\n// Phase 2: Click PROCEED when it appears (backoffice only)\nconst j = setInterval(() => {\n    const pro = [...document.querySelectorAll(\"button\")].find(b => b.textContent.trim().includes(\"PROCEED\"));\n    if (pro) {\n        clearInterval(j);\n        setTimeout(() => pro.click(), 300);\n    }\n}, 500);",
+        "taskSummary": "copy just the script to clipboard",
+        "lastExchange": "copy just the script to clipboard",
         "sessionId": "bin"
       },
       {
         "pid": 23360,
         "cwd": "c:\\windows",
-        "ageSeconds": 21960,
+        "ageSeconds": 22001,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -283,7 +283,7 @@
       {
         "pid": 41424,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 21958,
+        "ageSeconds": 21999,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -293,7 +293,7 @@
       {
         "pid": 32068,
         "cwd": "unknown",
-        "ageSeconds": 11193,
+        "ageSeconds": 11234,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -5358,7 +5358,7 @@
     "watchdog": {
       "alive": true,
       "lastWrite": "2026-11-24T12:48:01.029Z",
-      "ageMs": 375815
+      "ageMs": 418002
     },
     "watchdogLogTail": "[2026-11-24T12:46:56.346Z] DASHBOARD RESTART NEEDED: No dashboard heartbeat file found\n[2026-11-24T12:46:59.239Z] Killed dashboard PID 38600\n[2026-11-24T12:47:16.803Z] DASHBOARD RESTART NEEDED: Dashboard process (PID 38600) not found\n[2026-11-24T12:47:19.655Z] Could not kill dashboard PID 38600: Command failed: taskkill /PID 38600 /F /T\n[2026-11-24T12:47:20.293Z] Starting jira-dashboard-server.js...\n[2026-11-24T12:47:20.481Z] Dashboard started with PID 22032 (restart #12, 1 in last hour)\n[2026-11-24T12:47:45.222Z] DUPLICATE watchdog detected: PID 38940 — killing\n[2026-11-24T12:47:48.608Z] Starting jira-dashboard-server.js...\n[2026-11-24T12:47:48.803Z] Dashboard started with PID 33116 (restart #13, 2 in last hour)\n[2026-11-24T12:48:01.029Z] DUPLICATE jira-dashboard-server detected: PID 22032 — killing"
   },
@@ -5512,7 +5512,9 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": []
+  },
   "stuckOrders": null,
   "standupReport": {
     "standupText": "Yesterday: no worklogs\nToday: RT-722599, RT-664743\nBlockers: none"
