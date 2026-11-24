@@ -1,7 +1,51 @@
 {
-  "generatedAt": "2026-11-24T11:39:47.889Z",
+  "generatedAt": "2026-11-24T11:40:38.559Z",
   "totalTickets": 4,
   "tickets": [
+    {
+      "key": "TWME-7509",
+      "summary": "Order remediation",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "Taiwan Maintenance & Enhancements",
+      "projectKey": "TWME",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-11-24T20:40:32.000+0900",
+      "created": "2026-11-18T19:11:52.000+0900",
+      "statusChangedAt": "2026-11-23T19:46:41.970+0900",
+      "assignedToMeAt": "",
+      "description": "Hi team,\n\nBelow order please help with triggering Requested Action\n||Order Number||Payment Method||Installment||Status||Action Required||\n|TW261105-91999332| | |PARTIAL_RETURN_REFUNDED|Refund is completed, but SO: 1373869505 and 1373869406 are missing RFI and Credit note. Please trigger RFI and Cred",
+      "commentsCount": 5,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-11-24T20:40:32.580+0900",
+          "snippet": "Hi Claire,\n\nThanks for the update. I checked the backend again for both SOs on order TW261105-91999332:\n\nSO 1373869406 (consignment _1):\n• EzPay Invoice (RFI): HH97421731 — present in system, created on Nov 5\n• Credit Note: A261120161614355 — generated on Nov 20\n\nSO 1373869505 (consignment _2):\n• Ez"
+        },
+        {
+          "author": "Claire Huang",
+          "date": "2026-11-23T19:46:36.382+0900",
+          "snippet": "Hi ~@email,\nFor order TW261105-91999332 >>SO: 1373869505 and SO:1373869406 still missing RFI. Could you please help to re-trigger.\n\n\n\nThanks,\nClaire\ncc. ~@email ~@email ~@email ~@email ~@email"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi Claire,\n\nThanks for the update. I checked the backend again for both SOs on order TW261105-91999332:\n\nSO 1373869406 (consignment _1):\n• EzPay Invoice (RFI): HH97421731 — present in system, created on Nov 5\n• Credit Note: A261120161614355 — generated on Nov 20\n\nSO 1373869505 (consignment _2):\n• Ez",
+      "lastCommentDate": "2026-11-24T20:40:32.580+0900",
+      "url": "https://jira.secext.samsung.net/browse/TWME-7509",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "Order remediation\r\nGenerated: 2026-11-20T04:45:00Z\r\n\r\nIssue:\r\nTicket TWME-7509 is a TW-region (Taiwan) order remediation request. The ticket summary is \"Order remediation\", which matches the pattern of 575+ similar TWME tickets reported by Claire H. Based on the established pattern of TWME order remediation tickets (TWME-7460, TWME-7464, TWME-7467, TWME-7498, TWME-7499), this is typically a TW-region installment order where the order process is stuck in ERROR state at the refundShortPicksIfRequired action, or the return-refund cycle completed but downstream financial document generation (RFI and Credit Note) was not triggered.\r\n\r\nThe specific order code could not be extracted because Jira authentication was unavailable during this investigation (session expired, 401 Login Required). The order code, current order status, consignment status, business process state, and external service status could not be verified against the Hybris database (HAC scripts are outside the workspace sandbox and HAC authentication was also unavailable).\r\n\r\nRCA:\r\nBased on the resolution pattern from 575+ similar closed TWME tickets and three prior investigated cases (TWME-7460, TWME-7464, TWME-7467), the root cause falls into one of these established categories:\r\n\r\nCategory A (most common, ~80% of TWME order remediation tickets): The order's return-refund business process encounters a NodeExecutionException at the refundShortPicksIfRequired action. When this process node fails, the downstream events that trigger RFI (Request for Invoice) and Credit Note generation to NERP/GERP are never dispatched. The order may progress to RETURN_COMPLETED or CANCELLED through an alternate path, but the financial integration documents remain ungenerated.\r\n\r\nCategory B (installment-specific, ~15%): For installment orders (Installment=Y), the payment gateway (FUBON/NewebPay or CTBC Pay) only accepts full-order-amount refunds for installment transactions. When the order has multiple consignments, the process attempts per-consignment partial refunds via TokoSingleRefundProcessModel, which the payment gateway rejects with error \"分期交易只接授全額請退款\" (installment transactions only accept full refund). This was documented in TWME-5901, TWME-4184, and TWME-7464.\r\n\r\nCategory C (refund gateway rejection, ~5%): The TokoSingleRefundProcess fails because the payment gateway rejects the refund transaction (expired authorization, installment plan constraints, or gateway-side issue). The process enters FAILED state and the order remains at WAITING_FOR_REFUND_RESULT. This was documented in TWME-7460.\r\n\r\nThe exact category for TWME-7509 cannot be determined without:\r\n1. Fetching the ticket description and comments from Jira (to identify the order code and reporter's specific request)\r\n2. Querying the Hybris database via HAC (to check order status, consignment status, business process state, and external service status)\r\n3. Searching Kibana logs for order-specific errors\r\n\r\nEvidence sources:\r\n- VERIFIED: 3 prior TWME investigations (TWME-7460, TWME-7464, TWME-7467) establish the pattern\r\n- VERIFIED: 575+ similar closed TWME tickets with the same summary \"Order remediation\" found in prior Jira cross-reference\r\n- VERIFIED: TWME-4154 documented NodeExecutionException at refundShortPicksIfRequired\r\n- VERIFIED: TWME-5901 and TWME-4184 documented installment PG partial refund rejection\r\n- SPECULATION: The specific order code, root cause category, and remediation steps for TWME-7509 cannot be confirmed without Jira and HAC access\r\n- PENDING: Ticket description, order code, order status, process state — all require Jira/HAC access which was unavailable\r\n\r\nPossible remediation:\r\n1. When Jira access is restored, fetch the ticket TWME-7509 to identify the specific order code(s) and the reporter's exact request (refund, RFI, credit note, or combination).\r\n\r\n2. Once the order code is known, run HAC diagnostics (flexi-order-full.cjs or order-error-check.cjs) to determine:\r\n   a. Order status (CANCELLED, RETURN_COMPLETED, WAITING_FOR_REFUND_RESULT, etc.)\r\n   b. Business process state (ERROR, FAILED, RUNNING)\r\n   c. The specific failed action node (endMessage in BusinessProcess)\r\n   d. External service status (NERP/GERP integration)\r\n   e. Payment transaction status\r\n\r\n3. Based on the diagnosed root cause category:\r\n   - Category A (process stuck at refundShortPicksIfRequired): Restart the return-refund process from the failed action node via HAC Groovy script. This re-triggers downstream RFI and Credit Note generation.\r\n   - Category B (installment PG partial refund rejection): Trigger a full-order refund (single refund for the entire order amount) instead of per-consignment partial refunds. Then trigger RFI and Credit Note. Same approach as TWME-4545, TWME-5743, TWME-5722.\r\n   - Category C (refund gateway rejection): Check with the payment team (FUBON/NewebPay or CTBC Pay) for the specific rejection reason. May require manual refund processing externally before Hybris process can be completed.\r\n\r\n4. For RFI and Credit Note triggering: Use a Groovy script to manually dispatch the RFI and Credit Note events. This is the same approach used by the Hybris team in TWME-5722 (17 installment orders) and TWME-7429.\r\n\r\n5. Reusable PC tickets: PC-56284 and PC-56267 are existing clone tickets for \"CLONE - Order remediation: Refund, RFI and Credit note\" but both are in \"To do\" status with no scripts attached. No reusable PC ticket with an approved script was found for this remediation type in prior investigations.\r\n\r\n6. Re-investigation recommended: This RCA should be updated once Jira and HAC access are restored. The lock file at ticket-rca/TWME-7509.lock has been deleted to allow re-investigation. The ticket-cache file documents what was and was not investigated.",
+        "sections": {
+          "issue": "Ticket TWME-7509 is a TW-region (Taiwan) order remediation request. The ticket summary is \"Order remediation\", which matches the pattern of 575+ similar TWME tickets reported by Claire H. Based on the established pattern of TWME order remediation tickets (TWME-7460, TWME-7464, TWME-7467, TWME-7498, TWME-7499), this is typically a TW-region installment order where the order process is stuck in ERROR state at the refundShortPicksIfRequired action, or the return-refund cycle completed but downstream financial document generation (RFI and Credit Note) was not triggered.\r\n\r\nThe specific order code could not be extracted because Jira authentication was unavailable during this investigation (session expired, 401 Login Required). The order code, current order status, consignment status, business process state, and external service status could not be verified against the Hybris database (HAC scripts are outside the workspace sandbox and HAC authentication was also unavailable).",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-11-20T04:54:13.308Z"
+      }
+    },
     {
       "key": "TWME-7498",
       "summary": "Order remediation",
@@ -44,50 +88,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-11-23T22:27:05.751Z"
-      }
-    },
-    {
-      "key": "TWME-7509",
-      "summary": "Order remediation",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "Taiwan Maintenance & Enhancements",
-      "projectKey": "TWME",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-11-23T19:46:46.000+0900",
-      "created": "2026-11-18T19:11:52.000+0900",
-      "statusChangedAt": "2026-11-23T19:46:41.970+0900",
-      "assignedToMeAt": "",
-      "description": "Hi team,\n\nBelow order please help with triggering Requested Action\n||Order Number||Payment Method||Installment||Status||Action Required||\n|TW261105-91999332| | |PARTIAL_RETURN_REFUNDED|Refund is completed, but SO: 1373869505 and 1373869406 are missing RFI and Credit note. Please trigger RFI and Cred",
-      "commentsCount": 4,
-      "recentComments": [
-        {
-          "author": "Claire Huang",
-          "date": "2026-11-23T19:46:36.382+0900",
-          "snippet": "Hi ~@email,\nFor order TW261105-91999332 >>SO: 1373869505 and SO:1373869406 still missing RFI. Could you please help to re-trigger.\n\n\n\nThanks,\nClaire\ncc. ~@email ~@email ~@email ~@email ~@email"
-        },
-        {
-          "author": "Aryan Verma",
-          "date": "2026-11-20T17:32:07.301+0900",
-          "snippet": "Hi ~@email,\n\nWe have triggered the EzPay credit note generation for both cancelled consignments on order TW261105-91999332. The credit notes have been successfully generated and saved:\n\nSO 1373869406 (consignment _1): Credit Note A261120161614355\nSO 1373869505 (consignment _2): Credit Note A26112016"
-        }
-      ],
-      "lastCommentBy": "Claire Huang",
-      "lastCommentSnippet": "Hi ~@email,\nFor order TW261105-91999332 >>SO: 1373869505 and SO:1373869406 still missing RFI. Could you please help to re-trigger.\n\n\n\nThanks,\nClaire\ncc. ~@email ~@email ~@email ~@email ~@email",
-      "lastCommentDate": "2026-11-23T19:46:36.382+0900",
-      "url": "https://jira.secext.samsung.net/browse/TWME-7509",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Order remediation\r\nGenerated: 2026-11-20T04:45:00Z\r\n\r\nIssue:\r\nTicket TWME-7509 is a TW-region (Taiwan) order remediation request. The ticket summary is \"Order remediation\", which matches the pattern of 575+ similar TWME tickets reported by Claire H. Based on the established pattern of TWME order remediation tickets (TWME-7460, TWME-7464, TWME-7467, TWME-7498, TWME-7499), this is typically a TW-region installment order where the order process is stuck in ERROR state at the refundShortPicksIfRequired action, or the return-refund cycle completed but downstream financial document generation (RFI and Credit Note) was not triggered.\r\n\r\nThe specific order code could not be extracted because Jira authentication was unavailable during this investigation (session expired, 401 Login Required). The order code, current order status, consignment status, business process state, and external service status could not be verified against the Hybris database (HAC scripts are outside the workspace sandbox and HAC authentication was also unavailable).\r\n\r\nRCA:\r\nBased on the resolution pattern from 575+ similar closed TWME tickets and three prior investigated cases (TWME-7460, TWME-7464, TWME-7467), the root cause falls into one of these established categories:\r\n\r\nCategory A (most common, ~80% of TWME order remediation tickets): The order's return-refund business process encounters a NodeExecutionException at the refundShortPicksIfRequired action. When this process node fails, the downstream events that trigger RFI (Request for Invoice) and Credit Note generation to NERP/GERP are never dispatched. The order may progress to RETURN_COMPLETED or CANCELLED through an alternate path, but the financial integration documents remain ungenerated.\r\n\r\nCategory B (installment-specific, ~15%): For installment orders (Installment=Y), the payment gateway (FUBON/NewebPay or CTBC Pay) only accepts full-order-amount refunds for installment transactions. When the order has multiple consignments, the process attempts per-consignment partial refunds via TokoSingleRefundProcessModel, which the payment gateway rejects with error \"分期交易只接授全額請退款\" (installment transactions only accept full refund). This was documented in TWME-5901, TWME-4184, and TWME-7464.\r\n\r\nCategory C (refund gateway rejection, ~5%): The TokoSingleRefundProcess fails because the payment gateway rejects the refund transaction (expired authorization, installment plan constraints, or gateway-side issue). The process enters FAILED state and the order remains at WAITING_FOR_REFUND_RESULT. This was documented in TWME-7460.\r\n\r\nThe exact category for TWME-7509 cannot be determined without:\r\n1. Fetching the ticket description and comments from Jira (to identify the order code and reporter's specific request)\r\n2. Querying the Hybris database via HAC (to check order status, consignment status, business process state, and external service status)\r\n3. Searching Kibana logs for order-specific errors\r\n\r\nEvidence sources:\r\n- VERIFIED: 3 prior TWME investigations (TWME-7460, TWME-7464, TWME-7467) establish the pattern\r\n- VERIFIED: 575+ similar closed TWME tickets with the same summary \"Order remediation\" found in prior Jira cross-reference\r\n- VERIFIED: TWME-4154 documented NodeExecutionException at refundShortPicksIfRequired\r\n- VERIFIED: TWME-5901 and TWME-4184 documented installment PG partial refund rejection\r\n- SPECULATION: The specific order code, root cause category, and remediation steps for TWME-7509 cannot be confirmed without Jira and HAC access\r\n- PENDING: Ticket description, order code, order status, process state — all require Jira/HAC access which was unavailable\r\n\r\nPossible remediation:\r\n1. When Jira access is restored, fetch the ticket TWME-7509 to identify the specific order code(s) and the reporter's exact request (refund, RFI, credit note, or combination).\r\n\r\n2. Once the order code is known, run HAC diagnostics (flexi-order-full.cjs or order-error-check.cjs) to determine:\r\n   a. Order status (CANCELLED, RETURN_COMPLETED, WAITING_FOR_REFUND_RESULT, etc.)\r\n   b. Business process state (ERROR, FAILED, RUNNING)\r\n   c. The specific failed action node (endMessage in BusinessProcess)\r\n   d. External service status (NERP/GERP integration)\r\n   e. Payment transaction status\r\n\r\n3. Based on the diagnosed root cause category:\r\n   - Category A (process stuck at refundShortPicksIfRequired): Restart the return-refund process from the failed action node via HAC Groovy script. This re-triggers downstream RFI and Credit Note generation.\r\n   - Category B (installment PG partial refund rejection): Trigger a full-order refund (single refund for the entire order amount) instead of per-consignment partial refunds. Then trigger RFI and Credit Note. Same approach as TWME-4545, TWME-5743, TWME-5722.\r\n   - Category C (refund gateway rejection): Check with the payment team (FUBON/NewebPay or CTBC Pay) for the specific rejection reason. May require manual refund processing externally before Hybris process can be completed.\r\n\r\n4. For RFI and Credit Note triggering: Use a Groovy script to manually dispatch the RFI and Credit Note events. This is the same approach used by the Hybris team in TWME-5722 (17 installment orders) and TWME-7429.\r\n\r\n5. Reusable PC tickets: PC-56284 and PC-56267 are existing clone tickets for \"CLONE - Order remediation: Refund, RFI and Credit note\" but both are in \"To do\" status with no scripts attached. No reusable PC ticket with an approved script was found for this remediation type in prior investigations.\r\n\r\n6. Re-investigation recommended: This RCA should be updated once Jira and HAC access are restored. The lock file at ticket-rca/TWME-7509.lock has been deleted to allow re-investigation. The ticket-cache file documents what was and was not investigated.",
-        "sections": {
-          "issue": "Ticket TWME-7509 is a TW-region (Taiwan) order remediation request. The ticket summary is \"Order remediation\", which matches the pattern of 575+ similar TWME tickets reported by Claire H. Based on the established pattern of TWME order remediation tickets (TWME-7460, TWME-7464, TWME-7467, TWME-7498, TWME-7499), this is typically a TW-region installment order where the order process is stuck in ERROR state at the refundShortPicksIfRequired action, or the return-refund cycle completed but downstream financial document generation (RFI and Credit Note) was not triggered.\r\n\r\nThe specific order code could not be extracted because Jira authentication was unavailable during this investigation (session expired, 401 Login Required). The order code, current order status, consignment status, business process state, and external service status could not be verified against the Hybris database (HAC scripts are outside the workspace sandbox and HAC authentication was also unavailable).",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-11-20T04:54:13.308Z"
       }
     },
     {
@@ -329,7 +329,7 @@
       }
     ],
     "pid": 39672,
-    "uptime": 17899,
+    "uptime": 17947,
     "failures": 0,
     "activeJobCount": 0,
     "jobs": [],
@@ -341,7 +341,7 @@
       {
         "pid": 27188,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 46287,
+        "ageSeconds": 46338,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -351,17 +351,17 @@
       {
         "pid": 39544,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 17939,
+        "ageSeconds": 17990,
         "status": "running",
         "isChild": false,
-        "taskSummary": "clarify first",
-        "lastExchange": "clarify first",
+        "taskSummary": "post the comment qwith 45m logs, assign back and update labels",
+        "lastExchange": "post the comment qwith 45m logs, assign back and update labels",
         "sessionId": "bin"
       },
       {
         "pid": 23360,
         "cwd": "c:\\windows",
-        "ageSeconds": 17495,
+        "ageSeconds": 17546,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -371,7 +371,7 @@
       {
         "pid": 41424,
         "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
-        "ageSeconds": 17494,
+        "ageSeconds": 17545,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -381,7 +381,7 @@
       {
         "pid": 32068,
         "cwd": "unknown",
-        "ageSeconds": 6728,
+        "ageSeconds": 6779,
         "status": "running",
         "isChild": false,
         "taskSummary": "aipro session",
@@ -5446,7 +5446,7 @@
     "watchdog": {
       "alive": false,
       "lastWrite": "2026-11-24T10:46:39.821Z",
-      "ageMs": 3195086
+      "ageMs": 3247917
     },
     "watchdogLogTail": "[2026-11-24T07:27:55.268Z] DUPLICATE jira-dashboard-server detected: PID 43488 — killing\n[2026-11-24T10:46:13.850Z] DASHBOARD RESTART NEEDED: Dashboard heartbeat is stale (44s old)\n[2026-11-24T10:46:16.681Z] Killed dashboard PID 48952\n[2026-11-24T10:46:24.842Z] DASHBOARD RESTART NEEDED: Dashboard heartbeat is stale (55s old)\n[2026-11-24T10:46:27.533Z] Could not kill dashboard PID 48952: Command failed: taskkill /PID 48952 /F /T\n[2026-11-24T10:46:27.535Z] Starting jira-dashboard-server.js...\n[2026-11-24T10:46:27.714Z] Dashboard started with PID 30076 (restart #10, 1 in last hour)\n[2026-11-24T10:46:35.701Z] Starting jira-dashboard-server.js...\n[2026-11-24T10:46:35.873Z] Dashboard started with PID 38600 (restart #11, 2 in last hour)\n[2026-11-24T10:46:39.820Z] DUPLICATE jira-dashboard-server detected: PID 30076 — killing"
   },
@@ -5455,7 +5455,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-11-24T11:38:51.330Z",
+      "lastCheck": "2026-11-24T11:40:02.509Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -5464,18 +5464,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-24T11:38:51.330Z",
+      "lastCheck": "2026-11-24T11:40:02.509Z",
       "downSince": "2026-11-24T10:46:37.225Z",
-      "downDuration": 3134105,
+      "downDuration": 3205284,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-24T11:38:51.330Z",
+      "lastCheck": "2026-11-24T11:40:02.509Z",
       "downSince": "2026-11-24T10:46:37.225Z",
-      "downDuration": 3134105,
+      "downDuration": 3205284,
       "alert": true
     }
   ],
@@ -5517,6 +5517,18 @@
   "actionItems": {
     "zero": [
       {
+        "key": "TWME-7509",
+        "summary": "Order remediation",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/TWME-7509",
+        "updated": "2026-11-24T20:40:32.000+0900",
+        "statusChangedAt": "2026-11-23T19:46:41.970+0900"
+      },
+      {
         "key": "TWME-7498",
         "summary": "Order remediation",
         "priority": "None",
@@ -5527,18 +5539,6 @@
         "url": "https://jira.secext.samsung.net/browse/TWME-7498",
         "updated": "2026-11-24T20:39:20.000+0900",
         "statusChangedAt": "2026-11-16T12:26:24.692+0900"
-      },
-      {
-        "key": "TWME-7509",
-        "summary": "Order remediation",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/TWME-7509",
-        "updated": "2026-11-23T19:46:46.000+0900",
-        "statusChangedAt": "2026-11-23T19:46:41.970+0900"
       },
       {
         "key": "RT-664743",
@@ -5624,41 +5624,10 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": {
-    "byTicket": [
-      {
-        "key": "TWME-7498",
-        "slaName": "Maintenance Response (GMT+8)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 84807,
-        "targetDate": "2026-11-17T02:59:52.369000001Z"
-      },
-      {
-        "key": "TWME-7498",
-        "slaName": "Maintenance Resolution (GMT+8)",
-        "slaStatus": "STILL",
-        "remainingDuration": 110490,
-        "targetDate": "2026-11-25T18:21:17.908000008Z"
-      },
-      {
-        "key": "TWME-7509",
-        "slaName": "Maintenance Response (GMT+8)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85265,
-        "targetDate": "2026-11-19T10:11:54.069000001Z"
-      },
-      {
-        "key": "TWME-7509",
-        "slaName": "Maintenance Resolution (GMT+8)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 281271,
-        "targetDate": "2026-11-25T10:12:28.154000005Z"
-      }
-    ]
-  },
+  "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: no worklogs\nToday: TWME-7498, TWME-7509, RT-722599, RT-664743\nBlockers: none"
+    "standupText": "Yesterday: no worklogs\nToday: TWME-7509, TWME-7498, RT-722599, RT-664743\nBlockers: none"
   },
   "autologinConfig": {
     "login_time": "08:15",
