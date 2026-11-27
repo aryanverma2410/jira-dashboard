@@ -1,7 +1,51 @@
 {
-  "generatedAt": "2026-11-27T10:45:25.577Z",
+  "generatedAt": "2026-11-27T10:46:12.552Z",
   "totalTickets": 5,
   "tickets": [
+    {
+      "key": "NPSM-93688",
+      "summary": "[112226700][AU] [Online Purchasing]Medallia Alert ",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "None",
+      "project": "NPS",
+      "projectKey": "NPSM",
+      "issuetype": "Maintenance Request",
+      "updated": "2026-11-27T19:45:40.000+0900",
+      "created": "2026-11-27T10:40:18.000+0900",
+      "statusChangedAt": "2026-11-27T13:29:10.271+0900",
+      "assignedToMeAt": "",
+      "description": "Please check Reason for Score field for detail. Note The initial response time is tracked, so once you receive a ticket, please move it to “In Progress” or “Closed” within 48 hours. Issue URL: [Internal Link]",
+      "commentsCount": 2,
+      "recentComments": [
+        {
+          "author": "Aryan Verma",
+          "date": "2026-11-27T19:45:40.668+0900",
+          "snippet": "Hi ~@email ,\n\nChecked the backend logs for order AU261127-56487290 and found no errors related to PayPal payment or voucher redemption. The order was placed successfully at 01:53 UTC on 27 Nov via PayPal and is currently in SHIPPING_PREPARATION status with GERP integration underway.\n\nKibana logs sho"
+        },
+        {
+          "author": "irgy syah",
+          "date": "2026-11-27T13:28:57.447+0900",
+          "snippet": "Hi team\n\nCustomer reported something went from for PayPal transaction and discount code was \"Used Up\"\nI've already check in backoffice, customer already placed the order and there are no TEMPORARY order created\n !screenshot-1.png|thumbnail!  !screenshot-2.png|thumbnail! \n !screenshot-3.png|thumbnail"
+        }
+      ],
+      "lastCommentBy": "Aryan Verma",
+      "lastCommentSnippet": "Hi ~@email ,\n\nChecked the backend logs for order AU261127-56487290 and found no errors related to PayPal payment or voucher redemption. The order was placed successfully at 01:53 UTC on 27 Nov via PayPal and is currently in SHIPPING_PREPARATION status with GERP integration underway.\n\nKibana logs sho",
+      "lastCommentDate": "2026-11-27T19:45:40.668+0900",
+      "url": "https://jira.secext.samsung.net/browse/NPSM-93688",
+      "linkedTickets": [],
+      "solution": {
+        "status": "found",
+        "excerpt": "[112226700][AU] [Online Purchasing]Medallia Alert\r\nGenerated: 2026-11-27T11:15:00Z\r\n\r\nIssue:\r\nCustomer on the AU site (shop.samsung.com/au) reported that something went wrong with their PayPal transaction during checkout, and their discount code showed as \"Used Up\" when they tried to use it. The checkout URL indicates the customer was at the CHECKOUT_STEP_PAYMENT stage. Backoffice confirmation from irgy syah confirms the customer already placed the order successfully and there are no TEMPORARY orders remaining.\r\n\r\nRCA:\r\nThe customer selected PayPal as the payment method and applied a discount code during checkout. The standard PayPal flow on the AU site works as follows:\r\n\r\n1. Hybris creates a temporary order and applies the coupon via TokoCouponRedemptionMethodHook.afterPlaceOrder(), which creates a CouponRedemptionModel record for the coupon and user. This happens at the \"place order\" step, BEFORE the payment is completed.\r\n\r\n2. The payment request is sent to Adyen/PayPal via TokoAdyenDefaultSubmitOrderStrategyImpl, which creates a temporary order and sends the Adyen/payments API request. Adyen returns a Pending result with a PayPal redirect URL.\r\n\r\n3. The customer is redirected to PayPal to approve the payment. During this redirect, if the HTTP session expires, TokoPaymentNotificationController logs \"Could not find temporary order for order code [hashed_code]\" when the PayPal return callback arrives. This is the same pattern documented in NPSM-93537 (AU PayPal, same SMA cluster, same date), where Kibana showed 1,232 \"Could not find temporary order\" hits and 10,023 \"Cart is invalid\" hits over 7 days on the AU site, with zero PayPal-specific errors.\r\n\r\n4. When the customer retries checkout after the session expiry, TokoCustomerCouponRedemptionStrategy.isCouponAlreadyRedeemed() calls findCouponRedemptionsByCodeAndUser(), which returns ALL redemption records including those on temporary or expired orders. The coupon now shows as \"Used Up\" because the CouponRedemptionModel from the first attempt still exists on the temporary order. This is by design, as isRedeemableOncePerCustomer = true on single-use coupons.\r\n\r\n5. The temporary order eventually gets cleaned up by the cleanup workflow. When removeCouponRedemptionTemporaryOrder() in TokoCouponRedemptionServiceImpl runs during temp order deletion, the CouponRedemptionModel is removed, freeing the coupon. The customer was then able to place the order successfully, which is confirmed by the backoffice check showing no TEMPORARY orders remaining.\r\n\r\nThe PayPal payment itself had no errors. The \"something went wrong\" the customer experienced was the session expiry during the PayPal redirect flow, which prevented the order from being placed on the first attempt. The discount code showing as \"Used Up\" was a direct consequence of the coupon redemption being persisted on the temporary order from the first attempt, which is the correct system behaviour for single-use coupons.\r\n\r\nThis is expected behaviour. When a session expires during a payment gateway redirect, the coupon redemption on the temporary order persists until the temp order cleanup workflow runs. No platform bug or code defect was involved.\r\n\r\nPossible remediation:\r\nNo remediation required. The order was successfully placed and no TEMPORARY orders remain. The customer's experience of the discount code showing as \"Used Up\" was transient and resolved when the temporary order was cleaned up. This is a known limitation of the coupon redemption flow during session expiry scenarios.",
+        "sections": {
+          "issue": "Customer on the AU site (shop.samsung.com/au) reported that something went wrong with their PayPal transaction during checkout, and their discount code showed as \"Used Up\" when they tried to use it. The checkout URL indicates the customer was at the CHECKOUT_STEP_PAYMENT stage. Backoffice confirmation from irgy syah confirms the customer already placed the order successfully and there are no TEMPORARY orders remaining.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-11-27T05:53:56.454Z"
+      }
+    },
     {
       "key": "NPSM-93537",
       "summary": "[112130205][AU] [Online Purchasing]Medallia Alert ",
@@ -88,45 +132,6 @@
         },
         "source": "RCA MD",
         "foundAt": "2026-11-20T04:54:13.308Z"
-      }
-    },
-    {
-      "key": "NPSM-93688",
-      "summary": "[112226700][AU] [Online Purchasing]Medallia Alert ",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "NPS",
-      "projectKey": "NPSM",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-11-27T13:51:39.000+0900",
-      "created": "2026-11-27T10:40:18.000+0900",
-      "statusChangedAt": "2026-11-27T13:29:10.271+0900",
-      "assignedToMeAt": "",
-      "description": "Please check Reason for Score field for detail. Note The initial response time is tracked, so once you receive a ticket, please move it to “In Progress” or “Closed” within 48 hours. Issue URL: [Internal Link]",
-      "commentsCount": 1,
-      "recentComments": [
-        {
-          "author": "irgy syah",
-          "date": "2026-11-27T13:28:57.447+0900",
-          "snippet": "Hi team\n\nCustomer reported something went from for PayPal transaction and discount code was \"Used Up\"\nI've already check in backoffice, customer already placed the order and there are no TEMPORARY order created\n !screenshot-1.png|thumbnail!  !screenshot-2.png|thumbnail! \n !screenshot-3.png|thumbnail"
-        }
-      ],
-      "lastCommentBy": "irgy syah",
-      "lastCommentSnippet": "Hi team\n\nCustomer reported something went from for PayPal transaction and discount code was \"Used Up\"\nI've already check in backoffice, customer already placed the order and there are no TEMPORARY order created\n !screenshot-1.png|thumbnail!  !screenshot-2.png|thumbnail! \n !screenshot-3.png|thumbnail",
-      "lastCommentDate": "2026-11-27T13:28:57.447+0900",
-      "url": "https://jira.secext.samsung.net/browse/NPSM-93688",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "[112226700][AU] [Online Purchasing]Medallia Alert\r\nGenerated: 2026-11-27T11:15:00Z\r\n\r\nIssue:\r\nCustomer on the AU site (shop.samsung.com/au) reported that something went wrong with their PayPal transaction during checkout, and their discount code showed as \"Used Up\" when they tried to use it. The checkout URL indicates the customer was at the CHECKOUT_STEP_PAYMENT stage. Backoffice confirmation from irgy syah confirms the customer already placed the order successfully and there are no TEMPORARY orders remaining.\r\n\r\nRCA:\r\nThe customer selected PayPal as the payment method and applied a discount code during checkout. The standard PayPal flow on the AU site works as follows:\r\n\r\n1. Hybris creates a temporary order and applies the coupon via TokoCouponRedemptionMethodHook.afterPlaceOrder(), which creates a CouponRedemptionModel record for the coupon and user. This happens at the \"place order\" step, BEFORE the payment is completed.\r\n\r\n2. The payment request is sent to Adyen/PayPal via TokoAdyenDefaultSubmitOrderStrategyImpl, which creates a temporary order and sends the Adyen/payments API request. Adyen returns a Pending result with a PayPal redirect URL.\r\n\r\n3. The customer is redirected to PayPal to approve the payment. During this redirect, if the HTTP session expires, TokoPaymentNotificationController logs \"Could not find temporary order for order code [hashed_code]\" when the PayPal return callback arrives. This is the same pattern documented in NPSM-93537 (AU PayPal, same SMA cluster, same date), where Kibana showed 1,232 \"Could not find temporary order\" hits and 10,023 \"Cart is invalid\" hits over 7 days on the AU site, with zero PayPal-specific errors.\r\n\r\n4. When the customer retries checkout after the session expiry, TokoCustomerCouponRedemptionStrategy.isCouponAlreadyRedeemed() calls findCouponRedemptionsByCodeAndUser(), which returns ALL redemption records including those on temporary or expired orders. The coupon now shows as \"Used Up\" because the CouponRedemptionModel from the first attempt still exists on the temporary order. This is by design, as isRedeemableOncePerCustomer = true on single-use coupons.\r\n\r\n5. The temporary order eventually gets cleaned up by the cleanup workflow. When removeCouponRedemptionTemporaryOrder() in TokoCouponRedemptionServiceImpl runs during temp order deletion, the CouponRedemptionModel is removed, freeing the coupon. The customer was then able to place the order successfully, which is confirmed by the backoffice check showing no TEMPORARY orders remaining.\r\n\r\nThe PayPal payment itself had no errors. The \"something went wrong\" the customer experienced was the session expiry during the PayPal redirect flow, which prevented the order from being placed on the first attempt. The discount code showing as \"Used Up\" was a direct consequence of the coupon redemption being persisted on the temporary order from the first attempt, which is the correct system behaviour for single-use coupons.\r\n\r\nThis is expected behaviour. When a session expires during a payment gateway redirect, the coupon redemption on the temporary order persists until the temp order cleanup workflow runs. No platform bug or code defect was involved.\r\n\r\nPossible remediation:\r\nNo remediation required. The order was successfully placed and no TEMPORARY orders remain. The customer's experience of the discount code showing as \"Used Up\" was transient and resolved when the temporary order was cleaned up. This is a known limitation of the coupon redemption flow during session expiry scenarios.",
-        "sections": {
-          "issue": "Customer on the AU site (shop.samsung.com/au) reported that something went wrong with their PayPal transaction during checkout, and their discount code showed as \"Used Up\" when they tried to use it. The checkout URL indicates the customer was at the CHECKOUT_STEP_PAYMENT stage. Backoffice confirmation from irgy syah confirms the customer already placed the order successfully and there are no TEMPORARY orders remaining.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-11-27T05:53:56.454Z"
       }
     },
     {
@@ -380,7 +385,7 @@
       {
         "pid": 23360,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 273436,
+        "ageSeconds": 273484,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -390,17 +395,17 @@
       {
         "pid": 41424,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 273434,
+        "ageSeconds": 273483,
         "status": "running",
         "isChild": false,
-        "taskSummary": "whats the exact name of list?",
-        "lastExchange": "whats the exact name of list?",
+        "taskSummary": "cehck now again",
+        "lastExchange": "cehck now again",
         "sessionId": "bin"
       },
       {
         "pid": 28832,
         "cwd": "c:\\windows",
-        "ageSeconds": 26269,
+        "ageSeconds": 26317,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -6104,17 +6109,17 @@
     "bridgeLogTail": "[2026-11-27T07:11:51.045Z] ==========================================\n[2026-11-27T07:11:51.048Z] === Hardened GitHub Bridge v3 Started ===\n[2026-11-27T07:11:51.049Z] === with Aipro Auto-Launch ===\n[2026-11-27T07:11:51.050Z] ==========================================\n[2026-11-27T07:11:51.051Z] PID: 25204\n[2026-11-27T07:11:51.051Z] Repo: aryanverma2410/agent-bridge\n[2026-11-27T07:11:51.052Z] Poll interval: 10000ms\n[2026-11-27T07:11:51.052Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-11-27T07:11:51.053Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-11-27T07:11:51.055Z] Waiting for messages...\n[2026-11-27T07:12:28.989Z] ==========================================\n[2026-11-27T07:12:28.993Z] === Hardened GitHub Bridge v3 Started ===\n[2026-11-27T07:12:28.994Z] === with Aipro Auto-Launch ===\n[2026-11-27T07:12:28.999Z] ==========================================\n[2026-11-27T07:12:29.002Z] PID: 64320\n[2026-11-27T07:12:29.003Z] Repo: aryanverma2410/agent-bridge\n[2026-11-27T07:12:29.004Z] Poll interval: 10000ms\n[2026-11-27T07:12:29.005Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-11-27T07:12:29.006Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-11-27T07:12:29.009Z] Waiting for messages...",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-11-27T10:45:28.179Z",
-      "ageMs": 6819
+      "lastWrite": "2026-11-27T10:46:16.263Z",
+      "ageMs": 6876
     },
-    "watchdogLogTail": "[2026-11-27T10:43:10.206Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:43:25.214Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:43:40.222Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:43:55.222Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:44:10.223Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:44:25.235Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:44:40.247Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:44:55.969Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:45:11.016Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:45:28.178Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-11-27T10:43:55.222Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:44:10.223Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:44:25.235Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:44:40.247Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:44:55.969Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:45:11.016Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:45:28.178Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:45:43.178Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:46:01.260Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:46:16.263Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-11-27T10:44:23.519Z",
+      "lastCheck": "2026-11-27T10:45:23.275Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -6123,18 +6128,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-27T10:44:23.519Z",
+      "lastCheck": "2026-11-27T10:45:23.275Z",
       "downSince": "2026-11-27T10:23:06.116Z",
-      "downDuration": 1277403,
+      "downDuration": 1337159,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-27T10:44:23.519Z",
+      "lastCheck": "2026-11-27T10:45:23.275Z",
       "downSince": "2026-11-27T10:23:06.116Z",
-      "downDuration": 1277403,
+      "downDuration": 1337159,
       "alert": true
     }
   ],
@@ -6176,6 +6181,18 @@
   "actionItems": {
     "zero": [
       {
+        "key": "NPSM-93688",
+        "summary": "[112226700][AU] [Online Purchasing]Medallia Alert ",
+        "priority": "None",
+        "status": "In Progress",
+        "category": "zero",
+        "reason": "",
+        "whatToDo": "Investigate or continue work",
+        "url": "https://jira.secext.samsung.net/browse/NPSM-93688",
+        "updated": "2026-11-27T19:45:40.000+0900",
+        "statusChangedAt": "2026-11-27T13:29:10.271+0900"
+      },
+      {
         "key": "TWME-7509",
         "summary": "Order remediation",
         "priority": "None",
@@ -6186,18 +6203,6 @@
         "url": "https://jira.secext.samsung.net/browse/TWME-7509",
         "updated": "2026-11-27T16:18:42.000+0900",
         "statusChangedAt": "2026-11-26T10:43:29.162+0900"
-      },
-      {
-        "key": "NPSM-93688",
-        "summary": "[112226700][AU] [Online Purchasing]Medallia Alert ",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/NPSM-93688",
-        "updated": "2026-11-27T13:51:39.000+0900",
-        "statusChangedAt": "2026-11-27T13:29:10.271+0900"
       },
       {
         "key": "RT-664743",
@@ -6295,10 +6300,27 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": null,
+  "slaCards": {
+    "byTicket": [
+      {
+        "key": "TWME-7509",
+        "slaName": "Maintenance Response (GMT+8)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 85265,
+        "targetDate": "2026-11-19T10:11:54.069000001Z"
+      },
+      {
+        "key": "TWME-7509",
+        "slaName": "Maintenance Resolution (GMT+8)",
+        "slaStatus": "SUCCESS",
+        "remainingDuration": 281271,
+        "targetDate": "2026-11-25T10:12:28.154000005Z"
+      }
+    ]
+  },
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 1.67h on HKHME-6861, 1.17h on JPME-2328, 0.42h on TWME-7498, 0.75h on THAME-18544, 1h on SAM-18530, 1h on SAM-18531\nToday: NPSM-93537, TWME-7509, NPSM-93688, RT-722599, RT-664743\nBlockers: none"
+    "standupText": "Yesterday: 1.67h on HKHME-6861, 1.17h on JPME-2328, 0.42h on TWME-7498, 0.75h on THAME-18544, 1h on SAM-18530, 1h on SAM-18531\nToday: NPSM-93688, NPSM-93537, TWME-7509, RT-722599, RT-664743\nBlockers: none"
   },
   "autologinConfig": {
     "login_time": "08:15",
