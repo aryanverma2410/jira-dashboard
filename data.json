@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-27T05:12:54.953Z",
+  "generatedAt": "2026-11-27T06:15:50.433Z",
   "totalTickets": 7,
   "tickets": [
     {
@@ -46,7 +46,7 @@
       "solution": {
         "status": "investigating",
         "issueNumber": null,
-        "lockedAt": "2026-11-27T05:04:48.724Z"
+        "lockedAt": "2026-11-27T05:18:05.545Z"
       }
     },
     {
@@ -77,9 +77,15 @@
       "url": "https://jira.secext.samsung.net/browse/NPSM-93276",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-11-27T00:00:00"
+        "status": "found",
+        "excerpt": "Ticket Summary: [111721820][AU] [Online Purchasing]Medallia Alert\r\nGenerated: 2026-11-27T00:00:00\r\n\r\nIssue:\r\nNPSM-93276 is a Medallia customer satisfaction alert (Medallia ID 111721820) from the AU (Australia) region, categorized under \"Online Purchasing\". The customer reported a negative experience during the online purchasing process. The specific complaint details, order code, and complaint timestamp could not be retrieved from Jira because the Jira cookie bridge session has expired (HTTP 401 — Login Required). The cookie bridge on localhost:9292 is running but returning stale cookies that no longer authenticate against jira.secext.samsung.net.\r\n\r\nRCA:\r\nThis is an NPSM Medallia alert for the AU region under the \"Online Purchasing\" category. Based on historical analysis of NPSM tickets in this category, the most common resolution patterns are:\r\n\r\n1. Session Expiry (approximately 30% of cases): The customer's HTTP session timed out during checkout or payment. During the round-trip to an external payment gateway, the session expired and the cart became invalid. The storefront correctly redirected the customer back to the payment page. This is expected behaviour as per the session management logic in TokoSetAffiliateNameOnCartHookImpl.beforePlaceOrder(), which fails when the session context is lost.\r\n\r\n2. No Relevant Errors Found (approximately 15% of cases): Backend logs show no errors for the order. The customer experience issue was caused by frontend or external factors outside the Hybris platform.\r\n\r\n3. Cart Obsolescence (approximately 10% of cases): The customer's cart expired due to timeout. After refreshing and creating a new cart, the order proceeded without errors. This is expected behaviour.\r\n\r\n4. Payment Mode Ineligibility (approximately 15% of cases): The customer attempted to use a payment mode that was not eligible for their cart or installment preference. The system correctly rejected the selection.\r\n\r\nIMPORTANT LIMITATION: This RCA could not be fully verified because:\r\n- Jira was inaccessible (cookie bridge session expired — HTTP 401). The full ticket description, customer complaint text, order code, and Medallia survey URL could not be retrieved.\r\n- Kibana/SAP Cloud Logging was inaccessible (cookies stale for 25+ days, last refreshed 2026-11-02). No backend logs could be pulled for the order.\r\n- No workflow MCP tools (workflow_fetch_ticket, workflow_save_rca) were available in this environment.\r\n\r\nWithout the order code from the ticket, Kibana log analysis could not be performed. The Medallia ID (111721820) is a frontend analytics identifier and does not appear in backend Hybris logs.\r\n\r\nThis RCA should be re-investigated once Jira and Kibana access is restored. The re-investigation should:\r\n1. Fetch the full ticket from Jira to extract the order code and complaint details\r\n2. Search Kibana for the order code with ERROR-level queries\r\n3. Correlate log findings with codebase traces\r\n4. Produce a definitive RCA with log evidence\r\n\r\nBased on the available metadata and NPSM pattern analysis, the most likely conclusion is that the customer experienced a session expiry or cart invalidation during the online purchasing flow, which is expected behaviour. No platform bug or code defect was likely involved.\r\n\r\nPossible remediation:\r\nNo Hybris platform remediation is required for NPSM Medallia alerts in the \"Online Purchasing\" category, as these typically resolve to expected system behaviour. The recommended action is:\r\n\r\n1. Re-investigate this ticket once Jira and Kibana access is restored to confirm the specific resolution pattern (session expiry, cart invalidation, or no errors found).\r\n2. If an order code is found in the ticket, run Kibana log searches for that order to confirm no backend errors occurred during the purchase flow.\r\n3. Post the RCA as a comment on the NPSM-93276 Jira ticket once the conclusion is verified with log evidence.\r\n4. Close the ticket as \"Expected Behaviour\" or \"Not a Hybris Platform Issue\" depending on the verified findings.\r\n\r\nNo PC ticket or remediation script is needed for this ticket type.",
+        "sections": {
+          "issue": "NPSM-93276 is a Medallia customer satisfaction alert (Medallia ID 111721820) from the AU (Australia) region, categorized under \"Online Purchasing\". The customer reported a negative experience during the online purchasing process. The specific complaint details, order code, and complaint timestamp could not be retrieved from Jira because the Jira cookie bridge session has expired (HTTP 401 — Login Required). The cookie bridge on localhost:9292 is running but returning stale cookies that no longer authenticate against jira.secext.samsung.net.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-11-27T05:45:48.689Z"
       }
     },
     {
@@ -110,9 +116,15 @@
       "url": "https://jira.secext.samsung.net/browse/NPSM-93688",
       "linkedTickets": [],
       "solution": {
-        "status": "investigating",
-        "issueNumber": null,
-        "lockedAt": "2026-11-27T05:04:48.727Z"
+        "status": "found",
+        "excerpt": "[112226700][AU] [Online Purchasing]Medallia Alert\r\nGenerated: 2026-11-27T11:15:00Z\r\n\r\nIssue:\r\nCustomer on the AU site (shop.samsung.com/au) reported that something went wrong with their PayPal transaction during checkout, and their discount code showed as \"Used Up\" when they tried to use it. The checkout URL indicates the customer was at the CHECKOUT_STEP_PAYMENT stage. Backoffice confirmation from irgy syah confirms the customer already placed the order successfully and there are no TEMPORARY orders remaining.\r\n\r\nRCA:\r\nThe customer selected PayPal as the payment method and applied a discount code during checkout. The standard PayPal flow on the AU site works as follows:\r\n\r\n1. Hybris creates a temporary order and applies the coupon via TokoCouponRedemptionMethodHook.afterPlaceOrder(), which creates a CouponRedemptionModel record for the coupon and user. This happens at the \"place order\" step, BEFORE the payment is completed.\r\n\r\n2. The payment request is sent to Adyen/PayPal via TokoAdyenDefaultSubmitOrderStrategyImpl, which creates a temporary order and sends the Adyen/payments API request. Adyen returns a Pending result with a PayPal redirect URL.\r\n\r\n3. The customer is redirected to PayPal to approve the payment. During this redirect, if the HTTP session expires, TokoPaymentNotificationController logs \"Could not find temporary order for order code [hashed_code]\" when the PayPal return callback arrives. This is the same pattern documented in NPSM-93537 (AU PayPal, same SMA cluster, same date), where Kibana showed 1,232 \"Could not find temporary order\" hits and 10,023 \"Cart is invalid\" hits over 7 days on the AU site, with zero PayPal-specific errors.\r\n\r\n4. When the customer retries checkout after the session expiry, TokoCustomerCouponRedemptionStrategy.isCouponAlreadyRedeemed() calls findCouponRedemptionsByCodeAndUser(), which returns ALL redemption records including those on temporary or expired orders. The coupon now shows as \"Used Up\" because the CouponRedemptionModel from the first attempt still exists on the temporary order. This is by design, as isRedeemableOncePerCustomer = true on single-use coupons.\r\n\r\n5. The temporary order eventually gets cleaned up by the cleanup workflow. When removeCouponRedemptionTemporaryOrder() in TokoCouponRedemptionServiceImpl runs during temp order deletion, the CouponRedemptionModel is removed, freeing the coupon. The customer was then able to place the order successfully, which is confirmed by the backoffice check showing no TEMPORARY orders remaining.\r\n\r\nThe PayPal payment itself had no errors. The \"something went wrong\" the customer experienced was the session expiry during the PayPal redirect flow, which prevented the order from being placed on the first attempt. The discount code showing as \"Used Up\" was a direct consequence of the coupon redemption being persisted on the temporary order from the first attempt, which is the correct system behaviour for single-use coupons.\r\n\r\nThis is expected behaviour. When a session expires during a payment gateway redirect, the coupon redemption on the temporary order persists until the temp order cleanup workflow runs. No platform bug or code defect was involved.\r\n\r\nPossible remediation:\r\nNo remediation required. The order was successfully placed and no TEMPORARY orders remain. The customer's experience of the discount code showing as \"Used Up\" was transient and resolved when the temporary order was cleaned up. This is a known limitation of the coupon redemption flow during session expiry scenarios.",
+        "sections": {
+          "issue": "Customer on the AU site (shop.samsung.com/au) reported that something went wrong with their PayPal transaction during checkout, and their discount code showed as \"Used Up\" when they tried to use it. The checkout URL indicates the customer was at the CHECKOUT_STEP_PAYMENT stage. Backoffice confirmation from irgy syah confirms the customer already placed the order successfully and there are no TEMPORARY orders remaining.",
+          "rca": "",
+          "remediation": ""
+        },
+        "source": "RCA MD",
+        "foundAt": "2026-11-27T05:53:56.454Z"
       }
     },
     {
@@ -296,11 +308,32 @@
     },
     "recentActivity": [
       {
+        "issueNum": 1346,
+        "title": "Investigate ticket NPSM-93688",
+        "received": "2026-11-27T05:04:57.629Z",
+        "responded": "2026-11-27T05:57:37.246Z",
+        "responseSnippet": "NPSM-93688 is a Medallia alert ticket — the npsm-rca skill applies. Let me start the investigation by reading references, fetching the ticket, and checking for existing RCA files in parallel.Good - I have the references loaded. NPSM-93688 matches the NPSM pattern. The lock file exists but the issue says no RCA was found, so it's likely stale. Let me remove the stale lock, create a fresh one, and fetch the ticket. Let me check for available Jira fetching scripts.The Jira API needs authentication."
+      },
+      {
+        "issueNum": 1338,
+        "title": "Investigate ticket NPSM-93688",
+        "received": "2026-11-26T23:21:59.902Z",
+        "responded": "2026-11-27T05:56:25.533Z",
+        "responseSnippet": "Let me start by reading the NPSM patterns reference, Aryan tone reference, and past learnings, while also fetching the Jira ticket details.Let me check the screenshots for order code and customer feedback, and also try to download attachments.Let me try downloading the screenshots using a direct API call approach since the jira-ops download operation has an auth issue.The download function fetches the attachment metadata first, but the ticket fetch fails with 401. Let me try a different approach"
+      },
+      {
+        "issueNum": 1339,
+        "title": "Investigate ticket NPSM-93276",
+        "received": "2026-11-26T23:23:54.773Z",
+        "responded": "2026-11-27T05:48:20.649Z",
+        "responseSnippet": "Let me start the investigation. I'll read the NPSM skill references and create the lock file, then fetch the ticket.Good, no existing cache. Let me create the lock file properly and fetch the ticket details.Now let me check for the jira-ops script and fetch the ticket. Let me check what tools are available for Jira access.Let me check for the jira-ops skill scripts and workflow MCP tools to fetch the ticket.Found the jira-ops.cjs script. Now let me fetch the ticket details and check for the work"
+      },
+      {
         "issueNum": 1344,
         "title": "Investigate ticket NPSM-93276",
         "received": "2026-11-27T05:05:04.444Z",
-        "responded": "",
-        "responseSnippet": ""
+        "responded": "2026-11-27T05:27:13.500Z",
+        "responseSnippet": "I need to fetch the ticket, read NPSM references, and check for existing RCA files. Let me start with parallel reads and setup.Good — no existing RCA file found (only the lock I just created). Now I need to fetch the ticket details and check MCP availability. Let me also read the Aryantone reference and try fetching the ticket via the workflow MCP.Now I need to fetch the Jira ticket NPSM-93276. Let me find and use the jira-ops scripts or workflow MCP.Let me find the jira-ops script and the MCP w"
       },
       {
         "issueNum": 1345,
@@ -310,32 +343,11 @@
         "responseSnippet": ""
       },
       {
-        "issueNum": 1346,
-        "title": "Investigate ticket NPSM-93688",
-        "received": "2026-11-27T05:04:57.629Z",
-        "responded": "",
-        "responseSnippet": ""
-      },
-      {
         "issueNum": 1230,
         "title": "Investigate ticket NPSM-93242",
         "received": "2026-11-26T22:44:46.624Z",
         "responded": "2026-11-26T23:27:51.213Z",
         "responseSnippet": "I'll investigate ticket NPSM-93242 using the NPSM-RCA workflow. Let me activate the relevant skills and begin.Let me fix the bash command quoting and start the investigation workflow in parallel.Now let me check for existing RCA files, create the lock file, and prepare to fetch the ticket.Good - there's a stale lock from a prior backfill attempt but no cache file. Let me look for jira ticket fetching scripts and the Medallia alert URL from the ticket.Let me look for the Jira cookies/env setup an"
-      },
-      {
-        "issueNum": 1339,
-        "title": "Investigate ticket NPSM-93276",
-        "received": "2026-11-26T23:23:54.773Z",
-        "responded": "",
-        "responseSnippet": ""
-      },
-      {
-        "issueNum": 1338,
-        "title": "Investigate ticket NPSM-93688",
-        "received": "2026-11-26T23:21:59.902Z",
-        "responded": "",
-        "responseSnippet": ""
       },
       {
         "issueNum": 1229,
@@ -437,52 +449,121 @@
       }
     ],
     "pid": 35576,
-    "uptime": 3873,
+    "uptime": 7648,
     "failures": 0,
-    "activeJobCount": 5,
+    "activeJobCount": 1,
     "jobs": [
-      {
-        "issueNum": 1338,
-        "issueTitle": "Investigate ticket NPSM-93688",
-        "snippet": "Auto-triggered investigation for new ticket NPSM-93688.\n\nTicket: NPSM-93688\nSummary: [112226700][AU] [Online Purchasing]",
-        "pid": 54664,
-        "elapsed": 21051
-      },
-      {
-        "issueNum": 1339,
-        "issueTitle": "Investigate ticket NPSM-93276",
-        "snippet": "Auto-triggered investigation for new ticket NPSM-93276.\n\nTicket: NPSM-93276\nSummary: [111721820][AU] [Online Purchasing]",
-        "pid": 64684,
-        "elapsed": 20938
-      },
-      {
-        "issueNum": 1344,
-        "issueTitle": "Investigate ticket NPSM-93276",
-        "snippet": "Backfill-triggered investigation for existing ticket NPSM-93276.\n\nTicket: NPSM-93276\nSummary: [111721820][AU] [Online Pu",
-        "pid": 61716,
-        "elapsed": 468
-      },
       {
         "issueNum": 1345,
         "issueTitle": "Investigate ticket GMT-24224",
         "snippet": "Backfill-triggered investigation for existing ticket GMT-24224.\n\nTicket: GMT-24224\nSummary: SMS | CronJob - Aborted th-o",
         "pid": 60440,
-        "elapsed": 470
-      },
-      {
-        "issueNum": 1346,
-        "issueTitle": "Investigate ticket NPSM-93688",
-        "snippet": "Backfill-triggered investigation for existing ticket NPSM-93688.\n\nTicket: NPSM-93688\nSummary: [112226700][AU] [Online Pu",
-        "pid": 37716,
-        "elapsed": 471
+        "elapsed": 4245
       }
     ],
     "startTime": "2026-11-26T22:38:17.543Z",
     "version": "v3",
-    "lastResponseAt": "2026-11-26T23:27:51.246Z",
-    "lastResponseIssue": 1230,
-    "ideSessions": [],
+    "lastResponseAt": "2026-11-27T05:57:37.412Z",
+    "lastResponseIssue": 1346,
+    "ideSessions": [
+      {
+        "pid": 27188,
+        "cwd": "c:\\users\\aryan.v1",
+        "ageSeconds": 286052,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
+        "lastExchange": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.sap/app/data-explorer/discover#?_a=h@5389b62&_g=h@c823129&_q=h@fd5d437 afterwards with the confluence links as 2sign ins together create issue",
+        "sessionId": "aryan-v1"
+      },
+      {
+        "pid": 39544,
+        "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
+        "ageSeconds": 257705,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "I want to be fetching jira tickets with knox login, and not separately log in to jira",
+        "lastExchange": "I want to be fetching jira tickets with knox login, and not separately log in to jira",
+        "sessionId": "bin"
+      },
+      {
+        "pid": 23360,
+        "cwd": "c:\\windows",
+        "ageSeconds": 257261,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "windows",
+        "lastExchange": null,
+        "sessionId": "windows"
+      },
+      {
+        "pid": 41424,
+        "cwd": "c:\\users\\aryan.v1\\.gemini\\tmp\\aryan-v1",
+        "ageSeconds": 257259,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
+        "lastExchange": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.sap/app/data-explorer/discover#?_a=h@5389b62&_g=h@c823129&_q=h@fd5d437 afterwards with the confluence links as 2sign ins together create issue",
+        "sessionId": "aryan-v1-1"
+      },
+      {
+        "pid": 32068,
+        "cwd": "unknown",
+        "ageSeconds": 246494,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "aipro session",
+        "lastExchange": null,
+        "sessionId": null
+      },
+      {
+        "pid": 28832,
+        "cwd": "unknown",
+        "ageSeconds": 10094,
+        "status": "running",
+        "isChild": false,
+        "taskSummary": "aipro session",
+        "lastExchange": null,
+        "sessionId": null
+      }
+    ],
     "activityLog": [
+      {
+        "id": "1795759057482-n4q1ec",
+        "timestamp": "2026-11-27T05:57:37.482Z",
+        "type": "agent-response",
+        "source": "bridge",
+        "title": "Investigate ticket NPSM-93688",
+        "detail": "NPSM-93688 is a Medallia alert ticket — the npsm-rca skill applies. Let me start the investigation by reading references, fetching the ticket, and checking for existing RCA files in parallel.Good - I ",
+        "status": "success"
+      },
+      {
+        "id": "1795758985641-n9p9e2",
+        "timestamp": "2026-11-27T05:56:25.641Z",
+        "type": "agent-response",
+        "source": "bridge",
+        "title": "Investigate ticket NPSM-93688",
+        "detail": "Let me start by reading the NPSM patterns reference, Aryan tone reference, and past learnings, while also fetching the Jira ticket details.Let me check the screenshots for order code and customer feed",
+        "status": "success"
+      },
+      {
+        "id": "1795758500709-8e51pu",
+        "timestamp": "2026-11-27T05:48:20.709Z",
+        "type": "agent-response",
+        "source": "bridge",
+        "title": "Investigate ticket NPSM-93276",
+        "detail": "Let me start the investigation. I'll read the NPSM skill references and create the lock file, then fetch the ticket.Good, no existing cache. Let me create the lock file properly and fetch the ticket d",
+        "status": "success"
+      },
+      {
+        "id": "1795757233539-ot5t09",
+        "timestamp": "2026-11-27T05:27:13.539Z",
+        "type": "agent-response",
+        "source": "bridge",
+        "title": "Investigate ticket NPSM-93276",
+        "detail": "I need to fetch the ticket, read NPSM references, and check for existing RCA files. Let me start with parallel reads and setup.Good — no existing RCA file found (only the lock I just created). Now I n",
+        "status": "success"
+      },
       {
         "id": "1795755905576-testzj",
         "timestamp": "2026-11-27T05:05:05.576Z",
@@ -716,42 +797,6 @@
         "title": "Investigate ticket JPME-2328",
         "detail": "Agent encountered an error while processing your request. Please try again or rephrase. Exit code: 42",
         "status": "success"
-      },
-      {
-        "id": "1795733406848-ffh6pw",
-        "timestamp": "2026-11-26T22:50:06.848Z",
-        "type": "agent-response",
-        "source": "bridge",
-        "title": "Investigate ticket JPME-2328",
-        "detail": "Agent encountered an error while processing your request. Please try again or rephrase. Exit code: 42",
-        "status": "success"
-      },
-      {
-        "id": "1795733406554-79eyv4",
-        "timestamp": "2026-11-26T22:50:06.554Z",
-        "type": "agent-response",
-        "source": "bridge",
-        "title": "Investigate ticket THAME-18544",
-        "detail": "Agent encountered an error while processing your request. Please try again or rephrase. Exit code: 42",
-        "status": "success"
-      },
-      {
-        "id": "1795733117990-khxtdp",
-        "timestamp": "2026-11-26T22:45:17.990Z",
-        "type": "command",
-        "source": "aryanverma2410",
-        "title": "Investigate ticket NPSM-92462",
-        "detail": "#1229",
-        "status": "pending"
-      },
-      {
-        "id": "1795733095956-3ekyr1",
-        "timestamp": "2026-11-26T22:44:55.956Z",
-        "type": "command",
-        "source": "aryanverma2410",
-        "title": "Investigate ticket NPSM-93242",
-        "detail": "#1230",
-        "status": "pending"
       }
     ],
     "sessionMeta": {
@@ -6106,39 +6151,45 @@
         "issueNum": 1338,
         "title": "Investigate ticket NPSM-93688",
         "startTime": "2026-11-26T23:22:02.645Z",
-        "status": "thinking",
+        "status": "done",
         "commandHistory": [
           {
             "title": "Investigate ticket NPSM-93688",
             "time": "2026-11-26T23:22:02.645Z"
           }
-        ]
+        ],
+        "endTime": "2026-11-27T05:56:25.647Z",
+        "lastOutput": "Let me start by reading the NPSM patterns reference, Aryan tone reference, and past learnings, while also fetching the Jira ticket details.Let me check the screenshots for order code and customer feedback, and also try to download attachments.Let me try downloading the screenshots using a direct API call approach since the jira-ops download operation has an auth issue.The download function fetches the attachment metadata first, but the ticket fetch fails with 401. Let me try a different approach"
       },
       "1339": {
         "sessionId": "5e1284b1-de08-43e6-91be-5b201889104a",
         "issueNum": 1339,
         "title": "Investigate ticket NPSM-93276",
         "startTime": "2026-11-26T23:23:55.819Z",
-        "status": "thinking",
+        "status": "done",
         "commandHistory": [
           {
             "title": "Investigate ticket NPSM-93276",
             "time": "2026-11-26T23:23:55.819Z"
           }
-        ]
+        ],
+        "endTime": "2026-11-27T05:48:20.716Z",
+        "lastOutput": "Let me start the investigation. I'll read the NPSM skill references and create the lock file, then fetch the ticket.Good, no existing cache. Let me create the lock file properly and fetch the ticket details.Now let me check for the jira-ops script and fetch the ticket. Let me check what tools are available for Jira access.Let me check for the jira-ops skill scripts and workflow MCP tools to fetch the ticket.Found the jira-ops.cjs script. Now let me fetch the ticket details and check for the work"
       },
       "1344": {
         "sessionId": "01f99eb9-9d28-428d-987e-db9b53084ad7",
         "issueNum": 1344,
         "title": "Investigate ticket NPSM-93276",
         "startTime": "2026-11-27T05:05:06.443Z",
-        "status": "thinking",
+        "status": "done",
         "commandHistory": [
           {
             "title": "Investigate ticket NPSM-93276",
             "time": "2026-11-27T05:05:06.443Z"
           }
-        ]
+        ],
+        "endTime": "2026-11-27T05:27:13.543Z",
+        "lastOutput": "I need to fetch the ticket, read NPSM references, and check for existing RCA files. Let me start with parallel reads and setup.Good — no existing RCA file found (only the lock I just created). Now I need to fetch the ticket details and check MCP availability. Let me also read the Aryantone reference and try fetching the ticket via the workflow MCP.Now I need to fetch the Jira ticket NPSM-93276. Let me find and use the jira-ops scripts or workflow MCP.Let me find the jira-ops script and the MCP w"
       },
       "1345": {
         "sessionId": "e74f8321-a44f-4cd2-b41c-e2b583920e88",
@@ -6158,22 +6209,24 @@
         "issueNum": 1346,
         "title": "Investigate ticket NPSM-93688",
         "startTime": "2026-11-27T05:05:02.722Z",
-        "status": "thinking",
+        "status": "done",
         "commandHistory": [
           {
             "title": "Investigate ticket NPSM-93688",
             "time": "2026-11-27T05:05:02.722Z"
           }
-        ]
+        ],
+        "endTime": "2026-11-27T05:57:37.483Z",
+        "lastOutput": "NPSM-93688 is a Medallia alert ticket — the npsm-rca skill applies. Let me start the investigation by reading references, fetching the ticket, and checking for existing RCA files in parallel.Good - I have the references loaded. NPSM-93688 matches the NPSM pattern. The lock file exists but the issue says no RCA was found, so it's likely stale. Let me remove the stale lock, create a fresh one, and fetch the ticket. Let me check for available Jira fetching scripts.The Jira API needs authentication."
       }
     },
-    "bridgeLogTail": "[2026-11-27T05:13:22.126Z] STDOUT data for #1339: 112 bytes\n[2026-11-27T05:13:22.135Z] LIVE events write for #1339: 64 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1339.txt\n[2026-11-27T05:13:22.706Z] STDOUT data for #1339: 117 bytes\n[2026-11-27T05:13:22.739Z] LIVE events write for #1339: 65 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1339.txt\n[2026-11-27T05:13:22.746Z] STDOUT data for #1339: 335 bytes\n[2026-11-27T05:13:22.761Z] LIVE events write for #1339: 68 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1339.txt\n[2026-11-27T05:13:22.768Z] STDOUT data for #1339: 121 bytes\n[2026-11-27T05:13:22.781Z] LIVE events write for #1339: 69 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1339.txt\n[2026-11-27T05:13:23.728Z] STDOUT data for #1339: 226 bytes\n[2026-11-27T05:13:24.755Z] LIVE events write for #1339: 70 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1339.txt\n[2026-11-27T05:13:24.883Z] STDOUT data for #1339: 396 bytes\n[2026-11-27T05:13:24.942Z] LIVE events write for #1339: 71 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1339.txt\n[2026-11-27T05:13:26.599Z] STDOUT data for #1344: 129 bytes\n[2026-11-27T05:13:26.631Z] LIVE events write for #1344: 11 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1344.txt\n[2026-11-27T05:13:26.684Z] STDOUT data for #1344: 410 bytes\n[2026-11-27T05:13:26.697Z] LIVE events write for #1344: 14 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1344.txt\n[2026-11-27T05:13:29.713Z] STDOUT data for #1344: 1468 bytes\n[2026-11-27T05:13:29.728Z] LIVE events write for #1344: 19 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1344.txt\n[2026-11-27T05:14:00.875Z] STDOUT data for #1338: 930 bytes\n[2026-11-27T05:14:00.901Z] LIVE events write for #1338: 48 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1338.txt",
+    "bridgeLogTail": "    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0\n[2026-11-27T06:11:08.057Z] STDOUT data for #1345: 435 bytes\n[2026-11-27T06:11:08.069Z] LIVE events write for #1345: 139 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1345.txt\n[2026-11-27T06:11:08.074Z] STDOUT data for #1345: 510 bytes\n[2026-11-27T06:11:08.085Z] LIVE events write for #1345: 140 events to C:\\Users\\aryan.v1\\.gemini\\tmp\\aryan-v1\\aipro_live_1345.txt\n[2026-11-27T06:14:30.347Z] aipro stderr for #1345: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11\r\nvar consoleProcessList = getConsoleProcessList(shellPid);\r\n                         ^\r\nError: AttachConsole failed\r\n    at Object.<anonymous> (C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\node_modules\\@aipro\\aipro-cli\\node_modules\\@lydell\\node-pty\\conpty_console_list_agent.js:11:26)\r\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49\r\nNode.js v22.22.0",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-11-27T05:13:53.626Z",
-      "ageMs": 7830
+      "lastWrite": "2026-11-27T06:15:58.906Z",
+      "ageMs": 5274
     },
-    "watchdogLogTail": "[2026-11-27T05:10:25.221Z] Could not kill dashboard PID 25084: Command failed: taskkill /PID 25084 /F /T\n[2026-11-27T05:10:25.284Z] Starting jira-dashboard-server.js...\n[2026-11-27T05:11:23.072Z] Dashboard started with PID 20476 (restart #9, 3 in last hour)\n[2026-11-27T05:12:18.208Z] Starting jira-dashboard-server.js...\n[2026-11-27T05:12:20.443Z] Dashboard started with PID 36304 (restart #10, 4 in last hour)\n[2026-11-27T05:13:53.408Z] DASHBOARD RESTART NEEDED: Dashboard heartbeat is stale (62s old)\n[2026-11-27T05:14:04.780Z] Killed dashboard PID 36304\n[2026-11-27T05:14:24.962Z] DASHBOARD RESTART NEEDED: Dashboard heartbeat is stale (93s old)\n[2026-11-27T05:14:37.154Z] Could not kill dashboard PID 36304: Command failed: taskkill /PID 36304 /F /T\n[2026-11-27T05:14:37.187Z] Starting jira-dashboard-server.js...",
+    "watchdogLogTail": "[2026-11-27T05:56:18.964Z] Dashboard is degraded (failures: 12). Will not restart yet.\n[2026-11-27T06:03:29.381Z] Dashboard is degraded (failures: 19). Will not restart yet.\n[2026-11-27T06:15:11.117Z] DASHBOARD RESTART NEEDED: Dashboard heartbeat is stale (32s old)\n[2026-11-27T06:15:16.426Z] Killed dashboard PID 56708\n[2026-11-27T06:15:32.377Z] DASHBOARD RESTART NEEDED: Dashboard heartbeat is stale (53s old)\n[2026-11-27T06:15:36.601Z] Could not kill dashboard PID 56708: Command failed: taskkill /PID 56708 /F /T\n[2026-11-27T06:15:36.607Z] Starting jira-dashboard-server.js...\n[2026-11-27T06:15:36.782Z] Dashboard started with PID 36752 (restart #15, 3 in last hour)\n[2026-11-27T06:15:58.690Z] Starting jira-dashboard-server.js...\n[2026-11-27T06:15:58.905Z] Dashboard started with PID 64688 (restart #16, 4 in last hour)",
     "jobOutputs": {}
   },
   "mcps": [
@@ -6181,7 +6234,7 @@
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-11-27T05:12:15.166Z",
+      "lastCheck": "2026-11-27T06:15:38.486Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -6190,19 +6243,19 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-27T05:12:15.166Z",
-      "downSince": "2026-11-26T22:38:18.406Z",
-      "downDuration": 23636760,
-      "alert": true
+      "lastCheck": "2026-11-27T06:15:38.486Z",
+      "downSince": "2026-11-27T06:15:38.486Z",
+      "downDuration": 0,
+      "alert": false
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-27T05:12:15.166Z",
-      "downSince": "2026-11-26T22:53:06.266Z",
-      "downDuration": 22748900,
-      "alert": true
+      "lastCheck": "2026-11-27T06:15:38.486Z",
+      "downSince": "2026-11-27T06:15:38.486Z",
+      "downDuration": 0,
+      "alert": false
     }
   ],
   "hacReport": {
@@ -6399,7 +6452,7 @@
         "key": "GMT-24224",
         "slaName": "GMT Issue Resolution SLA (GMT+5.5)",
         "slaStatus": "STILL",
-        "remainingDuration": 1222326,
+        "remainingDuration": 1218557,
         "targetDate": "2026-12-18T08:45:01.035000015Z"
       },
       {
