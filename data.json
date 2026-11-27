@@ -1,51 +1,7 @@
 {
-  "generatedAt": "2026-11-27T10:37:14.585Z",
-  "totalTickets": 6,
+  "generatedAt": "2026-11-27T10:37:59.551Z",
+  "totalTickets": 5,
   "tickets": [
-    {
-      "key": "NPSM-93276",
-      "summary": "[111721820][AU] [Online Purchasing]Medallia Alert ",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "None",
-      "project": "NPS",
-      "projectKey": "NPSM",
-      "issuetype": "Maintenance Request",
-      "updated": "2026-11-27T19:36:48.000+0900",
-      "created": "2026-11-24T18:10:12.000+0900",
-      "statusChangedAt": "2026-11-25T13:03:55.700+0900",
-      "assignedToMeAt": "",
-      "description": "Please check Reason for Score field for detail. Note The initial response time is tracked, so once you receive a ticket, please move it to “In Progress” or “Closed” within 48 hours. Issue URL: [Internal Link]",
-      "commentsCount": 2,
-      "recentComments": [
-        {
-          "author": "Aryan Verma",
-          "date": "2026-11-27T19:36:48.498+0900",
-          "snippet": "Hi ~@email ,\n\nWe checked the SMA Kibana logs for the AU site for the last 1 hour around the time of the reported issue. No payment related errors were found. There are no submitOrder errors, no checkout errors, and no payment gateway errors for this timeframe.\n\nThe only relevant logs are the standar"
-        },
-        {
-          "author": "irgy syah",
-          "date": "2026-11-25T13:03:21.499+0900",
-          "snippet": "Hi team\n\nCustomer reported already paid for the order\nI've already check in backoffice, the order is not created yet and still on Cart\n !screenshot-1.png|thumbnail! \nUpon reviewing DXA session, the record end before customer completed the payment process\n\nCould you please help check if there are any"
-        }
-      ],
-      "lastCommentBy": "Aryan Verma",
-      "lastCommentSnippet": "Hi ~@email ,\n\nWe checked the SMA Kibana logs for the AU site for the last 1 hour around the time of the reported issue. No payment related errors were found. There are no submitOrder errors, no checkout errors, and no payment gateway errors for this timeframe.\n\nThe only relevant logs are the standar",
-      "lastCommentDate": "2026-11-27T19:36:48.498+0900",
-      "url": "https://jira.secext.samsung.net/browse/NPSM-93276",
-      "linkedTickets": [],
-      "solution": {
-        "status": "found",
-        "excerpt": "Ticket Summary: [111721820][AU] [Online Purchasing]Medallia Alert\r\nGenerated: 2026-11-27T00:00:00\r\n\r\nIssue:\r\nNPSM-93276 is a Medallia customer satisfaction alert (Medallia ID 111721820) from the AU (Australia) region, categorized under \"Online Purchasing\". The customer reported a negative experience during the online purchasing process. The specific complaint details, order code, and complaint timestamp could not be retrieved from Jira because the Jira cookie bridge session has expired (HTTP 401 — Login Required). The cookie bridge on localhost:9292 is running but returning stale cookies that no longer authenticate against jira.secext.samsung.net.\r\n\r\nRCA:\r\nThis is an NPSM Medallia alert for the AU region under the \"Online Purchasing\" category. Based on historical analysis of NPSM tickets in this category, the most common resolution patterns are:\r\n\r\n1. Session Expiry (approximately 30% of cases): The customer's HTTP session timed out during checkout or payment. During the round-trip to an external payment gateway, the session expired and the cart became invalid. The storefront correctly redirected the customer back to the payment page. This is expected behaviour as per the session management logic in TokoSetAffiliateNameOnCartHookImpl.beforePlaceOrder(), which fails when the session context is lost.\r\n\r\n2. No Relevant Errors Found (approximately 15% of cases): Backend logs show no errors for the order. The customer experience issue was caused by frontend or external factors outside the Hybris platform.\r\n\r\n3. Cart Obsolescence (approximately 10% of cases): The customer's cart expired due to timeout. After refreshing and creating a new cart, the order proceeded without errors. This is expected behaviour.\r\n\r\n4. Payment Mode Ineligibility (approximately 15% of cases): The customer attempted to use a payment mode that was not eligible for their cart or installment preference. The system correctly rejected the selection.\r\n\r\nIMPORTANT LIMITATION: This RCA could not be fully verified because:\r\n- Jira was inaccessible (cookie bridge session expired — HTTP 401). The full ticket description, customer complaint text, order code, and Medallia survey URL could not be retrieved.\r\n- Kibana/SAP Cloud Logging was inaccessible (cookies stale for 25+ days, last refreshed 2026-11-02). No backend logs could be pulled for the order.\r\n- No workflow MCP tools (workflow_fetch_ticket, workflow_save_rca) were available in this environment.\r\n\r\nWithout the order code from the ticket, Kibana log analysis could not be performed. The Medallia ID (111721820) is a frontend analytics identifier and does not appear in backend Hybris logs.\r\n\r\nThis RCA should be re-investigated once Jira and Kibana access is restored. The re-investigation should:\r\n1. Fetch the full ticket from Jira to extract the order code and complaint details\r\n2. Search Kibana for the order code with ERROR-level queries\r\n3. Correlate log findings with codebase traces\r\n4. Produce a definitive RCA with log evidence\r\n\r\nBased on the available metadata and NPSM pattern analysis, the most likely conclusion is that the customer experienced a session expiry or cart invalidation during the online purchasing flow, which is expected behaviour. No platform bug or code defect was likely involved.\r\n\r\nPossible remediation:\r\nNo Hybris platform remediation is required for NPSM Medallia alerts in the \"Online Purchasing\" category, as these typically resolve to expected system behaviour. The recommended action is:\r\n\r\n1. Re-investigate this ticket once Jira and Kibana access is restored to confirm the specific resolution pattern (session expiry, cart invalidation, or no errors found).\r\n2. If an order code is found in the ticket, run Kibana log searches for that order to confirm no backend errors occurred during the purchase flow.\r\n3. Post the RCA as a comment on the NPSM-93276 Jira ticket once the conclusion is verified with log evidence.\r\n4. Close the ticket as \"Expected Behaviour\" or \"Not a Hybris Platform Issue\" depending on the verified findings.\r\n\r\nNo PC ticket or remediation script is needed for this ticket type.",
-        "sections": {
-          "issue": "NPSM-93276 is a Medallia customer satisfaction alert (Medallia ID 111721820) from the AU (Australia) region, categorized under \"Online Purchasing\". The customer reported a negative experience during the online purchasing process. The specific complaint details, order code, and complaint timestamp could not be retrieved from Jira because the Jira cookie bridge session has expired (HTTP 401 — Login Required). The cookie bridge on localhost:9292 is running but returning stale cookies that no longer authenticate against jira.secext.samsung.net.",
-          "rca": "",
-          "remediation": ""
-        },
-        "source": "RCA MD",
-        "foundAt": "2026-11-27T05:45:48.689Z"
-      }
-    },
     {
       "key": "NPSM-93537",
       "summary": "[112130205][AU] [Online Purchasing]Medallia Alert ",
@@ -424,7 +380,7 @@
       {
         "pid": 23360,
         "cwd": "c:\\users\\aryan.v1",
-        "ageSeconds": 272943,
+        "ageSeconds": 272987,
         "status": "running",
         "isChild": false,
         "taskSummary": "schedule https://dashboards-sf-5ec4ab8b-b273-4174-bf63-c5982c1fc80f.001.ap10.cls.services.cloud.s...",
@@ -434,7 +390,7 @@
       {
         "pid": 41424,
         "cwd": "c:\\toko\\toko6\\toko6\\core-customize\\hybris\\bin",
-        "ageSeconds": 272941,
+        "ageSeconds": 272986,
         "status": "running",
         "isChild": false,
         "taskSummary": "fix the script first and test on s2 sms",
@@ -444,7 +400,7 @@
       {
         "pid": 28832,
         "cwd": "c:\\windows",
-        "ageSeconds": 25776,
+        "ageSeconds": 25820,
         "status": "running",
         "isChild": false,
         "taskSummary": "windows",
@@ -6148,17 +6104,17 @@
     "bridgeLogTail": "[2026-11-27T07:11:51.045Z] ==========================================\n[2026-11-27T07:11:51.048Z] === Hardened GitHub Bridge v3 Started ===\n[2026-11-27T07:11:51.049Z] === with Aipro Auto-Launch ===\n[2026-11-27T07:11:51.050Z] ==========================================\n[2026-11-27T07:11:51.051Z] PID: 25204\n[2026-11-27T07:11:51.051Z] Repo: aryanverma2410/agent-bridge\n[2026-11-27T07:11:51.052Z] Poll interval: 10000ms\n[2026-11-27T07:11:51.052Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-11-27T07:11:51.053Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-11-27T07:11:51.055Z] Waiting for messages...\n[2026-11-27T07:12:28.989Z] ==========================================\n[2026-11-27T07:12:28.993Z] === Hardened GitHub Bridge v3 Started ===\n[2026-11-27T07:12:28.994Z] === with Aipro Auto-Launch ===\n[2026-11-27T07:12:28.999Z] ==========================================\n[2026-11-27T07:12:29.002Z] PID: 64320\n[2026-11-27T07:12:29.003Z] Repo: aryanverma2410/agent-bridge\n[2026-11-27T07:12:29.004Z] Poll interval: 10000ms\n[2026-11-27T07:12:29.005Z] Aipro path: C:\\Users\\aryan.v1\\AppData\\Roaming\\npm\\gemini.cmd\n[2026-11-27T07:12:29.006Z] Features: auto-ack, aipro-auto-launch, crash recovery\n[2026-11-27T07:12:29.009Z] Waiting for messages...",
     "watchdog": {
       "alive": true,
-      "lastWrite": "2026-11-27T10:37:16.851Z",
-      "ageMs": 5117
+      "lastWrite": "2026-11-27T10:38:06.380Z",
+      "ageMs": 1738
     },
-    "watchdogLogTail": "[2026-11-27T10:34:50.922Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:35:05.931Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:35:24.599Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:35:39.605Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:35:56.979Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:36:11.986Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:36:28.284Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:36:45.447Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:37:00.462Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:37:16.843Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
+    "watchdogLogTail": "[2026-11-27T10:35:56.979Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:36:11.986Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:36:28.284Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:36:45.447Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:37:00.462Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:37:16.843Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:37:31.854Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:37:46.304Z] DUPLICATE watchdog detected: PID 37896 — killing\n[2026-11-27T10:37:51.140Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry.\n[2026-11-27T10:38:06.226Z] CRITICAL: Max restarts (50/hour) reached. Waiting before retry."
   },
   "mcps": [
     {
       "name": "Jira",
       "status": "up",
       "httpStatus": 200,
-      "lastCheck": "2026-11-27T10:36:16.218Z",
+      "lastCheck": "2026-11-27T10:37:23.645Z",
       "downSince": null,
       "downDuration": 0,
       "alert": false
@@ -6167,18 +6123,18 @@
       "name": "Kibana",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-27T10:36:16.218Z",
+      "lastCheck": "2026-11-27T10:37:23.645Z",
       "downSince": "2026-11-27T10:23:06.116Z",
-      "downDuration": 790102,
+      "downDuration": 857529,
       "alert": true
     },
     {
       "name": "Confluence",
       "status": "down",
       "httpStatus": 401,
-      "lastCheck": "2026-11-27T10:36:16.218Z",
+      "lastCheck": "2026-11-27T10:37:23.645Z",
       "downSince": "2026-11-27T10:23:06.116Z",
-      "downDuration": 790102,
+      "downDuration": 857529,
       "alert": true
     }
   ],
@@ -6219,18 +6175,6 @@
   "actionQueue": [],
   "actionItems": {
     "zero": [
-      {
-        "key": "NPSM-93276",
-        "summary": "[111721820][AU] [Online Purchasing]Medallia Alert ",
-        "priority": "None",
-        "status": "In Progress",
-        "category": "zero",
-        "reason": "",
-        "whatToDo": "Investigate or continue work",
-        "url": "https://jira.secext.samsung.net/browse/NPSM-93276",
-        "updated": "2026-11-27T19:36:48.000+0900",
-        "statusChangedAt": "2026-11-25T13:03:55.700+0900"
-      },
       {
         "key": "TWME-7509",
         "summary": "Order remediation",
@@ -6297,7 +6241,7 @@
     "blocked": [],
     "queued": [],
     "totals": {
-      "zero": 4,
+      "zero": 3,
       "actionable": 2,
       "blocked": 0,
       "queued": 0
@@ -6351,27 +6295,10 @@
     "plannedTotalHours": 0,
     "byTicket": []
   },
-  "slaCards": {
-    "byTicket": [
-      {
-        "key": "TWME-7509",
-        "slaName": "Maintenance Response (GMT+8)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 85265,
-        "targetDate": "2026-11-19T10:11:54.069000001Z"
-      },
-      {
-        "key": "TWME-7509",
-        "slaName": "Maintenance Resolution (GMT+8)",
-        "slaStatus": "SUCCESS",
-        "remainingDuration": 281271,
-        "targetDate": "2026-11-25T10:12:28.154000005Z"
-      }
-    ]
-  },
+  "slaCards": null,
   "stuckOrders": null,
   "standupReport": {
-    "standupText": "Yesterday: 1.67h on HKHME-6861, 1.17h on JPME-2328, 0.42h on TWME-7498, 0.75h on THAME-18544, 1h on SAM-18530, 1h on SAM-18531\nToday: NPSM-93276, NPSM-93537, TWME-7509, NPSM-93688, RT-722599\nBlockers: none"
+    "standupText": "Yesterday: 1.67h on HKHME-6861, 1.17h on JPME-2328, 0.42h on TWME-7498, 0.75h on THAME-18544, 1h on SAM-18530, 1h on SAM-18531\nToday: NPSM-93537, TWME-7509, NPSM-93688, RT-722599, RT-664743\nBlockers: none"
   },
   "autologinConfig": {
     "login_time": "08:15",
